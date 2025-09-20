@@ -1,0 +1,33 @@
+.card {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Variants */
+.default {
+  border: 1px solid #e0e0e0;
+}
+
+.outlined {
+  border: 1px solid #d0d0d0;
+}
+
+.elevated {
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Padding */
+.small {
+  padding: 12px;
+}
+
+.medium {
+  padding: 16px;
+}
+
+.large {
+  padding: 24px;
+}

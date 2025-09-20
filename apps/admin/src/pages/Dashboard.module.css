@@ -1,0 +1,48 @@
+.container {
+  max-width: 1200px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.statCard {
+  text-align: center;
+}
+
+.statNumber {
+  font-size: 32px;
+  font-weight: bold;
+  color: #0066cc;
+  margin: 8px 0;
+}
+
+.statDescription {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.contentGrid ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.contentGrid li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.contentGrid li:last-child {
+  border-bottom: none;
+}

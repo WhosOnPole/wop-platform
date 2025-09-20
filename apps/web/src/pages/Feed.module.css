@@ -1,0 +1,29 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.container h1 {
+  font-size: 32px;
+  margin-bottom: 24px;
+}
+
+.container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.container li {
+  padding: 8px 0;
+  position: relative;
+  padding-left: 24px;
+}
+
+.container li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #0066cc;
+  font-weight: bold;
+}
