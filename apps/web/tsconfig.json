@@ -5,9 +5,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@ui": ["../../packages/ui/src"],
-      "@ui/*": ["../../packages/ui/src/*"],
-      "@supabase": ["../../packages/supabase/src"],
-      "@supabase/*": ["../../packages/supabase/src/*"]
+      "@ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["src/**/*", "src/types/**/*", "vite.config.ts"],

@@ -8,12 +8,11 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@ui': path.resolve(__dirname, '../../packages/ui/src'),
-      '@supabase': path.resolve(__dirname, '../../packages/supabase/src'),
     },
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },
   optimizeDeps: {
-    include: ['@ui', '@supabase']
+    include: ['@ui']
   },
   server: {
     port: 3000,
