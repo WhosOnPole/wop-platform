@@ -21,7 +21,7 @@ export function ComingSoon() {
           The ultimate platform for Formula 1 fans. Connect, discuss, and share your passion.
         </p>
         
-        <Card className={styles.card}>
+        {/* <Card className={styles.card}>
           <LayoutStack spacing="medium" align="center">
             <h2>Get Notified</h2>
             <p>Be the first to know when we launch!</p>
@@ -38,7 +38,7 @@ export function ComingSoon() {
               </LayoutStack>
             </form>
           </LayoutStack>
-        </Card>
+        </Card> */}
 
         <div className={styles.features}>
           <h3>What to expect:</h3>

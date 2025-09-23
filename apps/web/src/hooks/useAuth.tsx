@@ -28,9 +28,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Redirect to feed after successful authentication
+        // Redirect to personal feed after successful authentication
         if (event === 'SIGNED_IN' && session?.user) {
-          window.location.href = '/feed';
+          // Get user's handle/username from metadata or email
+          const userHandle = session.user.user_metadata?.username || 
+                           session.user.user_metadata?.full_name?.toLowerCase().replace(/\s+/g, '') ||
+                           session.user.email?.split('@')[0];
+          
+          // Redirect to personal feed page
+          window.location.href = `/profile/${userHandle}`;
         }
       }
     );
@@ -49,6 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username: email.split('@')[0], // Set username from email
+        }
+      }
     });
     return { data, error };
   };

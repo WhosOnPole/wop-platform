@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button, TextField, Card, LayoutStack } from '@ui';
 import { useAuth } from '../hooks/useAuth';
 import styles from './Auth.module.css';
@@ -11,7 +11,6 @@ export function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,9 +32,8 @@ export function Signup() {
       const { error } = await signUp(email, password);
       if (error) {
         setError(error.message);
-      } else {
-        navigate('/feed');
       }
+      // Navigation will be handled by auth state change
     } catch (err) {
       setError('An unexpected error occurred');
     } finally {
