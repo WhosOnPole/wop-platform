@@ -10,7 +10,6 @@
     "dev:admin": "pnpm --filter admin dev",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "postbuild": "tsx scripts/postbuild-db-setup.ts",
     "db:setup": "tsx scripts/postbuild-db-setup.ts",
     "db:seed:regions": "tsx scripts/seed/seedRegions.ts",
     "db:seed:entities": "tsx scripts/seed/seedEntities.ts",
