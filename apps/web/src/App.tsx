@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth.mock';
+import { AuthProvider } from './hooks/useAuth';
 import { Layout } from './components/Layout/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { ComingSoon } from './pages/ComingSoon';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
@@ -22,12 +23,36 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/feed" element={<Layout><Feed /></Layout>} />
-          <Route path="/drivers/:id" element={<Layout><DriverDetail /></Layout>} />
-          <Route path="/teams/:id" element={<Layout><TeamDetail /></Layout>} />
-          <Route path="/tracks/:id" element={<Layout><TrackDetail /></Layout>} />
-          <Route path="/polls" element={<Layout><Polls /></Layout>} />
-          <Route path="/profile/:handle" element={<Layout><Profile /></Layout>} />
+          <Route path="/feed" element={
+            <ProtectedRoute>
+              <Layout><Feed /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/drivers/:id" element={
+            <ProtectedRoute>
+              <Layout><DriverDetail /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/teams/:id" element={
+            <ProtectedRoute>
+              <Layout><TeamDetail /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/tracks/:id" element={
+            <ProtectedRoute>
+              <Layout><TrackDetail /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/polls" element={
+            <ProtectedRoute>
+              <Layout><Polls /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile/:handle" element={
+            <ProtectedRoute>
+              <Layout><Profile /></Layout>
+            </ProtectedRoute>
+          } />
         </Routes>
       </div>
     </AuthProvider>

@@ -5,17 +5,25 @@
   "type": "module",
   "scripts": {
     "install:all": "pnpm install --frozen-lockfile",
-    "build": "pnpm -r --filter ./apps/* build",
+    "build": "pnpm -r --filter web --filter admin build",
     "dev:web": "pnpm --filter web dev",
     "dev:admin": "pnpm --filter admin dev",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "postbuild": "node scripts/postbuild-db-setup.js"
+    "db:setup": "tsx scripts/postbuild-db-setup.ts",
+    "db:seed:regions": "tsx scripts/seed/seedRegions.ts",
+    "db:seed:entities": "tsx scripts/seed/seedEntities.ts",
+    "db:seed:all": "pnpm db:seed:regions && pnpm db:seed:entities"
   },
   "devDependencies": {
     "@types/node": "^22.16.5",
-    "typescript": "^5.8.3",
-    "pg": "^8.11.3"
+    "autoprefixer": "^10.4.21",
+    "pg": "^8.11.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.13",
+    "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.20.5",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=18.0.0",

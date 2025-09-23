@@ -8,11 +8,16 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:setup": "cd ../../ && tsx scripts/postbuild-db-setup.ts",
+    "db:seed:regions": "cd ../../ && tsx scripts/seed/seedRegions.ts",
+    "db:seed:entities": "cd ../../ && tsx scripts/seed/seedEntities.ts",
+    "db:seed:all": "pnpm db:seed:regions && pnpm db:seed:entities"
   },
   "dependencies": {
     "@wop/ui": "workspace:*",
     "@wop/supabase": "workspace:*",
+    "@supabase/supabase-js": "^2.45.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.1"
@@ -21,6 +26,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.8.3",
     "vite": "^5.4.19"
   }

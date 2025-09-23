@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, TextField, Card, LayoutStack } from '@ui';
-import { useAuth } from '../hooks/useAuth.mock';
+import { useAuth } from '../hooks/useAuth';
 import styles from './Auth.module.css';
 
 export function ResetPassword() {
