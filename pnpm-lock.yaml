@@ -72,6 +72,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.45.4
+        version: 2.57.4
       '@wop/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
