@@ -203,15 +203,18 @@ CREATE TRIGGER on_report_resolved
 -- ============================================
 -- Fires: AFTER UPDATE on profiles
 -- Condition: When strikes increase and reach >= 3
--- Logic: Bans the user by setting banned_until in auth.users
+-- Logic: Bans the user by setting banned_until in profiles table
 
 CREATE OR REPLACE FUNCTION public.check_for_ban()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Check if strikes increased and reached threshold
   IF NEW.strikes > OLD.strikes AND NEW.strikes >= 3 THEN
-    -- Update auth.users to ban the user (100 years = effectively permanent)
-    UPDATE auth.users
+    -- Set banned_until in profiles table (100 years = effectively permanent)
+    -- Note: We update profiles.banned_until instead of auth.users.banned_until
+    -- because auth.users is a protected system table that cannot be modified directly
+    -- Since this is an AFTER trigger, we need to UPDATE the table
+    UPDATE public.profiles
     SET banned_until = now() + interval '100 years'
     WHERE id = NEW.id;
   END IF;

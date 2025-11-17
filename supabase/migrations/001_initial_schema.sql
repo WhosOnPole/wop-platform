@@ -7,15 +7,55 @@
 -- ============================================
 -- 1. ENUM TYPES
 -- ============================================
+-- Create enums only if they don't exist (for idempotency)
 
-CREATE TYPE app_role AS ENUM ('user', 'admin');
-CREATE TYPE grid_type AS ENUM ('driver', 'team', 'track');
-CREATE TYPE parent_page_type AS ENUM ('driver', 'team', 'track', 'poll', 'hot_take', 'profile');
-CREATE TYPE target_type AS ENUM ('post', 'grid', 'profile', 'comment');
-CREATE TYPE report_status AS ENUM ('pending', 'resolved_removed', 'resolved_ignored');
-CREATE TYPE tip_status AS ENUM ('pending', 'approved', 'rejected');
-CREATE TYPE article_category AS ENUM ('FEATURE_FAN', 'FEATURE_WOMEN', 'FEATURE_INTERVIEW', 'BEGINNER_GUIDE');
-CREATE TYPE article_status AS ENUM ('draft', 'published');
+DO $$ BEGIN
+  CREATE TYPE app_role AS ENUM ('user', 'admin');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE grid_type AS ENUM ('driver', 'team', 'track');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE parent_page_type AS ENUM ('driver', 'team', 'track', 'poll', 'hot_take', 'profile');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE target_type AS ENUM ('post', 'grid', 'profile', 'comment');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE report_status AS ENUM ('pending', 'resolved_removed', 'resolved_ignored');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE tip_status AS ENUM ('pending', 'approved', 'rejected');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE article_category AS ENUM ('FEATURE_FAN', 'FEATURE_WOMEN', 'FEATURE_INTERVIEW', 'BEGINNER_GUIDE');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE article_status AS ENUM ('draft', 'published');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- ============================================
 -- 2. TABLES
@@ -29,6 +69,7 @@ CREATE TABLE profiles (
   points INT NOT NULL DEFAULT 0,
   strikes INT NOT NULL DEFAULT 0,
   role app_role NOT NULL DEFAULT 'user',
+  banned_until TIMESTAMPTZ,
   age INT,
   city VARCHAR(100),
   state VARCHAR(100),
@@ -38,6 +79,17 @@ CREATE TABLE profiles (
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   CONSTRAINT unique_username UNIQUE (username)
+);
+
+-- Teams table (must be created before drivers due to FK dependency)
+CREATE TABLE teams (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  image_url TEXT,
+  overview_text TEXT,
+  instagram_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Drivers table
@@ -54,17 +106,6 @@ CREATE TABLE drivers (
   podiums_total INT DEFAULT 0,
   current_standing INT,
   world_championships INT DEFAULT 0,
-  instagram_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Teams table
-CREATE TABLE teams (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  image_url TEXT,
-  overview_text TEXT,
   instagram_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -568,14 +609,17 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger to call the function on new user signup
+-- Drop trigger if it exists (for idempotency)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
--- 6. MANUAL STEP REQUIRED
+-- 6. BAN ENFORCEMENT
 -- ============================================
--- After running this migration, manually run:
--- ALTER TABLE auth.users ADD COLUMN banned_until TIMESTAMPTZ;
--- This column is required for the ban enforcement logic in middleware
+-- The banned_until column is included in the profiles table (line 32)
+-- Middleware should check profiles.banned_until instead of auth.users.banned_until
+-- because auth.users is a protected system table that cannot be modified directly
 
