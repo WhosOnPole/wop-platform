@@ -24,33 +24,45 @@ export default function EditGridPage() {
 
   async function loadAvailableItems() {
     setLoading(true)
-    let tableName = ''
-    let selectFields = ''
+    
+    try {
+      let result
+      
+      if (type === 'driver') {
+        result = await supabase
+          .from('drivers')
+          .select('id, name, image_url, team_icon_url')
+          .order('name')
+      } else if (type === 'team') {
+        result = await supabase
+          .from('teams')
+          .select('id, name, image_url')
+          .order('name')
+      } else if (type === 'track') {
+        result = await supabase
+          .from('tracks')
+          .select('id, name, image_url')
+          .order('name')
+      } else {
+        setLoading(false)
+        return
+      }
 
-    if (type === 'driver') {
-      tableName = 'drivers'
-      selectFields = 'id, name, image_url, team_icon_url'
-    } else if (type === 'team') {
-      tableName = 'teams'
-      selectFields = 'id, name, image_url'
-    } else if (type === 'track') {
-      tableName = 'tracks'
-      selectFields = 'id, name, image_url'
+      if (result.data) {
+        setAvailableItems(
+          result.data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            image_url: item.image_url,
+            team_icon_url: item.team_icon_url || null,
+          }))
+        )
+      }
+    } catch (error) {
+      console.error('Error loading items:', error)
+    } finally {
+      setLoading(false)
     }
-
-    const { data } = await supabase.from(tableName).select(selectFields).order('name')
-
-    if (data) {
-      setAvailableItems(
-        data.map((item) => ({
-          id: item.id,
-          name: item.name,
-          image_url: item.image_url,
-          team_icon_url: item.team_icon_url || null,
-        }))
-      )
-    }
-    setLoading(false)
   }
 
   if (loading) {
