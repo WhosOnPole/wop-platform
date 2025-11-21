@@ -100,3 +100,4 @@ temp/
 *.sw?
 apps/admin/.env.local
 *.local
+apps/web/.env.local
