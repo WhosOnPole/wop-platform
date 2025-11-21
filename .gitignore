@@ -98,3 +98,5 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+apps/admin/.env.local
+*.local

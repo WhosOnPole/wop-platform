@@ -3,8 +3,9 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LogOut, Users, FileText, Flag, MessageSquare, Star, Calendar } from 'lucide-react'
+import type { ReactNode } from 'react'
 
-async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = createServerComponentClient({ cookies })
   const {
     data: { session },
@@ -80,11 +81,8 @@ async function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="p-8">{children}</main>
+        <div className="p-8">{children}</div>
       </main>
     </div>
   )
 }
-
-export default AdminLayout
-
