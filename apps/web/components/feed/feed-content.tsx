@@ -16,7 +16,7 @@ interface Post {
 
 interface Grid {
   id: string
-  type: string
+  type: 'driver' | 'team' | 'track'
   comment: string | null
   ranked_items: any[]
   created_at: string
@@ -45,13 +45,19 @@ interface FeedContentProps {
   featuredNews: NewsStory[]
 }
 
+type FeedItem =
+  | (Post & { contentType: 'post' })
+  | (Grid & { contentType: 'grid' })
+  | (Poll & { contentType: 'poll' })
+  | (NewsStory & { contentType: 'news' })
+
 export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentProps) {
   // Combine and sort all content by created_at
-  const allContent = [
-    ...posts.map((p) => ({ ...p, type: 'post' as const })),
-    ...grids.map((g) => ({ ...g, type: 'grid' as const })),
-    ...polls.map((p) => ({ ...p, type: 'poll' as const })),
-    ...featuredNews.map((n) => ({ ...n, type: 'news' as const })),
+  const allContent: FeedItem[] = [
+    ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
+    ...grids.map((g) => ({ ...g, contentType: 'grid' as const })),
+    ...polls.map((p) => ({ ...p, contentType: 'poll' as const })),
+    ...featuredNews.map((n) => ({ ...n, contentType: 'news' as const })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   if (allContent.length === 0) {
@@ -73,8 +79,8 @@ export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentPr
   return (
     <div className="space-y-6">
       {allContent.map((item) => {
-        if (item.type === 'post') {
-          const post = item as Post & { type: 'post' }
+        if (item.contentType === 'post') {
+          const post = item
           return (
             <div
               key={`post-${post.id}`}
@@ -121,8 +127,8 @@ export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentPr
           )
         }
 
-        if (item.type === 'grid') {
-          const grid = item as Grid & { type: 'grid' }
+        if (item.contentType === 'grid') {
+          const grid = item
           return (
             <div
               key={`grid-${grid.id}`}
@@ -175,8 +181,8 @@ export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentPr
           )
         }
 
-        if (item.type === 'poll') {
-          const poll = item as Poll & { type: 'poll' }
+        if (item.contentType === 'poll') {
+          const poll = item
           return (
             <div
               key={`poll-${poll.id}`}
@@ -198,8 +204,8 @@ export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentPr
           )
         }
 
-        if (item.type === 'news') {
-          const news = item as NewsStory & { type: 'news' }
+        if (item.contentType === 'news') {
+          const news = item
           return (
             <div
               key={`news-${news.id}`}
