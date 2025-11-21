@@ -71,7 +71,7 @@ export default function EditGridPage() {
           Ranking
         </h1>
         <p className="mt-2 text-gray-600">
-          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'teams' : 'teams' : 'tracks'}
+          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'team' ? 'teams' : 'tracks'}
         </p>
       </div>
 
