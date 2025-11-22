@@ -6,6 +6,7 @@ import { CheckInSection } from '@/components/race/check-in-section'
 import { LiveChatComponent } from '@/components/race/live-chat-component'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 interface PageProps {
   params: {

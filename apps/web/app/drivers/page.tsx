@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 // Cache driver data per request (session-level caching)
 const getCachedDrivers = cache(async () => {

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 // Cache track data per request (session-level caching)
 const getCachedTracks = cache(async () => {

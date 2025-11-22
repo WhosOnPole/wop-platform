@@ -1,10 +1,11 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import ReactMarkdown from 'react-markdown'
 import { Calendar, BookOpen } from 'lucide-react'
+import { MarkdownContent } from '@/components/article/markdown-content'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 interface PageProps {
   params: {
@@ -61,9 +62,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
           <h1 className="mb-6 text-4xl font-bold text-gray-900">{article.title}</h1>
 
-          <div className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-code:text-gray-800 prose-pre:bg-gray-100">
-            <ReactMarkdown>{article.content}</ReactMarkdown>
-          </div>
+          <MarkdownContent content={article.content} />
         </div>
       </article>
     </div>

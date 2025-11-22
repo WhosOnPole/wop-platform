@@ -8,6 +8,7 @@ import { CommunityGridsSection } from '@/components/dtt/community-grids-section'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 interface PageProps {
   params: {

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { PollList } from '@/components/polls/poll-list'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 export default async function PollsPage() {
   const supabase = createServerComponentClient({ cookies })

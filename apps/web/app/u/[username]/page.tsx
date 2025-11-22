@@ -10,6 +10,7 @@ import { UserPostsSection } from '@/components/profile/user-posts-section'
 import { ProfileDiscussionSection } from '@/components/profile/profile-discussion-section'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 interface PageProps {
   params: {

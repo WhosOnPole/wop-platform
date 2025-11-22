@@ -11,6 +11,7 @@ import { FeaturedNews } from '@/components/home/featured-news'
 import { FeaturedSponsor } from '@/components/home/featured-sponsor'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 async function getCurrentWeekStart() {
   const today = new Date()

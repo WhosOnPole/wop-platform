@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { BookOpen } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 export default async function BeginnersGuidePage() {
   const supabase = createServerComponentClient({ cookies })
