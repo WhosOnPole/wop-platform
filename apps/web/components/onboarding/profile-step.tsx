@@ -256,7 +256,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           required
           value={formData.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
           placeholder="Choose a username"
         />
         {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
@@ -274,7 +274,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           value={formData.dateOfBirth}
           onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
           max={new Date().toISOString().split('T')[0]}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md text-black border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
       </div>
 
@@ -290,7 +290,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
             required
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="City"
           />
         </div>
@@ -304,7 +304,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
             required
             value={formData.state}
             onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="State"
           />
         </div>
@@ -318,7 +318,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
             required
             value={formData.country}
             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="Country"
           />
         </div>
@@ -335,14 +335,14 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
                 placeholder="Platform (e.g., Twitter, Instagram)"
                 value={link.platform}
                 onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="flex-1 rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               />
               <input
                 type="url"
                 placeholder="URL"
                 value={link.url}
                 onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="flex-1 rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               />
               <button
                 type="button"

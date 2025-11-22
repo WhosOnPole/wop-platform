@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LogOut } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -227,6 +227,15 @@ export function Navbar() {
                   </div>
                 )}
               </Link>
+            ) : user && pathname === '/onboarding' ? (
+              <button
+                onClick={handleSignOut}
+                className="flex items-center space-x-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </button>
             ) : (
               <Link
                 href="/login"
@@ -270,6 +279,15 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
+            {user && profile ? (
+              <Link
+                href={`/u/${profile.username}`}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Profile
+              </Link>
+            ) : null}
             {user && (
               <button
                 onClick={() => {
@@ -278,7 +296,7 @@ export function Navbar() {
                 }}
                 className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-gray-100"
               >
-                Sign Out
+                {pathname === '/onboarding' ? 'Logout' : 'Sign Out'}
               </button>
             )}
           </div>

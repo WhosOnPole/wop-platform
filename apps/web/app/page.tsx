@@ -154,7 +154,7 @@ export default async function HomePage() {
         <div className="w-2/3 overflow-y-auto">
           {/* Hero Section */}
           <section
-            className="relative min-h-[80vh] flex flex-col items-center justify-center p-0"
+            className="relative min-h-[100vh] flex flex-col items-center justify-center p-0"
             style={{
               backgroundImage: "url('/images/backsplash.png')",
               backgroundSize: '200%',
@@ -182,74 +182,7 @@ export default async function HomePage() {
             </div>
           </section>
 
-          {/* Featured Grid Section */}
-          {weeklyHighlights.data?.highlighted_fan && (
-            <section className="py-12 px-8 bg-white">
-              <div className="mx-auto max-w-7xl">
-                <div className="mb-6 flex items-center space-x-2">
-                  <Trophy className="h-6 w-6 text-racing-orange" />
-                  <h2 className="font-display text-2xl font-bold text-foundation-black">
-                    Featured Fan of the Week
-                  </h2>
-                </div>
-                <FeaturedGrid
-                  highlightedFan={weeklyHighlights.data.highlighted_fan as {
-                    id: string
-                    username: string
-                    profile_image_url: string | null
-                  }}
-                />
-              </div>
-            </section>
-          )}
-
-          {/* Week's Winners Podium */}
-          {topUsers.data && topUsers.data.length > 0 && (
-            <section className="py-12 px-8 bg-gray-50">
-              <div className="mx-auto max-w-7xl">
-                <div className="mb-6 flex items-center space-x-2">
-                  <Trophy className="h-6 w-6 text-racing-orange" />
-                  <h2 className="font-display text-2xl font-bold text-foundation-black">
-                    Week&apos;s Winners Podium
-                  </h2>
-                </div>
-                <WinnersPodium
-                  users={
-                    (topUsers.data as Array<{
-                      id: string
-                      username: string
-                      profile_image_url: string | null
-                      points: number
-                    }>) || []
-                  }
-                />
-              </div>
-            </section>
-          )}
-
-          {/* Featured News/Sponsor Section */}
-          {(featuredNews.data || weeklyHighlightsFull) && (
-            <section className="py-12 px-8 bg-white">
-              <div className="mx-auto max-w-7xl space-y-8">
-                {featuredNews.data && (
-                  <div>
-                    <h2 className="font-display text-2xl font-bold text-foundation-black mb-6">
-                      Featured News
-                    </h2>
-                    <FeaturedNews newsStory={featuredNews.data} />
-                  </div>
-                )}
-                {weeklyHighlightsFull && (
-                  <div>
-                    <h2 className="font-display text-2xl font-bold text-foundation-black mb-6">
-                      Featured Sponsor
-                    </h2>
-                    <FeaturedSponsor sponsor={weeklyHighlightsFull} />
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+          
         </div>
       </div>
 

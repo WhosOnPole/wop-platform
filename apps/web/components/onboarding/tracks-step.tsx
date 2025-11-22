@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
-import { Save, X } from 'lucide-react'
+import { Save, X, ChevronUp, ChevronDown } from 'lucide-react'
 
 interface GridItem {
   id: string
@@ -52,46 +51,40 @@ export function OnboardingTracksStep({ onComplete, onSkip }: OnboardingTracksSte
     }
   }
 
-  function onDragEnd(result: DropResult) {
-    const { source, destination } = result
-
-    if (!destination) return
-
-    if (source.droppableId === destination.droppableId) {
-      if (source.droppableId === 'ranked') {
-        const items = Array.from(rankedList)
-        const [reorderedItem] = items.splice(source.index, 1)
-        items.splice(destination.index, 0, reorderedItem)
-        setRankedList(items)
-      }
-    } else {
-      if (source.droppableId === 'available' && destination.droppableId === 'ranked') {
-        if (rankedList.length >= 10) {
-          alert('Maximum 10 tracks allowed')
-          return
-        }
-        const sourceItems = Array.from(availableList)
-        const destItems = Array.from(rankedList)
-        const [removed] = sourceItems.splice(source.index, 1)
-        destItems.splice(destination.index, 0, removed)
-        setRankedList(destItems)
-        setAvailableList(sourceItems)
-      } else if (source.droppableId === 'ranked' && destination.droppableId === 'available') {
-        const sourceItems = Array.from(rankedList)
-        const destItems = Array.from(availableList)
-        const [removed] = sourceItems.splice(source.index, 1)
-        destItems.splice(destination.index, 0, removed)
-        setRankedList(sourceItems)
-        setAvailableList(destItems)
-      }
+  function handleAddToRanked(item: GridItem) {
+    if (rankedList.length >= 10) {
+      alert('Maximum 10 tracks allowed')
+      return
     }
+    const newAvailableList = availableList.filter((i) => i.id !== item.id)
+    const newRankedList = [...rankedList, item]
+    setAvailableList(newAvailableList)
+    setRankedList(newRankedList)
   }
 
-  function removeFromRanked(index: number) {
-    const items = Array.from(rankedList)
-    const [removed] = items.splice(index, 1)
+  function handleRemoveFromRanked(item: GridItem) {
+    const newRankedList = rankedList.filter((i) => i.id !== item.id)
+    const newAvailableList = [...availableList, item]
+    setRankedList(newRankedList)
+    setAvailableList(newAvailableList)
+  }
+
+  function handleMoveUp(index: number) {
+    if (index === 0) return
+    const items = [...rankedList]
+    const temp = items[index]
+    items[index] = items[index - 1]
+    items[index - 1] = temp
     setRankedList(items)
-    setAvailableList([...availableList, removed])
+  }
+
+  function handleMoveDown(index: number) {
+    if (index === rankedList.length - 1) return
+    const items = [...rankedList]
+    const temp = items[index]
+    items[index] = items[index + 1]
+    items[index + 1] = temp
+    setRankedList(items)
   }
 
   async function handleSave() {
@@ -156,126 +149,109 @@ export function OnboardingTracksStep({ onComplete, onSkip }: OnboardingTracksSte
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Select Your Top 10 Tracks</h2>
-        <p className="mt-1 text-sm text-gray-600">Drag and drop to rank your favorite tracks</p>
+        <p className="mt-1 text-sm text-gray-600">Click tracks to add them to your ranking</p>
       </div>
 
-      <DragDropContext onDragEnd={onDragEnd}>
-        {/* Available Tracks */}
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Available Tracks</h3>
-          <Droppable droppableId="available" direction="horizontal">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="flex space-x-4 overflow-x-auto pb-4"
-              >
-                {availableList.map((item, index) => (
-                  <Draggable key={item.id} draggableId={item.id} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={`flex-shrink-0 rounded-lg border-2 border-gray-200 bg-white p-3 shadow transition-shadow ${
-                          snapshot.isDragging ? 'border-blue-500 shadow-lg' : 'hover:shadow-md'
-                        }`}
-                        style={{ ...provided.draggableProps.style }}
-                      >
-                        {item.image_url ? (
-                          <img
-                            src={item.image_url}
-                            alt={item.name}
-                            className="h-24 w-24 rounded object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-24 w-24 items-center justify-center rounded bg-gray-200">
-                            <span className="text-xs font-medium text-gray-600">
-                              {item.name.charAt(0)}
-                            </span>
-                          </div>
-                        )}
-                        <p className="mt-2 max-w-[100px] truncate text-xs font-medium text-gray-900">
-                          {item.name}
-                        </p>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
+      {/* Available Tracks */}
+      <div>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Available Tracks</h3>
+        <div className="flex flex-wrap gap-4">
+          {availableList.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handleAddToRanked(item)}
+              className="flex-shrink-0 cursor-pointer rounded-lg border-2 border-gray-200 bg-white p-3 shadow transition-shadow hover:border-blue-500 hover:shadow-md"
+            >
+              {item.image_url ? (
+                <img
+                  src={item.image_url}
+                  alt={item.name}
+                  className="h-24 w-24 rounded object-cover"
+                />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded bg-gray-200">
+                  <span className="text-xs font-medium text-gray-600">
+                    {item.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+              <p className="mt-2 max-w-[100px] truncate text-xs font-medium text-gray-900">
+                {item.name}
+              </p>
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Ranked List */}
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">
-            Your Ranking ({rankedList.length}/10)
-          </h3>
-          <Droppable droppableId="ranked">
-            {(provided) => (
+      {/* Ranked List */}
+      <div>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">
+          Your Ranking ({rankedList.length}/10)
+        </h3>
+        <div className="space-y-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4">
+          {rankedList.length === 0 ? (
+            <p className="py-8 text-center text-gray-500">
+              Click tracks above to add them to your ranking
+            </p>
+          ) : (
+            rankedList.map((item, index) => (
               <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4"
+                key={item.id}
+                className="flex items-center space-x-4 rounded-lg border-2 border-gray-200 bg-white p-4 shadow transition-shadow hover:shadow-md"
               >
-                {rankedList.length === 0 ? (
-                  <p className="py-8 text-center text-gray-500">
-                    Drag tracks here to rank them
-                  </p>
+                <div className="flex flex-col space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => handleMoveUp(index)}
+                    disabled={index === 0}
+                    className="rounded-md p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Move up"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveDown(index)}
+                    disabled={index === rankedList.length - 1}
+                    className="rounded-md p-1 text-gray-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Move down"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
+                  {index + 1}
+                </div>
+                {item.image_url ? (
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="h-12 w-12 rounded object-cover"
+                  />
                 ) : (
-                  rankedList.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`flex items-center space-x-4 rounded-lg border-2 bg-white p-4 shadow transition-shadow ${
-                            snapshot.isDragging
-                              ? 'border-blue-500 shadow-lg'
-                              : 'border-gray-200 hover:shadow-md'
-                          }`}
-                          style={{ ...provided.draggableProps.style }}
-                        >
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
-                            {index + 1}
-                          </div>
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="h-12 w-12 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded bg-gray-200">
-                              <span className="text-sm font-medium text-gray-600">
-                                {item.name.charAt(0)}
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{item.name}</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeFromRanked(index)}
-                            className="rounded-md p-2 text-gray-400 hover:text-red-600"
-                          >
-                            <X className="h-5 w-5" />
-                          </button>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))
+                  <div className="flex h-12 w-12 items-center justify-center rounded bg-gray-200">
+                    <span className="text-sm font-medium text-gray-600">
+                      {item.name.charAt(0)}
+                    </span>
+                  </div>
                 )}
-                {provided.placeholder}
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">{item.name}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFromRanked(item)}
+                  className="rounded-md p-2 text-gray-400 hover:text-red-600"
+                  title="Remove"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-            )}
-          </Droppable>
+            ))
+          )}
         </div>
-      </DragDropContext>
+      </div>
 
       {/* Blurb */}
       <div>
@@ -283,6 +259,8 @@ export function OnboardingTracksStep({ onComplete, onSkip }: OnboardingTracksSte
           Blurb (optional, max 140 characters)
         </label>
         <textarea
+          id="track-blurb"
+          name="track-blurb"
           value={blurb}
           onChange={(e) => {
             if (e.target.value.length <= 140) {
@@ -291,7 +269,9 @@ export function OnboardingTracksStep({ onComplete, onSkip }: OnboardingTracksSte
           }}
           rows={2}
           placeholder="Say something about your track picks..."
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          autoComplete="off"
+          data-form-type="other"
+          className="w-full rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
         <p className="mt-1 text-xs text-gray-500">{blurb.length}/140 characters</p>
       </div>
