@@ -12,9 +12,27 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = createRouteHandlerClient({ cookies })
     await supabase.auth.exchangeCodeForSession(code)
+
+    // Check if user has completed onboarding (has username)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (session) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      // If no username, redirect to onboarding
+      if (!profile?.username) {
+        return NextResponse.redirect(new URL('/onboarding', requestUrl.origin))
+      }
+    }
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/', requestUrl.origin))
+  return NextResponse.redirect(new URL('/feed', requestUrl.origin))
 }
 

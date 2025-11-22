@@ -28,8 +28,20 @@ export default async function HomePage() {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // If logged in, redirect to logged-in home
+  // If logged in, check onboarding status
   if (session) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    // If no username, redirect to onboarding
+    if (!profile?.username) {
+      redirect('/onboarding')
+    }
+
+    // Otherwise redirect to feed
     redirect('/feed')
   }
 

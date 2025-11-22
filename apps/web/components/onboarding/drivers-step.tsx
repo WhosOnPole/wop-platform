@@ -2,90 +2,53 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useRouter } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
-import { Save, X } from 'lucide-react'
+import { Save, X, Trophy } from 'lucide-react'
 
 interface GridItem {
   id: string
   name: string
   image_url: string | null
   headshot_url?: string | null
-  team_icon_url?: string | null
 }
 
-interface GridEditorProps {
-  type: 'driver' | 'team' | 'track'
-  availableItems: GridItem[]
+interface OnboardingDriversStepProps {
+  onComplete: () => void
+  onSkip: () => void
 }
 
-export function GridEditor({ type, availableItems }: GridEditorProps) {
+export function OnboardingDriversStep({ onComplete, onSkip }: OnboardingDriversStepProps) {
   const supabase = createClientComponentClient()
-  const router = useRouter()
   const [rankedList, setRankedList] = useState<GridItem[]>([])
-  const [availableList, setAvailableList] = useState<GridItem[]>(availableItems)
+  const [availableList, setAvailableList] = useState<GridItem[]>([])
   const [blurb, setBlurb] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [existingGridId, setExistingGridId] = useState<string | null>(null)
-
-  const maxItems = type === 'team' ? 5 : 10
 
   useEffect(() => {
-    setAvailableList(availableItems)
-    loadExistingGrid()
-  }, [availableItems, type])
+    loadDrivers()
+  }, [])
 
-  async function loadExistingGrid() {
+  async function loadDrivers() {
     setLoading(true)
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      const { data: drivers } = await supabase
+        .from('drivers')
+        .select('id, name, image_url, headshot_url')
+        .order('name')
 
-      if (!session) {
-        setLoading(false)
-        return
-      }
-
-      // Load existing grid
-      const { data: existingGrid } = await supabase
-        .from('grids')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('type', type)
-        .single()
-
-      if (existingGrid) {
-        setExistingGridId(existingGrid.id)
-        setBlurb(existingGrid.blurb || '')
-
-        // Map ranked items back to full items
-        const rankedItemIds = (existingGrid.ranked_items || []) as Array<{ id: string; name: string }>
-        const rankedItems: GridItem[] = []
-        const available: GridItem[] = []
-
-        availableItems.forEach((item) => {
-          const rankedItem = rankedItemIds.find((ri) => ri.id === item.id)
-          if (rankedItem) {
-            rankedItems.push(item)
-          } else {
-            available.push(item)
-          }
-        })
-
-        // Sort ranked items by their order in ranked_items
-        rankedItems.sort((a, b) => {
-          const aIndex = rankedItemIds.findIndex((ri) => ri.id === a.id)
-          const bIndex = rankedItemIds.findIndex((ri) => ri.id === b.id)
-          return aIndex - bIndex
-        })
-
-        setRankedList(rankedItems)
-        setAvailableList(available)
+      if (drivers) {
+        setAvailableList(
+          drivers.map((driver) => ({
+            id: driver.id,
+            name: driver.name,
+            image_url: driver.image_url,
+            headshot_url: driver.headshot_url || null,
+          }))
+        )
       }
     } catch (error) {
-      console.error('Error loading existing grid:', error)
+      console.error('Error loading drivers:', error)
     } finally {
       setLoading(false)
     }
@@ -107,9 +70,8 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
     } else {
       // Moving between lists
       if (source.droppableId === 'available' && destination.droppableId === 'ranked') {
-        // From available to ranked
-        if (rankedList.length >= maxItems) {
-          alert(`Maximum ${maxItems} items allowed in ranking`)
+        if (rankedList.length >= 10) {
+          alert('Maximum 10 drivers allowed')
           return
         }
         const sourceItems = Array.from(availableList)
@@ -119,7 +81,6 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
         setRankedList(destItems)
         setAvailableList(sourceItems)
       } else if (source.droppableId === 'ranked' && destination.droppableId === 'available') {
-        // From ranked to available
         const sourceItems = Array.from(rankedList)
         const destItems = Array.from(availableList)
         const [removed] = sourceItems.splice(source.index, 1)
@@ -138,64 +99,53 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
   }
 
   async function handleSave() {
-    if (rankedList.length === 0) {
-      alert('Please rank at least one item')
-      return
-    }
-
     setIsSubmitting(true)
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
-    if (!session) {
-      router.push('/login')
-      return
-    }
+    if (!session) return
 
     const rankedItemIds = rankedList.map((item) => ({
       id: item.id,
       name: item.name,
     }))
 
-    // Get username for redirect
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', session.user.id)
-      .single()
+    // Upsert grid (update if exists, insert if not)
+    const { data: existing } = await supabase
+      .from('grids')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .eq('type', 'driver')
+      .maybeSingle()
 
-    if (existingGridId) {
-      // Update existing grid
-      const { error } = await supabase
+    let error
+    if (existing) {
+      // Update existing
+      const { error: updateError } = await supabase
         .from('grids')
         .update({
           ranked_items: rankedItemIds,
           blurb: blurb.trim() || null,
         })
-        .eq('id', existingGridId)
-
-      if (error) {
-        console.error('Error updating grid:', error)
-        alert('Failed to update grid')
-      } else {
-        router.push(`/u/${profile?.username || session.user.id}`)
-      }
+        .eq('id', existing.id)
+      error = updateError
     } else {
-      // Insert new grid
-      const { error } = await supabase.from('grids').insert({
+      // Insert new
+      const { error: insertError } = await supabase.from('grids').insert({
         user_id: session.user.id,
-        type: type,
+        type: 'driver',
         ranked_items: rankedItemIds,
         blurb: blurb.trim() || null,
       })
+      error = insertError
+    }
 
-      if (error) {
-        console.error('Error saving grid:', error)
-        alert('Failed to save grid')
-      } else {
-        router.push(`/u/${profile?.username || session.user.id}`)
-      }
+    if (error) {
+      console.error('Error saving grid:', error)
+      alert('Failed to save grid')
+    } else {
+      onComplete()
     }
     setIsSubmitting(false)
   }
@@ -209,11 +159,56 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Select Your Top 10 Drivers</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Drag and drop to rank your favorites. Your top 3 picks are especially important!
+        </p>
+      </div>
+
       <DragDropContext onDragEnd={onDragEnd}>
-        {/* Available Items Picker */}
+        {/* Top 3 Podium */}
+        {rankedList.length >= 3 && (
+          <div className="rounded-lg border-2 border-purple-200 bg-purple-50 p-6">
+            <div className="mb-4 flex items-center space-x-2">
+              <Trophy className="h-5 w-5 text-purple-600" />
+              <h3 className="text-lg font-semibold text-purple-900">Your Top 3</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {rankedList.slice(0, 3).map((item, index) => (
+                <div
+                  key={item.id}
+                  className="relative rounded-lg border-2 border-purple-300 bg-white p-4 text-center shadow-md"
+                >
+                  <div className="mb-2 flex justify-center">
+                    {item.headshot_url || item.image_url ? (
+                      <img
+                        src={item.headshot_url || item.image_url || ''}
+                        alt={item.name}
+                        className="h-20 w-20 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200">
+                        <span className="text-xl font-medium text-gray-600">
+                          {item.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-1 flex items-center justify-center space-x-1">
+                    <span className="text-2xl font-bold text-purple-600">#{index + 1}</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Available Drivers */}
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Available {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'}</h2>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Available Drivers</h3>
           <Droppable droppableId="available" direction="horizontal">
             {(provided) => (
               <div
@@ -233,9 +228,9 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                         }`}
                         style={{ ...provided.draggableProps.style }}
                       >
-                        {(type === 'driver' && (item.headshot_url || item.image_url)) || (type !== 'driver' && item.image_url) ? (
+                        {item.headshot_url || item.image_url ? (
                           <img
-                            src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
+                            src={item.headshot_url || item.image_url || ''}
                             alt={item.name}
                             className="h-24 w-24 rounded object-cover"
                           />
@@ -259,11 +254,11 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
           </Droppable>
         </div>
 
-        {/* Ranked List */}
+        {/* Ranked List (4-10) */}
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Your Ranking ({rankedList.length}/{maxItems})
-          </h2>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">
+            Your Ranking ({rankedList.length}/10)
+          </h3>
           <Droppable droppableId="ranked">
             {(provided) => (
               <div
@@ -273,7 +268,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
               >
                 {rankedList.length === 0 ? (
                   <p className="py-8 text-center text-gray-500">
-                    Drag items here to rank them
+                    Drag drivers here to rank them (top 3 will be highlighted)
                   </p>
                 ) : (
                   rankedList.map((item, index) => (
@@ -286,16 +281,22 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                           className={`flex items-center space-x-4 rounded-lg border-2 bg-white p-4 shadow transition-shadow ${
                             snapshot.isDragging
                               ? 'border-blue-500 shadow-lg'
-                              : 'border-gray-200 hover:shadow-md'
+                              : index < 3
+                                ? 'border-purple-200 bg-purple-50'
+                                : 'border-gray-200 hover:shadow-md'
                           }`}
                           style={{ ...provided.draggableProps.style }}
                         >
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-white ${
+                              index < 3 ? 'bg-purple-600' : 'bg-blue-600'
+                            }`}
+                          >
                             {index + 1}
                           </div>
-                          {(type === 'driver' && (item.headshot_url || item.image_url)) || (type !== 'driver' && item.image_url) ? (
+                          {item.headshot_url || item.image_url ? (
                             <img
-                              src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
+                              src={item.headshot_url || item.image_url || ''}
                               alt={item.name}
                               className="h-12 w-12 rounded object-cover"
                             />
@@ -310,6 +311,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                             <p className="font-medium text-gray-900">{item.name}</p>
                           </div>
                           <button
+                            type="button"
                             onClick={() => removeFromRanked(index)}
                             className="rounded-md p-2 text-gray-400 hover:text-red-600"
                           >
@@ -327,7 +329,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
         </div>
       </DragDropContext>
 
-      {/* Blurb Section */}
+      {/* Blurb */}
       <div>
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Blurb (optional, max 140 characters)
@@ -339,30 +341,30 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
               setBlurb(e.target.value)
             }
           }}
-          rows={3}
-          placeholder="Add a blurb about your ranking..."
+          rows={2}
+          placeholder="Say something about your driver picks..."
           className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
-        <p className="mt-1 text-xs text-gray-500">
-          {blurb.length}/140 characters
-        </p>
+        <p className="mt-1 text-xs text-gray-500">{blurb.length}/140 characters</p>
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end space-x-3">
+      {/* Actions */}
+      <div className="flex justify-between">
         <button
-          onClick={() => router.back()}
+          type="button"
+          onClick={onSkip}
           className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
-          Cancel
+          Skip for now
         </button>
         <button
+          type="button"
           onClick={handleSave}
           disabled={isSubmitting || rankedList.length === 0}
-          className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center space-x-2 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
-          <span>Save Ranking</span>
+          <span>Continue</span>
         </button>
       </div>
     </div>

@@ -38,19 +38,78 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   const isOwnProfile = session?.user.id === profile.id
 
-  // Fetch user's grids
-  const { data: grids } = await supabase
+  // Fetch user's grids with like counts
+  let gridsQuery = supabase
     .from('grids')
     .select('*')
     .eq('user_id', profile.id)
     .order('created_at', { ascending: false })
 
-  // Fetch user's posts
+  const { data: grids } = await gridsQuery
+
+  // Fetch like counts and user's like status for each grid
+  const gridsWithLikes = await Promise.all(
+    (grids || []).map(async (grid) => {
+      const { count: likeCount } = await supabase
+        .from('grid_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('grid_id', grid.id)
+
+      let isLiked = false
+      if (session && !isOwnProfile) {
+        const { data: like } = await supabase
+          .from('grid_likes')
+          .select('id')
+          .eq('grid_id', grid.id)
+          .eq('user_id', session.user.id)
+          .single()
+
+        isLiked = !!like
+      }
+
+      return {
+        ...grid,
+        like_count: likeCount || 0,
+        is_liked: isLiked,
+      }
+    })
+  )
+
+  // Fetch user's posts with context
   const { data: posts } = await supabase
     .from('posts')
     .select('*')
     .eq('user_id', profile.id)
     .order('created_at', { ascending: false })
+
+  // Enrich posts with parent page names
+  const postsWithContext = await Promise.all(
+    (posts || []).map(async (post) => {
+      if (!post.parent_page_type || !post.parent_page_id) {
+        return { ...post, parent_page_name: null }
+      }
+
+      let name = null
+      const type = post.parent_page_type
+      const id = post.parent_page_id
+
+      if (type === 'driver') {
+        const { data } = await supabase.from('drivers').select('name').eq('id', id).single()
+        name = data?.name || null
+      } else if (type === 'team') {
+        const { data } = await supabase.from('teams').select('name').eq('id', id).single()
+        name = data?.name || null
+      } else if (type === 'track') {
+        const { data } = await supabase.from('tracks').select('name').eq('id', id).single()
+        name = data?.name || null
+      } else if (type === 'profile') {
+        const { data } = await supabase.from('profiles').select('username').eq('id', id).single()
+        name = data?.username || null
+      }
+
+      return { ...post, parent_page_name: name }
+    })
+  )
 
   // Fetch discussion posts on this profile
   const { data: profilePosts } = await supabase
@@ -184,13 +243,18 @@ export default async function UserProfilePage({ params }: PageProps) {
       </div>
 
       {/* Grids Section */}
-      {grids && grids.length > 0 && (
-        <UserGridsSection grids={grids} username={profile.username} />
+      {gridsWithLikes && gridsWithLikes.length > 0 && (
+        <UserGridsSection
+          grids={gridsWithLikes}
+          username={profile.username}
+          isOwnProfile={isOwnProfile}
+          currentUserId={session?.user.id}
+        />
       )}
 
       {/* Posts Section */}
-      {posts && posts.length > 0 && (
-        <UserPostsSection posts={posts} username={profile.username} />
+      {postsWithContext && postsWithContext.length > 0 && (
+        <UserPostsSection posts={postsWithContext} username={profile.username} />
       )}
 
       {/* Discussion Section */}

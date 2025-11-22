@@ -10,6 +10,7 @@ interface Profile {
   username: string
   email: string
   profile_image_url: string | null
+  date_of_birth: string | null
   age: number | null
   city: string | null
   state: string | null
@@ -24,7 +25,7 @@ export default function EditProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [formData, setFormData] = useState({
     username: '',
-    age: '',
+    dateOfBirth: '',
     city: '',
     state: '',
     country: '',
@@ -49,17 +50,28 @@ export default function EditProfilePage() {
       return
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single()
 
+    if (error) {
+      // If profile doesn't exist, redirect to onboarding
+      if (error.code === 'PGRST116') {
+        router.push('/onboarding')
+        return
+      }
+      console.error('Error loading profile:', error)
+      setLoading(false)
+      return
+    }
+
     if (data) {
       setProfile(data)
       setFormData({
         username: data.username || '',
-        age: data.age?.toString() || '',
+        dateOfBirth: data.date_of_birth || '',
         city: data.city || '',
         state: data.state || '',
         country: data.country || '',
@@ -126,13 +138,13 @@ export default function EditProfilePage() {
       return
     }
 
-    // Check username uniqueness (if changed)
+    // Check username uniqueness (if changed or new profile)
     if (formData.username !== profile?.username) {
       const { data: existing } = await supabase
         .from('profiles')
         .select('id')
         .eq('username', formData.username.trim())
-        .single()
+        .maybeSingle()
 
       if (existing) {
         setErrors({ username: 'Username already taken' })
@@ -174,23 +186,39 @@ export default function EditProfilePage() {
       }
     })
 
-    // Update profile
+    // Calculate age from date of birth
+    let age = null
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth)
+      const today = new Date()
+      age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+    }
+
+    // Upsert profile (create if doesn't exist, update if it does)
+    const profileData = {
+      id: session.user.id,
+      username: formData.username.trim(),
+      email: session.user.email || '',
+      profile_image_url: imageUrl,
+      date_of_birth: formData.dateOfBirth || null,
+      age: age,
+      city: formData.city.trim() || null,
+      state: formData.state.trim() || null,
+      country: formData.country.trim() || null,
+      social_links: Object.keys(socialLinksObj).length > 0 ? socialLinksObj : null,
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({
-        username: formData.username.trim(),
-        profile_image_url: imageUrl,
-        age: formData.age ? parseInt(formData.age) : null,
-        city: formData.city.trim() || null,
-        state: formData.state.trim() || null,
-        country: formData.country.trim() || null,
-        social_links: Object.keys(socialLinksObj).length > 0 ? socialLinksObj : null,
-      })
-      .eq('id', session.user.id)
+      .upsert(profileData, { onConflict: 'id' })
 
     if (error) {
-      console.error('Error updating profile:', error)
-      setErrors({ submit: 'Failed to update profile' })
+      console.error('Error saving profile:', error)
+      setErrors({ submit: 'Failed to save profile' })
     } else {
       router.push(`/u/${formData.username.trim()}`)
     }
@@ -256,18 +284,17 @@ export default function EditProfilePage() {
           {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
         </div>
 
-        {/* Age */}
+        {/* Date of Birth */}
         <div>
-          <label htmlFor="age" className="block text-sm font-medium text-gray-700">
-            Age
+          <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
+            Date of Birth
           </label>
           <input
-            type="number"
-            id="age"
-            min="1"
-            max="120"
-            value={formData.age}
-            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            type="date"
+            id="dateOfBirth"
+            value={formData.dateOfBirth}
+            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+            max={new Date().toISOString().split('T')[0]}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
           />
         </div>

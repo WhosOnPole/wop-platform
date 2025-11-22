@@ -53,24 +53,19 @@ export function Navbar() {
       if (session) {
         setUser(session.user)
 
-        // Fetch profile with error handling
+        // Fetch profile - profile should always exist after onboarding
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, username, profile_image_url')
           .eq('id', session.user.id)
-          .maybeSingle() // Use maybeSingle() instead of single() to handle missing profiles gracefully
+          .single()
 
         if (profileError) {
-          // Only log non-404 errors (404 means profile doesn't exist yet, which is OK)
-          if (profileError.code !== 'PGRST116') {
-            console.error('Error fetching profile:', profileError)
-          }
+          console.error('Error fetching profile:', profileError)
+          // If profile doesn't exist, user should be redirected to onboarding by middleware
           setProfile(null)
         } else if (profileData) {
           setProfile(profileData)
-        } else {
-          // Profile doesn't exist yet (might be a new user)
-          setProfile(null)
         }
       } else {
         setUser(null)
@@ -211,28 +206,26 @@ export function Navbar() {
           {/* Right side - Auth */}
           <div className="flex items-center space-x-4">
             {loading ? (
-              <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
+              <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
             ) : user && profile ? (
               <Link
                 href={`/u/${profile.username}`}
-                className="flex items-center space-x-2 rounded-full hover:opacity-80"
+                className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
+                title={profile.username}
               >
                 {profile.profile_image_url ? (
                   <img
                     src={profile.profile_image_url}
                     alt={profile.username}
-                    className="h-8 w-8 rounded-full object-cover"
+                    className="h-full w-full rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white">
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
                     <span className="text-sm font-medium">
                       {profile.username.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
-                <span className="hidden text-sm font-medium text-gray-700 sm:inline">
-                  {profile.username}
-                </span>
               </Link>
             ) : (
               <Link
