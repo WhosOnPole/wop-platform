@@ -8,6 +8,8 @@ import { UpcomingRace } from '@/components/feed/upcoming-race'
 import { HighlightsSection } from '@/components/feed/highlights-section'
 import { HotTakeTuesday } from '@/components/feed/hot-take-tuesday'
 
+export const dynamic = 'force-dynamic'
+
 async function getCurrentWeekStart() {
   const today = new Date()
   const dayOfWeek = today.getDay()

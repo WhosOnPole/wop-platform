@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import Image from 'next/image'
 
+export const dynamic = 'force-dynamic'
+
 // Cache driver data per request (session-level caching)
 const getCachedDrivers = cache(async () => {
   const supabase = createServerComponentClient({ cookies })
@@ -55,9 +57,9 @@ export default async function DriversPage() {
               >
                 {/* Driver Image */}
                 <div className="relative h-64 w-full bg-gradient-to-br from-gray-100 to-gray-200">
-                  {driver.image_url ? (
+                  {driver.headshot_url || driver.image_url ? (
                     <img
-                      src={driver.image_url}
+                      src={driver.headshot_url || driver.image_url}
                       alt={driver.name}
                       className="h-full w-full object-cover object-center"
                     />

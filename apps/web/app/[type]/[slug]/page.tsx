@@ -7,6 +7,8 @@ import { TrackTipsSection } from '@/components/dtt/track-tips-section'
 import { CommunityGridsSection } from '@/components/dtt/community-grids-section'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: {
     type: string
@@ -119,15 +121,15 @@ export default async function DynamicPage({ params }: PageProps) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Hero Section */}
       <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg">
-        {entity.image_url && (
+        {(type === 'drivers' && (entity.headshot_url || entity.image_url)) || (type !== 'drivers' && entity.image_url) ? (
           <div className="relative h-64 w-full md:h-96">
             <img
-              src={entity.image_url}
+              src={type === 'drivers' ? (entity.headshot_url || entity.image_url) : entity.image_url}
               alt={entity.name}
               className="h-full w-full object-cover"
             />
           </div>
-        )}
+        ) : null}
         <div className="p-8">
           <h1 className="mb-4 text-4xl font-bold text-gray-900">{entity.name}</h1>
 

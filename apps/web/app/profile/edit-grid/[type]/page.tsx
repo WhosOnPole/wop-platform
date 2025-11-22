@@ -31,7 +31,7 @@ export default function EditGridPage() {
       if (type === 'driver') {
         result = await supabase
           .from('drivers')
-          .select('id, name, image_url, team_icon_url')
+          .select('id, name, image_url, headshot_url, team_icon_url')
           .order('name')
       } else if (type === 'team') {
         result = await supabase
@@ -54,6 +54,7 @@ export default function EditGridPage() {
             id: item.id,
             name: item.name,
             image_url: item.image_url,
+            headshot_url: item.headshot_url || null,
             team_icon_url: item.team_icon_url || null,
           }))
         )

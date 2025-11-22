@@ -86,9 +86,9 @@ export function DriversTable() {
                 <tr key={driver.id}>
                   <td className="whitespace-nowrap px-6 py-4">
                     <div className="flex items-center">
-                      {driver.image_url && (
+                      {(driver.headshot_url || driver.image_url) && (
                         <img
-                          src={driver.image_url}
+                          src={driver.headshot_url || driver.image_url}
                           alt={driver.name}
                           className="mr-3 h-10 w-10 rounded-full object-cover"
                         />

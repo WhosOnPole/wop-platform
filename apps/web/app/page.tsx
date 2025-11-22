@@ -10,6 +10,8 @@ import { WinnersPodium } from '@/components/home/winners-podium'
 import { FeaturedNews } from '@/components/home/featured-news'
 import { FeaturedSponsor } from '@/components/home/featured-sponsor'
 
+export const dynamic = 'force-dynamic'
+
 async function getCurrentWeekStart() {
   const today = new Date()
   const dayOfWeek = today.getDay()
@@ -138,19 +140,21 @@ export default async function HomePage() {
         {/* Right Panel - Scrollable Content (2/3) */}
         <div className="w-2/3 overflow-y-auto">
           {/* Hero Section */}
-          <section className="relative min-h-[80vh] flex flex-col items-center justify-center px-8 py-20">
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
-              style={{
-                backgroundImage: "url('/images/backsplash.png')",
-              }}
-            />
-            <div className="relative z-10 text-center max-w-3xl">
+          <section
+            className="relative min-h-[80vh] flex flex-col items-center justify-center p-0"
+            style={{
+              backgroundImage: "url('/images/backsplash.png')",
+              backgroundSize: '200%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
+            <div className="relative z-10 text-center max-w-3xl text-white p-16">
               <Logo variant="white" size="lg" href="/" className="mx-auto mb-8" />
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foundation-black mb-6">
+              <h1 className="font-secondary text-3xl mb-6">
                 Building community. Highlighting fan stories. Making a space for women in the world of F1.
               </h1>
-              <p className="text-lg md:text-xl text-gray-700 mb-8 leading-relaxed">
+              <p className="text-lg mb-8 leading-relaxed">
                 Follow now to be a part of a racing community where no one will accuse you of being a &quot;Drive to Survive&quot; fan.
                 <br />
                 <br />
@@ -239,11 +243,14 @@ export default async function HomePage() {
       {/* Mobile Layout */}
       <div className="lg:hidden">
         {/* Hero Section */}
-        <section className="relative min-h-[70vh] flex flex-col items-center justify-center px-6 py-16">
+        <section className="relative min-h-[70vh] flex flex-col items-center justify-center px-6 py-16 overflow-hidden">
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            className="absolute inset-0"
             style={{
               backgroundImage: "url('/images/backsplash.png')",
+              backgroundSize: '200%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
             }}
           />
           <div className="relative z-10 text-center max-w-2xl">

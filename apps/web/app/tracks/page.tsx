@@ -3,6 +3,8 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 // Cache track data per request (session-level caching)
 const getCachedTracks = cache(async () => {
   const supabase = createServerComponentClient({ cookies })

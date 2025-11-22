@@ -9,6 +9,8 @@ import { UserGridsSection } from '@/components/profile/user-grids-section'
 import { UserPostsSection } from '@/components/profile/user-posts-section'
 import { ProfileDiscussionSection } from '@/components/profile/profile-discussion-section'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: {
     username: string

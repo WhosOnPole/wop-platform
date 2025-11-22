@@ -15,6 +15,7 @@ interface OpenF1Driver {
   full_name: string;
   name: string;
   team_name?: string;
+  headshot_url?: string;
 }
 
 interface OpenF1Meeting {
@@ -51,50 +52,78 @@ Deno.serve(async (req) => {
     const drivers: OpenF1Driver[] = await driversResponse.json();
 
     console.log(`Processing ${drivers.length} drivers...`);
-    for (const driver of drivers) {
-      if (!driver.driver_number || !driver.full_name) {
-        console.warn(`Skipping invalid driver: ${JSON.stringify(driver)}`);
-        continue;
-      }
-
-      // Find team_id if team_name is provided
-      let teamId: string | null = null;
-      if (driver.team_name) {
-        const { data: team } = await supabase
-          .from("teams")
-          .select("id")
-          .ilike("name", `%${driver.team_name}%`)
-          .limit(1)
-          .single();
-
-        if (team) {
-          teamId = team.id;
+    
+    // Fetch all existing drivers in one query to avoid N+1 queries
+    const { data: existingDrivers } = await supabase
+      .from("drivers")
+      .select("id, openf1_driver_number, headshot_url");
+    
+    const existingDriversMap = new Map(
+      (existingDrivers || []).map((d: any) => [d.openf1_driver_number, d])
+    );
+    
+    // Process drivers in batches to avoid timeout
+    const BATCH_SIZE = 10;
+    let processedCount = 0;
+    
+    for (let i = 0; i < drivers.length; i += BATCH_SIZE) {
+      const batch = drivers.slice(i, i + BATCH_SIZE);
+      console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} drivers)...`);
+      
+      // Process batch in parallel
+      const batchPromises = batch.map(async (driver) => {
+        if (!driver.driver_number || !driver.full_name) {
+          console.warn(`Skipping invalid driver: ${JSON.stringify(driver)}`);
+          return;
         }
-      }
 
-      // Hybrid upsert: Only update fields we control from OpenF1
-      // Never overwrite: age, nationality, podiums_total, world_championships, image_url, instagram_url
-      const { error: driverError } = await supabase
-        .from("drivers")
-        .upsert(
-          {
-            openf1_driver_number: driver.driver_number,
-            name: driver.full_name || driver.name,
-            team_id: teamId,
-            // Only update these if they don't exist (admin may have set them)
-            updated_at: new Date().toISOString(),
-          },
-          {
+        // Find team_id if team_name is provided
+        let teamId: string | null = null;
+        if (driver.team_name) {
+          const { data: team } = await supabase
+            .from("teams")
+            .select("id")
+            .ilike("name", `%${driver.team_name}%`)
+            .limit(1)
+            .single();
+
+          if (team) {
+            teamId = team.id;
+          }
+        }
+
+        const existingDriver = existingDriversMap.get(driver.driver_number) as any;
+
+        // Skip headshot_url fetching in main ingestion to avoid timeout
+        // Headshots will be populated by a separate function
+        const updateData: any = {
+          openf1_driver_number: driver.driver_number,
+          name: driver.full_name || driver.name,
+          team_id: teamId,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Use upsert for simplicity - it will insert or update as needed
+        const { error: upsertError } = await supabase
+          .from("drivers")
+          .upsert(updateData, {
             onConflict: "openf1_driver_number",
             ignoreDuplicates: false,
-          }
-        )
-        .select();
+          });
 
-      if (driverError) {
-        console.error(`Error upserting driver ${driver.full_name}:`, driverError);
-      }
+        if (upsertError) {
+          console.error(`Error upserting driver ${driver.full_name}:`, upsertError);
+        }
+        
+        processedCount++;
+      });
+      
+      // Wait for batch to complete
+      await Promise.all(batchPromises);
+      console.log(`Completed batch. Total processed: ${processedCount}/${drivers.length}`);
     }
+    
+    console.log(`Finished processing all ${drivers.length} drivers`);
 
     // ============================================
     // 2. INGEST TEAMS

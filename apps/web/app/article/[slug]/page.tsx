@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { Calendar, BookOpen } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: {
     slug: string

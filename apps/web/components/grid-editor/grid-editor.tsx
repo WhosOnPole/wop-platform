@@ -10,6 +10,7 @@ interface GridItem {
   id: string
   name: string
   image_url: string | null
+  headshot_url?: string | null
   team_icon_url?: string | null
 }
 
@@ -139,9 +140,9 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                         }`}
                         style={{ ...provided.draggableProps.style }}
                       >
-                        {item.image_url ? (
+                        {(type === 'driver' && (item.headshot_url || item.image_url)) || (type !== 'driver' && item.image_url) ? (
                           <img
-                            src={item.image_url}
+                            src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
                             alt={item.name}
                             className="h-24 w-24 rounded object-cover"
                           />
@@ -199,9 +200,9 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
                             {index + 1}
                           </div>
-                          {item.image_url ? (
+                          {(type === 'driver' && (item.headshot_url || item.image_url)) || (type !== 'driver' && item.image_url) ? (
                             <img
-                              src={item.image_url}
+                              src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
                               alt={item.name}
                               className="h-12 w-12 rounded object-cover"
                             />

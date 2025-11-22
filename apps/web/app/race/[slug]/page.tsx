@@ -5,6 +5,8 @@ import { Calendar, MapPin, Users } from 'lucide-react'
 import { CheckInSection } from '@/components/race/check-in-section'
 import { LiveChatComponent } from '@/components/race/live-chat-component'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: {
     slug: string

@@ -3,6 +3,8 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { BookOpen } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function BeginnersGuidePage() {
   const supabase = createServerComponentClient({ cookies })
 

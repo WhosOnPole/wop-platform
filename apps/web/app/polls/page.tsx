@@ -2,6 +2,8 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { PollList } from '@/components/polls/poll-list'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PollsPage() {
   const supabase = createServerComponentClient({ cookies })
   const {

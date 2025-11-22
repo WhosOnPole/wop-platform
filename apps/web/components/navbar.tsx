@@ -33,29 +33,56 @@ export function Navbar() {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [supabase])
 
   async function checkUser() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
 
-    if (session) {
-      setUser(session.user)
+      if (sessionError) {
+        console.error('Error getting session:', sessionError)
+        setUser(null)
+        setProfile(null)
+        setLoading(false)
+        return
+      }
 
-      // Fetch profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, username, profile_image_url')
-        .eq('id', session.user.id)
-        .single()
+      if (session) {
+        setUser(session.user)
 
-      setProfile(profileData)
-    } else {
+        // Fetch profile with error handling
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, username, profile_image_url')
+          .eq('id', session.user.id)
+          .maybeSingle() // Use maybeSingle() instead of single() to handle missing profiles gracefully
+
+        if (profileError) {
+          // Only log non-404 errors (404 means profile doesn't exist yet, which is OK)
+          if (profileError.code !== 'PGRST116') {
+            console.error('Error fetching profile:', profileError)
+          }
+          setProfile(null)
+        } else if (profileData) {
+          setProfile(profileData)
+        } else {
+          // Profile doesn't exist yet (might be a new user)
+          setProfile(null)
+        }
+      } else {
+        setUser(null)
+        setProfile(null)
+      }
+    } catch (error) {
+      console.error('Error in checkUser:', error)
       setUser(null)
       setProfile(null)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   async function handleSignOut() {

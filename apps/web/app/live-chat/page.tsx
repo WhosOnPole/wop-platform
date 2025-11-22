@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { Radio, Calendar, Clock } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function LiveChatPage() {
   const supabase = createServerComponentClient({ cookies })
 
