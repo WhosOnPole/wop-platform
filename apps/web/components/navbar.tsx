@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, X, LogOut } from 'lucide-react'
+import { Menu, X, LogOut, User, Settings, ChevronDown } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -22,6 +22,7 @@ export function Navbar() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -34,6 +35,23 @@ export function Navbar() {
 
     return () => subscription.unsubscribe()
   }, [supabase])
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement
+      if (profileMenuOpen && !target.closest('[data-profile-menu]')) {
+        setProfileMenuOpen(false)
+      }
+    }
+
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [profileMenuOpen])
 
   async function checkUser() {
     try {
@@ -208,25 +226,61 @@ export function Navbar() {
             {loading ? (
               <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
             ) : user && profile ? (
-              <Link
-                href={`/u/${profile.username}`}
-                className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
-                title={profile.username}
-              >
-                {profile.profile_image_url ? (
-                  <img
-                    src={profile.profile_image_url}
-                    alt={profile.username}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
-                    <span className="text-sm font-medium">
-                      {profile.username.charAt(0).toUpperCase()}
-                    </span>
+              <div className="relative" data-profile-menu>
+                <button
+                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
+                  title={profile.username}
+                  aria-label="Profile menu"
+                >
+                  {profile.profile_image_url ? (
+                    <img
+                      src={profile.profile_image_url}
+                      alt={profile.username}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
+                      <span className="text-sm font-medium">
+                        {profile.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </button>
+                {profileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg">
+                    <div className="py-1">
+                      <Link
+                        href={`/u/${profile.username}`}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <User className="h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                      <Link
+                        href="/settings"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
+                      <div className="border-t border-gray-100" />
+                      <button
+                        onClick={() => {
+                          handleSignOut()
+                          setProfileMenuOpen(false)
+                        }}
+                        className="flex w-full items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-              </Link>
+              </div>
             ) : user && pathname === '/onboarding' ? (
               <button
                 onClick={handleSignOut}
