@@ -5,10 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Trophy } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
-import { FeaturedGrid } from '@/components/home/featured-grid'
-import { WinnersPodium } from '@/components/home/winners-podium'
-import { FeaturedNews } from '@/components/home/featured-news'
-import { FeaturedSponsor } from '@/components/home/featured-sponsor'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
@@ -125,11 +121,11 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Desktop Split Layout */}
-      <div className="hidden lg:flex lg:h-screen lg:overflow-hidden">
+      <div className="flex h-screen">
         {/* Left Panel - Login/Create Account (1/3) */}
-        <div className="w-1/3 bg-foundation-black flex flex-col items-center justify-center p-12">
+        <div className="hidden lg:flex lg:w-1/3 bg-foundation-black flex-col items-center justify-center p-12">
           <div className="w-full max-w-sm space-y-8">
-            <Logo variant="gradient" size="lg" href="/" className="mx-auto" />
+            <Logo variant="gradient" size="md" href="/" className="mx-auto w-full" />
             <div className="space-y-4">
               <Link
                 href="/login"
@@ -151,23 +147,25 @@ export default async function HomePage() {
         </div>
 
         {/* Right Panel - Scrollable Content (2/3) */}
-        <div className="w-2/3 overflow-y-auto">
+        <div className="w-full lg:w-2/3 m-0 p-0">
           {/* Hero Section */}
-          <section
-            className="relative min-h-[100vh] flex flex-col items-center justify-center p-0"
-            style={{
-              backgroundImage: "url('/images/backsplash.png')",
-              backgroundSize: '200%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          >
-            <div className="relative z-10 text-center max-w-3xl text-white p-16">
+          <section className="relative min-h-[100vh] flex flex-row overflow-hidden m-0 p-0">
+            {/* Background Image - Flush with top */}
+            <Image
+              src="/images/backsplash.png"
+              alt="Backsplash"
+              fill
+              className="object-cover object-top"
+              style={{ top: 0, left: 0 }}
+              priority
+            />
+            {/* Content Overlay */}
+            <div className="relative z-10 h-full w-full text-center max-w-3xl mx-auto text-white flex flex-col items-center justify-center px-10 pt-8">
               <Logo variant="white" size="lg" href="/" className="mx-auto mb-8" />
-              <h1 className="font-secondary text-3xl mb-6">
+              <h1 className="font-secondary text-xl lg:text-3xl mb-6">
                 Building community. Highlighting fan stories. Making a space for women in the world of F1.
               </h1>
-              <p className="text-lg mb-8 leading-relaxed">
+              <p className="text-sm lg:text-lg mb-8 leading-relaxed">
                 Follow now to be a part of a racing community where no one will accuse you of being a &quot;Drive to Survive&quot; fan.
                 <br />
                 <br />
@@ -181,112 +179,7 @@ export default async function HomePage() {
               </Link>
             </div>
           </section>
-
-          
         </div>
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="lg:hidden">
-        {/* Hero Section */}
-        <section className="relative min-h-[70vh] flex flex-col items-center justify-center px-6 py-16 overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: "url('/images/backsplash.png')",
-              backgroundSize: '200%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          />
-          <div className="relative z-10 text-center max-w-2xl">
-            <Logo variant="white" size="lg" href="/" className="mx-auto mb-8" />
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-6">
-              Building community. Highlighting fan stories. Making a space for women in the world of F1.
-            </h1>
-            <p className="text-base md:text-lg text-white/90 mb-8 leading-relaxed">
-              Follow now to be a part of a racing community where no one will accuse you of being a &quot;Drive to Survive&quot; fan.
-              <br />
-              <br />
-              Build your dream grid, connect with fans, chat during race weekends, and so much more!
-            </p>
-            <Link
-              href="/signup"
-              className="inline-block rounded-full bg-foundation-black px-8 py-4 text-lg font-bold italic text-white transition-colors hover:bg-foundation-black/90"
-            >
-              Join Us!
-            </Link>
-          </div>
-        </section>
-
-        {/* Featured Grid Section */}
-        {weeklyHighlights.data?.highlighted_fan && (
-          <section className="py-12 px-6 bg-white">
-            <div className="mx-auto max-w-7xl">
-              <div className="mb-6 flex items-center space-x-2">
-                <Trophy className="h-6 w-6 text-racing-orange" />
-                <h2 className="font-display text-2xl font-bold text-foundation-black">
-                  Featured Fan of the Week
-                </h2>
-              </div>
-              <FeaturedGrid
-                highlightedFan={weeklyHighlights.data.highlighted_fan as {
-                  id: string
-                  username: string
-                  profile_image_url: string | null
-                }}
-              />
-            </div>
-          </section>
-        )}
-
-        {/* Week's Winners Podium */}
-        {topUsers.data && topUsers.data.length > 0 && (
-          <section className="py-12 px-6 bg-gray-50">
-            <div className="mx-auto max-w-7xl">
-              <div className="mb-6 flex items-center space-x-2">
-                <Trophy className="h-6 w-6 text-racing-orange" />
-                <h2 className="font-display text-2xl font-bold text-foundation-black">
-                  Week&apos;s Winners Podium
-                </h2>
-              </div>
-              <WinnersPodium
-                users={
-                  (topUsers.data as Array<{
-                    id: string
-                    username: string
-                    profile_image_url: string | null
-                    points: number
-                  }>) || []
-                }
-              />
-            </div>
-          </section>
-        )}
-
-        {/* Featured News/Sponsor Section */}
-        {(featuredNews.data || weeklyHighlightsFull) && (
-          <section className="py-12 px-6 bg-white">
-            <div className="mx-auto max-w-7xl space-y-8">
-              {featuredNews.data && (
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foundation-black mb-6">
-                    Featured News
-                  </h2>
-                  <FeaturedNews newsStory={featuredNews.data} />
-                </div>
-              )}
-              {weeklyHighlightsFull && (
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-foundation-black mb-6">
-                    Featured Sponsor
-                  </h2>
-                  <FeaturedSponsor sponsor={weeklyHighlightsFull} />
-                </div>
-              )}
-            </div>
-          </section>
-        )}
       </div>
     </div>
   )

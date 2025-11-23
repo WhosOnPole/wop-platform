@@ -4,7 +4,7 @@ import { Logo } from '@/components/ui/logo'
 export function Footer() {
   return (
     <footer className="bg-foundation-black text-white">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-2">

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MessageSquare, Heart } from 'lucide-react'
+import { F1InstagramEmbed } from './f1-instagram-embed'
 
 interface User {
   id: string
@@ -78,6 +79,9 @@ export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentPr
 
   return (
     <div className="space-y-6">
+      {/* F1 Official Instagram - Always show at top */}
+      <F1InstagramEmbed />
+      
       {allContent.map((item) => {
         if (item.contentType === 'post') {
           const post = item
