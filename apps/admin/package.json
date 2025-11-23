@@ -1,32 +1,33 @@
 {
   "name": "admin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "db:setup": "cd ../../ && tsx scripts/postbuild-db-setup.ts",
-    "db:seed:regions": "cd ../../ && tsx scripts/seed/seedRegions.ts",
-    "db:seed:entities": "cd ../../ && tsx scripts/seed/seedEntities.ts",
-    "db:seed:all": "pnpm db:seed:regions && pnpm db:seed:entities"
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@wop/ui": "workspace:*",
-    "@wop/supabase": "workspace:*",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.30.1"
+    "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "@supabase/supabase-js": "^2.39.0",
+    "next": "14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.22.4",
+    "lucide-react": "^0.309.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.23",
-    "@types/react-dom": "^18.3.7",
-    "@vitejs/plugin-react-swc": "^3.11.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.8.3",
-    "vite": "^5.4.19"
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
   }
 }
+

@@ -1,32 +1,24 @@
 {
   "name": "wop-platform",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "description": "Who's on Pole? - F1 Fan Community Platform",
   "scripts": {
-    "install:all": "pnpm install --frozen-lockfile",
-    "build": "pnpm -r --filter web --filter admin build",
+    "dev": "pnpm --filter './apps/*' dev",
     "dev:web": "pnpm --filter web dev",
     "dev:admin": "pnpm --filter admin dev",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
-    "db:setup": "tsx scripts/postbuild-db-setup.ts",
-    "db:seed:regions": "tsx scripts/seed/seedRegions.ts",
-    "db:seed:entities": "tsx scripts/seed/seedEntities.ts",
-    "db:seed:all": "pnpm db:seed:regions && pnpm db:seed:entities"
+    "build": "pnpm --filter './apps/*' build",
+    "lint": "pnpm --filter './apps/*' lint",
+    "type-check": "pnpm --filter './apps/*' type-check"
   },
   "devDependencies": {
-    "@types/node": "^22.16.5",
-    "autoprefixer": "^10.4.21",
-    "pg": "^8.11.3",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.13",
-    "tailwindcss-animate": "^1.0.7",
-    "tsx": "^4.20.5",
-    "typescript": "^5.8.3"
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
-  }
+  },
+  "packageManager": "pnpm@8.15.0"
 }
+

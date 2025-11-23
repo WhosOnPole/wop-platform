@@ -1,0 +1,209 @@
+'use client'
+
+import { useState } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
+import { MessageSquare, Send } from 'lucide-react'
+import Link from 'next/link'
+
+interface User {
+  id: string
+  username: string
+  profile_image_url: string | null
+}
+
+interface Post {
+  id: string
+  content: string
+  created_at: string
+  user: User | null
+}
+
+interface DiscussionSectionProps {
+  posts: Post[]
+  parentPageType: 'driver' | 'team' | 'track' | 'poll' | 'hot_take' | 'profile'
+  parentPageId: string
+}
+
+export function DiscussionSection({
+  posts: initialPosts,
+  parentPageType,
+  parentPageId,
+}: DiscussionSectionProps) {
+  const supabase = createClientComponentClient()
+  const router = useRouter()
+  const [posts, setPosts] = useState(initialPosts)
+  const [newPostContent, setNewPostContent] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showReplyForm, setShowReplyForm] = useState<string | null>(null)
+  const [replyContent, setReplyContent] = useState<Record<string, string>>({})
+
+  async function handleCreatePost(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newPostContent.trim()) return
+
+    setIsSubmitting(true)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        content: newPostContent.trim(),
+        user_id: session.user.id,
+        parent_page_type: parentPageType,
+        parent_page_id: parentPageId,
+      })
+      .select(
+        `
+        *,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .single()
+
+    if (error) {
+      console.error('Error creating post:', error)
+      alert('Failed to create post')
+    } else {
+      setPosts([data, ...posts])
+      setNewPostContent('')
+    }
+    setIsSubmitting(false)
+  }
+
+  async function handleCreateReply(postId: string) {
+    const content = replyContent[postId]
+    if (!content?.trim()) return
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    const { error } = await supabase.from('comments').insert({
+      content: content.trim(),
+      user_id: session.user.id,
+      post_id: postId,
+    })
+
+    if (error) {
+      console.error('Error creating comment:', error)
+      alert('Failed to create comment')
+    } else {
+      setShowReplyForm(null)
+      setReplyContent({ ...replyContent, [postId]: '' })
+      router.refresh() // Refresh to show new comment
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+      <div className="mb-6 flex items-center space-x-2">
+        <MessageSquare className="h-5 w-5 text-blue-500" />
+        <h2 className="text-xl font-semibold text-gray-900">Discussion</h2>
+      </div>
+
+      {/* Create Post Form */}
+      <form onSubmit={handleCreatePost} className="mb-6">
+        <textarea
+          value={newPostContent}
+          onChange={(e) => setNewPostContent(e.target.value)}
+          placeholder="Start a discussion..."
+          rows={4}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          required
+        />
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="mt-2 flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        >
+          <Send className="h-4 w-4" />
+          <span>Post</span>
+        </button>
+      </form>
+
+      {/* Posts List */}
+      <div className="space-y-6">
+        {posts.length === 0 ? (
+          <p className="text-center text-gray-500">No discussions yet. Be the first to post!</p>
+        ) : (
+          posts.map((post) => (
+            <div key={post.id} className="border-b border-gray-200 pb-6 last:border-0">
+              <div className="mb-3 flex items-center space-x-3">
+                {post.user?.profile_image_url ? (
+                  <img
+                    src={post.user.profile_image_url}
+                    alt={post.user.username}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
+                    <span className="text-xs font-medium text-gray-600">
+                      {post.user?.username?.charAt(0).toUpperCase() || '?'}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <Link
+                    href={`/u/${post.user?.username || 'unknown'}`}
+                    className="font-medium text-gray-900 hover:text-blue-600"
+                  >
+                    {post.user?.username || 'Unknown'}
+                  </Link>
+                  <p className="text-xs text-gray-500">
+                    {new Date(post.created_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <p className="mb-3 text-gray-700">{post.content}</p>
+              <button
+                onClick={() => setShowReplyForm(showReplyForm === post.id ? null : post.id)}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Reply
+              </button>
+
+              {/* Reply Form */}
+              {showReplyForm === post.id && (
+                <div className="mt-3 ml-11">
+                  <textarea
+                    value={replyContent[post.id] || ''}
+                    onChange={(e) =>
+                      setReplyContent({ ...replyContent, [post.id]: e.target.value })
+                    }
+                    placeholder="Write a reply..."
+                    rows={2}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => handleCreateReply(post.id)}
+                    className="mt-2 rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                  >
+                    Post Reply
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  )
+}
+
