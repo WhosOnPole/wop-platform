@@ -5,22 +5,27 @@ import type { NextRequest } from 'next/server'
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
+  const pathname = req.nextUrl.pathname
+
+  // Allow access to auth routes (callback, reset-password) and login page for unauthenticated users
+  const publicPaths = ['/login', '/auth/callback', '/auth/reset-password']
+  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
 
   // Refresh session if expired
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Check if user is trying to access login page
-  const isLoginPage = req.nextUrl.pathname === '/login'
-
-  // If no session and not on login page, redirect to login
-  if (!session && !isLoginPage) {
+  // If no session and not on public path, redirect to login
+  if (!session && !isPublicPath) {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = '/login'
     redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
+
+  // Check if user is trying to access login page
+  const isLoginPage = pathname === '/login'
 
   // If user has session, check admin access
   if (session && !isLoginPage) {
@@ -48,7 +53,7 @@ export async function middleware(req: NextRequest) {
 
     if (!isAdminEmail && !isAdminRole) {
       // Not an admin, redirect to main site
-      return NextResponse.redirect(new URL('https://whosonpole.org'))
+      return NextResponse.redirect(new URL('https://www.whosonpole.org'))
     }
   }
 

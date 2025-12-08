@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LogOut, Users, FileText, Flag, MessageSquare, Star, Calendar } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { PasswordRecoveryCheck } from './password-recovery-check'
+import { MobileMenu } from './mobile-menu'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = createServerComponentClient({ cookies })
@@ -26,30 +28,43 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const isAdminRole = profile?.role === 'admin'
 
   if (!isAdminEmail && !isAdminRole) {
-    redirect('https://whosonpole.org')
+    redirect('https://www.whosonpole.org')
   }
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: Users },
-    { href: '/dashboard/data-enrichment', label: 'Data Enrichment', icon: Users },
-    { href: '/dashboard/content', label: 'Content Creation', icon: FileText },
-    { href: '/dashboard/highlights', label: 'Weekly Highlights', icon: Star },
-    { href: '/dashboard/reports', label: 'Reports', icon: Flag },
-    { href: '/dashboard/track-tips', label: 'Track Tips', icon: MessageSquare },
-    { href: '/dashboard/chat-logs', label: 'Chat Logs', icon: Calendar },
+    { href: '/dashboard', label: 'Dashboard', icon: 'Users' },
+    { href: '/dashboard/data-enrichment', label: 'Data Enrichment', icon: 'Users' },
+    { href: '/dashboard/content', label: 'Content Creation', icon: 'FileText' },
+    { href: '/dashboard/highlights', label: 'Weekly Highlights', icon: 'Star' },
+    { href: '/dashboard/reports', label: 'Reports', icon: 'Flag' },
+    { href: '/dashboard/track-tips', label: 'Track Tips', icon: 'MessageSquare' },
+    { href: '/dashboard/chat-logs', label: 'Chat Logs', icon: 'Calendar' },
   ]
+
+  // Icon mapping for desktop sidebar (server component can use components directly)
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    Users,
+    FileText,
+    Star,
+    Flag,
+    MessageSquare,
+    Calendar,
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white">
+      {/* Mobile Menu */}
+      <MobileMenu navItems={navItems} userEmail={session.user.email || ''} />
+
+      {/* Desktop Sidebar - hidden on mobile */}
+      <aside className="hidden lg:block w-64 bg-gray-900 text-white">
         <div className="flex h-full flex-col">
           <div className="flex h-16 items-center border-b border-gray-800 px-6">
             <h1 className="text-xl font-bold">Admin Dashboard</h1>
           </div>
           <nav className="flex-1 space-y-1 px-3 py-4">
             {navItems.map((item) => {
-              const Icon = item.icon
+              const Icon = iconMap[item.icon] || Users
               return (
                 <Link
                   key={item.href}
@@ -80,8 +95,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">{children}</div>
+      <main className="flex-1 overflow-y-auto lg:ml-0">
+        <PasswordRecoveryCheck />
+        <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>
   )

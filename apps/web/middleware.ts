@@ -8,7 +8,7 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
 
   // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-  const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/banned', '/']
+  const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/']
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     // Still check session for authenticated users on public paths
     const {
