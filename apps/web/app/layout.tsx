@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Navbar />
-        <main className="min-h-screen bg-white">{children}</main>
+        <main className="min-h-screen bg-background">{children}</main>
         <Footer />
         <LiveRaceBanner />
       </body>

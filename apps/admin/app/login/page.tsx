@@ -49,7 +49,9 @@ export default function AdminLoginPage() {
           router.push('/dashboard')
         } else {
           // Not an admin, redirect to main site
-          router.push('/login')
+          const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+            (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
+          window.location.href = mainSiteUrl
         }
       }
     })

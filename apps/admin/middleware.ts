@@ -53,23 +53,31 @@ export async function middleware(req: NextRequest) {
 
     if (!isAdminEmail && !isAdminRole) {
       // Not an admin, redirect to main site
-      return NextResponse.redirect(new URL('https://www.whosonpole.org'))
+      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+        (req.nextUrl.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
+      return NextResponse.redirect(new URL(mainSiteUrl))
     }
   }
 
-  // If on login page and already authenticated as admin, redirect to dashboard
+  // If on login page and already authenticated
   if (session && isLoginPage) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, email')
       .eq('id', session.user.id)
-      .single()
+      .maybeSingle()
 
     const isAdminEmail = session.user.email?.endsWith('@whosonpole.org')
     const isAdminRole = profile?.role === 'admin'
 
     if (isAdminEmail || isAdminRole) {
+      // Admin user, redirect to dashboard
       return NextResponse.redirect(new URL('/dashboard', req.url))
+    } else {
+      // Non-admin user on login page, redirect to main site
+      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+        (req.nextUrl.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
+      return NextResponse.redirect(new URL(mainSiteUrl))
     }
   }
 

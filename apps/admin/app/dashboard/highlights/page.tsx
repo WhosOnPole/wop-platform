@@ -1,6 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { WeeklyHighlightsManager } from '@/components/highlights/weekly-highlights-manager'
+import { HighlightedFanManager } from '@/components/highlights/highlighted-fan-manager'
+import { HighlightedSponsorManager } from '@/components/highlights/highlighted-sponsor-manager'
 
 async function getCurrentWeekStart() {
   const today = new Date()
@@ -40,13 +41,26 @@ export default async function HighlightsPage() {
     <div>
       <h1 className="mb-6 text-3xl font-bold text-gray-900">Weekly Highlights</h1>
       <p className="mb-8 text-gray-600">
-        Set the highlighted fan and sponsor for the current week. The week starts on Monday.
+        Set the highlighted fan and sponsor for the current week. The week starts on Monday. Each can be set independently.
       </p>
 
-      <WeeklyHighlightsManager
-        currentWeekStart={weekStart}
-        existingHighlights={currentHighlights}
-      />
+      <div className="space-y-8">
+        <div>
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Fan</h2>
+          <HighlightedFanManager
+            currentWeekStart={weekStart}
+            existingFan={currentHighlights?.highlighted_fan || null}
+          />
+        </div>
+
+        <div>
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Sponsor</h2>
+          <HighlightedSponsorManager
+            currentWeekStart={weekStart}
+            existingSponsor={currentHighlights?.highlighted_sponsor || null}
+          />
+        </div>
+      </div>
     </div>
   )
 }

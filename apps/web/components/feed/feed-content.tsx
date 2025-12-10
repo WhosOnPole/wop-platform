@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MessageSquare, Heart } from 'lucide-react'
+import { FeaturedFanGrid } from './featured-fan-grid'
 
 interface User {
   id: string
@@ -43,6 +44,13 @@ interface FeedContentProps {
   grids: Grid[]
   polls: Poll[]
   featuredNews: NewsStory[]
+  weeklyHighlights?: {
+    highlighted_fan: {
+      id: string
+      username: string
+      profile_image_url: string | null
+    } | null
+  } | null
 }
 
 type FeedItem =
@@ -51,16 +59,20 @@ type FeedItem =
   | (Poll & { contentType: 'poll' })
   | (NewsStory & { contentType: 'news' })
 
-export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentProps) {
-  // Combine and sort all content by created_at
+export function FeedContent({ posts, grids, polls, featuredNews, weeklyHighlights }: FeedContentProps) {
+  // Separate polls from other content
+  const pollsContent: Poll[] = polls || []
+  
+  // Combine and sort all non-poll content by created_at
   const allContent: FeedItem[] = [
     ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
     ...grids.map((g) => ({ ...g, contentType: 'grid' as const })),
-    ...polls.map((p) => ({ ...p, contentType: 'poll' as const })),
     ...featuredNews.map((n) => ({ ...n, contentType: 'news' as const })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-  if (allContent.length === 0) {
+  const hasContent = allContent.length > 0 || pollsContent.length > 0
+
+  if (!hasContent) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
         <p className="text-gray-500">
@@ -78,6 +90,43 @@ export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentPr
 
   return (
     <div className="space-y-6">
+      {/* Horizontal scrolling polls container */}
+      {pollsContent.length > 0 && (
+        <div className="h-40 overflow-x-auto overflow-y-hidden">
+          <div className="flex space-x-4">
+            {pollsContent.map((poll) => (
+              <div
+                key={`poll-${poll.id}`}
+                className="flex-shrink-0 w-48 h-40 rounded-lg border border-gray-200 bg-white p-4 shadow"
+              >
+                <h3 className="mb-2 text-sm font-semibold text-gray-900 line-clamp-2">{poll.question}</h3>
+                <div className="space-y-1">
+                  {Array.isArray(poll.options) &&
+                    poll.options.slice(0, 2).map((option: any, index: number) => (
+                      <button
+                        key={index}
+                        className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-left text-xs text-gray-900 hover:bg-gray-50 truncate"
+                        title={option}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  {poll.options && poll.options.length > 2 && (
+                    <p className="text-xs text-gray-500">+{poll.options.length - 2} more</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Featured Fan Grid */}
+      {weeklyHighlights?.highlighted_fan && (
+        <FeaturedFanGrid highlightedFan={weeklyHighlights.highlighted_fan} />
+      )}
+
+      {/* Vertical feed for other content */}
       {allContent.map((item) => {
         if (item.contentType === 'post') {
           const post = item
@@ -175,29 +224,6 @@ export function FeedContent({ posts, grids, polls, featuredNews }: FeedContentPr
                       </span>
                       <span className="text-sm text-gray-900">{item.name || 'Unknown'}</span>
                     </div>
-                  ))}
-              </div>
-            </div>
-          )
-        }
-
-        if (item.contentType === 'poll') {
-          const poll = item
-          return (
-            <div
-              key={`poll-${poll.id}`}
-              className="rounded-lg border border-gray-200 bg-white p-6 shadow"
-            >
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">{poll.question}</h3>
-              <div className="space-y-2">
-                {Array.isArray(poll.options) &&
-                  poll.options.map((option: any, index: number) => (
-                    <button
-                      key={index}
-                      className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-left text-sm hover:bg-gray-50"
-                    >
-                      {option}
-                    </button>
                   ))}
               </div>
             </div>
