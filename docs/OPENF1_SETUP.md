@@ -1,10 +1,10 @@
 # OpenF1 Data Ingestion Setup Guide
 
-This guide explains how to set up automatic daily ingestion of F1 data from the OpenF1 API.
+This guide explains how to set up automatic monthly ingestion of F1 data from the OpenF1 API.
 
 ## Overview
 
-The OpenF1 ingestion Edge Function fetches driver, team, and race schedule data from the OpenF1 API and syncs it to your database. You can run it manually or set it up to run automatically on a schedule.
+The OpenF1 ingestion Edge Function fetches driver, team, and race schedule data from the OpenF1 API and syncs it to your database. The function runs automatically on the last day of each month, and can also be triggered manually from the admin panel when needed (e.g., after races).
 
 ## Option 1: Manual Trigger (Simplest - Recommended for Development)
 
@@ -41,10 +41,10 @@ Supabase supports scheduled Edge Functions (if available on your plan):
 2. **Set up schedule:**
    - Go to Supabase Dashboard > Edge Functions > ingest-openf1
    - Look for "Schedule" or "Cron" tab/section
-   - Set schedule: `0 2 * * *` (runs daily at 2 AM UTC)
-   - Or use the UI to select "Daily" and time
+   - Set schedule: `0 2 28-31 * *` (runs on last day of each month at 2 AM UTC)
+   - This covers the last day of every month (28 for February, 29 for leap years, 30/31 for other months)
 
-**When to use:** Production environments where you want automatic daily updates.
+**When to use:** Production environments where you want automatic monthly updates. For more frequent updates (e.g., after races), use the manual refresh button in the admin panel.
 
 ## Option 3: pg_cron (Advanced)
 
@@ -70,7 +70,7 @@ If you need more control or your plan doesn't support scheduled functions:
 
 4. **Verify the schedule:**
    ```sql
-   SELECT * FROM cron.job WHERE jobname = 'openf1-daily-ingestion';
+   SELECT * FROM cron.job WHERE jobname = 'openf1-monthly-ingestion';
    ```
 
 **When to use:** If you need custom scheduling or more control over the cron job.
@@ -85,11 +85,11 @@ Use an external service like:
 
 Example GitHub Actions workflow (`.github/workflows/openf1-sync.yml`):
 ```yaml
-name: OpenF1 Daily Sync
+name: OpenF1 Monthly Sync
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+    - cron: '0 2 28-31 * *'  # Last day of each month at 2 AM UTC
   workflow_dispatch:  # Allow manual trigger
 
 jobs:

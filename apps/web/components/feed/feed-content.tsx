@@ -82,7 +82,7 @@ export function FeedContent({ posts, grids, polls, featuredNews, weeklyHighlight
           href="/drivers"
           className="mt-4 inline-block text-blue-600 hover:text-blue-800"
         >
-          Explore Drivers, Teams & Tracks →
+          Explore Drivers, Teams & Circuits →
         </Link>
       </div>
     )
@@ -205,7 +205,7 @@ export function FeedContent({ posts, grids, polls, featuredNews, weeklyHighlight
                     {grid.user?.username || 'Unknown'}
                   </Link>
                   <p className="text-xs text-gray-500">
-                    Top {grid.type === 'driver' ? 'Drivers' : grid.type === 'team' ? 'Teams' : 'Tracks'}
+                    Top {grid.type === 'driver' ? 'Drivers' : grid.type === 'team' ? 'Teams' : 'Circuits'}
                   </p>
                 </div>
               </div>

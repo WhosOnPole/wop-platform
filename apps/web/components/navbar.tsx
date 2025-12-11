@@ -90,7 +90,7 @@ export function Navbar() {
         { href: '/', label: 'Home' },
         { href: '/drivers', label: 'Drivers' },
         { href: '/teams', label: 'Teams' },
-        { href: '/tracks', label: 'Tracks' },
+        { href: '/circuits', label: 'Circuits' },
         { href: '/polls', label: 'Polls' },
         { href: '/features', label: 'Features' },
         { href: '/beginners-guide', label: "Beginner's Guide" },

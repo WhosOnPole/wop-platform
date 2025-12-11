@@ -80,11 +80,11 @@ export default function EditGridPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Edit Your Top {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'}{' '}
+          Edit Your Top {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Circuits'}{' '}
           Ranking
         </h1>
         <p className="mt-2 text-gray-600">
-          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'team' ? 'teams' : 'tracks'}
+          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'team' ? 'teams' : 'circuits'}
         </p>
       </div>
 

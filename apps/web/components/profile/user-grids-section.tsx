@@ -34,7 +34,7 @@ export function UserGridsSection({
     if (!grid) return null
 
     const maxItems = type === 'team' ? 5 : 10
-    const typeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'
+    const typeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Circuits'
     const rankedItems = Array.isArray(grid.ranked_items) ? grid.ranked_items : []
 
     return (

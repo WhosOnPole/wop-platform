@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DriversTable } from '@/components/data-enrichment/drivers-table'
 import { TeamsTable } from '@/components/data-enrichment/teams-table'
 import { TracksTable } from '@/components/data-enrichment/tracks-table'
+import { OpenF1RefreshButton } from '@/components/data-enrichment/openf1-refresh-button'
 
 export default async function DataEnrichmentPage() {
   const supabase = createServerComponentClient({ cookies })
@@ -16,7 +17,7 @@ export default async function DataEnrichmentPage() {
         You can only edit enriched fields (images, bios, stats).
       </p>
 
-      <Tabs defaultValue="drivers" className="w-full">
+      <Tabs defaultValue="drivers" className="w-full mb-8">
         <TabsList>
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
           <TabsTrigger value="teams">Teams</TabsTrigger>
@@ -35,6 +36,11 @@ export default async function DataEnrichmentPage() {
           <TracksTable />
         </TabsContent>
       </Tabs>
+
+            {/* OpenF1 Refresh Button */}
+      <div className="mb-8">
+        <OpenF1RefreshButton />
+      </div>
     </div>
   )
 }

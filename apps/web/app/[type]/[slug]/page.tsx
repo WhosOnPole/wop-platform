@@ -21,7 +21,7 @@ export default async function DynamicPage({ params }: PageProps) {
   const { type, slug } = params
   const supabase = createServerComponentClient({ cookies })
 
-  if (!['drivers', 'teams', 'tracks'].includes(type)) {
+  if (!['drivers', 'teams', 'circuits'].includes(type)) {
     notFound()
   }
 
@@ -64,18 +64,18 @@ export default async function DynamicPage({ params }: PageProps) {
     ) || teams?.[0]
 
     entity = team
-  } else if (type === 'tracks') {
+  } else if (type === 'circuits') {
     const slugName = slug.replace(/-/g, ' ')
-    const { data: tracks } = await supabase
+    const { data: circuits } = await supabase
       .from('tracks')
       .select('*')
       .ilike('name', `%${slugName}%`)
 
-    const track = tracks?.find(
-      (t) => t.name.toLowerCase().replace(/\s+/g, '-') === slug
-    ) || tracks?.[0]
+    const circuit = circuits?.find(
+      (c) => c.name.toLowerCase().replace(/\s+/g, '-') === slug
+    ) || circuits?.[0]
 
-    entity = track
+    entity = circuit
   }
 
   if (!entity) {
@@ -97,7 +97,7 @@ export default async function DynamicPage({ params }: PageProps) {
         )
       `
       )
-      .eq('type', type.slice(0, -1)) // Remove 's' from 'drivers' -> 'driver'
+      .eq('type', type === 'circuits' ? 'track' : type.slice(0, -1)) // Map 'circuits' -> 'track', 'drivers' -> 'driver', 'teams' -> 'team'
       .order('created_at', { ascending: false })
       .limit(10),
     // Discussion posts for this entity
@@ -113,7 +113,7 @@ export default async function DynamicPage({ params }: PageProps) {
         )
       `
       )
-      .eq('parent_page_type', type.slice(0, -1))
+      .eq('parent_page_type', type === 'circuits' ? 'track' : type.slice(0, -1))
       .eq('parent_page_id', entity.id)
       .order('created_at', { ascending: false }),
   ])
@@ -193,7 +193,7 @@ export default async function DynamicPage({ params }: PageProps) {
               </div>
             )}
 
-            {type === 'tracks' && (
+            {type === 'circuits' && (
               <>
                 {entity.built_date && (
                   <div>
@@ -208,6 +208,22 @@ export default async function DynamicPage({ params }: PageProps) {
                     <p className="text-sm text-gray-500">Length</p>
                     <p className="text-lg font-semibold text-gray-900">
                       {entity.track_length} km
+                    </p>
+                  </div>
+                )}
+                {entity.location && (
+                  <div>
+                    <p className="text-sm text-gray-500">Location</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {entity.location}
+                    </p>
+                  </div>
+                )}
+                {entity.country && (
+                  <div>
+                    <p className="text-sm text-gray-500">Country</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {entity.country}
                     </p>
                   </div>
                 )}
@@ -228,8 +244,8 @@ export default async function DynamicPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Track Tips Section (Tracks Only) */}
-      {type === 'tracks' && <TrackTipsSection trackId={entity.id} />}
+      {/* Track Tips Section (Circuits Only) */}
+      {type === 'circuits' && <TrackTipsSection trackId={entity.id} />}
 
       {/* Community Grids Section */}
       {grids.data && grids.data.length > 0 && (

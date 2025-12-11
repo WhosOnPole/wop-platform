@@ -85,7 +85,7 @@ export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
       <div className="h-40 overflow-x-auto overflow-y-hidden">
         <div className="flex space-x-4">
           {grids.map((grid: any) => {
-            const gridTypeLabel = grid.type === 'driver' ? 'Top Drivers' : grid.type === 'team' ? 'Top Teams' : 'Top Tracks'
+            const gridTypeLabel = grid.type === 'driver' ? 'Top Drivers' : grid.type === 'team' ? 'Top Teams' : 'Top Circuits'
             return (
               <div
                 key={grid.id}
