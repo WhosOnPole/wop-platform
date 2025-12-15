@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { Menu, X, LogOut } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
+import { NotificationBell } from '@/components/navbar/notification-bell'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface Profile {
@@ -208,25 +209,29 @@ export function Navbar() {
             {loading ? (
               <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
             ) : user && profile ? (
-              <Link
-                href={`/u/${profile.username}`}
-                className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
-                title={profile.username}
-              >
-                {profile.profile_image_url ? (
-                  <img
-                    src={profile.profile_image_url}
-                    alt={profile.username}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
-                    <span className="text-sm font-medium">
-                      {profile.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </Link>
+              <>
+                <Link
+                  href={`/u/${profile.username}`}
+                  className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
+                  title={profile.username}
+                >
+                  {profile.profile_image_url ? (
+                    <img
+                      src={profile.profile_image_url}
+                      alt={profile.username}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
+                      <span className="text-sm font-medium">
+                        {profile.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </Link>
+                {/* Notification Bell - Desktop: right of user icon, Mobile: between user icon and hamburger */}
+                <NotificationBell />
+              </>
             ) : user && pathname === '/onboarding' ? (
               <button
                 onClick={handleSignOut}
