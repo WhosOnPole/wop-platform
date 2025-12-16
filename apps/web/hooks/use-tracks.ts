@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-interface Circuit {
+interface Track {
   id: string
   name: string
   image_url: string | null
@@ -17,11 +17,11 @@ interface Circuit {
   [key: string]: any
 }
 
-export function useCircuits() {
+export function useTracks() {
   const supabase = createClientComponentClient()
 
   return useQuery({
-    queryKey: ['circuits'],
+    queryKey: ['tracks'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tracks')
@@ -29,10 +29,10 @@ export function useCircuits() {
         .order('name', { ascending: true })
 
       if (error) {
-        throw new Error(`Failed to fetch circuits: ${error.message}`)
+        throw new Error(`Failed to fetch tracks: ${error.message}`)
       }
 
-      return (data || []) as Circuit[]
+      return (data || []) as Track[]
     },
   })
 }

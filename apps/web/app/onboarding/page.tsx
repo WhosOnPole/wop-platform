@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { OnboardingProfileStep } from '@/components/onboarding/profile-step'
 import { OnboardingDriversStep } from '@/components/onboarding/drivers-step'
 import { OnboardingTeamsStep } from '@/components/onboarding/teams-step'
-import { OnboardingCircuitsStep } from '@/components/onboarding/circuits-step'
+import { OnboardingTracksStep } from '@/components/onboarding/tracks-step'
 import { CheckCircle2, Circle } from 'lucide-react'
 
 type OnboardingStep = 'profile' | 'drivers' | 'teams' | 'tracks' | 'complete'
@@ -108,7 +108,7 @@ export default function OnboardingPage() {
     { id: 'profile', label: 'Profile', required: true },
     { id: 'drivers', label: 'Top Drivers', required: false },
     { id: 'teams', label: 'Top Teams', required: false },
-    { id: 'tracks', label: 'Top Circuits', required: false },
+    { id: 'tracks', label: 'Top Tracks', required: false },
   ]
 
   return (
@@ -183,7 +183,7 @@ export default function OnboardingPage() {
             />
           )}
           {currentStep === 'tracks' && (
-            <OnboardingCircuitsStep
+            <OnboardingTracksStep
               onComplete={() => handleStepComplete('tracks')}
               onSkip={() => handleSkip('tracks')}
             />

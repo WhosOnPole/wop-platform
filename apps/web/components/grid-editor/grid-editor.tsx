@@ -213,7 +213,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
       <DragDropContext onDragEnd={onDragEnd}>
         {/* Available Items Picker */}
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Available {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Circuits'}</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Available {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'}</h2>
           <Droppable droppableId="available" direction="horizontal">
             {(provided) => (
               <div

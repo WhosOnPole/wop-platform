@@ -21,7 +21,7 @@ export default async function DynamicPage({ params }: PageProps) {
   const { type, slug } = params
   const supabase = createServerComponentClient({ cookies })
 
-  if (!['drivers', 'teams', 'circuits'].includes(type)) {
+  if (!['drivers', 'teams', 'tracks'].includes(type)) {
     notFound()
   }
 
@@ -64,18 +64,18 @@ export default async function DynamicPage({ params }: PageProps) {
     ) || teams?.[0]
 
     entity = team
-  } else if (type === 'circuits') {
+  } else if (type === 'tracks') {
     const slugName = slug.replace(/-/g, ' ')
-    const { data: circuits } = await supabase
+    const { data: tracks } = await supabase
       .from('tracks')
       .select('*')
       .ilike('name', `%${slugName}%`)
 
-    const circuit = circuits?.find(
-      (c) => c.name.toLowerCase().replace(/\s+/g, '-') === slug
-    ) || circuits?.[0]
+    const track = tracks?.find(
+      (t) => t.name.toLowerCase().replace(/\s+/g, '-') === slug
+    ) || tracks?.[0]
 
-    entity = circuit
+    entity = track
   }
 
   if (!entity) {
@@ -97,7 +97,7 @@ export default async function DynamicPage({ params }: PageProps) {
         )
       `
       )
-      .eq('type', type === 'circuits' ? 'track' : type.slice(0, -1)) // Map 'circuits' -> 'track', 'drivers' -> 'driver', 'teams' -> 'team'
+      .eq('type', type === 'tracks' ? 'track' : type.slice(0, -1)) // Map 'tracks' -> 'track', 'drivers' -> 'driver', 'teams' -> 'team'
       .order('created_at', { ascending: false })
       .limit(10),
     // Discussion posts for this entity
@@ -113,7 +113,7 @@ export default async function DynamicPage({ params }: PageProps) {
         )
       `
       )
-      .eq('parent_page_type', type === 'circuits' ? 'track' : type.slice(0, -1))
+      .eq('parent_page_type', type === 'tracks' ? 'track' : type.slice(0, -1))
       .eq('parent_page_id', entity.id)
       .order('created_at', { ascending: false }),
   ])
@@ -193,7 +193,7 @@ export default async function DynamicPage({ params }: PageProps) {
               </div>
             )}
 
-            {type === 'circuits' && (
+            {type === 'tracks' && (
               <>
                 {entity.built_date && (
                   <div>
@@ -244,8 +244,8 @@ export default async function DynamicPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Track Tips Section (Circuits Only) */}
-      {type === 'circuits' && <TrackTipsSection trackId={entity.id} />}
+      {/* Track Tips Section (Tracks Only) */}
+      {type === 'tracks' && <TrackTipsSection trackId={entity.id} />}
 
       {/* Community Grids Section */}
       {grids.data && grids.data.length > 0 && (

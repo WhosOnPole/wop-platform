@@ -30,8 +30,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/circuits" className="text-sm text-gray-400 hover:text-white">
-                  Circuits
+                <Link href="/tracks" className="text-sm text-gray-400 hover:text-white">
+                  Tracks
                 </Link>
               </li>
               <li>

@@ -31,7 +31,7 @@ export function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-100"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-gray-100"
         aria-label="Notifications"
       >
         <Bell className={`h-5 w-5 ${hasUnread ? 'animate-pulse text-blue-600' : ''}`} />
