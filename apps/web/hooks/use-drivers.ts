@@ -7,7 +7,6 @@ interface Driver {
   id: string
   name: string
   team_id: string | null
-  openf1_driver_number: number | null
   image_url: string | null
   headshot_url: string | null
   team_icon_url: string | null

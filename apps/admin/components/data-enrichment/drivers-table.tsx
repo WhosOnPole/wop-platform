@@ -9,7 +9,6 @@ interface Driver {
   id: string
   name: string
   team_id: string | null
-  openf1_driver_number: number | null
   image_url: string | null
   team_icon_url: string | null
   racing_number: number | null
@@ -105,7 +104,7 @@ export function DriversTable() {
                     {driver.teams?.name || 'N/A'}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {driver.racing_number || driver.openf1_driver_number || 'N/A'}
+                    {driver.racing_number || 'N/A'}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     <button
