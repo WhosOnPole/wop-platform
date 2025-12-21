@@ -1,28 +1,18 @@
-'use client'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { getTeamIconUrl } from '@/utils/storage-urls'
+import { TeamCard } from '@/components/teams/team-card'
 
-import { useTeams } from '@/hooks/use-teams'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Loader2 } from 'lucide-react'
+export const revalidate = 3600 // Revalidate every hour
 
-export default function TeamsPage() {
-  const { data: teams, isLoading, error } = useTeams()
+export default async function TeamsPage() {
+  const supabase = createServerComponentClient({ cookies })
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Teams</h1>
-          <p className="mt-2 text-gray-600">
-            Explore all Formula 1 teams and their profiles
-          </p>
-        </div>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
-      </div>
-    )
-  }
+  const { data: teams, error } = await supabase
+    .from('teams')
+    .select('*')
+    .order('name', { ascending: true })
 
   if (error) {
     return (
@@ -71,44 +61,15 @@ export default function TeamsPage() {
         {teams.map((team) => {
           // Generate slug from team name
           const slug = team.name.toLowerCase().replace(/\s+/g, '-')
+          const iconUrl = supabaseUrl ? getTeamIconUrl(team.name, supabaseUrl) : null
           
           return (
-            <Link
+            <TeamCard
               key={team.id}
-              href={`/teams/${slug}`}
-              className="group overflow-hidden rounded-lg border border-gray-200 bg-white shadow transition-all hover:shadow-lg hover:scale-105"
-            >
-              {/* Team Image */}
-              <div className="relative h-64 w-full bg-gradient-to-br from-gray-100 to-gray-200">
-                {team.image_url ? (
-                  <Image
-                    src={team.image_url}
-                    alt={team.name}
-                    fill
-                    className="object-cover object-center"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <span className="text-4xl font-bold text-gray-400">
-                      {team.name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Team Info */}
-              <div className="p-4">
-                <h3 className="mb-2 text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {team.name}
-                </h3>
-                
-                {team.overview_text && (
-                  <p className="line-clamp-2 text-sm text-gray-600">
-                    {team.overview_text}
-                  </p>
-                )}
-              </div>
-            </Link>
+              team={team}
+              slug={slug}
+              iconUrl={iconUrl}
+            />
           )
         })}
       </div>

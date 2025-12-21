@@ -120,8 +120,8 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`rounded-md px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 ${
-                    pathname === item.href ? 'bg-white/30' : ''
+                  className={`rounded-md px-3 py-2 text-sm font-medium text-white transition-colors hover:text-[#3BEFEB] ${
+                    pathname === item.href ? 'hover:text-[#3BEFEB]' : ''
                   }`}
                 >
                   {item.label}
@@ -193,10 +193,10 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-full hover:bg-background py-2 px-4 tracking-wider align-middle text-sm font-medium transition-colors ${
                   pathname === item.href
-                    ? 'bg-blue-100 text-white'
-                    : 'text-white hover:bg-gray-100'
+                    ? 'text-[#3BEFEB] shadow-none'
+                    : 'text-white hover:text-[#3BEFEB]'
                 }`}
               >
                 {item.label}
@@ -277,8 +277,8 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block rounded-md px-3 py-2 text-base font-medium ${
                   pathname === item.href
-                    ? 'bg-blue-100 text-white'
-                    : 'text-white hover:bg-gray-100'
+                    ? 'text-[#3BEFEB]'
+                    : 'text-white hover:text-[#3BEFEB]'
                 }`}
               >
                 {item.label}

@@ -47,6 +47,7 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
           .from('drivers')
           .select('id, name, image_url, headshot_url, racing_number')
           .eq('id', item.id)
+          .eq('active', true)
           .maybeSingle()
         if (driver) {
           return {

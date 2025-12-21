@@ -11,6 +11,7 @@ interface Driver {
   team_id: string | null
   image_url: string | null
   team_icon_url: string | null
+  active: boolean
   racing_number: number | null
   age: number | null
   nationality: string | null
@@ -76,6 +77,9 @@ export function DriversTable() {
                   Number
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Active
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Actions
                 </th>
               </tr>
@@ -105,6 +109,17 @@ export function DriversTable() {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                     {driver.racing_number || 'N/A'}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                        driver.active
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {driver.active ? 'Active' : 'Inactive'}
+                    </span>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     <button

@@ -6,9 +6,10 @@ import { Trophy, MapPin, Calendar, Users } from 'lucide-react'
 import { TrackTipsSection } from '@/components/dtt/track-tips-section'
 import { CommunityGridsSection } from '@/components/dtt/community-grids-section'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
+import { TeamDriverHero } from '@/components/teams/team-driver-hero'
+import { TeamLogoSection } from '@/components/teams/team-logo-section'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export const revalidate = 3600 // Revalidate every hour
 
 interface PageProps {
   params: {
@@ -44,6 +45,7 @@ export default async function DynamicPage({ params }: PageProps) {
         )
       `
       )
+      .eq('active', true)
       .ilike('name', `%${slugName}%`)
 
     // Find the best match (exact match preferred)
@@ -64,6 +66,18 @@ export default async function DynamicPage({ params }: PageProps) {
     ) || teams?.[0]
 
     entity = team
+
+    // Fetch active drivers for this team
+    if (team) {
+      const { data: drivers } = await supabase
+        .from('drivers')
+        .select('id, name, headshot_url, image_url')
+        .eq('team_id', team.id)
+        .eq('active', true)
+        .order('name')
+
+      relatedData = drivers || []
+    }
   } else if (type === 'tracks') {
     const slugName = slug.replace(/-/g, ' ')
     const { data: tracks } = await supabase
@@ -118,11 +132,23 @@ export default async function DynamicPage({ params }: PageProps) {
       .order('created_at', { ascending: false }),
   ])
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Hero Section */}
       <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg">
-        {(type === 'drivers' && (entity.headshot_url || entity.image_url)) || (type !== 'drivers' && entity.image_url) ? (
+        {type === 'teams' && relatedData && Array.isArray(relatedData) && relatedData.length > 0 ? (
+          // Driver hero section for teams
+          <TeamDriverHero
+            team={entity}
+            drivers={relatedData}
+            supabaseUrl={supabaseUrl}
+          />
+        ) : type === 'teams' ? (
+          // Team logo for teams without drivers
+          <TeamLogoSection team={entity} supabaseUrl={supabaseUrl} />
+        ) : (type === 'drivers' && (entity.headshot_url || entity.image_url)) || (type !== 'drivers' && entity.image_url) ? (
           <div className="relative h-64 w-full md:h-96">
             <img
               src={type === 'drivers' ? (entity.headshot_url || entity.image_url) : entity.image_url}
