@@ -34,6 +34,7 @@ export function OnboardingDriversStep({ onComplete, onSkip }: OnboardingDriversS
       const { data: drivers } = await supabase
         .from('drivers')
         .select('id, name, image_url, headshot_url')
+        .eq('active', true)
         .order('name')
 
       if (drivers) {

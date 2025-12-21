@@ -271,6 +271,12 @@ export function OnboardingTracksStep({ onComplete, onSkip }: OnboardingTracksSte
           placeholder="Say something about your track picks..."
           autoComplete="off"
           data-form-type="other"
+          data-lpignore="true"
+          data-1p-ignore="true"
+          data-bwignore="true"
+          spellCheck={false}
+          role="textbox"
+          aria-label="Track grid blurb"
           className="w-full rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
         <p className="mt-1 text-xs text-gray-500">{blurb.length}/140 characters</p>

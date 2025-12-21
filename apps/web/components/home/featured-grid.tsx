@@ -1,7 +1,6 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface FeaturedGridProps {
   highlightedFan: {
@@ -14,16 +13,41 @@ interface FeaturedGridProps {
 export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
   const supabase = createServerComponentClient({ cookies })
 
-  // Fetch one of their grids (most recent)
-  const { data: grid } = await supabase
-    .from('grids')
-    .select('*')
-    .eq('user_id', highlightedFan.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+  // Fetch top 3 grids (one of each type: driver, team, track)
+  const [driverGrid, teamGrid, trackGrid] = await Promise.all([
+    supabase
+      .from('grids')
+      .select('*')
+      .eq('user_id', highlightedFan.id)
+      .eq('type', 'driver')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('grids')
+      .select('*')
+      .eq('user_id', highlightedFan.id)
+      .eq('type', 'team')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('grids')
+      .select('*')
+      .eq('user_id', highlightedFan.id)
+      .eq('type', 'track')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
 
-  if (!grid) {
+  const grids = [
+    driverGrid.data,
+    teamGrid.data,
+    trackGrid.data,
+  ].filter(Boolean)
+
+  if (grids.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow">
         <p className="text-gray-500">
@@ -37,7 +61,7 @@ export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+    <div>
       <div className="mb-4 flex items-center space-x-3">
         {highlightedFan.profile_image_url && (
           <img
@@ -57,32 +81,40 @@ export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
         </div>
       </div>
 
-      <div className="mb-4">
-        <h3 className="mb-2 text-lg font-semibold text-gray-900">
-          Top {grid.type === 'driver' ? 'Drivers' : grid.type === 'team' ? 'Teams' : 'Tracks'}
-        </h3>
-        {grid.comment && (
-          <p className="mb-4 text-gray-600">&quot;{grid.comment}&quot;</p>
-        )}
-        <div className="space-y-2">
-          {Array.isArray(grid.ranked_items) &&
-            grid.ranked_items.slice(0, 5).map((item: any, index: number) => (
+      {/* Horizontal scrolling grids container */}
+      <div className="h-40 overflow-x-auto overflow-y-hidden">
+        <div className="flex space-x-4">
+          {grids.map((grid: any) => {
+            const gridTypeLabel = grid.type === 'driver' ? 'Top Drivers' : grid.type === 'team' ? 'Top Teams' : 'Top Tracks'
+            return (
               <div
-                key={index}
-                className="flex items-center space-x-3 rounded-md bg-gray-50 p-2"
+                key={grid.id}
+                className="flex-shrink-0 w-[calc(100vw-3rem)] sm:w-96 lg:w-1/3 h-40 rounded-lg border border-gray-200 bg-white p-4 shadow"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-racing-orange text-sm font-bold text-white">
-                  {index + 1}
-                </span>
-                <span className="text-gray-900">{item.name || 'Unknown'}</span>
+                <h3 className="mb-2 text-sm font-semibold text-gray-900">{gridTypeLabel}</h3>
+                <div className="space-y-1">
+                  {Array.isArray(grid.ranked_items) &&
+                    grid.ranked_items.slice(0, 5).map((item: any, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2"
+                      >
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-racing-orange text-xs font-bold text-white flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        <span className="text-xs text-gray-900 truncate">{item.name || 'Unknown'}</span>
+                      </div>
+                    ))}
+                </div>
               </div>
-            ))}
+            )
+          })}
         </div>
       </div>
 
       <Link
         href={`/u/${highlightedFan.username}`}
-        className="text-sm text-bright-teal hover:text-racing-orange font-medium"
+        className="mt-4 inline-block text-sm text-bright-teal hover:text-racing-orange font-medium"
       >
         View all grids by {highlightedFan.username} →
       </Link>

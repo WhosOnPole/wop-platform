@@ -1,7 +1,8 @@
 -- ============================================
 -- Who's on Pole? Platform - OpenF1 Cron Job Setup
 -- ============================================
--- This migration sets up a pg_cron job to run the OpenF1 ingestion function daily
+-- This migration sets up a pg_cron job to run the OpenF1 ingestion function monthly
+-- (on the last day of each month at 2 AM UTC)
 -- 
 -- Note: pg_cron must be enabled in your Supabase project first
 -- Go to: Database > Extensions > Enable "pg_cron"
@@ -9,7 +10,9 @@
 -- First, ensure pg_cron extension is enabled
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
--- Schedule the OpenF1 ingestion to run daily at 2 AM UTC
+-- Schedule the OpenF1 ingestion to run monthly on the last day of each month at 2 AM UTC
+-- The cron expression '0 2 28-31 * *' runs on days 28-31 of each month, which covers
+-- the last day of every month (28 for February, 29 for leap years, 30/31 for other months)
 -- This will call the Edge Function via HTTP
 -- Replace 'YOUR_PROJECT_REF' with your actual Supabase project reference
 -- Replace 'YOUR_ANON_KEY' with your service role key (for authentication)
@@ -18,8 +21,8 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 -- Uncomment and update the URL with your project details:
 /*
 SELECT cron.schedule(
-  'openf1-daily-ingestion',
-  '0 2 * * *', -- Runs daily at 2 AM UTC
+  'openf1-monthly-ingestion',
+  '0 2 28-31 * *', -- Runs on last day of each month at 2 AM UTC
   $$
   SELECT
     net.http_post(

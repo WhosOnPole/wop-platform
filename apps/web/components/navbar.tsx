@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, X, LogOut } from 'lucide-react'
+import { Menu, X, LogOut, User, Settings, ChevronDown } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
+import { NotificationBell } from '@/components/navbar/notification-bell'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface Profile {
@@ -22,6 +23,7 @@ export function Navbar() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -34,6 +36,23 @@ export function Navbar() {
 
     return () => subscription.unsubscribe()
   }, [supabase])
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement
+      if (profileMenuOpen && !target.closest('[data-profile-menu]')) {
+        setProfileMenuOpen(false)
+      }
+    }
+
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [profileMenuOpen])
 
   async function checkUser() {
     try {
@@ -119,8 +138,8 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`rounded-md px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 ${
-                    pathname === item.href ? 'bg-white/30' : ''
+                  className={`rounded-md px-3 py-2 text-sm font-medium text-white transition-colors hover:text-[#3BEFEB] ${
+                    pathname === item.href ? 'hover:text-[#3BEFEB]' : ''
                   }`}
                 >
                   {item.label}
@@ -178,12 +197,12 @@ export function Navbar() {
 
   // Logged-in state - standard styling
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="border-b border-gray-200 bg-sunset-gradient">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Logo variant="black" size="md" />
+            <Logo variant="white" size="md" />
           </div>
 
           {/* Desktop Navigation */}
@@ -192,10 +211,10 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-full hover:bg-background py-2 px-4 tracking-wider align-middle text-sm font-medium transition-colors ${
                   pathname === item.href
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-[#3BEFEB] shadow-none'
+                    : 'text-white hover:text-[#3BEFEB]'
                 }`}
               >
                 {item.label}
@@ -208,25 +227,64 @@ export function Navbar() {
             {loading ? (
               <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
             ) : user && profile ? (
-              <Link
-                href={`/u/${profile.username}`}
-                className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
-                title={profile.username}
-              >
-                {profile.profile_image_url ? (
-                  <img
-                    src={profile.profile_image_url}
-                    alt={profile.username}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
-                    <span className="text-sm font-medium">
-                      {profile.username.charAt(0).toUpperCase()}
-                    </span>
+              <>
+                <Link
+                  href={`/u/${profile.username}`}
+                  className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
+                  title={profile.username}
+                >
+                  {profile.profile_image_url ? (
+                    <img
+                      src={profile.profile_image_url}
+                      alt={profile.username}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
+                      <span className="text-sm font-medium">
+                        {profile.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </Link>
+                {/* Notification Bell - Desktop: right of user icon, Mobile: between user icon and hamburger */}
+                <NotificationBell />
+              </>
+                </button>
+                {profileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg">
+                    <div className="py-1">
+                      <Link
+                        href={`/u/${profile.username}`}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <User className="h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                      <Link
+                        href="/settings"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
+                      <div className="border-t border-gray-100" />
+                      <button
+                        onClick={() => {
+                          handleSignOut()
+                          setProfileMenuOpen(false)
+                        }}
+                        className="flex w-full items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-              </Link>
+              </div>
             ) : user && pathname === '/onboarding' ? (
               <button
                 onClick={handleSignOut}
@@ -252,9 +310,9 @@ export function Navbar() {
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-gray-700" />
+                <X className="h-6 w-6 text-white" />
               ) : (
-                <Menu className="h-6 w-6 text-gray-700" />
+                <Menu className="h-6 w-6 text-white" />
               )}
             </button>
           </div>
@@ -272,8 +330,8 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block rounded-md px-3 py-2 text-base font-medium ${
                   pathname === item.href
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'text-[#3BEFEB]'
+                    : 'text-white hover:text-[#3BEFEB]'
                 }`}
               >
                 {item.label}
@@ -283,7 +341,7 @@ export function Navbar() {
               <Link
                 href={`/u/${profile.username}`}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-gray-100"
               >
                 Profile
               </Link>
@@ -294,7 +352,7 @@ export function Navbar() {
                   handleSignOut()
                   setMobileMenuOpen(false)
                 }}
-                className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-gray-100"
+                className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-white hover:bg-gray-100"
               >
                 {pathname === '/onboarding' ? 'Logout' : 'Sign Out'}
               </button>
