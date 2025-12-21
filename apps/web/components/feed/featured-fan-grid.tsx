@@ -45,14 +45,15 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
       if (item.id) {
         const { data: driver } = await supabase
           .from('drivers')
-          .select('id, name, image_url, headshot_url, racing_number, openf1_driver_number')
+          .select('id, name, image_url, headshot_url, racing_number')
           .eq('id', item.id)
+          .eq('active', true)
           .maybeSingle()
         if (driver) {
           return {
             ...driver,
             image_url: driver.headshot_url || driver.image_url,
-            number: driver.racing_number || driver.openf1_driver_number,
+            number: driver.racing_number,
           }
         }
       }

@@ -31,7 +31,8 @@ export default function EditGridPage() {
       if (type === 'driver') {
         result = await supabase
           .from('drivers')
-          .select('id, name, image_url, headshot_url, team_icon_url')
+          .select('id, name, image_url, headshot_url, team_id, teams:team_id(image_url)')
+          .eq('active', true)
           .order('name')
       } else if (type === 'team') {
         result = await supabase
@@ -55,7 +56,7 @@ export default function EditGridPage() {
             name: item.name,
             image_url: item.image_url,
             headshot_url: item.headshot_url || null,
-            team_icon_url: item.team_icon_url || null,
+            team_icon_url: item.teams?.image_url || null,
           }))
         )
       }
@@ -80,11 +81,11 @@ export default function EditGridPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Edit Your Top {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Circuits'}{' '}
+          Edit Your Top {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'}{' '}
           Ranking
         </h1>
         <p className="mt-2 text-gray-600">
-          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'team' ? 'teams' : 'circuits'}
+          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'team' ? 'teams' : 'tracks'}
         </p>
       </div>
 

@@ -3,8 +3,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { FileText } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export const revalidate = 3600 // Revalidate every hour
 
 export default async function FeaturesPage() {
   const supabase = createServerComponentClient({ cookies })

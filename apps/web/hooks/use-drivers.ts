@@ -7,10 +7,10 @@ interface Driver {
   id: string
   name: string
   team_id: string | null
-  openf1_driver_number: number | null
   image_url: string | null
   headshot_url: string | null
   team_icon_url: string | null
+  active: boolean
   racing_number: number | null
   age: number | null
   nationality: string | null
@@ -42,6 +42,7 @@ export function useDrivers() {
           )
         `
         )
+        .eq('active', true)
         .order('name', { ascending: true })
 
       if (error) {

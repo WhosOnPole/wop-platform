@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 
 const driverSchema = z.object({
   image_url: z.string().url().optional().or(z.literal('')),
-  team_icon_url: z.string().url().optional().or(z.literal('')),
+  team_id: z.union([z.string().uuid(), z.literal(''), z.null()]).transform((val) => val === '' ? null : val),
+  active: z.boolean().optional(),
   racing_number: z.number().int().positive().optional().or(z.null()),
   age: z.number().int().positive().max(100).optional().or(z.null()),
   nationality: z.string().max(100).optional().or(z.literal('')),
@@ -17,12 +18,19 @@ const driverSchema = z.object({
   instagram_url: z.string().url().optional().or(z.literal('')),
 })
 
+interface Team {
+  id: string
+  name: string
+  image_url: string | null
+}
+
 interface DriverEditModalProps {
   driver: {
     id: string
     name: string
     image_url: string | null
-    team_icon_url: string | null
+    team_id: string | null
+    active: boolean
     racing_number: number | null
     age: number | null
     nationality: string | null
@@ -38,9 +46,12 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
   const supabase = createClientComponentClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loadingTeams, setLoadingTeams] = useState(true)
   const [formData, setFormData] = useState({
     image_url: driver.image_url || '',
-    team_icon_url: driver.team_icon_url || '',
+    team_id: driver.team_id || '',
+    active: driver.active ?? true,
     racing_number: driver.racing_number?.toString() || '',
     age: driver.age?.toString() || '',
     nationality: driver.nationality || '',
@@ -49,6 +60,28 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
     world_championships: driver.world_championships.toString(),
     instagram_url: driver.instagram_url || '',
   })
+
+  useEffect(() => {
+    loadTeams()
+  }, [])
+
+  async function loadTeams() {
+    setLoadingTeams(true)
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .select('id, name, image_url')
+        .order('name')
+
+      if (error) {
+        console.error('Error loading teams:', error)
+      } else {
+        setTeams(data || [])
+      }
+    } finally {
+      setLoadingTeams(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -59,7 +92,8 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
       // Validate form data
       const validated = driverSchema.parse({
         image_url: formData.image_url || undefined,
-        team_icon_url: formData.team_icon_url || undefined,
+        team_id: formData.team_id && formData.team_id.trim() !== '' ? formData.team_id : null,
+        active: formData.active,
         racing_number: formData.racing_number ? parseInt(formData.racing_number) : null,
         age: formData.age ? parseInt(formData.age) : null,
         nationality: formData.nationality || undefined,
@@ -75,7 +109,9 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
         .update({
           ...validated,
           image_url: validated.image_url || null,
-          team_icon_url: validated.team_icon_url || null,
+          team_id: validated.team_id || null,
+          active: validated.active ?? true,
+          team_icon_url: null, // Remove team_icon_url, it will come from team relationship
           instagram_url: validated.instagram_url || null,
         })
         .eq('id', driver.id)
@@ -125,14 +161,38 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Team Icon URL
+                Team
               </label>
-              <input
-                type="url"
-                value={formData.team_icon_url}
-                onChange={(e) => setFormData({ ...formData, team_icon_url: e.target.value })}
+              <select
+                value={formData.team_id}
+                onChange={(e) => setFormData({ ...formData, team_id: e.target.value })}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
+                disabled={loadingTeams}
+              >
+                <option value="">No Team</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              {loadingTeams && (
+                <p className="mt-1 text-xs text-gray-500">Loading teams...</p>
+              )}
+            </div>
+
+            <div className="col-span-2">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.active}
+                  onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Active (driver is active for current season)
+                </span>
+              </label>
             </div>
 
             <div>

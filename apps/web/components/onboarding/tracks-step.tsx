@@ -10,12 +10,12 @@ interface GridItem {
   image_url: string | null
 }
 
-interface OnboardingCircuitsStepProps {
+interface OnboardingTracksStepProps {
   onComplete: () => void
   onSkip: () => void
 }
 
-export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuitsStepProps) {
+export function OnboardingTracksStep({ onComplete, onSkip }: OnboardingTracksStepProps) {
   const supabase = createClientComponentClient()
   const [rankedList, setRankedList] = useState<GridItem[]>([])
   const [availableList, setAvailableList] = useState<GridItem[]>([])
@@ -24,28 +24,28 @@ export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuit
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadCircuits()
+    loadTracks()
   }, [])
 
-  async function loadCircuits() {
+  async function loadTracks() {
     setLoading(true)
     try {
-      const { data: circuits } = await supabase
+      const { data: tracks } = await supabase
         .from('tracks')
         .select('id, name, image_url')
         .order('name')
 
-      if (circuits) {
+      if (tracks) {
         setAvailableList(
-          circuits.map((circuit) => ({
-            id: circuit.id,
-            name: circuit.name,
-            image_url: circuit.image_url,
+          tracks.map((track) => ({
+            id: track.id,
+            name: track.name,
+            image_url: track.image_url,
           }))
         )
       }
     } catch (error) {
-      console.error('Error loading circuits:', error)
+      console.error('Error loading tracks:', error)
     } finally {
       setLoading(false)
     }
@@ -53,7 +53,7 @@ export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuit
 
   function handleAddToRanked(item: GridItem) {
     if (rankedList.length >= 10) {
-      alert('Maximum 10 circuits allowed')
+      alert('Maximum 10 tracks allowed')
       return
     }
     const newAvailableList = availableList.filter((i) => i.id !== item.id)
@@ -148,13 +148,13 @@ export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuit
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Select Your Top 10 Circuits</h2>
-        <p className="mt-1 text-sm text-gray-600">Click circuits to add them to your ranking</p>
+        <h2 className="text-2xl font-bold text-gray-900">Select Your Top 10 Tracks</h2>
+        <p className="mt-1 text-sm text-gray-600">Click tracks to add them to your ranking</p>
       </div>
 
-      {/* Available Circuits */}
+      {/* Available Tracks */}
       <div>
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">Available Circuits</h3>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Available Tracks</h3>
         <div className="flex flex-wrap gap-4">
           {availableList.map((item) => (
             <button
@@ -192,7 +192,7 @@ export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuit
         <div className="space-y-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4">
           {rankedList.length === 0 ? (
             <p className="py-8 text-center text-gray-500">
-              Click circuits above to add them to your ranking
+              Click tracks above to add them to your ranking
             </p>
           ) : (
             rankedList.map((item, index) => (
@@ -259,8 +259,8 @@ export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuit
           Blurb (optional, max 140 characters)
         </label>
         <textarea
-          id="circuit-blurb"
-          name="circuit-blurb"
+          id="track-blurb"
+          name="track-blurb"
           value={blurb}
           onChange={(e) => {
             if (e.target.value.length <= 140) {
@@ -268,7 +268,7 @@ export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuit
             }
           }}
           rows={2}
-          placeholder="Say something about your circuit picks..."
+          placeholder="Say something about your track picks..."
           autoComplete="off"
           data-form-type="other"
           data-lpignore="true"
@@ -276,7 +276,7 @@ export function OnboardingCircuitsStep({ onComplete, onSkip }: OnboardingCircuit
           data-bwignore="true"
           spellCheck={false}
           role="textbox"
-          aria-label="Circuit grid blurb"
+          aria-label="Track grid blurb"
           className="w-full rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
         <p className="mt-1 text-xs text-gray-500">{blurb.length}/140 characters</p>
