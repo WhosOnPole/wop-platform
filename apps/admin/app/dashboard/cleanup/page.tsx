@@ -1,0 +1,25 @@
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { CleanupDashboard } from '@/components/cleanup/cleanup-dashboard'
+
+export default async function CleanupPage() {
+  const supabase = createServerComponentClient({ cookies })
+
+  // Fetch cleanup configurations
+  const { data: configs } = await supabase
+    .from('cleanup_config')
+    .select('*')
+    .order('cleanup_type')
+
+  return (
+    <div>
+      <h1 className="mb-6 text-3xl font-bold text-gray-900">Data Cleanup</h1>
+      <p className="mb-8 text-gray-600">
+        Configure and monitor automated data cleanup tasks
+      </p>
+
+      <CleanupDashboard initialConfigs={configs || []} />
+    </div>
+  )
+}
+

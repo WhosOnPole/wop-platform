@@ -2,7 +2,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut, Users, FileText, Flag, MessageSquare, Star, Calendar } from 'lucide-react'
+import { LogOut, Users, FileText, Flag, MessageSquare, Star, Calendar, Mail, Bell, Image, Trash2, Trophy } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
@@ -39,6 +39,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     { href: '/dashboard/chat-logs', label: 'Chat Logs', icon: Calendar },
   ]
 
+  const workerNavItems = [
+    { href: '/dashboard/emails', label: 'Email Queue', icon: Mail },
+    { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
+    { href: '/dashboard/images', label: 'Image Processing', icon: Image },
+    { href: '/dashboard/cleanup', label: 'Data Cleanup', icon: Trash2 },
+    { href: '/dashboard/leaderboards', label: 'Leaderboards', icon: Trophy },
+  ]
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -61,6 +69,25 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 </Link>
               )
             })}
+            
+            <div className="my-4 border-t border-gray-800 pt-4">
+              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Workers
+              </p>
+              {workerNavItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
           </nav>
           <div className="border-t border-gray-800 p-4">
             <div className="mb-2 text-sm text-gray-400">
