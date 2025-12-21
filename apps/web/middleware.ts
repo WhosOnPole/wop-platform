@@ -8,7 +8,7 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
 
   // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-  const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/banned', '/']
+  const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/']
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     // Still check session for authenticated users on public paths
     const {
@@ -42,22 +42,22 @@ export async function middleware(req: NextRequest) {
   }
 
   // Check ban status
-  const { data: profile } = await supabase
-    .from('profiles')
+    const { data: profile } = await supabase
+      .from('profiles')
     .select('banned_until, username')
-    .eq('id', session.user.id)
+      .eq('id', session.user.id)
     .maybeSingle()
 
-  // Check if user is banned
-  if (profile?.banned_until) {
-    const bannedUntil = new Date(profile.banned_until)
-    if (bannedUntil > new Date()) {
-      await supabase.auth.signOut()
-      const redirectUrl = req.nextUrl.clone()
-      redirectUrl.pathname = '/banned'
-      return NextResponse.redirect(redirectUrl)
+    // Check if user is banned
+    if (profile?.banned_until) {
+      const bannedUntil = new Date(profile.banned_until)
+      if (bannedUntil > new Date()) {
+        await supabase.auth.signOut()
+        const redirectUrl = req.nextUrl.clone()
+        redirectUrl.pathname = '/banned'
+        return NextResponse.redirect(redirectUrl)
+      }
     }
-  }
 
   // Check if user needs to complete onboarding
   // Profile must have username to be considered complete

@@ -212,6 +212,7 @@ export default async function FeedPage() {
             grids={followingGrids.data || []}
             polls={polls.data || []}
             featuredNews={featuredNews.data || []}
+            weeklyHighlights={weeklyHighlights.data || null}
           />
         </div>
 

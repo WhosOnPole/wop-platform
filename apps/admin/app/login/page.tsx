@@ -29,6 +29,36 @@ export default function AdminLoginPage() {
           })
       }
     })
+
+    // Listen for auth state changes (for email/password login)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Check admin status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, email')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        const isAdminEmail = session.user.email?.endsWith('@whosonpole.org')
+        const isAdminRole = profile?.role === 'admin'
+
+        if (isAdminEmail || isAdminRole) {
+          router.push('/dashboard')
+        } else {
+          // Not an admin, redirect to main site
+          const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+            (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
+          window.location.href = mainSiteUrl
+        }
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [router, supabase])
 
   return (
@@ -46,7 +76,7 @@ export default function AdminLoginPage() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           providers={['google', 'apple']}
-          redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'}/dashboard`}
+          redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'}/auth/callback`}
           onlyThirdPartyProviders={false}
         />
       </div>

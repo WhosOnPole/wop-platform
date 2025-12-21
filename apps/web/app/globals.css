@@ -30,9 +30,8 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #001e21;
-  --foundation-black: #001e21;
+  --background: #191C1C;
+  --foreground: #ffffff;
   --sunset-start: #d90084;
   --sunset-end: #ff4300;
   --bright-teal: #25b4b1;
@@ -41,14 +40,14 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #001e21;
+    --background: #191C1C;
     --foreground: #ffffff;
   }
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: #191C1C;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 

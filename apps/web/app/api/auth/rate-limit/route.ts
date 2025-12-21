@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 export const runtime = 'edge'
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes in milliseconds
+const RATE_LIMIT_WINDOW_SECONDS = 15 * 60 // 15 minutes in seconds
 const MAX_REQUESTS = 5 // Max 5 login/signup attempts per window
 
 // Cleanup expired records every 100 requests (to avoid overhead)

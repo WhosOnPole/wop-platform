@@ -56,10 +56,10 @@ Deno.serve(async (req) => {
     // Fetch all existing drivers in one query to avoid N+1 queries
     const { data: existingDrivers } = await supabase
       .from("drivers")
-      .select("id, openf1_driver_number, headshot_url");
+      .select("id, racing_number, headshot_url");
     
     const existingDriversMap = new Map(
-      (existingDrivers || []).map((d: any) => [d.openf1_driver_number, d])
+      (existingDrivers || []).map((d: any) => [d.racing_number, d])
     );
     
     // Process drivers in batches to avoid timeout
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
         // Skip headshot_url fetching in main ingestion to avoid timeout
         // Headshots will be populated by a separate function
         const updateData: any = {
-          openf1_driver_number: driver.driver_number,
+          racing_number: driver.driver_number,
           name: driver.full_name || driver.name,
           team_id: teamId,
           updated_at: new Date().toISOString(),
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
         const { error: upsertError } = await supabase
           .from("drivers")
           .upsert(updateData, {
-            onConflict: "openf1_driver_number",
+            onConflict: "racing_number",
             ignoreDuplicates: false,
           });
 
