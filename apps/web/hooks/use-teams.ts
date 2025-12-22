@@ -8,6 +8,7 @@ interface Team {
   name: string
   image_url: string | null
   overview_text: string | null
+  active: boolean
   [key: string]: any
 }
 
@@ -20,6 +21,7 @@ export function useTeams() {
       const { data, error } = await supabase
         .from('teams')
         .select('*')
+        .eq('active', true)
         .order('name', { ascending: true })
 
       if (error) {

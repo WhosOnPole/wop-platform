@@ -115,10 +115,6 @@ export default async function HighlightsPage() {
           </div>
         </div>
       )}
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Weekly Highlights</h1>
-      <p className="mb-8 text-gray-600">
-        Set the highlighted fan and sponsor for the current week. The week starts on Monday. Each can be set independently.
-      </p>
 
       <div className="space-y-8">
         <div>
