@@ -121,6 +121,7 @@ export default async function DynamicPage({ params }: PageProps) {
       .select(
         `
         *,
+        like_count,
         user:profiles!user_id (
           id,
           username,

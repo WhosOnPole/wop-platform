@@ -86,15 +86,15 @@ export function VoteButton({
     <button
       onClick={handleVote}
       disabled={isLoading}
-      className={`flex items-center space-x-1 rounded-md px-2 py-1 text-sm transition-colors disabled:opacity-50 ${
+      className={`inline-flex items-center gap-1 align-middle rounded-md px-2 py-1 text-sm leading-none transition-colors disabled:opacity-50 ${
         isVoted
           ? 'bg-red-100 text-red-600 hover:bg-red-200'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       }`}
       title={isVoted ? 'Remove vote' : 'Vote'}
     >
-      <Heart className={`h-4 w-4 ${isVoted ? 'fill-current' : ''}`} />
-      <span>{voteCount}</span>
+      <Heart className={`h-4 w-4 shrink-0 ${isVoted ? 'fill-current' : ''}`} />
+      <span className="leading-none">{voteCount}</span>
     </button>
   )
 }

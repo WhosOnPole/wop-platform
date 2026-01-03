@@ -30,9 +30,9 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
   }
 
   // Fetch grid like count
-  const { data: likeCountData } = await supabase
-    .rpc('get_grid_like_count', { grid_id: driverGrid.id })
-    .single()
+  const { data: likeCountData } = await supabase.rpc('get_grid_like_count', {
+    grid_uuid: driverGrid.id,
+  })
 
   const likeCount = typeof likeCountData === 'number' ? likeCountData : 0
 
