@@ -11,6 +11,7 @@ interface Team {
   image_url: string | null
   overview_text: string | null
   instagram_url: string | null
+  active: boolean
 }
 
 export function TeamsTable() {
@@ -57,6 +58,9 @@ export function TeamsTable() {
                   Team
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Active
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Actions
                 </th>
               </tr>
@@ -75,6 +79,17 @@ export function TeamsTable() {
                       )}
                       <div className="text-sm font-medium text-gray-900">{team.name}</div>
                     </div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                        team.active
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {team.active ? 'Active' : 'Inactive'}
+                    </span>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     <button

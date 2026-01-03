@@ -227,30 +227,30 @@ export function Navbar() {
             {loading ? (
               <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
             ) : user && profile ? (
-              <>
-                <Link
-                  href={`/u/${profile.username}`}
-                  className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
-                  title={profile.username}
-                >
-                  {profile.profile_image_url ? (
-                    <img
-                      src={profile.profile_image_url}
-                      alt={profile.username}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
-                      <span className="text-sm font-medium">
-                        {profile.username.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                </Link>
-                {/* Notification Bell - Desktop: right of user icon, Mobile: between user icon and hamburger */}
-                <NotificationBell />
-              </>
-                </button>
+              <div className="relative" data-profile-menu>
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-gray-200 transition-all hover:ring-blue-500"
+                    title={profile.username}
+                  >
+                    {profile.profile_image_url ? (
+                      <img
+                        src={profile.profile_image_url}
+                        alt={profile.username}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-600 text-white">
+                        <span className="text-sm font-medium">
+                          {profile.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                  {/* Notification Bell - Desktop: right of user icon, Mobile: between user icon and hamburger */}
+                  <NotificationBell />
+                </div>
                 {profileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg">
                     <div className="py-1">

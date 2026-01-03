@@ -33,6 +33,7 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
       const { data: teams } = await supabase
         .from('teams')
         .select('id, name, image_url')
+        .eq('active', true)
         .order('name')
 
       if (teams) {
