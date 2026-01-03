@@ -63,15 +63,15 @@ export function GridHeartButton({
     <button
       onClick={toggleLike}
       disabled={isLoading}
-      className={`flex items-center space-x-1 rounded-full px-3 py-1.5 text-sm transition-colors ${
+      className={`inline-flex items-center gap-1 align-middle rounded-full px-3 py-1.5 text-sm leading-none transition-colors ${
         isLiked
           ? 'bg-red-100 text-red-600 hover:bg-red-200'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       } disabled:opacity-50`}
       title={isLiked ? 'Unlike this grid' : 'Like this grid'}
     >
-      <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-      <span>{likeCount}</span>
+      <Heart className={`h-4 w-4 shrink-0 ${isLiked ? 'fill-current' : ''}`} />
+      <span className="leading-none">{likeCount}</span>
     </button>
   )
 }

@@ -102,3 +102,4 @@ apps/admin/.env.local
 *.local
 apps/web/.env.local
 /supabase
+/docs

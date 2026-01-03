@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 interface LogoProps {
   variant?: 'gradient' | 'white' | 'black' | 'icon' | 'seal' | 'gradient_white'
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   href?: string
   className?: string
 }
@@ -12,6 +12,7 @@ export function Logo({ variant = 'gradient', size = 'md', href = '/', className 
     sm: 'h-8 w-auto',
     md: 'h-12 w-auto',
     lg: 'h-16 w-auto',
+    xl: 'h-24 w-auto',
   }
 
   const getLogoSrc = () => {

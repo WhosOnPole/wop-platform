@@ -59,6 +59,7 @@ export default async function DynamicPage({ params }: PageProps) {
     const { data: teams } = await supabase
       .from('teams')
       .select('*')
+      .eq('active', true)
       .ilike('name', `%${slugName}%`)
 
     const team = teams?.find(
@@ -120,6 +121,7 @@ export default async function DynamicPage({ params }: PageProps) {
       .select(
         `
         *,
+        like_count,
         user:profiles!user_id (
           id,
           username,

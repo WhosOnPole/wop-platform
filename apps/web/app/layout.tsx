@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
-import { LiveRaceBanner } from '@/components/live-race-banner'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { LayoutWrapper } from '@/components/layout-wrapper'
 
 export const metadata: Metadata = {
   title: "Who's on Pole? - F1 Fan Community",
@@ -19,10 +17,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <QueryProvider>
-          <Navbar />
-          <main className="min-h-screen bg-background">{children}</main>
-          <Footer />
-          <LiveRaceBanner />
+          <LayoutWrapper>{children}</LayoutWrapper>
         </QueryProvider>
       </body>
     </html>

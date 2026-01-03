@@ -38,6 +38,7 @@ export default function EditGridPage() {
         result = await supabase
           .from('teams')
           .select('id, name, image_url')
+          .eq('active', true)
           .order('name')
       } else if (type === 'track') {
         result = await supabase

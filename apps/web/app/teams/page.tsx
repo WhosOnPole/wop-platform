@@ -12,6 +12,7 @@ export default async function TeamsPage() {
   const { data: teams, error } = await supabase
     .from('teams')
     .select('*')
+    .eq('active', true)
     .order('name', { ascending: true })
 
   if (error) {

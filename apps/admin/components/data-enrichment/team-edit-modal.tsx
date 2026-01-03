@@ -9,6 +9,7 @@ const teamSchema = z.object({
   image_url: z.string().url().optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
   instagram_url: z.string().url().optional().or(z.literal('')),
+  active: z.boolean().optional(),
 })
 
 interface TeamEditModalProps {
@@ -18,6 +19,7 @@ interface TeamEditModalProps {
     image_url: string | null
     overview_text: string | null
     instagram_url: string | null
+    active: boolean
   }
   onClose: () => void
 }
@@ -30,6 +32,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
     image_url: team.image_url || '',
     overview_text: team.overview_text || '',
     instagram_url: team.instagram_url || '',
+    active: team.active ?? true,
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -42,6 +45,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
         image_url: formData.image_url || undefined,
         overview_text: formData.overview_text || undefined,
         instagram_url: formData.instagram_url || undefined,
+        active: formData.active,
       })
 
       const { error: updateError } = await supabase
@@ -51,6 +55,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
           image_url: validated.image_url || null,
           overview_text: validated.overview_text || null,
           instagram_url: validated.instagram_url || null,
+          active: validated.active ?? true,
         })
         .eq('id', team.id)
 
@@ -107,6 +112,20 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
               onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
+          </div>
+
+          <div className="col-span-2">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.active}
+                onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Active (team is active for current season)
+              </span>
+            </label>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
