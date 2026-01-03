@@ -74,6 +74,12 @@ jspm_packages/
 # Next.js build output
 .next
 
+# Playwright
+playwright-report/
+test-results/
+apps/web/playwright-report/
+apps/web/test-results/
+
 # Nuxt.js build / generate output
 .nuxt
 
