@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "verify-env": "node scripts/verify-build-env.js",
-    "build": "pnpm verify-env && rm -rf .open-next && pnpm exec next build && pnpm dlx @opennextjs/cloudflare build --noMinify",
+    "build": "pnpm verify-env && rm -rf .open-next && pnpm exec next build && pnpm dlx @opennextjs/cloudflare build --skipNextBuild --noMinify",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
