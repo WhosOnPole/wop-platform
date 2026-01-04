@@ -4,9 +4,29 @@ import { useState, useEffect } from 'react'
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences'
 import { Bell, Mail, Smartphone } from 'lucide-react'
 
+interface NotificationPreferences {
+  user_id: string
+  email_likes: boolean
+  email_comments: boolean
+  email_follows: boolean
+  email_mentions: boolean
+  email_poll_votes: boolean
+  push_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+type ToggleableField = 
+  | 'email_likes'
+  | 'email_comments'
+  | 'email_follows'
+  | 'email_mentions'
+  | 'email_poll_votes'
+  | 'push_enabled'
+
 export function NotificationPreferences() {
   const { preferences, isLoading, updatePreferences, isUpdating } = useNotificationPreferences()
-  const [localPrefs, setLocalPrefs] = useState(preferences)
+  const [localPrefs, setLocalPrefs] = useState<NotificationPreferences | null>(preferences || null)
 
   // Update local state when preferences load
   useEffect(() => {
@@ -15,7 +35,7 @@ export function NotificationPreferences() {
     }
   }, [preferences])
 
-  function handleToggle(field: keyof typeof localPrefs) {
+  function handleToggle(field: ToggleableField) {
     if (!localPrefs) return
 
     const newValue = !localPrefs[field]
