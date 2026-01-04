@@ -1,5 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Trophy, MapPin, Calendar, Users } from 'lucide-react'
@@ -20,7 +19,11 @@ interface PageProps {
 
 export default async function DynamicPage({ params }: PageProps) {
   const { type, slug } = params
-  const supabase = createServerComponentClient({ cookies })
+  // Use public client for static generation (no cookies needed)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   if (!['drivers', 'teams', 'tracks'].includes(type)) {
     notFound()
