@@ -1,12 +1,14 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      'localhost',
-      // Add your Supabase project URL domain here
-    ],
     remotePatterns: [
+      {
+        protocol: 'http', // allow localhost in dev
+        hostname: 'localhost',
+      },
       {
         protocol: 'https',
         hostname: '**.supabase.co',
@@ -17,9 +19,11 @@ const nextConfig = {
       },
     ],
   },
+  // Ensure Turbopack resolves the project root correctly (Next.js 16)
+  turbopack: {
+    root: path.join(__dirname),
+  },
 }
-
-
 
 // Build-time verification of required env vars
 if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -31,7 +35,6 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANO
   console.error('   NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅' : '❌')
   console.error('   NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅' : '❌')
   if (process.env.CI) {
-    // In CI/build environment, this is a critical error
     console.error('   This will cause build failures. Ensure env vars are set in Cloudflare Pages settings.')
   }
 }
