@@ -1,9 +1,7 @@
 name = "wop-platform-web"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
-# Output dir relative to repo root; build writes to apps/web/.open-next
 pages_build_output_dir = "apps/web/.open-next"
-
 
 # Environment variables for build-time and runtime access
 # These variables will be available during the build process
