@@ -14,6 +14,7 @@ SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdX
 WEB_GOOGLE_CLIENT_ID = "988898868785-dajalt9mqvoaqur28ms64rn791qovnq3.apps.googleusercontent.com"
 WEB_TURNSTILE_SECRET_KEY = "0x4AAAAAAB2D1Ox85sQrFoXSuATMTb1z5F4"
 WEB_TURNSTILE_SITE_KEY = "0x4AAAAAAB2D1Ip8V0tAKT0O"
+NEXT_DISABLE_TURBOPACK=1
 
 # Environment-specific overrides (optional)
 # [env.production.vars]
