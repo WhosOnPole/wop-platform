@@ -1,12 +1,15 @@
 import Link from 'next/link'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { FileText } from 'lucide-react'
 
 export const revalidate = 3600 // Revalidate every hour
 
 export default async function FeaturesPage() {
-  const supabase = createServerComponentClient({ cookies })
+  // Use public client for static generation (no cookies needed)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   // Fetch all published feature articles
   const { data: articles } = await supabase

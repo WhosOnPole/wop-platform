@@ -73,7 +73,7 @@ export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
         <div>
           <Link
             href={`/u/${highlightedFan.username}`}
-            className="text-lg font-semibold text-foundation-black hover:text-bright-teal"
+            className="text-lg font-semibold text-background-text hover:text-bright-teal"
           >
             {highlightedFan.username}
           </Link>

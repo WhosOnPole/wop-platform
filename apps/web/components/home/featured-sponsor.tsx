@@ -24,7 +24,7 @@ export function FeaturedSponsor({ sponsor }: FeaturedSponsorProps) {
             />
           </div>
         )}
-        <h3 className="mb-2 text-2xl font-bold text-foundation-black">{sponsor.name}</h3>
+        <h3 className="mb-2 text-2xl font-bold text-background-text">{sponsor.name}</h3>
         {sponsor.website_url && (
           <Link
             href={sponsor.website_url}

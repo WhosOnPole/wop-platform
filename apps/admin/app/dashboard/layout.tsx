@@ -39,6 +39,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     { href: '/dashboard/reports', label: 'Reports', icon: 'Flag' },
     { href: '/dashboard/track-tips', label: 'Track Tips', icon: 'MessageSquare' },
     { href: '/dashboard/chat-logs', label: 'Chat Logs', icon: 'Calendar' },
+    { href: '/dashboard/users', label: 'Users (Points/Strikes)', icon: 'Users' },
   ]
 
   const workerNavItems = [

@@ -20,6 +20,10 @@ async function getCurrentWeekStart() {
   return monday.toISOString().split('T')[0]
 }
 
+function slugify(name: string) {
+  return name.toLowerCase().trim().replace(/\s+/g, '-')
+}
+
 export default async function FeedPage() {
   const supabase = createServerComponentClient({ cookies })
   const {
@@ -185,6 +189,8 @@ export default async function FeedPage() {
       .select(
         `
         *,
+        parent_page_type,
+        parent_page_id,
         user:profiles!user_id (
           id,
           username,
@@ -196,6 +202,66 @@ export default async function FeedPage() {
       .order('created_at', { ascending: false })
       .limit(5),
   ])
+
+  // Build parent lookups for trending posts to avoid 404s
+  const trending = trendingPosts.data || []
+  const driverIds = trending
+    .filter((p) => p.parent_page_type === 'driver' && p.parent_page_id)
+    .map((p) => p.parent_page_id as string)
+  const teamIds = trending
+    .filter((p) => p.parent_page_type === 'team' && p.parent_page_id)
+    .map((p) => p.parent_page_id as string)
+  const trackIds = trending
+    .filter((p) => p.parent_page_type === 'track' && p.parent_page_id)
+    .map((p) => p.parent_page_id as string)
+
+  const [driverLookup, teamLookup, trackLookup] = await Promise.all([
+    driverIds.length
+      ? supabase
+          .from('drivers')
+          .select('id, name')
+          .in('id', driverIds)
+          .then((res) => Object.fromEntries((res.data || []).map((d) => [d.id, slugify(d.name)])))
+      : {},
+    teamIds.length
+      ? supabase
+          .from('teams')
+          .select('id, name')
+          .in('id', teamIds)
+          .then((res) => Object.fromEntries((res.data || []).map((t) => [t.id, slugify(t.name)])))
+      : {},
+    trackIds.length
+      ? supabase
+          .from('tracks')
+          .select('id, name')
+          .in('id', trackIds)
+          .then((res) => Object.fromEntries((res.data || []).map((t) => [t.id, slugify(t.name)])))
+      : {},
+  ])
+
+  const trendingWithLinks = trending.map((post) => {
+    const type = post.parent_page_type as string | null
+    const parentId = post.parent_page_id as string | null
+    let href = '/feed'
+
+    if (type && parentId) {
+      const slug =
+        type === 'driver'
+          ? (driverLookup as Record<string, string>)[parentId]
+          : type === 'team'
+          ? (teamLookup as Record<string, string>)[parentId]
+          : type === 'track'
+          ? (trackLookup as Record<string, string>)[parentId]
+          : null
+
+      if (slug) {
+        const pathType = type === 'track' ? 'tracks' : `${type}s`
+        href = `/${pathType}/${slug}`
+      }
+    }
+
+    return { ...post, href }
+  })
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -222,8 +288,8 @@ export default async function FeedPage() {
           {hotTake.data && <HotTakeTuesday hotTake={hotTake.data} />}
 
           {/* Trending */}
-          {trendingPosts.data && trendingPosts.data.length > 0 && (
-            <TrendingSection posts={trendingPosts.data} />
+          {trendingWithLinks.length > 0 && (
+            <TrendingSection posts={trendingWithLinks} />
           )}
 
           {/* Upcoming Race */}

@@ -41,7 +41,7 @@ export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardPr
     <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-6 shadow-lg">
       <div className="mb-4 flex items-center space-x-2">
         <Trophy className="h-6 w-6 text-racing-orange" />
-        <h2 className="text-2xl font-bold text-foundation-black">
+        <h2 className="text-2xl font-bold text-background-text">
           Featured Fan of the Week
         </h2>
       </div>
@@ -71,7 +71,7 @@ export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardPr
           <div>
             <Link
               href={`/u/${fan.username}`}
-              className="text-xl font-bold text-foundation-black hover:text-racing-orange transition-colors"
+              className="text-xl font-bold text-background-text hover:text-racing-orange transition-colors"
             >
               {fan.username}
             </Link>
@@ -100,7 +100,7 @@ export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardPr
                 <Award className="h-4 w-4" />
                 <span>Total Points</span>
               </div>
-              <p className="mt-1 text-2xl font-bold text-foundation-black">
+              <p className="mt-1 text-2xl font-bold text-background-text">
                 {fan.points || 0}
               </p>
             </div>

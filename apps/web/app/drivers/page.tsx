@@ -1,11 +1,14 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { DriverCard } from '@/components/drivers/driver-card'
 
 export const revalidate = 3600 // Revalidate every hour
 
 export default async function DriversPage() {
-  const supabase = createServerComponentClient({ cookies })
+  // Use public client for static generation (no cookies needed)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const { data: drivers, error } = await supabase
     .from('drivers')

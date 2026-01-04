@@ -54,6 +54,19 @@ export function Navbar() {
     }
   }, [profileMenuOpen])
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+    // Ensure scroll is restored when menu closes
+    document.body.style.overflow = ''
+  }, [mobileMenuOpen])
+
   async function checkUser() {
     try {
       const {
@@ -124,7 +137,7 @@ export function Navbar() {
   // Logged-out state - brand styling
   if (!user && !loading) {
     return (
-      <nav className="bg-sunset-gradient">
+      <nav className="bg-sunset-gradient relative z-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
@@ -151,7 +164,7 @@ export function Navbar() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/login"
-                className="rounded-full bg-foundation-black px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-foundation-black/90"
+                className="rounded-full bg-background px-6 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
               >
                 Log In
               </Link>
@@ -174,8 +187,8 @@ export function Navbar() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/20">
-            <div className="space-y-1 px-2 pt-2 pb-3">
+          <div className="md:hidden fixed inset-x-0 top-16 bottom-0 z-40 bg-sunset-gradient/95 backdrop-blur">
+            <div className="space-y-1 border-t border-white/20 px-4 pt-3 pb-6">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -197,7 +210,7 @@ export function Navbar() {
 
   // Logged-in state - standard styling
   return (
-    <nav className="border-b border-gray-200 bg-sunset-gradient">
+    <nav className="border-b border-gray-200 bg-sunset-gradient relative z-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -321,8 +334,8 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="space-y-1 border-t border-gray-200 px-2 pt-2 pb-3">
+        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 z-40 bg-sunset-gradient/95 backdrop-blur">
+          <div className="space-y-1 border-t border-gray-200/50 px-4 pt-3 pb-6">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -330,7 +343,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block rounded-md px-3 py-2 text-base font-medium ${
                   pathname === item.href
-                    ? 'text-[#3BEFEB]'
+                    ? 'text-[#3BEFEB] bg-white/10'
                     : 'text-white hover:text-[#3BEFEB]'
                 }`}
               >
@@ -341,7 +354,7 @@ export function Navbar() {
               <Link
                 href={`/u/${profile.username}`}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-gray-100"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10"
               >
                 Profile
               </Link>
@@ -352,7 +365,7 @@ export function Navbar() {
                   handleSignOut()
                   setMobileMenuOpen(false)
                 }}
-                className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-white hover:bg-gray-100"
+                className="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-white hover:bg-white/10"
               >
                 {pathname === '/onboarding' ? 'Logout' : 'Sign Out'}
               </button>
