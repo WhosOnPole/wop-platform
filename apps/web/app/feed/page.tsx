@@ -9,7 +9,7 @@ import { HighlightsSection } from '@/components/feed/highlights-section'
 import { HotTakeTuesday } from '@/components/feed/hot-take-tuesday'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 async function getCurrentWeekStart() {
   const today = new Date()

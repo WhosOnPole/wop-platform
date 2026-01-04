@@ -1,7 +1,7 @@
 name = "wop-platform-web"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
+pages_build_output_dir = ".open-next"
 
 # Environment variables for build-time and runtime access
 # These variables will be available during the build process

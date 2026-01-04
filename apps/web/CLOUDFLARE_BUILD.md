@@ -44,18 +44,17 @@ If variables are missing, the build will fail with a clear error message.
 
 ### Build Command
 
-The build command used by Cloudflare Pages is:
+Use the OpenNext Cloudflare adapter:
 ```bash
-pnpm install --frozen-lockfile && pnpm dlx @cloudflare/next-on-pages
+pnpm install --frozen-lockfile && pnpm --filter web build
 ```
 
 This runs:
 1. `pnpm install` - Install dependencies
-2. `pnpm dlx @cloudflare/next-on-pages` - Build with Cloudflare adapter
-   - Which internally runs: `pnpm run build` (in apps/web)
-   - Which runs: `pnpm verify-env && next build`
+2. `pnpm --filter web build` - Executes `pnpm verify-env && next build && pnpm dlx @opennextjs/cloudflare build`
+   - Output is written to `.open-next` (see `wrangler.toml`).
 
-**Current Issue**: The build log shows `Build environment variables: (none found)`, which means Cloudflare Pages is not passing environment variables to the build process.
+**Note**: `@cloudflare/next-on-pages` is deprecated; `@opennextjs/cloudflare` is the supported adapter.
 
 ### Why Variables Aren't Available During Build
 

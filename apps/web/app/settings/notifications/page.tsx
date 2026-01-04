@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { NotificationSettings } from '@/components/notifications/notification-settings'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export default async function NotificationSettingsPage() {
   const supabase = createServerComponentClient({ cookies })

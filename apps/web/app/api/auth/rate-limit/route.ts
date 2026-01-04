@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes in milliseconds
 const RATE_LIMIT_WINDOW_SECONDS = 15 * 60 // 15 minutes in seconds

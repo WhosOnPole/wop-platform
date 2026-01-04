@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "verify-env": "node scripts/verify-build-env.js",
-    "build": "pnpm verify-env && next build",
+    "build": "pnpm verify-env && next build && pnpm dlx @opennextjs/cloudflare build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -28,6 +28,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.0.0-beta.3",
     "@playwright/test": "^1.44.1",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@types/node": "^20.11.0",

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { Calendar, BookOpen } from 'lucide-react'
 import { MarkdownContent } from '@/components/article/markdown-content'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
 
 interface PageProps {
