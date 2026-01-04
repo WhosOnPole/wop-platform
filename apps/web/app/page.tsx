@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { Logo } from '@/components/ui/logo'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+// export const dynamic = 'force-dynamic'
+// export const runtime = 'edge'
 
 export default function HomePage() {
   // Auth redirects are handled by middleware

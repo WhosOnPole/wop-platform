@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type')
 
   if (code) {
-    const cookieStore = await cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = createRouteHandlerClient({ cookies })
     
     // Check if this is a password recovery flow
     if (type === 'recovery') {

@@ -7,8 +7,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 export default async function LiveChatPage() {
-  const cookieStore = await cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+  const supabase = createServerComponentClient({ cookies })
 
   const now = new Date()
   const threeHoursLater = new Date(now.getTime() + 3 * 60 * 60 * 1000)

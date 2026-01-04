@@ -19,9 +19,6 @@ const nextConfig = {
       },
     ],
   },
-  turbopack: {
-    root: path.resolve(__dirname),
-  },
 }
 
 // Build-time verification of required env vars
