@@ -7,13 +7,13 @@ export const runtime = 'edge'
 export const revalidate = 3600 // Revalidate every hour
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default async function ArticlePage({ params }: PageProps) {
-  const { slug } = params
+  const { slug } = await params
   // Use public client for static generation (no cookies needed)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

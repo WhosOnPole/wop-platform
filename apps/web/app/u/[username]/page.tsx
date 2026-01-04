@@ -13,13 +13,13 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
 export default async function UserProfilePage({ params }: PageProps) {
-  const { username } = params
+  const { username } = await params
   const cookieStore = await cookies()
   const supabase = createServerComponentClient({ cookies: () => cookieStore })
   const {

@@ -9,13 +9,13 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default async function RacePage({ params }: PageProps) {
-  const { slug } = params
+  const { slug } = await params
   const cookieStore = await cookies()
   const supabase = createServerComponentClient({ cookies: () => cookieStore })
   const {
