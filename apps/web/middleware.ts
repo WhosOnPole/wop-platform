@@ -6,11 +6,16 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
+  // Completely bypass middleware for home page to avoid any potential errors
+  if (pathname === '/') {
+    return res
+  }
+
   try {
     const supabase = createMiddlewareClient({ req, res })
 
     // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-    const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/', '/coming-soon']
+    const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/coming-soon']
     if (publicPaths.some((path) => pathname.startsWith(path))) {
       // Still check session for authenticated users on public paths
       try {
@@ -28,7 +33,6 @@ export async function middleware(req: NextRequest) {
               .maybeSingle()
 
             // If on login/signup, redirect to feed or onboarding
-            // Home page (/) is now reverted to old content, so don't redirect from there
             if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
               const redirectUrl = req.nextUrl.clone()
               redirectUrl.pathname = profile?.username ? '/feed' : '/coming-soon'

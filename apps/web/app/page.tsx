@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { Logo } from '@/components/ui/logo'
 
 export const dynamic = 'force-dynamic'
@@ -8,6 +7,7 @@ export const runtime = 'edge'
 export default function HomePage() {
   // Auth redirects are handled by middleware
   // This page only renders static content for unauthenticated users
+  // Using regular img tag instead of Next.js Image for edge runtime compatibility
 
   return (
     <div className="min-h-screen bg-white">
@@ -41,14 +41,14 @@ export default function HomePage() {
         <div className="w-full lg:w-2/3 m-0 p-0">
           {/* Hero Section */}
           <section className="relative min-h-[100vh] flex flex-row overflow-hidden m-0 p-0">
-            {/* Background Image - Flush with top */}
-            <Image
-              src="/images/backsplash.png"
-              alt="Backsplash"
-              fill
-              className="object-cover object-top"
-              style={{ top: 0, left: 0 }}
-              priority
+            {/* Background Image - Using CSS background instead of Next.js Image for edge runtime */}
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-top"
+              style={{
+                backgroundImage: 'url(/images/backsplash.png)',
+                top: 0,
+                left: 0,
+              }}
             />
             {/* Content Overlay */}
             <div className="relative z-10 h-full w-full text-center max-w-3xl mx-auto text-white flex flex-col items-center justify-center px-10 pt-8">
