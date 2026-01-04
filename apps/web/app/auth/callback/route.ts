@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
     const supabase = createRouteHandlerClient({
       cookies: () => cookieStore,
     })
-    
     // Check if this is a password recovery flow
     if (type === 'recovery') {
       // Exchange code for session (creates temporary session for password reset)
