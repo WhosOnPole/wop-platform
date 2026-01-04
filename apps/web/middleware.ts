@@ -8,24 +8,27 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
 
   // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-  const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/']
+  const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/', '/coming-soon']
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     // Still check session for authenticated users on public paths
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
-    // If authenticated and on login/signup, redirect to feed or onboarding
-    if (session && (pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
+    // If authenticated, redirect based on path
+    if (session) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('username')
         .eq('id', session.user.id)
         .maybeSingle()
 
-      const redirectUrl = req.nextUrl.clone()
-      redirectUrl.pathname = profile?.username ? '/feed' : '/onboarding'
-      return NextResponse.redirect(redirectUrl)
+      // If on login/signup or home page, redirect to feed or onboarding
+      if (pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname === '/') {
+        const redirectUrl = req.nextUrl.clone()
+        redirectUrl.pathname = profile?.username ? '/feed' : '/coming-soon'
+        return NextResponse.redirect(redirectUrl)
+      }
     }
 
     return res
@@ -63,7 +66,7 @@ export async function middleware(req: NextRequest) {
   // Profile must have username to be considered complete
   if (!profile?.username) {
     const redirectUrl = req.nextUrl.clone()
-    redirectUrl.pathname = '/onboarding'
+    redirectUrl.pathname = '/coming-soon'
     return NextResponse.redirect(redirectUrl)
   }
 
