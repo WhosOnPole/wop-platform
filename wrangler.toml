@@ -1,0 +1,8 @@
+name = "wop-platform-web"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".open-next"
+
+# Note: Environment variables are defined in apps/web/wrangler.toml.
+# Cloudflare Pages uses this root file to detect the output dir.
+
