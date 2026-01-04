@@ -1,4 +1,5 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -19,31 +20,43 @@ async function getCurrentWeekStart() {
 }
 
 export default async function HomePage() {
-  const supabase = createServerComponentClient({ cookies })
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // Use public client for data fetching (doesn't require auth)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-  // If logged in, check onboarding status
-  if (session) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', session.user.id)
-      .maybeSingle()
+  // Try to check session for redirects (wrap in try-catch for edge runtime compatibility)
+  try {
+    const authSupabase = createServerComponentClient({ cookies })
+    const {
+      data: { session },
+    } = await authSupabase.auth.getSession()
 
-    // If no username, redirect to onboarding
-    if (!profile?.username) {
-      redirect('/onboarding')
+    // If logged in, check onboarding status
+    if (session) {
+      const { data: profile } = await authSupabase
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .maybeSingle()
+
+      // If no username, redirect to onboarding
+      if (!profile?.username) {
+        redirect('/onboarding')
+      }
+
+      // Otherwise redirect to feed
+      redirect('/feed')
     }
-
-    // Otherwise redirect to feed
-    redirect('/feed')
+  } catch (error) {
+    // If there's an error with auth (e.g., cookies not available in edge runtime), continue to show the landing page
+    console.error('Error checking session:', error)
   }
 
   const weekStart = await getCurrentWeekStart()
 
-  // Fetch featured content
+  // Fetch featured content using public client
   const [
     weeklyHighlights,
     topUsers,
@@ -123,13 +136,13 @@ export default async function HomePage() {
       {/* Desktop Split Layout */}
       <div className="flex h-screen">
         {/* Left Panel - Login/Create Account (1/3) */}
-        <div className="hidden lg:flex lg:w-1/3 bg-foundation-black flex-col items-center justify-center p-12">
+        <div className="hidden lg:flex lg:w-1/3 bg-background flex-col items-center justify-center p-12">
           <div className="w-full max-w-sm space-y-8">
             <Logo variant="gradient" size="md" href="/" className="mx-auto w-full" />
             <div className="space-y-4">
               <Link
                 href="/login"
-                className="block w-full rounded-full bg-white px-6 py-3 text-center text-base font-medium text-foundation-black transition-colors hover:bg-gray-100"
+                className="block w-full rounded-full bg-white px-6 py-3 text-center text-base font-medium text-background-text transition-colors hover:bg-gray-100"
               >
                 Log In
               </Link>
@@ -173,7 +186,7 @@ export default async function HomePage() {
               </p>
               <Link
                 href="/signup"
-                className="inline-block rounded-full bg-foundation-black px-8 py-4 text-lg font-bold italic text-white transition-colors hover:bg-foundation-black/90"
+                className="inline-block rounded-full bg-background px-8 py-4 text-lg font-bold italic text-white transition-colors hover:opacity-90"
               >
                 Join Us!
               </Link>

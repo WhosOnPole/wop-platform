@@ -164,7 +164,7 @@ export function Navbar() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/login"
-                className="rounded-full bg-foundation-black px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-foundation-black/90"
+                className="rounded-full bg-background px-6 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
               >
                 Log In
               </Link>
