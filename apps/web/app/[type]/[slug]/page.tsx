@@ -8,6 +8,7 @@ import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { TeamDriverHero } from '@/components/teams/team-driver-hero'
 import { TeamLogoSection } from '@/components/teams/team-logo-section'
 
+export const runtime = 'edge'
 export const revalidate = 3600 // Revalidate every hour
 
 interface PageProps {
