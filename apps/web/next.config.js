@@ -1,5 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    rootDir: __dirname,
+    turbo: {
+      resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json'],
+      resolveMainFields: ['module', 'main'],
+      resolveMainFiles: ['index'],
+      resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json'],
+      resolveMainFields: ['module', 'main'],
+      resolveMainFiles: ['index'],
+    },
+  },
   reactStrictMode: true,
   images: {
     domains: [
@@ -18,6 +29,8 @@ const nextConfig = {
     ],
   },
 }
+
+
 
 // Build-time verification of required env vars
 if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
