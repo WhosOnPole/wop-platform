@@ -51,85 +51,99 @@ export default async function HomePage() {
     }
   } catch (error) {
     // If there's an error with auth (e.g., cookies not available in edge runtime), continue to show the landing page
-    console.error('Error checking session:', error)
+    // Silently continue - this is expected in edge runtime
   }
 
-  const weekStart = await getCurrentWeekStart()
+  // Fetch featured content using public client with error handling
+  // Note: Data fetching is optional - page will render even if queries fail
+  // Since this is a landing page and the data isn't displayed, we can safely ignore failures
+  try {
+    const weekStart = await getCurrentWeekStart()
 
-  // Fetch featured content using public client
-  const [
-    weeklyHighlights,
-    topUsers,
-    featuredNews,
-    weeklyHighlightsFull,
-  ] = await Promise.all([
-    // Weekly highlights - fetch separately to avoid type issues
-    (async () => {
-      const { data: highlights } = await supabase
-        .from('weekly_highlights')
-        .select('highlighted_fan_id, highlighted_sponsor_id')
-        .eq('week_start_date', weekStart)
-        .single()
+    // Use Promise.allSettled to prevent one failure from crashing the page
+    await Promise.allSettled([
+      // Weekly highlights - fetch separately to avoid type issues
+      (async () => {
+        try {
+          const { data: highlights } = await supabase
+            .from('weekly_highlights')
+            .select('highlighted_fan_id, highlighted_sponsor_id')
+            .eq('week_start_date', weekStart)
+            .single()
 
-      if (highlights) {
-        const [fan, sponsor] = await Promise.all([
-          highlights.highlighted_fan_id
-            ? supabase
-                .from('profiles')
-                .select('id, username, profile_image_url')
-                .eq('id', highlights.highlighted_fan_id)
-                .single()
-            : Promise.resolve({ data: null }),
-          highlights.highlighted_sponsor_id
-            ? supabase
-                .from('sponsors')
-                .select('*')
-                .eq('id', highlights.highlighted_sponsor_id)
-                .single()
-            : Promise.resolve({ data: null }),
-        ])
-        return {
-          data: {
-            highlighted_fan: fan.data,
-            highlighted_sponsor: sponsor.data,
-          },
+          if (highlights) {
+            await Promise.allSettled([
+              highlights.highlighted_fan_id
+                ? supabase
+                    .from('profiles')
+                    .select('id, username, profile_image_url')
+                    .eq('id', highlights.highlighted_fan_id)
+                    .single()
+                : Promise.resolve({ data: null }),
+              highlights.highlighted_sponsor_id
+                ? supabase
+                    .from('sponsors')
+                    .select('*')
+                    .eq('id', highlights.highlighted_sponsor_id)
+                    .single()
+                : Promise.resolve({ data: null }),
+            ])
+          }
+        } catch (error) {
+          // Silently fail - data fetching is optional for landing page
         }
-      }
-      return { data: null }
-    })(),
-    // Top 3 users by points
-    supabase
-      .from('profiles')
-      .select('id, username, profile_image_url, points')
-      .order('points', { ascending: false })
-      .limit(3),
-    // Featured news story
-    supabase
-      .from('news_stories')
-      .select('*')
-      .eq('is_featured', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single(),
-    // Full weekly highlights for sponsor
-    (async () => {
-      const { data: highlights } = await supabase
-        .from('weekly_highlights')
-        .select('highlighted_fan_id, highlighted_sponsor_id')
-        .eq('week_start_date', weekStart)
-        .single()
+      })(),
+      // Top 3 users by points
+      (async () => {
+        try {
+          await supabase
+            .from('profiles')
+            .select('id, username, profile_image_url, points')
+            .order('points', { ascending: false })
+            .limit(3)
+        } catch (error) {
+          // Silently fail - data fetching is optional for landing page
+        }
+      })(),
+      // Featured news story
+      (async () => {
+        try {
+          await supabase
+            .from('news_stories')
+            .select('*')
+            .eq('is_featured', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+        } catch (error) {
+          // Silently fail - data fetching is optional for landing page
+        }
+      })(),
+      // Full weekly highlights for sponsor
+      (async () => {
+        try {
+          const { data: highlights } = await supabase
+            .from('weekly_highlights')
+            .select('highlighted_fan_id, highlighted_sponsor_id')
+            .eq('week_start_date', weekStart)
+            .single()
 
-      if (highlights?.highlighted_sponsor_id) {
-        const { data: sponsor } = await supabase
-          .from('sponsors')
-          .select('*')
-          .eq('id', highlights.highlighted_sponsor_id)
-          .single()
-        return sponsor
-      }
-      return null
-    })(),
-  ])
+          if (highlights?.highlighted_sponsor_id) {
+            await supabase
+              .from('sponsors')
+              .select('*')
+              .eq('id', highlights.highlighted_sponsor_id)
+              .single()
+          }
+        } catch (error) {
+          // Silently fail - data fetching is optional for landing page
+        }
+      })(),
+    ])
+  } catch (error) {
+    // If all data fetching fails, still show the landing page
+    // This is a landing page, so data fetching failures shouldn't prevent rendering
+  }
 
   return (
     <div className="min-h-screen bg-white">
