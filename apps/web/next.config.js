@@ -18,7 +18,10 @@ const nextConfig = {
         hostname: 'www.formula1.com',
       },
     ],
-  }
+  },
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
 }
 
 // Build-time verification of required env vars
