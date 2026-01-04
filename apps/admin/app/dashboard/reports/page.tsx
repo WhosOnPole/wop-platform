@@ -87,6 +87,53 @@ export default async function ReportsPage() {
   const gridMap = Object.fromEntries((gridsRes.data || []).map((g) => [g.id, g]))
   const profileMap = Object.fromEntries((profilesRes.data || []).map((p) => [p.id, p]))
 
+  // Collect parent page IDs from posts/comments for naming
+  const parentDriverIds = new Set<string>()
+  const parentTeamIds = new Set<string>()
+  const parentTrackIds = new Set<string>()
+  const parentProfileIds = new Set<string>()
+
+  Object.values(postMap).forEach((p: any) => {
+    if (p.parent_page_type === 'driver' && p.parent_page_id) parentDriverIds.add(p.parent_page_id)
+    if (p.parent_page_type === 'team' && p.parent_page_id) parentTeamIds.add(p.parent_page_id)
+    if (p.parent_page_type === 'track' && p.parent_page_id) parentTrackIds.add(p.parent_page_id)
+    if (p.parent_page_type === 'profile' && p.parent_page_id) parentProfileIds.add(p.parent_page_id)
+  })
+
+  const [parentDriversRes, parentTeamsRes, parentTracksRes, parentProfilesRes] = await Promise.all([
+    parentDriverIds.size
+      ? supabase
+          .from('drivers')
+          .select('id, name')
+          .in('id', Array.from(parentDriverIds))
+      : { data: [] },
+    parentTeamIds.size
+      ? supabase
+          .from('teams')
+          .select('id, name')
+          .in('id', Array.from(parentTeamIds))
+      : { data: [] },
+    parentTrackIds.size
+      ? supabase
+          .from('tracks')
+          .select('id, name')
+          .in('id', Array.from(parentTrackIds))
+      : { data: [] },
+    parentProfileIds.size
+      ? supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', Array.from(parentProfileIds))
+      : { data: [] },
+  ])
+
+  const driverNameMap = Object.fromEntries((parentDriversRes.data || []).map((d) => [d.id, d.name]))
+  const teamNameMap = Object.fromEntries((parentTeamsRes.data || []).map((t) => [t.id, t.name]))
+  const trackNameMap = Object.fromEntries((parentTracksRes.data || []).map((t) => [t.id, t.name]))
+  const parentProfileNameMap = Object.fromEntries(
+    (parentProfilesRes.data || []).map((p) => [p.id, p.username])
+  )
+
   const enrichedReports =
     pending?.map((report) => {
       let targetPreview: any = null
@@ -99,6 +146,16 @@ export default async function ReportsPage() {
             username: p.user?.username,
             parent_page_type: p.parent_page_type,
             parent_page_id: p.parent_page_id,
+            parent_name:
+              p.parent_page_type === 'driver'
+                ? driverNameMap[p.parent_page_id as string]
+                : p.parent_page_type === 'team'
+                ? teamNameMap[p.parent_page_id as string]
+                : p.parent_page_type === 'track'
+                ? trackNameMap[p.parent_page_id as string]
+                : p.parent_page_type === 'profile'
+                ? parentProfileNameMap[p.parent_page_id as string]
+                : null,
           }
       } else if (report.target_type === 'comment') {
         const c = commentMap[report.target_id]
@@ -110,6 +167,16 @@ export default async function ReportsPage() {
             username: c.user?.username,
             parent_page_type: parentPost?.parent_page_type,
             parent_page_id: parentPost?.parent_page_id,
+            parent_name:
+              parentPost?.parent_page_type === 'driver'
+                ? driverNameMap[parentPost.parent_page_id as string]
+                : parentPost?.parent_page_type === 'team'
+                ? teamNameMap[parentPost.parent_page_id as string]
+                : parentPost?.parent_page_type === 'track'
+                ? trackNameMap[parentPost.parent_page_id as string]
+                : parentPost?.parent_page_type === 'profile'
+                ? parentProfileNameMap[parentPost.parent_page_id as string]
+                : null,
           }
         }
       } else if (report.target_type === 'grid') {

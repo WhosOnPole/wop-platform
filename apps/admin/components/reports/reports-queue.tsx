@@ -23,6 +23,7 @@ interface Report {
     image?: string | null
     parent_page_type?: string | null
     parent_page_id?: string | null
+    parent_name?: string | null
   } | null
 }
 
@@ -64,34 +65,16 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
     setProcessing(reportId)
 
     try {
-      // Delete the offending content based on target_type
-      let deleteError = null
-      if (targetType === 'post') {
-        const { error } = await supabase.from('posts').delete().eq('id', targetId)
-        deleteError = error
-      } else if (targetType === 'comment') {
-        const { error } = await supabase.from('comments').delete().eq('id', targetId)
-        deleteError = error
-      } else if (targetType === 'grid') {
-        const { error } = await supabase.from('grids').delete().eq('id', targetId)
-        deleteError = error
-      } else if (targetType === 'profile') {
-        // For profiles, we can't delete the profile, but we could ban the user
-        // For now, just mark as resolved
-        console.warn('Profile reports cannot delete the profile')
+      const res = await fetch('/api/reports/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId, targetType, targetId }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to remove content')
       }
-
-      if (deleteError) {
-        throw deleteError
-      }
-
-      // Update report status to resolved_removed (this triggers the points/strikes penalty)
-      const { error: updateError } = await supabase
-        .from('reports')
-        .update({ status: 'resolved_removed' })
-        .eq('id', reportId)
-
-      if (updateError) throw updateError
 
       setReports(reports.filter((r) => r.id !== reportId))
     } catch (error: any) {
@@ -127,17 +110,18 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                 <span className="inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
                   {getTargetTypeLabel(report.target_type)}
                 </span>
-                <span className="ml-2 text-sm text-gray-500">
+                <span className="ml-2 mr-8 text-sm text-gray-500">
                   Reported by {report.reporter?.username || 'Unknown'}
+                </span>
+                <span className="text-gray-500 text-sm  text-right">
+                  <strong>Reason:</strong> {report.reason || 'No reason provided'}
                 </span>
               </div>
               <div className="text-sm text-gray-600 flex justify-between gap-3">
                 <span>
                   <strong>Target ID:</strong> {report.target_id}
                 </span>
-                <span className="text-gray-900">
-                  <strong>Reason:</strong> {report.reason}
-                </span>
+              
               </div>
               <div className="mt-1 text-xs text-gray-500">
                 Reported on {new Date(report.created_at).toLocaleString()}
@@ -165,7 +149,10 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                   )}
                   {report.targetPreview.parent_page_type && report.targetPreview.parent_page_id && (
                     <p className="mt-2 text-xs text-gray-500">
-                      Parent: {report.targetPreview.parent_page_type} ({report.targetPreview.parent_page_id})
+                      Parent:{' '}
+                      {report.targetPreview.parent_name
+                        ? `${getTargetTypeLabel(report.targetPreview.parent_page_type)}: ${report.targetPreview.parent_name}`
+                        : `${report.targetPreview.parent_page_type} (${report.targetPreview.parent_page_id})`}
                     </p>
                   )}
                 </div>
