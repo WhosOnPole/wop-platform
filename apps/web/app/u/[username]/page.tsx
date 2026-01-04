@@ -20,7 +20,8 @@ interface PageProps {
 
 export default async function UserProfilePage({ params }: PageProps) {
   const { username } = await params
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
   const {
     data: { session },
   } = await supabase.auth.getSession()

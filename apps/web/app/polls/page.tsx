@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export default async function PollsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
   const {
     data: { session },
   } = await supabase.auth.getSession()
