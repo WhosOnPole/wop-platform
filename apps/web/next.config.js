@@ -18,11 +18,7 @@ const nextConfig = {
         hostname: 'www.formula1.com',
       },
     ],
-  },
-  // Ensure Turbopack resolves the project root correctly (Next.js 16)
-  turbopack: {
-    root: path.join(__dirname),
-  },
+  }
 }
 
 // Build-time verification of required env vars
