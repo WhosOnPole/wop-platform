@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "verify-env": "node scripts/verify-build-env.js",
+    "build": "pnpm verify-env && next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
