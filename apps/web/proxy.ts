@@ -2,7 +2,7 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
@@ -12,7 +12,10 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    const supabase = createMiddlewareClient({ req, res })
+    const supabase = createMiddlewareClient({ 
+      req: req as any, 
+      res: res as any
+    })
 
     // Allow access to onboarding, auth, and public routes (for unauthenticated users)
     const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/coming-soon']

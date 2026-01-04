@@ -25,7 +25,8 @@ function slugify(name: string) {
 }
 
 export default async function FeedPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
   const {
     data: { session },
   } = await supabase.auth.getSession()

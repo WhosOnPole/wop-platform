@@ -9,7 +9,9 @@ interface Article {
   id: string
   title: string
   slug: string
+  content: string
   category: string
+  header_image_url: string | null
   status: string
   created_at: string
 }

@@ -6,7 +6,8 @@ import { NotificationSettings } from '@/components/notifications/notification-se
 export const runtime = 'edge'
 
 export default async function NotificationSettingsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
   const {
     data: { session },
   } = await supabase.auth.getSession()

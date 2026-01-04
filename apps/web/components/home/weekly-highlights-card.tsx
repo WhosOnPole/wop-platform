@@ -9,7 +9,8 @@ interface WeeklyHighlightsCardProps {
 }
 
 export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardProps) {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   // Fetch current week's highlights
   const { data: highlights } = await supabase
