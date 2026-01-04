@@ -109,3 +109,4 @@ apps/admin/.env.local
 apps/web/.env.local
 /supabase
 /docs
+/apps/web/.open-next
