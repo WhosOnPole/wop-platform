@@ -27,8 +27,9 @@ export async function middleware(req: NextRequest) {
               .eq('id', session.user.id)
               .maybeSingle()
 
-            // If on login/signup or home page, redirect to feed or onboarding
-            if (pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname === '/') {
+            // If on login/signup, redirect to feed or onboarding
+            // Home page (/) now shows coming-soon, so don't redirect from there
+            if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
               const redirectUrl = req.nextUrl.clone()
               redirectUrl.pathname = profile?.username ? '/feed' : '/coming-soon'
               return NextResponse.redirect(redirectUrl)

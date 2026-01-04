@@ -134,9 +134,8 @@ export function ComingSoonContent() {
         </div>
         
         {/* Logo overlay */}
-        <div className="relative z-10 text-center space-y-6">
-          <Logo variant="white" size="xl" href="/" className="mx-auto" />
-          <p className="text-xl text-white max-w-xl">
+        <div className="relative z-10 text-center space-y-6 p-12">
+          <p className="text-8xl font-display text-gray-800/50">
             We're putting the finishing touches on something amazing!
           </p>
         </div>
