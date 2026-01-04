@@ -13,11 +13,24 @@ The following environment variables must be set in Cloudflare Pages:
 
 ### Setting Variables in Cloudflare Pages
 
+Environment variables are defined in `wrangler.toml` for build-time and runtime access:
+
+```toml
+[vars]
+NEXT_PUBLIC_SUPABASE_URL = "https://akjgphgaisyhumgmaeqo.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-anon-key-here"
+```
+
+**Note**: The `NEXT_PUBLIC_*` prefix means these variables are public-facing and safe to commit to the repository.
+
+**Alternative Configuration**: You can also set these in Cloudflare Pages dashboard:
 1. Go to Cloudflare Dashboard → Your Project → **Settings**
 2. Navigate to **Variables and Secrets**
-3. Ensure both variables are listed:
-   - `NEXT_PUBLIC_SUPABASE_URL` (can be Plaintext)
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (should be Secret)
+3. Add both variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` (Plaintext)
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Plaintext or Secret)
+
+Variables defined in `wrangler.toml` take precedence and will be available during both build and runtime.
 
 ### Build Verification
 
@@ -41,6 +54,42 @@ This runs:
 2. `pnpm dlx @cloudflare/next-on-pages` - Build with Cloudflare adapter
    - Which internally runs: `pnpm run build` (in apps/web)
    - Which runs: `pnpm verify-env && next build`
+
+**Current Issue**: The build log shows `Build environment variables: (none found)`, which means Cloudflare Pages is not passing environment variables to the build process.
+
+### Why Variables Aren't Available During Build
+
+Cloudflare Pages environment variables are typically available at **runtime** but may not be automatically available during the **build phase**. This is a limitation when using `@cloudflare/next-on-pages` which runs `vercel build` internally.
+
+### Solutions
+
+#### Option 1: Verify Cloudflare Pages Configuration (Recommended)
+
+1. **Check Variable Settings**:
+   - Go to Cloudflare Dashboard → Your Project → Settings → Variables and Secrets
+   - Ensure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are listed
+   - Variables should be set as **Plaintext** (not just Secrets) for build-time access
+
+2. **Trigger New Deployment**:
+   - After adding/modifying variables, trigger a new deployment
+   - Variables may not be available until a fresh deployment
+
+3. **Check Build Logs**:
+   - Look for the verification output in build logs
+   - If you see "❌ Missing", variables aren't being passed to build
+
+#### Option 2: Use Runtime-Only Rendering (Fallback)
+
+If environment variables cannot be made available during build, you'll need to use `export const dynamic = 'force-dynamic'` instead of `export const revalidate = 3600`. This means:
+- ✅ Pages will work without build-time env vars
+- ❌ Pages won't be statically generated (no ISR benefits)
+- ❌ Slower initial page loads
+
+#### Option 3: Contact Cloudflare Support
+
+If variables are set correctly but still not available during build, this may be a Cloudflare Pages limitation. Consider:
+- Checking Cloudflare Pages documentation for build-time env var configuration
+- Contacting Cloudflare support about build-time environment variable access
 
 ### Troubleshooting
 
