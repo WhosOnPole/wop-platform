@@ -21,7 +21,9 @@ async function getCurrentWeekStart() {
 }
 
 export default async function FeedPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieGetter = () => cookies()
+  // @ts-expect-error Next 15 cookies() returns a Promise; auth-helper types still expect sync cookies. Safe to pass through.
+  const supabase = createServerComponentClient({ cookies: cookieGetter })
   const {
     data: { session },
   } = await supabase.auth.getSession()
