@@ -5,6 +5,7 @@ import { Logo } from '@/components/ui/logo'
 // export const runtime = 'edge'
 
 export default function HomePage() {
+  // Home page now shows coming-soon content
   // Auth redirects are handled by middleware
   // This page only renders static content for unauthenticated users
   // Using regular img tag instead of Next.js Image for edge runtime compatibility

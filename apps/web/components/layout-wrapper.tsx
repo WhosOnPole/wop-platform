@@ -7,7 +7,8 @@ import { LiveRaceBanner } from '@/components/live-race-banner'
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const isComingSoon = pathname === '/coming-soon'
+  // Hide navbar/footer for home page (/) and coming-soon page
+  const isComingSoon = pathname === '/coming-soon' || pathname === '/'
 
   if (isComingSoon) {
     return <>{children}</>
