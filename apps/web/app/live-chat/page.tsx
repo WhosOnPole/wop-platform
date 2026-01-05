@@ -7,8 +7,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export default async function LiveChatPage() {
-  const cookieGetter = () => cookies()
-  // @ts-expect-error Next 15 cookies() returns a Promise; auth-helper types expect sync cookies.
+  const cookieGetter = cookies as unknown as () => any
   const supabase = createServerComponentClient({ cookies: cookieGetter })
 
   const now = new Date()

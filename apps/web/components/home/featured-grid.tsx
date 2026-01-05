@@ -11,8 +11,7 @@ interface FeaturedGridProps {
 }
 
 export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
-  const cookieGetter = () => cookies()
-  // @ts-expect-error Next 15 cookies() returns a Promise; auth-helper types expect sync cookies.
+  const cookieGetter = cookies as unknown as () => any
   const supabase = createServerComponentClient({ cookies: cookieGetter })
 
   // Fetch top 3 grids (one of each type: driver, team, track)

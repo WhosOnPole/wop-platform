@@ -4,10 +4,10 @@ import { redirect } from 'next/navigation'
 import { NotificationSettings } from '@/components/notifications/notification-settings'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export default async function NotificationSettingsPage() {
-  const cookieGetter = () => cookies()
-  // @ts-expect-error Next 15 cookies() returns a Promise; auth-helper types expect sync cookies.
+  const cookieGetter = cookies as unknown as () => any
   const supabase = createServerComponentClient({ cookies: cookieGetter })
   const {
     data: { session },

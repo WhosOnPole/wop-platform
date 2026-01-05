@@ -11,9 +11,7 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type')
 
   if (code) {
-    const cookieGetter = () => cookies()
-    // @ts-expect-error Next 15 cookies() returns a Promise; auth-helper types still expect sync cookies. Safe to cast.
-    const supabase = createRouteHandlerClient({ cookies: cookieGetter })
+    const supabase = createRouteHandlerClient({ cookies })
     // Check if this is a password recovery flow
     if (type === 'recovery') {
       // Exchange code for session (creates temporary session for password reset)

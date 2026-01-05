@@ -25,8 +25,7 @@ function slugify(name: string) {
 }
 
 export default async function FeedPage() {
-  const cookieGetter = () => cookies()
-  // @ts-expect-error Next 15 cookies() returns a Promise; auth-helper types still expect sync cookies. Safe to pass through.
+  const cookieGetter = cookies as unknown as () => any
   const supabase = createServerComponentClient({ cookies: cookieGetter })
   const {
     data: { session },
