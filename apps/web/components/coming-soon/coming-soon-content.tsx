@@ -50,7 +50,7 @@ export function ComingSoonContent() {
               </div>
             </div>
 
-            <h1 className="text-4xl font-bold font-display tracking-wider">
+            <h1 className="text-4xl font-bold font-display">
               Coming Soon
             </h1>
             <p className="text-lg text-white/50">
