@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 
 export default async function LiveChatPage() {
   const cookieStore = await cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+  const supabase = createServerComponentClient({ cookies: async() => cookieStore })
 
   const now = new Date()
   const threeHoursLater = new Date(now.getTime() + 3 * 60 * 60 * 1000)

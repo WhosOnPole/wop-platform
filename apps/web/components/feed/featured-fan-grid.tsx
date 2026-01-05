@@ -14,7 +14,7 @@ interface FeaturedFanGridProps {
 
 export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) {
   const cookieStore = await cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+  const supabase = createServerComponentClient({ cookies: async() => cookieStore })
 
   // Fetch the most recent driver grid for the highlighted fan
   const { data: driverGrid } = await supabase

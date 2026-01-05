@@ -17,7 +17,7 @@ interface PageProps {
 export default async function RacePage({ params }: PageProps) {
   const { slug } = await params
   const cookieStore = await cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+  const supabase = createServerComponentClient({ cookies: async() => cookieStore })
   const {
     data: { session },
   } = await supabase.auth.getSession()
