@@ -6,17 +6,18 @@ import { CheckInSection } from '@/components/race/check-in-section'
 import { LiveChatComponent } from '@/components/race/live-chat-component'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default async function RacePage({ params }: PageProps) {
-  const { slug } = params
-  const supabase = createServerComponentClient({ cookies })
+  const { slug } = await params
+  const cookieGetter = cookies as unknown as () => any
+  const supabase = createServerComponentClient({ cookies: cookieGetter })
   const {
     data: { session },
   } = await supabase.auth.getSession()

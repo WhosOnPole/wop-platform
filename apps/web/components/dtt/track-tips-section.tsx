@@ -7,7 +7,8 @@ interface TrackTipsSectionProps {
 }
 
 export async function TrackTipsSection({ trackId }: TrackTipsSectionProps) {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieGetter = cookies as unknown as () => any
+  const supabase = createServerComponentClient({ cookies: cookieGetter })
 
   const { data: tips } = await supabase
     .from('track_tips')

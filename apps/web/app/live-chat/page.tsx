@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { Radio, Calendar, Clock } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export default async function LiveChatPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieGetter = cookies as unknown as () => any
+  const supabase = createServerComponentClient({ cookies: cookieGetter })
 
   const now = new Date()
   const threeHoursLater = new Date(now.getTime() + 3 * 60 * 60 * 1000)

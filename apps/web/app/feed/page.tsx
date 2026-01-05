@@ -9,7 +9,7 @@ import { HighlightsSection } from '@/components/feed/highlights-section'
 import { HotTakeTuesday } from '@/components/feed/hot-take-tuesday'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 async function getCurrentWeekStart() {
   const today = new Date()
@@ -25,7 +25,8 @@ function slugify(name: string) {
 }
 
 export default async function FeedPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieGetter = cookies as unknown as () => any
+  const supabase = createServerComponentClient({ cookies: cookieGetter })
   const {
     data: { session },
   } = await supabase.auth.getSession()

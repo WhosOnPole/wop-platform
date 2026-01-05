@@ -85,7 +85,6 @@ apps/web/test-results/
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -109,3 +108,4 @@ apps/admin/.env.local
 apps/web/.env.local
 /supabase
 /docs
+/apps/web/.open-next

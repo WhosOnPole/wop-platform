@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes in milliseconds
 const RATE_LIMIT_WINDOW_SECONDS = 15 * 60 // 15 minutes in seconds
@@ -145,11 +145,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Extract IP address
+    // Extract IP address (Next.js 16: request.ip is removed, use headers only)
     const ip =
-      request.ip ||
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') || // Cloudflare specific
       'unknown'
 
     const { endpoint } = await request.json()

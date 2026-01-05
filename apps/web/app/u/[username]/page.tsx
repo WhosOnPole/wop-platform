@@ -10,17 +10,18 @@ import { UserPostsSection } from '@/components/profile/user-posts-section'
 import { ProfileDiscussionSection } from '@/components/profile/profile-discussion-section'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
 export default async function UserProfilePage({ params }: PageProps) {
-  const { username } = params
-  const supabase = createServerComponentClient({ cookies })
+  const { username } = await params
+  const cookieGetter = cookies as unknown as () => any
+  const supabase = createServerComponentClient({ cookies: cookieGetter })
   const {
     data: { session },
   } = await supabase.auth.getSession()

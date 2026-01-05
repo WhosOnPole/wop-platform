@@ -22,15 +22,17 @@ export function UserPostsSection({ posts, username }: UserPostsSectionProps) {
     }
 
     const type = post.parent_page_type
-    const id = post.parent_page_id
     const name = post.parent_page_name || 'Unknown'
 
+    // Generate slug from name (same pattern used throughout the app)
+    const slug = name.toLowerCase().replace(/\s+/g, '-')
+
     if (type === 'driver') {
-      return { href: `/driver/${id}`, label: `Driver: ${name}`, icon: Trophy }
+      return { href: `/drivers/${slug}`, label: `Driver: ${name}`, icon: Trophy }
     } else if (type === 'team') {
-      return { href: `/team/${id}`, label: `Team: ${name}`, icon: Users }
+      return { href: `/teams/${slug}`, label: `Team: ${name}`, icon: Users }
     } else if (type === 'track') {
-      return { href: `/track/${id}`, label: `Track: ${name}`, icon: MapPin }
+      return { href: `/tracks/${slug}`, label: `Track: ${name}`, icon: MapPin }
     } else if (type === 'profile') {
       return { href: `/u/${name}`, label: `Profile: ${name}`, icon: Users }
     }

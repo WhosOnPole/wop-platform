@@ -8,18 +8,18 @@ import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { TeamDriverHero } from '@/components/teams/team-driver-hero'
 import { TeamLogoSection } from '@/components/teams/team-logo-section'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
 
 interface PageProps {
-  params: {
+  params: Promise<{
     type: string
     slug: string
-  }
+  }>
 }
 
 export default async function DynamicPage({ params }: PageProps) {
-  const { type, slug } = params
+  const { type, slug } = await params
   // Use public client for static generation (no cookies needed)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
