@@ -11,26 +11,30 @@ const path = require('path')
 // Load .env.local file if it exists (for local development)
 const envLocalPath = path.join(__dirname, '..', '.env.local')
 if (fs.existsSync(envLocalPath)) {
-  const envFile = fs.readFileSync(envLocalPath, 'utf8')
-  envFile.split('\n').forEach((line) => {
-    const trimmedLine = line.trim()
-    // Skip comments and empty lines
-    if (trimmedLine && !trimmedLine.startsWith('#')) {
-      const match = trimmedLine.match(/^([^=]+)=(.*)$/)
-      if (match) {
-        const key = match[1].trim()
-        let value = match[2].trim()
-        // Remove quotes if present
-        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-          value = value.slice(1, -1)
-        }
-        // Only set if not already in process.env (env vars take precedence)
-        if (!process.env[key]) {
-          process.env[key] = value
+  try {
+    const envFile = fs.readFileSync(envLocalPath, 'utf8')
+    envFile.split('\n').forEach((line) => {
+      const trimmedLine = line.trim()
+      // Skip comments and empty lines
+      if (trimmedLine && !trimmedLine.startsWith('#')) {
+        const match = trimmedLine.match(/^([^=]+)=(.*)$/)
+        if (match) {
+          const key = match[1].trim()
+          let value = match[2].trim()
+          // Remove quotes if present
+          if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1)
+          }
+          // Only set if not already in process.env (env vars take precedence)
+          if (!process.env[key]) {
+            process.env[key] = value
+          }
         }
       }
-    }
-  })
+    })
+  } catch (error) {
+    console.warn('⚠️  Could not read .env.local, continuing with existing environment:', error?.message)
+  }
 }
 
 const requiredVars = [
@@ -81,6 +85,10 @@ if (missingVars.length > 0) {
 console.log('✅ All required environment variables are available during build')
 requiredVars.forEach((varName) => {
   const value = process.env[varName]
+  if (!value) {
+    console.log(`   ${varName}: (not set in process.env)`)
+    return
+  }
   const preview = value.length > 30 ? value.substring(0, 30) + '...' : value
   console.log(`   ${varName}: ${preview}`)
 })
