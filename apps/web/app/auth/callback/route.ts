@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Next 15 cookies() is async; auth-helper expects sync getter. Cache then return.
     const cookieStore = await cookies()
     const supabase = createRouteHandlerClient({
-      cookies: async() => cookieStore,
+      cookies: () => cookieStore,
     })
     // Check if this is a password recovery flow
     if (type === 'recovery') {
