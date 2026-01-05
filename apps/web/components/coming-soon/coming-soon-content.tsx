@@ -38,11 +38,11 @@ export function ComingSoonContent() {
   }
 
   return (
-    <div className="flex min-h-screen bg-cover bg-center bg-no-repeat bg-[url(/images/backsplash.png)] lg:bg-background">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-cover bg-center bg-no-repeat bg-[url(/images/backsplash_mobile.png)] lg:flex-row lg:items-stretch lg:justify-between lg:bg-background">
       {/* Left Side - Background Points of Interest */}
 
-      <div className="lg:w-1/3 flex items-center justify-center p-8 relative">
-        <div className="w-full max-w-md space-y-8 rounded-lg bg-background lg:bg-white/75 backdrop-blur-sm p-8 shadow-lg">
+      <div className="relative flex w-full max-w-xl items-center justify-center p-8 lg:w-1/3">
+        <div className="w-full max-w-md space-y-8 rounded-lg bg-background lg:bg-background backdrop-blur-sm p-8 shadow-lg">
           <div className="space-y-4 text-center">
             <div className="flex justify-center">
               <div className="rounded-full p-4">
@@ -115,7 +115,7 @@ export function ComingSoonContent() {
 
       {/* Right Side - Coming Soon Panel */}
       <div className="hidden lg:flex w-full lg:w-2/3 flex items-center justify-center p-8 relative bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/images/backsplash.png)' }}>
-        <div className="absolute inset-0 opacity-5 text-white">
+        <div className="absolute inset-0 opacity-10 text-white">
           <div className="grid grid-cols-3 gap-28 p-8 h-full w-full">
             {pointsOfInterest.map((item, index) => (
               <div
@@ -135,8 +135,8 @@ export function ComingSoonContent() {
         
         {/* Logo overlay */}
         <div className="relative z-10 text-center space-y-6">
-          <Logo variant="white" size="xl" href="/" className="mx-auto" />
-          <p className="text-xl text-white max-w-xl">
+          <Logo variant="gradient" size="xl" href="/" className="mx-auto" />
+          <p className="text-5xl tracking-loose leading-tight text-white font-display max-w-2xl">
             We're putting the finishing touches on something amazing!
           </p>
         </div>
