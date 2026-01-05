@@ -19,7 +19,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Sageva', 'serif'],
+        display: ['Raygun', 'serif'],
       },
       backgroundImage: {
         'sunset-gradient': 'linear-gradient(45deg, #d90084, #ff4300)',

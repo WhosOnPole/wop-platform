@@ -22,8 +22,8 @@
 }
 
 @font-face {
-  font-family: 'Sageva';
-  src: url('/fonts/Sageva.ttf') format('truetype');
+  font-family: 'Raygun';
+  src: url('/fonts/RaygunRegular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -64,7 +64,7 @@ body {
   }
 
   .font-display {
-    font-family: 'Sageva', serif;
+    font-family: 'Raygun', serif;
   }
 
   .bg-sunset-gradient {
