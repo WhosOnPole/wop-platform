@@ -6,118 +6,51 @@ export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'A',location:'middleware.ts:entry',message:'middleware entry',data:{pathname,host:req.headers.get('host')},timestamp:Date.now()})}).catch(()=>{})
-  // #endregion
-
-  // Completely bypass middleware for home page to rule it out as a cause of 500 errors
-  if (pathname === '/') {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'B',location:'middleware.ts:root-bypass',message:'bypass root',data:{pathname},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
-    return res
-  }
-
   try {
-    const supabase = createMiddlewareClient({ 
-      req: req as any, 
-      res: res as any
+    const supabase = createMiddlewareClient({
+      req: req as any,
+      res: res as any,
     })
 
-    // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-    const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/coming-soon']
-    if (publicPaths.some((path) => pathname.startsWith(path))) {
-      // Still check session for authenticated users on public paths
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-        // If authenticated, redirect based on path
-        if (session) {
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('username')
-              .eq('id', session.user.id)
-              .maybeSingle()
+    // Allow list for unauthenticated traffic (coming soon + auth callbacks + health)
+    const publicPaths = ['/coming-soon', '/auth/callback', '/api/health']
+    const isPublic = publicPaths.some((path) => pathname.startsWith(path))
 
-            // If on login/signup, redirect to feed or onboarding
-            if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
-              const redirectUrl = req.nextUrl.clone()
-              redirectUrl.pathname = profile?.username ? '/feed' : '/coming-soon'
-              return NextResponse.redirect(redirectUrl)
-            }
-          } catch (error) {
-            // If profile query fails, continue without redirect
-            console.error('Error fetching profile in middleware:', error)
-          }
-        }
-      } catch (error) {
-        // If session check fails, continue without redirect
-        console.error('Error checking session in middleware:', error)
-      }
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'C',location:'middleware.ts:public-path',message:'public path allowed',data:{pathname},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
-      return res
+    if (!session && !isPublic) {
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = '/coming-soon'
+      redirectUrl.search = ''
+      return NextResponse.redirect(redirectUrl)
     }
 
-    // For protected routes, check authentication and onboarding
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+    // For authenticated users, keep existing behavior:
+    if (session) {
+      // Example: block banned users
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('banned_until, username')
+        .eq('id', session.user.id)
+        .maybeSingle()
 
-      if (!session) {
-        // Not authenticated, allow through (they'll be redirected by page-level checks)
-        return res
-      }
-
-      // Check ban status
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('banned_until, username')
-          .eq('id', session.user.id)
-          .maybeSingle()
-
-        // Check if user is banned
-        if (profile?.banned_until) {
-          const bannedUntil = new Date(profile.banned_until)
-          if (bannedUntil > new Date()) {
-            await supabase.auth.signOut()
-            const redirectUrl = req.nextUrl.clone()
-            redirectUrl.pathname = '/banned'
-            return NextResponse.redirect(redirectUrl)
-          }
-        }
-
-        // Check if user needs to complete onboarding
-        // Profile must have username to be considered complete
-        if (!profile?.username) {
+      if (profile?.banned_until) {
+        const bannedUntil = new Date(profile.banned_until)
+        if (bannedUntil > new Date()) {
+          await supabase.auth.signOut()
           const redirectUrl = req.nextUrl.clone()
-          redirectUrl.pathname = '/coming-soon'
+          redirectUrl.pathname = '/banned'
+          redirectUrl.search = ''
           return NextResponse.redirect(redirectUrl)
         }
-      } catch (error) {
-        // If profile query fails, allow through (page will handle auth)
-        console.error('Error fetching profile in middleware:', error)
       }
-    } catch (error) {
-      // If session check fails, allow through (page will handle auth)
-      console.error('Error checking session in middleware:', error)
     }
   } catch (error) {
-    // If middleware completely fails, allow request through
-    // Better to show the page with potential auth issues than a 500 error
-    console.error('Middleware error:', error)
+    console.error('Proxy middleware error:', error)
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'D',location:'middleware.ts:return',message:'middleware fallthrough',data:{pathname},timestamp:Date.now()})}).catch(()=>{})
-  // #endregion
   return res
 }
 
