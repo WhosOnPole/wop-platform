@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type')
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
-    
+    const cookieGetter = () => cookies()
+    // @ts-expect-error Next 15 cookies() returns a Promise; auth-helper types still expect sync cookies. Safe to cast.
+    const supabase = createRouteHandlerClient({ cookies: cookieGetter })
     // Check if this is a password recovery flow
     if (type === 'recovery') {
       // Exchange code for session (creates temporary session for password reset)

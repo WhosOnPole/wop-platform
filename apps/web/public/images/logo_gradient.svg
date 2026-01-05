@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-label="Who's on Pole logo gradient">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff3b6a"/>
+      <stop offset="50%" stop-color="#ff8f3f"/>
+      <stop offset="100%" stop-color="#ffd54f"/>
+    </linearGradient>
+    <style>
+      .text { fill: url(#g); font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 36px; }
+      .accent { fill: url(#g); }
+    </style>
+  </defs>
+  <rect width="320" height="80" fill="none"/>
+  <g transform="translate(20,18)">
+    <rect class="accent" x="0" y="10" width="14" height="44" rx="6"/>
+    <rect class="accent" x="20" y="0" width="14" height="54" rx="7"/>
+    <rect class="accent" x="40" y="6" width="14" height="48" rx="7"/>
+    <text class="text" x="70" y="45">WHO'S ON POLE</text>
+  </g>
+</svg>
+

@@ -1,5 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { LeaderboardView } from '@/components/leaderboard/leaderboard-view'
 
 async function getCurrentWeekStart() {
@@ -18,7 +17,11 @@ async function getCurrentMonthStart() {
 }
 
 export default async function LeaderboardPage() {
-  const supabase = createServerComponentClient({ cookies })
+  // Use public client for static generation (no cookies needed)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const weekStart = await getCurrentWeekStart()
   const monthStart = await getCurrentMonthStart()
 

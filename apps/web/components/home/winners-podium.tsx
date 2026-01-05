@@ -47,7 +47,7 @@ export function WinnersPodium({ users }: WinnersPodiumProps) {
               </div>
             </div>
             <div className="mt-4 rounded-lg bg-bright-teal/10 px-4 py-3 text-center">
-              <p className="font-semibold text-foundation-black">{second.username}</p>
+              <p className="font-semibold text-background-text">{second.username}</p>
               <p className="text-sm text-bright-teal font-medium">{second.points} points</p>
             </div>
           </Link>
@@ -80,7 +80,7 @@ export function WinnersPodium({ users }: WinnersPodiumProps) {
               </div>
             </div>
             <div className="mt-6 rounded-lg bg-racing-orange/10 px-6 py-4 text-center">
-              <p className="text-lg font-bold text-foundation-black">{first.username}</p>
+              <p className="text-lg font-bold text-background-text">{first.username}</p>
               <p className="text-sm font-semibold text-racing-orange font-medium">{first.points} points</p>
             </div>
           </Link>
@@ -113,7 +113,7 @@ export function WinnersPodium({ users }: WinnersPodiumProps) {
               </div>
             </div>
             <div className="mt-2 rounded-lg bg-bright-teal/10 px-3 py-2 text-center">
-              <p className="font-semibold text-foundation-black">{third.username}</p>
+              <p className="font-semibold text-background-text">{third.username}</p>
               <p className="text-xs text-bright-teal font-medium">{third.points} points</p>
             </div>
           </Link>

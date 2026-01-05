@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes in milliseconds
 const RATE_LIMIT_WINDOW_SECONDS = 15 * 60 // 15 minutes in seconds
@@ -12,8 +12,16 @@ const MAX_REQUESTS = 5 // Max 5 login/signup attempts per window
 let requestCount = 0
 const CLEANUP_INTERVAL = 100
 
+interface RateLimitRow {
+  ip_address: string
+  endpoint: string
+  request_count: number
+  expires_at: string
+  updated_at?: string | null
+}
+
 async function checkRateLimit(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   ip: string,
   endpoint: string
 ): Promise<{ allowed: boolean; remaining: number; resetAt: Date }> {
@@ -28,14 +36,21 @@ async function checkRateLimit(
     .eq('endpoint', endpoint)
     .maybeSingle()
 
+  if (fetchError) {
+    console.error('Error fetching rate limit:', fetchError)
+  }
+
+  // Type assertion for the existing record
+  const existingRecord = existing as Pick<RateLimitRow, 'request_count' | 'expires_at'> | null
+
   // If record exists and hasn't expired
-  if (existing && new Date(existing.expires_at) > now) {
+  if (existingRecord && new Date(existingRecord.expires_at) > now) {
     // Check if limit exceeded
-    if (existing.request_count >= MAX_REQUESTS) {
+    if (existingRecord.request_count >= MAX_REQUESTS) {
       return {
         allowed: false,
         remaining: 0,
-        resetAt: new Date(existing.expires_at),
+        resetAt: new Date(existingRecord.expires_at),
       }
     }
 
@@ -43,9 +58,9 @@ async function checkRateLimit(
     const { error: updateError } = await supabase
       .from('rate_limits')
       .update({
-        request_count: existing.request_count + 1,
+        request_count: existingRecord.request_count + 1,
         updated_at: now.toISOString(),
-      })
+      } as any)
       .eq('ip_address', ip)
       .eq('endpoint', endpoint)
 
@@ -54,15 +69,15 @@ async function checkRateLimit(
       // Allow request on error (fail open)
       return {
         allowed: true,
-        remaining: MAX_REQUESTS - existing.request_count - 1,
-        resetAt: new Date(existing.expires_at),
+        remaining: MAX_REQUESTS - existingRecord.request_count - 1,
+        resetAt: new Date(existingRecord.expires_at),
       }
     }
 
     return {
       allowed: true,
-      remaining: MAX_REQUESTS - existing.request_count - 1,
-      resetAt: new Date(existing.expires_at),
+      remaining: MAX_REQUESTS - existingRecord.request_count - 1,
+      resetAt: new Date(existingRecord.expires_at),
     }
   }
 
@@ -75,7 +90,7 @@ async function checkRateLimit(
         endpoint,
         request_count: 1,
         expires_at: expiresAt.toISOString(),
-      },
+      } as any,
       {
         onConflict: 'ip_address,endpoint',
       }
@@ -99,7 +114,7 @@ async function checkRateLimit(
 }
 
 async function cleanupExpiredRecords(
-  supabase: ReturnType<typeof createClient>
+  supabase: any
 ): Promise<void> {
   try {
     // Call the cleanup function
@@ -130,11 +145,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Extract IP address
+    // Extract IP address (Next.js 16: request.ip is removed, use headers only)
     const ip =
-      request.ip ||
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
+      request.headers.get('cf-connecting-ip') || // Cloudflare specific
       'unknown'
 
     const { endpoint } = await request.json()

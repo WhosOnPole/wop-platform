@@ -12,6 +12,7 @@ interface Post {
   content: string
   created_at: string
   user: User | null
+  href?: string
 }
 
 interface TrendingSectionProps {
@@ -29,7 +30,7 @@ export function TrendingSection({ posts }: TrendingSectionProps) {
         {posts.map((post) => (
           <Link
             key={post.id}
-            href={`/post/${post.id}`}
+            href={post.href || '/feed'}
             className="block rounded-md p-3 hover:bg-gray-50 transition-colors"
           >
             <p className="text-sm text-gray-700 line-clamp-2">{post.content}</p>
