@@ -116,7 +116,7 @@ importers:
         version: 3.25.76
     devDependencies:
       '@opennextjs/cloudflare':
-        specifier: ^1.0.0-beta.3
+        specifier: ^1.14.7
         version: 1.14.7(next@15.1.4)(wrangler@4.54.0)
       '@playwright/test':
         specifier: ^1.44.1
