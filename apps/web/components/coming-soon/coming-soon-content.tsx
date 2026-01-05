@@ -38,29 +38,29 @@ export function ComingSoonContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-cover bg-center bg-no-repeat bg-[url(/images/backsplash_mobile.png)] lg:flex-row lg:items-stretch lg:justify-between lg:bg-background">
+    <div className="flex h-screen min-h-screen flex-col items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat bg-[url(/images/backsplash_mobile.png)] lg:flex-row lg:items-stretch lg:justify-between lg:bg-background">
       {/* Left Side - Background Points of Interest */}
 
-      <div className="relative flex w-full max-w-xl items-center justify-center p-8 lg:w-1/3">
-        <div className="w-full max-w-md space-y-8 rounded-lg bg-background lg:bg-background backdrop-blur-sm p-8 shadow-lg">
-          <div className="space-y-4 text-center">
+      <div className="relative flex w-full max-w-xl items-center justify-center p-6 lg:w-1/3">
+        <div className="w-full max-w-md space-y-6 rounded-lg bg-background lg:bg-background backdrop-blur-sm p-6 shadow-lg">
+          <div className="space-y-3 text-center">
             <div className="flex justify-center">
               <div className="rounded-full p-4">
                 <Logo variant="gradient" size="lg" />
               </div>
             </div>
 
-            <h1 className="text-4xl font-bold font-display tracking-wider">
+            <h1 className="text-4xl font-bold font-display">
               Coming Soon
             </h1>
-            <p className="text-lg text-white/50">
-            Stay tuned for the launch of Who&apos;s on Pole - your ultimate F1 fan community
+            <p className="text-base text-white/60">
+              Stay tuned for the launch of Who&apos;s on Pole - your ultimate F1 fan community
             </p>
 
           </div>
 
-          <div className="space-y-4 rounded-lg border border-gray-400/50 p-6 bg-white/5 backdrop-blur-sm">
-            <div className="flex items-start space-x-6 mb-6">
+          <div className="space-y-3 rounded-lg border border-gray-400/50 p-5 bg-white/5 backdrop-blur-sm">
+            <div className="mb-4 flex items-start space-x-4">
               <Clock className="h-5 w-5 text-racing-orange mt-0.5 flex-shrink-0" />
               <div>
                 <h3 className="font-semibold text-racing-orange">What to Expect</h3>
@@ -70,7 +70,7 @@ export function ComingSoonContent() {
               </div>
             </div>
 
-            <div className="flex items-start space-x-6">
+            <div className="flex items-start space-x-4">
               <Mail className="h-5 w-5 text-bright-teal mt-0.5 flex-shrink-0" />
               <div>
                 <h3 className="font-semibold text-bright-teal">Stay in the Loop!</h3>
@@ -81,7 +81,7 @@ export function ComingSoonContent() {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
+          <div className="border-t border-gray-200 pt-5">
             <p className="text-center font-display text-sm text-white">
               Follow us for updates
             </p>
