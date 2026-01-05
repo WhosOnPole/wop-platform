@@ -1,0 +1,7 @@
+name = "wop-platform-admin"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".open-next"
+
+# Add env vars in Pages settings instead of committing secrets here.
+

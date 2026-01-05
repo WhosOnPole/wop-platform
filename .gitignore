@@ -74,12 +74,17 @@ jspm_packages/
 # Next.js build output
 .next
 
+# Playwright
+playwright-report/
+test-results/
+apps/web/playwright-report/
+apps/web/test-results/
+
 # Nuxt.js build / generate output
 .nuxt
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -103,3 +108,4 @@ apps/admin/.env.local
 apps/web/.env.local
 /supabase
 /docs
+/apps/web/.open-next

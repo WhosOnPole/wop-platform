@@ -1,20 +1,24 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import { Calendar, BookOpen } from 'lucide-react'
 import { MarkdownContent } from '@/components/article/markdown-content'
 
+export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default async function ArticlePage({ params }: PageProps) {
-  const { slug } = params
-  const supabase = createServerComponentClient({ cookies })
+  const { slug } = await params
+  // Use public client for static generation (no cookies needed)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const { data: article } = await supabase
     .from('articles')

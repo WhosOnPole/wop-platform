@@ -1,12 +1,15 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { getTeamIconUrl } from '@/utils/storage-urls'
 import { TeamCard } from '@/components/teams/team-card'
 
 export const revalidate = 3600 // Revalidate every hour
 
 export default async function TeamsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  // Use public client for static generation (no cookies needed)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 
   const { data: teams, error } = await supabase

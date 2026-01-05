@@ -11,7 +11,8 @@ interface FeaturedGridProps {
 }
 
 export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: async() => cookieStore })
 
   // Fetch top 3 grids (one of each type: driver, team, track)
   const [driverGrid, teamGrid, trackGrid] = await Promise.all([
@@ -73,7 +74,7 @@ export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
         <div>
           <Link
             href={`/u/${highlightedFan.username}`}
-            className="text-lg font-semibold text-foundation-black hover:text-bright-teal"
+            className="text-lg font-semibold text-background-text hover:text-bright-teal"
           >
             {highlightedFan.username}
           </Link>
