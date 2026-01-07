@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { getTeamIconUrl } from '@/utils/storage-urls'
 import { TeamCard } from '@/components/teams/team-card'
