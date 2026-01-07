@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { TrackCard } from '@/components/tracks/track-card'
 

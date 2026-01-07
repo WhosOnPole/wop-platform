@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { getTeamIconUrl } from '@/utils/storage-urls'
 import { TeamCard } from '@/components/teams/team-card'
@@ -16,7 +17,6 @@ export default async function TeamsPage() {
   }
 
   const supabase = createClient(supabaseUrl!, supabaseKey!)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 
   const { data: teams, error } = await supabase
     .from('teams')
