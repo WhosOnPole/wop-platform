@@ -101,12 +101,19 @@ function ResetPasswordForm() {
     setLoading(true)
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
+      // BotIdClient automatically adds necessary headers to protected routes
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password, confirmPassword }),
       })
 
-      if (updateError) {
-        setError(updateError.message || 'Failed to update password. Please try again.')
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to update password. Please try again.')
         setLoading(false)
         return
       }

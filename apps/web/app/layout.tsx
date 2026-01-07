@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { BotIDProviderWrapper } from '@/components/providers/botid-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <QueryProvider>
-          <LayoutWrapper>{children}</LayoutWrapper>
+          <BotIDProviderWrapper>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </BotIDProviderWrapper>
         </QueryProvider>
       </body>
     </html>

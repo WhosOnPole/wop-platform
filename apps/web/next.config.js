@@ -1,4 +1,5 @@
 const path = require('path')
+const { withBotId } = require('botid/next/config')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -44,5 +45,5 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUB
   }
 }
 
-module.exports = nextConfig
+module.exports = withBotId(nextConfig)
 

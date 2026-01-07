@@ -20,21 +20,41 @@ export function ComingSoonContent() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError(null)
     setLoading(true)
 
-    // TODO: Implement email subscription API endpoint
-    // For now, just simulate success
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    
-    setSubmitted(true)
-    setLoading(false)
-    setEmail('')
-    
-    // Reset after 5 seconds
-    setTimeout(() => setSubmitted(false), 5000)
+    try {
+      // BotIdClient automatically adds necessary headers to protected routes
+      const response = await fetch('/api/coming-soon/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to subscribe. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      setSubmitted(true)
+      setLoading(false)
+      setEmail('')
+      
+      // Reset after 5 seconds
+      setTimeout(() => setSubmitted(false), 5000)
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
