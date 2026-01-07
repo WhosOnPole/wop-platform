@@ -8,7 +8,10 @@ import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClientComponentClient({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  })
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
   const authContainerRef = useRef<HTMLDivElement>(null)
 

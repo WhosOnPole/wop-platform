@@ -6,10 +6,10 @@
 set -e
 
 SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-}"
-SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
+SECRET_KEY="${SUPABASE_SECRET_KEY:-}"
 
-if [ -z "$SUPABASE_URL" ] || [ -z "$SERVICE_ROLE_KEY" ]; then
-  echo "Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set"
+if [ -z "$SUPABASE_URL" ] || [ -z "$SECRET_KEY" ]; then
+  echo "Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY must be set"
   exit 1
 fi
 
@@ -21,7 +21,7 @@ echo ""
 echo "1. Testing Weekly Highlights Calculation..."
 curl -X POST \
   "${SUPABASE_URL}/functions/v1/calculate-weekly-highlights" \
-  -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SECRET_KEY}" \
   -H "Content-Type: application/json" \
   -d '{}' | jq '.'
 echo ""
@@ -30,7 +30,7 @@ echo ""
 echo "2. Testing Email Queue Processing..."
 curl -X POST \
   "${SUPABASE_URL}/functions/v1/process-email-queue" \
-  -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SECRET_KEY}" \
   -H "Content-Type: application/json" \
   -d '{}' | jq '.'
 echo ""
@@ -39,7 +39,7 @@ echo ""
 echo "3. Testing Notification Delivery..."
 curl -X POST \
   "${SUPABASE_URL}/functions/v1/deliver-notifications" \
-  -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SECRET_KEY}" \
   -H "Content-Type: application/json" \
   -d '{}' | jq '.'
 echo ""
@@ -48,7 +48,7 @@ echo ""
 echo "4. Testing Data Cleanup..."
 curl -X POST \
   "${SUPABASE_URL}/functions/v1/cleanup-data" \
-  -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SECRET_KEY}" \
   -H "Content-Type: application/json" \
   -d '{}' | jq '.'
 echo ""
@@ -57,7 +57,7 @@ echo ""
 echo "5. Testing Weekly Points Summary..."
 curl -X POST \
   "${SUPABASE_URL}/functions/v1/generate-points-summary" \
-  -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SECRET_KEY}" \
   -H "Content-Type: application/json" \
   -d '{"period_type": "weekly"}' | jq '.'
 echo ""
@@ -65,7 +65,7 @@ echo ""
 echo "6. Testing Monthly Points Summary..."
 curl -X POST \
   "${SUPABASE_URL}/functions/v1/generate-points-summary" \
-  -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SECRET_KEY}" \
   -H "Content-Type: application/json" \
   -d '{"period_type": "monthly"}' | jq '.'
 echo ""

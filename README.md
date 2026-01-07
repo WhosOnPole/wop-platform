@@ -52,47 +52,22 @@ pnpm install
 Create `.env.local` files in both `apps/web` and `apps/admin`:
 
 **apps/web/.env.local:**
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://akjgphgaisyhumgmaeqo.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuYXdnYnZtZnZyb3ZyY2txeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNDAwMDAsImV4cCI6MjA3MDcxNjAwMH0.CO_DuBRCIfWmby3C8MJDsdndAYod_4aZNLT5yGBgNvE
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=988898868785-dajalt9mqvoaqur28ms64rn791qovnq3.apps.googleusercontent.com
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
+
 
 **apps/admin/.env.local:**
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://akjgphgaisyhumgmaeqo.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuYXdnYnZtZnZyb3ZyY2txeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNDAwMDAsImV4cCI6MjA3MDcxNjAwMH0.CO_DuBRCIfWmby3C8MJDsdndAYod_4aZNLT5yGBgNvE
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=988898868785-dajalt9mqvoaqur28ms64rn791qovnq3.apps.googleusercontent.com
+NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
 NEXT_PUBLIC_SITE_URL=http://localhost:3001
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_SECRET_KEY=sb_secret_your_key # server-side only, set via env/secret store
 ```
 
-**Note:** Get your `SUPABASE_SERVICE_ROLE_KEY` from Supabase Dashboard > Settings > API > service_role key
+**Note:** Use Supabase's new API keys: publishable key for client-side access and secret key for server-only usage. Add them in your hosting env (e.g., Vercel) instead of committing to git.
 
 See [SETUP.md](./SETUP.md) for detailed setup instructions.
 
-### Database Setup
 
-1. Create a new Supabase project
-2. Run the migrations in order:
-   - `supabase/migrations/001_initial_schema.sql` - Creates all tables, enums, RLS policies 
-   - `supabase/migrations/002_points_strikes_triggers.sql` - Creates points & strikes system
-   - `supabase/migrations/004_add_unique_constraints.sql` - Adds UNIQUE constraints for OpenF1 upserts (required!)
-3. Deploy the Edge Function:
-   ```bash
-   supabase functions deploy ingest-openf1
-   ```
-   Or manually via Supabase Dashboard > Edge Functions > Deploy
-
-4. Set up OpenF1 ingestion (choose one method):
-   - **Simplest**: Manually trigger from Supabase Dashboard > Edge Functions > ingest-openf1 > Invoke
-   - **Recommended**: Set up scheduled function (Dashboard > Edge Functions > Schedule)
-   - **Advanced**: Use pg_cron (see `docs/OPENF1_SETUP.md` for detailed instructions)
-   
-   See [OpenF1 Setup Guide](./docs/OPENF1_SETUP.md) for complete instructions.
-
-### Development
 
 Run both apps in development mode:
 ```bash

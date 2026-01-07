@@ -16,7 +16,7 @@ This guide explains how to test the rate limiting functionality after migrating 
 
 2. **Verify environment variables:**
    - `NEXT_PUBLIC_SUPABASE_URL` - Should be set
-   - `SUPABASE_SERVICE_ROLE_KEY` - Should be set (server-side only)
+   - `SUPABASE_SECRET_KEY` - Should be set (server-side only)
 
 3. **Start the development server:**
    ```bash
@@ -151,7 +151,7 @@ SELECT cleanup_expired_rate_limits();
 ### Issue: All requests return 200
 **Possible causes:**
 - Migration not applied
-- `SUPABASE_SERVICE_ROLE_KEY` not set
+- `SUPABASE_SECRET_KEY` not set
 - Database connection issue
 
 **Solution:**

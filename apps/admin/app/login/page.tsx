@@ -8,7 +8,10 @@ import { useEffect } from 'react'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClientComponentClient({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  })
 
   useEffect(() => {
     // Check if already logged in

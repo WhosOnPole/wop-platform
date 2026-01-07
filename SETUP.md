@@ -8,18 +8,18 @@
    cp apps/admin/.env.example apps/admin/.env.local
    ```
 
-2. **Update the anon key in both files:**
+2. **Update the publishable key in both files:**
    - Open `apps/web/.env.local` and `apps/admin/.env.local`
-   - Replace `your-supabase-anon-key` with your actual Supabase anon key:
+   - Replace `your-supabase-publishable-key` with your Supabase publishable key:
      ```
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuYXdnYnZtZnZyb3ZyY2txeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNDAwMDAsImV4cCI6MjA3MDcxNjAwMH0.CO_DuBRCIfWmby3C8MJDsdndAYod_4aZNLT5yGBgNvE
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
      ```
 
-3. **Add service role key to admin app:**
+3. **Add the Supabase secret key to the admin app (server-only):**
    - Open `apps/admin/.env.local`
-   - Add your service role key (get it from Supabase Dashboard > Settings > API):
+   - Add your Supabase secret key (from Supabase Dashboard > Settings > API):
      ```
-     SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+   SUPABASE_SECRET_KEY=sb_secret_your_key
      ```
 
 4. **Install dependencies:**
@@ -27,16 +27,8 @@
    pnpm install
    ```
 
-5. **Run database migrations:**
-   - Go to Supabase Dashboard > SQL Editor
-   - Run `supabase/migrations/001_initial_schema.sql`
-   - Run `supabase/migrations/002_points_strikes_triggers.sql`
-   - Manually add banned_until column:
-     ```sql
-     ALTER TABLE auth.users ADD COLUMN banned_until TIMESTAMPTZ;
-     ```
 
-6. **Start development servers:**
+5. **Start development servers:**
    ```bash
    pnpm dev
    ```
@@ -45,29 +37,29 @@
 
 ### Web App (`apps/web/.env.local`)
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (public)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` - Supabase publishable key (public)
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `NEXT_PUBLIC_SITE_URL` - Your site URL (for OAuth redirects)
 
 ### Admin App (`apps/admin/.env.local`)
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (public)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` - Supabase publishable key (public)
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `NEXT_PUBLIC_SITE_URL` - Your admin site URL
-- `SUPABASE_SERVICE_ROLE_KEY` - **SECRET** - Service role key (server-side only)
+- `SUPABASE_SECRET_KEY` - **SECRET** - Supabase secret key (server-side only)
 
 ### Edge Functions
 Set these in Supabase Dashboard > Edge Functions > Settings:
 - `SUPABASE_URL` - Your Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY` - Service role key
+- `SUPABASE_SECRET_KEY` - Secret key (server-only)
 
 ## Important Notes
 
 ⚠️ **Never commit `.env.local` files to git!**
 
-⚠️ **Never expose `SUPABASE_SERVICE_ROLE_KEY` to client-side code!**
+⚠️ **Never expose `SUPABASE_SECRET_KEY` to client-side code!**
 
-The service role key bypasses RLS and should only be used in:
+The secret key bypasses RLS and should only be used in:
 - Server Actions
 - API Routes
 - Edge Functions

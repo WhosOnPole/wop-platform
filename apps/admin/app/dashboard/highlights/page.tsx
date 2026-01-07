@@ -15,7 +15,14 @@ async function getCurrentWeekStart() {
 }
 
 export default async function HighlightsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
   const weekStart = await getCurrentWeekStart()
 
   // Fetch current week's highlights
