@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const supabase = createRouteHandlerClient(
-      { cookies: () => cookieStore },
+      { cookies: () => cookieStore as any },
       {
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
         supabaseKey: process.env.SUPABASE_SECRET_KEY,
@@ -153,7 +153,7 @@ export async function GET() {
   try {
     const cookieStore = await cookies()
     const supabase = createRouteHandlerClient(
-      { cookies: () => cookieStore },
+      { cookies: () => cookieStore as any },
       {
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
         supabaseKey: process.env.SUPABASE_SECRET_KEY,
