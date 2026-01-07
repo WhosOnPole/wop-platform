@@ -11,8 +11,14 @@ interface FeaturedGridProps {
 }
 
 export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
-  const cookieGetter = cookies as unknown as () => any
-  const supabase = createServerComponentClient({ cookies: cookieGetter })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
 
   // Fetch top 3 grids (one of each type: driver, team, track)
   const [driverGrid, teamGrid, trackGrid] = await Promise.all([

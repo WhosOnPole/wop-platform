@@ -7,7 +7,14 @@ import { TracksTable } from '@/components/data-enrichment/tracks-table'
 import { OpenF1RefreshButton } from '@/components/data-enrichment/openf1-refresh-button'
 
 export default async function DataEnrichmentPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
 
   return (
     <div>

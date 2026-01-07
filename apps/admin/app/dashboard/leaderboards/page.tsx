@@ -3,7 +3,14 @@ import { cookies } from 'next/headers'
 import { LeaderboardDashboard } from '@/components/leaderboards/leaderboard-dashboard'
 
 export default async function LeaderboardsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
 
   // Fetch latest leaderboard generations
   const { data: weeklyLeaderboard } = await supabase

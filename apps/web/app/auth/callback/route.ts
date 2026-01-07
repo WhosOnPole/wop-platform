@@ -11,7 +11,13 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type')
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createRouteHandlerClient(
+      { cookies },
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      }
+    )
     // Check if this is a password recovery flow
     if (type === 'recovery') {
       // Exchange code for session (creates temporary session for password reset)

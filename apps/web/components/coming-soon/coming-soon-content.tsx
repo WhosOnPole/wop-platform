@@ -82,7 +82,7 @@ export function ComingSoonContent() {
           </div>
 
           <div className="border-t border-gray-200 pt-6">
-            <p className="text-center font-display text-sm text-white">
+            <p className="text-center font-display text-sm text-white tracking-wider">
               Follow us for updates
             </p>
             <div className="mt-4 flex justify-center space-x-4">

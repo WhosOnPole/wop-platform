@@ -19,10 +19,16 @@ export async function proxy(req: NextRequest) {
   }
 
   try {
-    const supabase = createMiddlewareClient({ 
-      req: req as any, 
-      res: res as any
-    })
+    const supabase = createMiddlewareClient(
+      {
+        req: req as any,
+        res: res as any,
+      },
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      }
+    )
 
     // Allow access to onboarding, auth, and public routes (for unauthenticated users)
     const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/coming-soon']

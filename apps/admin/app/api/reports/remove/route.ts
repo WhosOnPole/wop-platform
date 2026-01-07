@@ -10,14 +10,14 @@ interface RemovePayload {
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SECRET_KEY = process.env.SUPABASE_SECRET_KEY
 
 export async function POST(request: Request) {
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  if (!SUPABASE_URL || !SECRET_KEY) {
     return NextResponse.json({ error: 'Server configuration missing' }, { status: 500 })
   }
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+  const supabase = createClient(SUPABASE_URL, SECRET_KEY)
 
   let payload: RemovePayload
   try {

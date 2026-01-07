@@ -9,7 +9,13 @@ const COOLDOWN_HOURS = 24
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createRouteHandlerClient(
+      { cookies },
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.SUPABASE_SECRET_KEY,
+      }
+    )
     
     // Get current session
     const {
@@ -69,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     // Get Supabase project details from environment
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const serviceRoleKey = process.env.SUPABASE_SECRET_KEY
 
     if (!supabaseUrl || !serviceRoleKey) {
       return NextResponse.json(
@@ -144,7 +150,13 @@ export async function POST(request: NextRequest) {
 // GET endpoint to check last refresh time and cooldown status
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createRouteHandlerClient(
+      { cookies },
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.SUPABASE_SECRET_KEY,
+      }
+    )
     
     // Get current session
     const {

@@ -5,10 +5,16 @@ export const revalidate = 3600 // Revalidate every hour
 
 export default async function DriversPage() {
   // Use public client for static generation (no cookies needed)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Supabase public env vars are missing for drivers page')
+    notFound()
+  }
+
+  const supabase = createClient(supabaseUrl!, supabaseKey!)
 
   const { data: drivers, error } = await supabase
     .from('drivers')
