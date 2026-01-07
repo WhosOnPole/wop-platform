@@ -63,7 +63,7 @@ export default function LoginPage() {
           <Auth
             supabaseClient={supabase}
             appearance={{ theme: ThemeSupa }}
-            providers={['google', 'instagram', 'tiktok']}
+            providers={['google']}
             redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
             onlyThirdPartyProviders={false}
             view={view}

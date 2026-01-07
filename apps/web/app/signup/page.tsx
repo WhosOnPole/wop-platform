@@ -37,7 +37,7 @@ export default function SignupPage() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           view="sign_up"
-          providers={['google', 'instagram', 'tiktok']}
+          providers={['google']}
           redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
           onlyThirdPartyProviders={false}
         />
