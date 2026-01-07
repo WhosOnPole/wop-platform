@@ -8,7 +8,10 @@ import { useEffect } from 'react'
 
 export default function SignupPage() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClientComponentClient({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  })
 
   useEffect(() => {
     // Check if already logged in
@@ -34,7 +37,7 @@ export default function SignupPage() {
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
           view="sign_up"
-          providers={['google', 'apple', 'facebook', 'twitter']}
+          providers={['google', 'instagram', 'tiktok']}
           redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
           onlyThirdPartyProviders={false}
         />
