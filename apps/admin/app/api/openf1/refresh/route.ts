@@ -10,7 +10,7 @@ const COOLDOWN_HOURS = 24
 export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient(
-      { cookies },
+      { cookies: () => cookies() },
       {
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
         supabaseKey: process.env.SUPABASE_SECRET_KEY,
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient(
-      { cookies },
+      { cookies: () => cookies() },
       {
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
         supabaseKey: process.env.SUPABASE_SECRET_KEY,
