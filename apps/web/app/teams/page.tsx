@@ -16,7 +16,6 @@ export default async function TeamsPage() {
   }
 
   const supabase = createClient(supabaseUrl!, supabaseKey!)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 
   const { data: teams, error } = await supabase
     .from('teams')
