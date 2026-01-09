@@ -39,8 +39,11 @@ export async function proxy(req: NextRequest) {
       '/auth/reset-password',
       '/banned',
       '/coming-soon',
+      '/privacy',
+      '/terms',
       '/api/auth/tiktok',
       '/api/auth/tiktok/callback',
+      '/tiktokUltdht23ChFllaZO9MnLlgSt7HMHnZzl.txt', // TikTok domain verification file
     ]
     if (publicPaths.some((path) => pathname.startsWith(path))) {
       // Still check session for authenticated users on public paths
