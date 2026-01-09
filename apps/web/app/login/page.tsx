@@ -14,6 +14,7 @@ export default function LoginPage() {
   })
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
   const authContainerRef = useRef<HTMLDivElement>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Check if already logged in
@@ -23,6 +24,12 @@ export default function LoginPage() {
       }
     })
   }, [router, supabase])
+
+  useEffect(() => {
+    // Avoid useSearchParams to prevent Next.js prerender bailout in builds
+    const err = new URLSearchParams(window.location.search).get('error')
+    if (err) setError('Login failed. Please try another method or try again.')
+  }, [])
 
   // Monitor for view changes by intercepting toggle link clicks
   useEffect(() => {
@@ -58,6 +65,22 @@ export default function LoginPage() {
               ? 'Welcome back to the F1 fan community'
               : 'Create your account to get started'}
           </p>
+        </div>
+        {error && (
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        )}
+        <button
+          onClick={() => (window.location.href = '/api/auth/tiktok')}
+          className="flex w-full items-center justify-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition hover:bg-gray-50"
+          aria-label="Continue with TikTok"
+        >
+          <img src="/icons/tiktok.svg" alt="TikTok" className="h-5 w-5" />
+          <span>Continue with TikTok</span>
+        </button>
+        <div className="flex items-center space-x-2">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs uppercase text-gray-400">or</span>
+          <div className="h-px flex-1 bg-gray-200" />
         </div>
         <div ref={authContainerRef}>
           <Auth

@@ -31,7 +31,17 @@ export async function proxy(req: NextRequest) {
     )
 
     // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-    const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/coming-soon']
+    const publicPaths = [
+      '/onboarding',
+      '/login',
+      '/signup',
+      '/auth/callback',
+      '/auth/reset-password',
+      '/banned',
+      '/coming-soon',
+      '/api/auth/tiktok',
+      '/api/auth/tiktok/callback',
+    ]
     if (publicPaths.some((path) => pathname.startsWith(path))) {
       // Still check session for authenticated users on public paths
       try {
@@ -51,7 +61,7 @@ export async function proxy(req: NextRequest) {
             // If on login/signup, redirect to feed or onboarding
             if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
               const redirectUrl = req.nextUrl.clone()
-              redirectUrl.pathname = profile?.username ? '/feed' : '/coming-soon'
+              redirectUrl.pathname = profile?.username ? '/feed' : '/onboarding'
               return NextResponse.redirect(redirectUrl)
             }
           } catch (error) {
@@ -104,7 +114,7 @@ export async function proxy(req: NextRequest) {
         // Profile must have username to be considered complete
         if (!profile?.username) {
           const redirectUrl = req.nextUrl.clone()
-          redirectUrl.pathname = '/coming-soon'
+          redirectUrl.pathname = '/onboarding'
           return NextResponse.redirect(redirectUrl)
         }
       } catch (error) {
