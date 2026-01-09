@@ -4,11 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const supabase = createClientComponentClient({
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -27,11 +26,10 @@ export default function LoginPage() {
   }, [router, supabase])
 
   useEffect(() => {
-    const err = searchParams.get('error')
-    if (err) {
-      setError('Login failed. Please try another method or try again.')
-    }
-  }, [searchParams])
+    // Avoid useSearchParams to prevent Next.js prerender bailout in builds
+    const err = new URLSearchParams(window.location.search).get('error')
+    if (err) setError('Login failed. Please try another method or try again.')
+  }, [])
 
   // Monitor for view changes by intercepting toggle link clicks
   useEffect(() => {
