@@ -16,8 +16,15 @@ export async function proxy(req: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession()
 
-    // Allow list for unauthenticated traffic (coming soon + auth callbacks + health)
-    const publicPaths = ['/coming-soon', '/auth/callback', '/api/health', '/privacy', '/terms']
+    // Allow list for unauthenticated traffic (coming soon + auth callbacks + health + legal + verification)
+    const publicPaths = [
+      '/coming-soon',
+      '/auth/callback',
+      '/api/health',
+      '/privacy',
+      '/terms',
+      '/tiktokUltdht23ChFllaZO9MnLlgSt7HMHnZzl.txt',
+    ]
     const isPublic = publicPaths.some((path) => pathname.startsWith(path))
 
     if (!session && !isPublic) {
