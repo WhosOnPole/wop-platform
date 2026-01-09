@@ -1,57 +1,187 @@
-<style>
-  [data-custom-class='body'], [data-custom-class='body'] * { background: transparent !important; }
-  [data-custom-class='title'], [data-custom-class='title'] * { font-family: Arial !important; font-size: 26px !important; color: #000000 !important; }
-  [data-custom-class='subtitle'], [data-custom-class='subtitle'] * { font-family: Arial !important; color: #595959 !important; font-size: 14px !important; }
-  [data-custom-class='heading_1'], [data-custom-class='heading_1'] * { font-family: Arial !important; font-size: 19px !important; color: #000000 !important; }
-  [data-custom-class='heading_2'], [data-custom-class='heading_2'] * { font-family: Arial !important; font-size: 17px !important; color: #000000 !important; }
-  [data-custom-class='body_text'], [data-custom-class='body_text'] * { color: #595959 !important; font-size: 14px !important; font-family: Arial !important; }
-  [data-custom-class='link'], [data-custom-class='link'] * { color: #3030F1 !important; font-size: 14px !important; font-family: Arial !important; word-break: break-word !important; }
-  ul { list-style-type: square; }
-  ul > li > ul { list-style-type: circle; }
-  ul > li > ul > li > ul { list-style-type: square; }
-  ol li { font-family: Arial; }
-</style>
-<span style="display: block;margin: 0 auto 3.125rem;width: 11.125rem;height: 2.375rem;background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNzgiIGhlaWdodD0iMzgiIHZpZXdCb3g9IjAgMCAxNzggMzgiPgogICAgPGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8cGF0aCBmaWxsPSIjRDFEMUQxIiBkPSJNNC4yODMgMjQuMTA3Yy0uNzA1IDAtMS4yNTgtLjI1Ni0xLjY2LS43NjhoLS4wODVjLjA1Ny41MDIuMDg2Ljc5Mi4wODYuODd2Mi40MzRILjk4NXYtOC42NDhoMS4zMzJsLjIzMS43NzloLjA3NmMuMzgzLS41OTQuOTUtLjg5MiAxLjcwMi0uODkyLjcxIDAgMS4yNjQuMjc0IDEuNjY1LjgyMi40MDEuNTQ4LjYwMiAxLjMwOS42MDIgMi4yODMgMCAuNjQtLjA5NCAxLjE5OC0uMjgyIDEuNjctLjE4OC40NzMtLjQ1Ni44MzMtLjgwMyAxLjA4LS4zNDcuMjQ3LS43NTYuMzctMS4yMjUuMzd6TTMuOCAxOS4xOTNjLS40MDUgMC0uNy4xMjQtLjg4Ni4zNzMtLjE4Ny4yNDktLjI4My42Ni0uMjkgMS4yMzN2LjE3N2MwIC42NDUuMDk1IDEuMTA3LjI4NyAxLjM4Ni4xOTIuMjguNDk1LjQxOS45MS40MTkuNzM0IDAgMS4xMDEtLjYwNSAxLjEwMS0xLjgxNiAwLS41OS0uMDktMS4wMzQtLjI3LTEuMzI5LS4xODItLjI5NS0uNDY1LS40NDMtLjg1Mi0uNDQzem01LjU3IDEuNzk0YzAgLjU5NC4wOTggMS4wNDQuMjkzIDEuMzQ4LjE5Ni4zMDQuNTEzLjQ1Ny45NTQuNDU3LjQzNyAwIC43NS0uMTUyLjk0Mi0uNDU0LjE5Mi0uMzAzLjI4OC0uNzUzLjI4OC0xLjM1MSAwLS41OTUtLjA5Ny0xLjA0LS4yOS0xLjMzOC0uMTk0LS4yOTctLjUxLS40NDUtLjk1LS40NDUtLjQzOCAwLS43NTMuMTQ3LS45NDYuNDQzLS4xOTQuMjk1LS4yOS43NDItLjI5IDEuMzR6bTQuMTUzIDBjMCAuOTc3LS4yNTggMS43NDItLjc3NCAyLjI5My0uNTE1LjU1Mi0xLjIzMy44MjctMi4xNTQuODI3LS41NzYgMC0xLjA4NS0uMTI2LTEuNTI1LS4zNzhhMi41MiAyLjUyIDAgMCAxLTEuMDE1LTEuMDg4Yy0uMjM3LS40NzMtLjM1NS0xLjAyNC0uMzU1LTEuNjU0IDAtLjk4MS4yNTYtMS43NDQuNzY4LTIuMjg4LjUxMi0uNTQ1IDEuMjMyLS44MTcgMi4xNi0uODE3LjU3NiAwIDEuMDg1LjEyNiAxLjUyNS4zNzYuNDQuMjUxLjc3OS42MSAxLjAxNSAxLjA4LjIzNi40NjkuMzU1IDEuMDE5LjM1NSAxLjY0OXpNMTkuNzEgMjRsLS40NjItMi4xLS42MjMtMi42NTNoLS4wMzdMMTcuNDkzIDI0SDE1LjczbC0xLjcwOC02LjAwNWgxLjYzM2wuNjkzIDIuNjU5Yy4xMS40NzYuMjI0IDEuMTMzLjMzOCAxLjk3MWguMDMyYy4wMTUtLjI3Mi4wNzctLjcwNC4xODgtMS4yOTRsLjA4Ni0uNDU3Ljc0Mi0yLjg3OWgxLjgwNGwuNzA0IDIuODc5Yy4wMTQuMDc5LjAzNy4xOTUuMDY3LjM1YTIwLjk5OCAyMC45OTggMCAwIDEgLjE2NyAxLjAwMmMuMDIzLjE2NS4wMzYuMjk5LjA0LjM5OWguMDMyYy4wMzItLjI1OC4wOS0uNjExLjE3Mi0xLjA2LjA4Mi0uNDUuMTQxLS43NTQuMTc3LS45MTFsLjcyLTIuNjU5aDEuNjA2TDIxLjQ5NCAyNGgtMS43ODN6bTcuMDg2LTQuOTUyYy0uMzQ4IDAtLjYyLjExLS44MTcuMzMtLjE5Ny4yMi0uMzEuNTMzLS4zMzguOTM3aDIuMjk5Yy0uMDA4LS40MDQtLjExMy0uNzE3LS4zMTctLjkzNy0uMjA0LS4yMi0uNDgtLjMzLS44MjctLjMzem0uMjMgNS4wNmMtLjk2NiAwLTEuNzIyLS4yNjctMi4yNjYtLjgtLjU0NC0uNTM0LS44MTYtMS4yOS0uODE2LTIuMjY3IDAtMS4wMDcuMjUxLTEuNzg1Ljc1NC0yLjMzNC41MDMtLjU1IDEuMTk5LS44MjUgMi4wODctLjgyNS44NDggMCAxLjUxLjI0MiAxLjk4Mi43MjUuNDcyLjQ4NC43MDkgMS4xNTIuNzA5IDIuMDA0di43OTVoLTMuODczYy4wMTguNDY1LjE1Ni44MjkuNDE0IDEuMDkuMjU4LjI2MS42Mi4zOTIgMS4wODUuMzkyLjM2MSAwIC43MDMtLjAzNyAxLjAyNi0uMTEzYTUuMTMzIDUuMTMzIDAgMCAwIDEuMDEtLjM2djEuMjY4Yy0uMjg3LjE0My0uNTkzLjI1LS45Mi4zMmE1Ljc5IDUuNzkgMCAwIDEtMS4xOTEuMTA0em03LjI1My02LjIyNmMuMjIyIDAgLjQwNi4wMTYuNTUzLjA0OWwtLjEyNCAxLjUzNmExLjg3NyAxLjg3NyAwIDAgMC0uNDgzLS4wNTRjLS41MjMgMC0uOTMuMTM0LTEuMjIyLjQwMy0uMjkyLjI2OC0uNDM4LjY0NC0uNDM4IDEuMTI4VjI0aC0xLjYzOHYtNi4wMDVoMS4yNGwuMjQyIDEuMDFoLjA4Yy4xODctLjMzNy40MzktLjYwOC43NTYtLjgxNGExLjg2IDEuODYgMCAwIDEgMS4wMzQtLjMwOXptNC4wMjkgMS4xNjZjLS4zNDcgMC0uNjIuMTEtLjgxNy4zMy0uMTk3LjIyLS4zMS41MzMtLjMzOC45MzdoMi4yOTljLS4wMDctLjQwNC0uMTEzLS43MTctLjMxNy0uOTM3LS4yMDQtLjIyLS40OC0uMzMtLjgyNy0uMzN6bS4yMyA1LjA2Yy0uOTY2IDAtMS43MjItLjI2Ny0yLjI2Ni0uOC0uNTQ0LS41MzQtLjgxNi0xLjI5LS44MTYtMi4yNjcgMC0xLjAwNy4yNTEtMS43ODUuNzU0LTIuMzM0LjUwNC0uNTUgMS4yLS44MjUgMi4wODctLjgyNS44NDkgMCAxLjUxLjI0MiAxLjk4Mi43MjUuNDczLjQ4NC43MDkgMS4xNTIuNzA5IDIuMDA0di43OTVoLTMuODczYy4wMTguNDY1LjE1Ni44MjkuNDE0IDEuMDkuMjU4LjI2MS42Mi4zOTIgMS4wODUuMzkyLjM2MiAwIC43MDQtLjAzNyAxLjAyNi0uMTEzYTUuMTMzIDUuMTMzIDAgMCAwIDEuMDEtLjM2djEuMjY4Yy0uMjg3LjE0My0uNTkzLjI1LS45MTkuMzJhNS43OSA1Ljc5IDAgMCAxLTEuMTkyLjEwNHptNS44MDMgMGMtLjcwNiAwLTEuMjYtLjI3NS0xLjY2My0uODIyLS40MDMtLjU0OC0uNjA0LTEuMzA3LS42MDQtMi4yNzggMC0uOTg0LjIwNS0xLjc1Mi42MTUtMi4zMDEuNDEtLjU1Ljk3NS0uODI1IDEuNjk1LS44MjUuNzU1IDAgMS4zMzIuMjk0IDEuNzI5Ljg4MWguMDU0YTYuNjk3IDYuNjk3IDAgMCAxLS4xMjQtMS4xOTh2LTEuOTIyaDEuNjQ0VjI0SDQ2LjQzbC0uMzE3LS43NzloLS4wN2MtLjM3Mi41OTEtLjk0Ljg4Ni0xLjcwMi44ODZ6bS41NzQtMS4zMDZjLjQyIDAgLjcyNi0uMTIxLjkyMS0uMzY1LjE5Ni0uMjQzLjMwMi0uNjU3LjMyLTEuMjR2LS4xNzhjMC0uNjQ0LS4xLTEuMTA2LS4yOTgtMS4zODYtLjE5OS0uMjc5LS41MjItLjQxOS0uOTctLjQxOWEuOTYyLjk2MiAwIDAgMC0uODUuNDY1Yy0uMjAzLjMxLS4zMDQuNzYtLjMwNCAxLjM1IDAgLjU5Mi4xMDIgMS4wMzUuMzA2IDEuMzMuMjA0LjI5Ni40OTYuNDQzLjg3NS40NDN6bTEwLjkyMi00LjkyYy43MDkgMCAxLjI2NC4yNzcgMS42NjUuODMuNC41NTMuNjAxIDEuMzEyLjYwMSAyLjI3NSAwIC45OTItLjIwNiAxLjc2LS42MiAyLjMwNC0uNDE0LjU0NC0uOTc3LjgxNi0xLjY5LjgxNi0uNzA1IDAtMS4yNTgtLjI1Ni0xLjY1OS0uNzY4aC0uMTEzbC0uMjc0LjY2MWgtMS4yNTF2LTguMzU3aDEuNjM4djEuOTQ0YzAgLjI0Ny0uMDIxLjY0My0uMDY0IDEuMTg3aC4wNjRjLjM4My0uNTk0Ljk1LS44OTIgMS43MDMtLjg5MnptLS41MjcgMS4zMWMtLjQwNCAwLS43LjEyNS0uODg2LjM3NC0uMTg2LjI0OS0uMjgzLjY2LS4yOSAxLjIzM3YuMTc3YzAgLjY0NS4wOTYgMS4xMDcuMjg3IDEuMzg2LjE5Mi4yOC40OTUuNDE5LjkxLjQxOS4zMzcgMCAuNjA1LS4xNTUuODA0LS40NjUuMTk5LS4zMS4yOTgtLjc2LjI5OC0xLjM1IDAtLjU5MS0uMS0xLjAzNS0uMy0xLjMzYS45NDMuOTQzIDAgMCAwLS44MjMtLjQ0M3ptMy4xODYtMS4xOTdoMS43OTRsMS4xMzQgMy4zNzljLjA5Ni4yOTMuMTYzLjY0LjE5OCAxLjA0MmguMDMzYy4wMzktLjM3LjExNi0uNzE3LjIzLTEuMDQybDEuMTEyLTMuMzc5aDEuNzU3bC0yLjU0IDYuNzczYy0uMjM0LjYyNy0uNTY2IDEuMDk2LS45OTcgMS40MDctLjQzMi4zMTItLjkzNi40NjgtMS41MTIuNDY4LS4yODMgMC0uNTYtLjAzLS44MzMtLjA5MnYtMS4zYTIuOCAyLjggMCAwIDAgLjY0NS4wN2MuMjkgMCAuNTQzLS4wODguNzYtLjI2Ni4yMTctLjE3Ny4zODYtLjQ0NC41MDgtLjgwM2wuMDk2LS4yOTUtMi4zODUtNS45NjJ6Ii8+CiAgICAgICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNzMpIj4KICAgICAgICAgICAgPGNpcmNsZSBjeD0iMTkiIGN5PSIxOSIgcj0iMTkiIGZpbGw9IiNFMEUwRTAiLz4KICAgICAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTIyLjQ3NCAxNS40NDNoNS4xNjJMMTIuNDM2IDMwLjRWMTAuMzYzaDE1LjJsLTUuMTYyIDUuMDh6Ii8+CiAgICAgICAgPC9nPgogICAgICAgIDxwYXRoIGZpbGw9IiNEMkQyRDIiIGQ9Ik0xMjEuNTQ0IDE0LjU2di0xLjcyOGg4LjI3MnYxLjcyOGgtMy4wMjRWMjRoLTIuMjR2LTkuNDRoLTMuMDA4em0xMy43NDQgOS41NjhjLTEuMjkgMC0yLjM0MS0uNDE5LTMuMTUyLTEuMjU2LS44MS0uODM3LTEuMjE2LTEuOTQ0LTEuMjE2LTMuMzJzLjQwOC0yLjQ3NyAxLjIyNC0zLjMwNGMuODE2LS44MjcgMS44NzItMS4yNCAzLjE2OC0xLjI0czIuMzYuNDAzIDMuMTkyIDEuMjA4Yy44MzIuODA1IDEuMjQ4IDEuODggMS4yNDggMy4yMjQgMCAuMzEtLjAyMS41OTctLjA2NC44NjRoLTYuNDY0Yy4wNTMuNTc2LjI2NyAxLjA0LjY0IDEuMzkyLjM3My4zNTIuODQ4LjUyOCAxLjQyNC41MjguNzc5IDAgMS4zNTUtLjMyIDEuNzI4LS45NmgyLjQzMmEzLjg5MSAzLjg5MSAwIDAgMS0xLjQ4OCAyLjA2NGMtLjczNi41MzMtMS42MjcuOC0yLjY3Mi44em0xLjQ4LTYuNjg4Yy0uNC0uMzUyLS44ODMtLjUyOC0xLjQ0OC0uNTI4cy0xLjAzNy4xNzYtMS40MTYuNTI4Yy0uMzc5LjM1Mi0uNjA1LjgyMS0uNjggMS40MDhoNC4xOTJjLS4wMzItLjU4Ny0uMjQ4LTEuMDU2LS42NDgtMS40MDh6bTcuMDE2LTIuMzA0djEuNTY4Yy41OTctMS4xMyAxLjQ2MS0xLjY5NiAyLjU5Mi0xLjY5NnYyLjMwNGgtLjU2Yy0uNjcyIDAtMS4xNzkuMTY4LTEuNTIuNTA0LS4zNDEuMzM2LS41MTIuOTE1LS41MTIgMS43MzZWMjRoLTIuMjU2di04Ljg2NGgyLjI1NnptNi40NDggMHYxLjMyOGMuNTY1LS45NyAxLjQ4My0xLjQ1NiAyLjc1Mi0xLjQ1Ni42NzIgMCAxLjI3Mi4xNTUgMS44LjQ2NC41MjguMzEuOTM2Ljc1MiAxLjIyNCAxLjMyOC4zMS0uNTU1LjczMy0uOTkyIDEuMjcyLTEuMzEyYTMuNDg4IDMuNDg4IDAgMCAxIDEuODE2LS40OGMxLjA1NiAwIDEuOTA3LjMzIDIuNTUyLjk5Mi42NDUuNjYxLjk2OCAxLjU5Ljk2OCAyLjc4NFYyNGgtMi4yNHYtNC44OTZjMC0uNjkzLS4xNzYtMS4yMjQtLjUyOC0xLjU5Mi0uMzUyLS4zNjgtLjgzMi0uNTUyLTEuNDQtLjU1MnMtMS4wOS4xODQtMS40NDguNTUyYy0uMzU3LjM2OC0uNTM2Ljg5OS0uNTM2IDEuNTkyVjI0aC0yLjI0di00Ljg5NmMwLS42OTMtLjE3Ni0xLjIyNC0uNTI4LTEuNTkyLS4zNTItLjM2OC0uODMyLS41NTItMS40NC0uNTUycy0xLjA5LjE4NC0xLjQ0OC41NTJjLS4zNTcuMzY4LS41MzYuODk5LS41MzYgMS41OTJWMjRoLTIuMjU2di04Ljg2NGgyLjI1NnpNMTY0LjkzNiAyNFYxMi4xNmgyLjI1NlYyNGgtMi4yNTZ6bTcuMDQtLjE2bC0zLjQ3Mi04LjcwNGgyLjUyOGwyLjI1NiA2LjMwNCAyLjM4NC02LjMwNGgyLjM1MmwtNS41MzYgMTMuMDU2aC0yLjM1MmwxLjg0LTQuMzUyeiIvPgogICAgPC9nPgo8L3N2Zz4K) center no-repeat;"></span>
-
-<div data-custom-class="body">
-<div><strong><span style="font-size: 26px;"><span data-custom-class="title"><bdt class="block-component"></bdt><h1>PRIVACY NOTICE</h1><bdt class="block-component"></bdt></span></span></strong></div><div><span style="color: rgb(127, 127, 127);"><strong><span style="font-size: 15px;"><span data-custom-class="subtitle">Last updated <bdt class="question">__________</bdt></span></span></strong></span></div><div><br></div><div><br></div><div><br></div><div style="line-height: 1.5;"><span style="color: rgb(127, 127, 127);"><span style="color: rgb(89, 89, 89); font-size: 15px;"><span data-custom-class="body_text">This Privacy Notice for <bdt class="question noTranslate">Who’s On Pole, LLC. </bdt><bdt class="block-component"></bdt></bdt> (<bdt class="block-component"></bdt>"<strong>we</strong>," "<strong>us</strong>," or "<strong>our</strong>"<bdt class="statement-end-if-in-editor"></bdt></span><span data-custom-class="body_text">), describes how and why we might access, collect, store, use, and/or share (<bdt class="block-component"></bdt>"<strong>process</strong>"<bdt class="statement-end-if-in-editor"></bdt>) your personal information when you use our services (<bdt class="block-component"></bdt>"<strong>Services</strong>"<bdt class="statement-end-if-in-editor"></bdt>), including when you:</span></span></span></div><ul><li data-custom-class="body_text" style="line-height: 1.5;"><span style="font-size: 15px; color: rgb(89, 89, 89);">Visit our website <a target="_blank" data-custom-class="link" href="http://www.whosonpole.org" style="color: rgb(0, 58, 250);">http://www.whosonpole.org</a> or any website of ours that links to this Privacy Notice</span></li><li data-custom-class="body_text" style="line-height: 1.5;"><span style="font-size: 15px; color: rgb(89, 89, 89);">Download and use our mobile application <bdt class="question">Who’s On Pole</bdt>, or any other application of ours that links to this Privacy Notice</span></li><li data-custom-class="body_text" style="line-height: 1.5;"><span style="font-size: 15px; color: rgb(89, 89, 89);">Engage with us in other related ways, including any marketing or events</span></li></ul><div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>Questions or concerns? </strong>Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services.</span></span></div><div style="line-height: 1.5;"><br></div><div style="line-height: 1.5;"><br></div><div style="line-height: 1.5;"><strong><span style="font-size: 15px;"><span data-custom-class="heading_1"><h2>SUMMARY OF KEY POINTS</h2></span></span></strong></div><div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong><em>This summary provides key points from our Privacy Notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our </em></strong></span></span><a data-custom-class="link" href="#toc" style="color: rgb(0, 58, 250); font-size: 15px;"><span data-custom-class="body_text"><strong><em>table of contents</em></strong></span></a><span style="font-size: 15px;"><span data-custom-class="body_text"><strong><em> below to find the section you are looking for.</em></strong></span></span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>What personal information do we process?</strong> When you visit, use, or navigate our Services, we may process personal information depending on how you interact with us and the Services, the choices you make, and the products and features you use. Learn more about </span></span><a data-custom-class="link" href="#personalinfo" style="color: rgb(0, 58, 250); font-size: 15px;"><span data-custom-class="body_text">personal information you disclose to us</span></a><span data-custom-class="body_text">.</span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>Do we process any sensitive personal information? </strong>Some of the information may be considered "special" or "sensitive" in certain jurisdictions, for example your racial or ethnic origins, sexual orientation, and religious beliefs. We do not process sensitive personal information.</span></span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>Do we collect any information from third parties?</strong> We do not collect any information from third parties.</span></span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>How do we process your information?</strong> We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent. We process your information only when we have a valid legal reason to do so. Learn more about </span></span><a data-custom-class="link" href="#infouse" style="color: rgb(0, 58, 250); font-size: 15px;"><span data-custom-class="body_text">how we process your information</span></a><span data-custom-class="body_text">.</span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>In what situations and with which parties do we share personal information?</strong> We may share information in specific situations and with specific third parties. Learn more about </span></span><a data-custom-class="link" href="#whoshare" style="color: rgb(0, 58, 250); font-size: 15px;"><span data-custom-class="body_text">when and with whom we share your personal information</span></a><span style="font-size: 15px;"><span data-custom-class="body_text">.</span></span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>How do we keep your information safe?</strong> We have adequate organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Learn more about </span></span><a data-custom-class="link" href="#infosafe" style="color: rgb(0, 58, 250); font-size: 15px;"><span data-custom-class="body_text">how we keep your information safe</span></a><span data-custom-class="body_text">.</span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>What are your rights?</strong> Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. Learn more about </span></span><a data-custom-class="link" href="#privacyrights" style="color: rgb(0, 58, 250); font-size: 15px;"><span data-custom-class="body_text">your privacy rights</span></a><span data-custom-class="body_text">.</span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text"><strong>How do you exercise your rights?</strong> The easiest way to exercise your rights is by visiting <a target="_blank" data-custom-class="link" href="http://www.whosonpole.org/help" style="color: rgb(0, 58, 250);">http://www.whosonpole.org/help</a>, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.</span></span></div>
-<div style="line-height: 1.5;"><br></div>
-<div style="line-height: 1.5;"><span style="font-size: 15px;"><span data-custom-class="body_text">Want to learn more about what we do with any information we collect? <a data-custom-class="link" href="#toc" style="color: rgb(0, 58, 250);">Review the Privacy Notice in full</a>.</span></span></div>
-<div style="line-height: 1.5;"><br></div><div style="line-height: 1.5;"><br></div>
-<div id="toc" style="line-height: 1.5;"><strong><span data-custom-class="heading_1"><h2>TABLE OF CONTENTS</h2></span></strong></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#infocollect" style="color: rgb(0, 58, 250);">1. WHAT INFORMATION DO WE COLLECT?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#infouse" style="color: rgb(0, 58, 250);">2. HOW DO WE PROCESS YOUR INFORMATION?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#legalbases" style="color: rgb(0, 58, 250);">3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#whoshare" style="color: rgb(0, 58, 250);">4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#cookies" style="color: rgb(0, 58, 250);">5. DO WE USE COOKIES AND OTHER TRACKING TECHNOLOGIES?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#sociallogins" style="color: rgb(0, 58, 250);">6. HOW DO WE HANDLE YOUR SOCIAL LOGINS?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#inforetain" style="color: rgb(0, 58, 250);">7. HOW LONG DO WE KEEP YOUR INFORMATION?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#infosafe" style="color: rgb(0, 58, 250);">8. HOW DO WE KEEP YOUR INFORMATION SAFE?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#infominors" style="color: rgb(0, 58, 250);">9. DO WE COLLECT INFORMATION FROM MINORS?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#privacyrights" style="color: rgb(0, 58, 250);">10. WHAT ARE YOUR PRIVACY RIGHTS?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#DNT" style="color: rgb(0, 58, 250);">11. CONTROLS FOR DO-NOT-TRACK FEATURES</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#uslaws" style="color: rgb(0, 58, 250);">12. DO UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#otherlaws" style="color: rgb(0, 58, 250);">13. DO OTHER REGIONS HAVE SPECIFIC PRIVACY RIGHTS?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#policyupdates" style="color: rgb(0, 58, 250);">14. DO WE MAKE UPDATES TO THIS NOTICE?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#contact" style="color: rgb(0, 58, 250);">15. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</a></div>
-<div style="line-height: 1.5;"><a data-custom-class="link" href="#request" style="color: rgb(0, 58, 250);">16. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</a></div>
-
-<!-- The remainder of the document mirrors the full text shown in the provided screenshots, including all sections from 1 through 16 with their detailed paragraphs, bullet points, tables, and contact details as displayed. -->
-
-</div>
+<h1>PRIVACY NOTICE</h1>
+<p><strong>Last updated</strong> __________</p>
+<p>This Privacy Notice for Who’s On Pole, LLC. ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you:</p>
+<ul>
+  <li>Visit our website at <a href="http://www.whosonpole.org">http://www.whosonpole.org</a> or any website of ours that links to this Privacy Notice</li>
+  <li>Download and use our mobile application (Who’s On Pole), or any other application of ours that links to this Privacy Notice</li>
+  <li>Engage with us in other related ways, including any marketing or events</li>
+</ul>
+<p><strong>Questions or concerns?</strong> Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services.</p>
+<h2>SUMMARY OF KEY POINTS</h2>
+<p>This summary provides key points from our Privacy Notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for.</p>
+<ul>
+  <li>What personal information do we process? When you visit, use, or navigate our Services, we may process personal information depending on how you interact with us and the Services, the choices you make, and the products and features you use. Learn more about personal information you disclose to us.</li>
+  <li>Do we process any sensitive personal information? Some of the information may be considered "special" or "sensitive" in certain jurisdictions, for example your racial or ethnic origins, sexual orientation, and religious beliefs. We do not process sensitive personal information.</li>
+  <li>Do we collect any information from third parties? We do not collect any information from third parties.</li>
+  <li>How do we process your information? We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent. We process your information only when we have a valid legal reason to do so. Learn more about how we process your information.</li>
+  <li>In what situations and with which parties do we share personal information? We may share information in specific situations and with specific third parties. Learn more about when and with whom we share your personal information.</li>
+  <li>How do we keep your information safe? We have adequate organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Learn more about how we keep your information safe.</li>
+  <li>What are your rights? Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. Learn more about your privacy rights.</li>
+  <li>How do you exercise your rights? The easiest way to exercise your rights is by visiting <a href="http://www.whosonpole.org/help">http://www.whosonpole.org/help</a>, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.</li>
+  <li>Want to learn more about what we do with any information we collect? Review the Privacy Notice in full.</li>
+</ul>
+<h2>TABLE OF CONTENTS</h2>
+<ol>
+  <li>WHAT INFORMATION DO WE COLLECT?</li>
+  <li>HOW DO WE PROCESS YOUR INFORMATION?</li>
+  <li>WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?</li>
+  <li>WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</li>
+  <li>DO WE USE COOKIES AND OTHER TRACKING TECHNOLOGIES?</li>
+  <li>HOW DO WE HANDLE YOUR SOCIAL LOGINS?</li>
+  <li>HOW LONG DO WE KEEP YOUR INFORMATION?</li>
+  <li>HOW DO WE KEEP YOUR INFORMATION SAFE?</li>
+  <li>DO WE COLLECT INFORMATION FROM MINORS?</li>
+  <li>WHAT ARE YOUR PRIVACY RIGHTS?</li>
+  <li>CONTROLS FOR DO-NOT-TRACK FEATURES</li>
+  <li>DO UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?</li>
+  <li>DO OTHER REGIONS HAVE SPECIFIC PRIVACY RIGHTS?</li>
+  <li>DO WE MAKE UPDATES TO THIS NOTICE?</li>
+  <li>HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</li>
+  <li>HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</li>
+</ol>
+<h2>WHAT INFORMATION DO WE COLLECT?</h2>
+<h3>Personal information you disclose to us</h3>
+<p><strong>In Short:</strong> We collect personal information that you provide to us.</p>
+<p>We collect personal information that you voluntarily provide to us when you register on the Services, express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us.</p>
+<p><strong>Personal Information Provided by You.</strong> The personal information that we collect depends on the context of your interactions with us and the Services, the choices you make, and the products and features you use. The personal information we collect may include the following:</p>
+<ul>
+  <li>names</li>
+  <li>email addresses</li>
+  <li>usernames</li>
+  <li>passwords</li>
+  <li>contact or authentication data</li>
+</ul>
+<p><strong>Sensitive Information.</strong> We do not process sensitive information.</p>
+<p><strong>Payment Data.</strong> We may collect data necessary to process your payment if you choose to make purchases, such as your payment instrument number, and the security code associated with your payment instrument. All payment data is handled and stored by PayPal. You may find their privacy notice link(s) here: <a href="https://www.paypal.com/us/legalhub/paypal/privacy-full">https://www.paypal.com/us/legalhub/paypal/privacy-full</a>.</p>
+<p><strong>Social Media Login Data.</strong> We may provide you with the option to register with us using your existing social media account details, like your Facebook, X, or other social media account. If you choose to register in this way, we will collect certain profile information about you from the social media provider, as described in the section called “HOW DO WE HANDLE YOUR SOCIAL LOGINS?” below.</p>
+<p><strong>Application Data.</strong> If you use our application(s), we also may collect the following information if you choose to provide us with access or permission:</p>
+<ul>
+  <li><em>Push Notifications.</em> We may request to send you push notifications regarding your account or certain features of the application(s). If you wish to opt out from receiving these types of communications, you may turn them off in your device's settings.</li>
+</ul>
+<p>This information is primarily needed to maintain the security and operation of our application(s), for troubleshooting, and for our internal analytics and reporting purposes.</p>
+<p>All personal information that you provide to us must be true, complete, and accurate, and you must notify us of any changes to such personal information.</p>
+<h3>Information automatically collected</h3>
+<p><strong>In Short:</strong> Some information — such as your Internet Protocol (IP) address and/or browser and device characteristics — is collected automatically when you visit our Services.</p>
+<p>We automatically collect certain information when you visit, use, or navigate the Services. This information does not reveal your specific identity (like your name or contact information) but may include device and usage information, such as your IP address, browser and device characteristics, operating system, language preferences, referring URLs, device name, country, location, information about how and when you use our Services, and other technical information. This information is primarily needed to maintain the security and operation of our Services, and for our internal analytics and reporting purposes.</p>
+<p>Like many businesses, we also collect information through cookies and similar technologies. You can find out more about this in our Cookie Notice: <a href="http://www.whosonpole.org/cookies">http://www.whosonpole.org/cookies</a>.</p>
+<p>The information we collect includes:</p>
+<ul>
+  <li><em>Log and Usage Data.</em> Log and usage data is service-related, diagnostic, usage, and performance information our servers automatically collect when you access or use our Services and which we record in log files. Depending on how you interact with us, this log data may include your IP address, device information, browser type, and settings and information about your activity in the Services (such as the date/time stamps associated with your usage, pages and files viewed, searches, and other actions you take such as which features you use), device event information (such as system activity, error reports (sometimes called "crash dumps"), and hardware settings).</li>
+  <li><em>Device Data.</em> We collect device data such as information about your computer, phone, tablet, or other device you use to access the Services. Depending on the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers, location, browser type, hardware model, Internet service provider and/or mobile carrier, operating system, and system configuration information.</li>
+  <li><em>Location Data.</em> We collect location data such as information about your device's location, which can be either precise or imprecise. How much information we collect depends on the type and settings of the device you use to access the Services. For example, we may use GPS and other technologies to collect geolocation data that tells us your current location (based on your IP address). You can opt out of allowing us to collect this information either by refusing access to the information or by disabling your Location setting on your device. However, if you choose to opt out, you may not be able to use certain aspects of the Services.</li>
+</ul>
+<h3>Google API</h3>
+<p>Our use of information received from Google APIs will adhere to Google API Services User Data Policy, including the Limited Use requirements.</p>
+<ul>
+  <li><a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a></li>
+  <li><a href="https://developers.google.com/terms/api-services-user-data-policy#limited-use">Limited Use requirements</a></li>
+</ul>
+<h2>HOW DO WE PROCESS YOUR INFORMATION?</h2>
+<p><strong>In Short:</strong> We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We process the personal information for the following purposes listed below. We may also process your information for other purposes only with your prior explicit consent.</p>
+<p>We process your personal information for a variety of reasons, depending on how you interact with our Services, including:</p>
+<ul>
+  <li>To facilitate account creation and authentication and otherwise manage user accounts. We may process your information so you can create and log in to your account, as well as keep your account in working order.</li>
+  <li>To save or protect an individual's vital interest. We may process your information when necessary to save or protect an individual’s vital interest, such as to prevent harm.</li>
+</ul>
+<h2>WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR INFORMATION?</h2>
+<p><strong>In Short:</strong> We only process your personal information when we believe it is necessary and we have a valid legal reason (i.e., legal basis) to do so under applicable law, like with your consent, to comply with laws, to provide you with services to enter into or fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.</p>
+<p><strong>If you are located in the EU or UK, this section applies to you.</strong></p>
+<p>The General Data Protection Regulation (GDPR) and UK GDPR require us to explain the valid legal bases we rely on in order to process your personal information. As such, we may rely on the following legal bases to process your personal information:</p>
+<ul>
+  <li><strong>Consent.</strong> We may process your information if you have given us permission (i.e., consent) to use your personal information for a specific purpose. You can withdraw your consent at any time.</li>
+  <li><strong>Legal Obligations.</strong> We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.</li>
+  <li><strong>Vital Interests.</strong> We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.</li>
+</ul>
+<p><strong>If you are located in Canada, this section applies to you.</strong></p>
+<p>We may process your information if you have given us specific permission (i.e., express consent) to use your personal information for a specific purpose, or in situations where your permission can be inferred (i.e., implied consent). You can withdraw your consent at any time.</p>
+<p>In some exceptional cases, we may be legally permitted under applicable law to process your information without your consent, including, for example:</p>
+<ul>
+  <li>If collection is clearly in the interests of an individual and consent cannot be obtained in a timely way</li>
+  <li>For investigations and fraud detection and prevention</li>
+  <li>For business transactions provided certain conditions are met</li>
+  <li>If it is contained in a witness statement and the collection is necessary to assess, process, or settle an insurance claim</li>
+  <li>For identifying injured, ill, or deceased persons and communicating with next of kin</li>
+  <li>If we have reasonable grounds to believe an individual has been, is, or may be victim of financial abuse</li>
+  <li>If it is reasonable to expect collection and use with consent would compromise the availability or the accuracy of the information and the collection is reasonable for purposes related to investigating a breach of an agreement or a contravention of the laws of Canada or a province</li>
+  <li>If disclosure is required to comply with a subpoena, warrant, court order, or rules of the court relating to the production of records</li>
+  <li>If it was produced by an individual in the course of their employment, business, or profession and the collection is consistent with the purposes for which the information was produced</li>
+  <li>If the collection is solely for journalistic, artistic, or literary purposes</li>
+  <li>If the information is publicly available and is specified by the regulations</li>
+  <li>We may disclose de-identified information for approved research or statistics projects, subject to ethics oversight and confidentiality commitments</li>
+</ul>
+<h2>WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</h2>
+<p><strong>In Short:</strong> We may share information in specific situations described in this section and/or with the following third parties.</p>
+<p>We may need to share your personal information in the following situations:</p>
+<ul>
+  <li><strong>Business Transfers.</strong> We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.</li>
+  <li><strong>Business Partners.</strong> We may share your information with our business partners to offer you certain products, services, or promotions.</li>
+  <li><strong>Offer Wall.</strong> Our application(s) may display a third-party hosted "offer wall." Such an offer wall allows third-party advertisers to offer virtual currency, gifts, or other items to users in return for the acceptance and completion of an advertisement offer.</li>
+</ul>
+<h2>DO WE USE COOKIES AND OTHER TRACKING TECHNOLOGIES?</h2>
+<p><strong>In Short:</strong> We may use cookies and other tracking technologies to collect and store your information.</p>
+<p>We may use cookies and similar tracking technologies (like web beacons and pixels) to gather information when you interact with our Services. Some online tracking technologies help us maintain the security of our Services and your account, prevent crashes, fix bugs, save your preferences, and assist with basic site functions.</p>
+<p>We also permit third parties and service providers to use online tracking technologies on our Services for analytics and advertising, including to help manage and display advertisements, to tailor advertisements to your interests, or to send abandoned shopping cart reminders (depending on your communication preferences).</p>
+<p>To the extent these online tracking technologies are deemed to be a "sale"/"sharing" under applicable US state laws, you can opt out as described in “DO UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?”</p>
+<p>Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice: <a href="http://www.whosonpole.org/cookies">http://www.whosonpole.org/cookies</a>.</p>
+<h2>HOW DO WE HANDLE YOUR SOCIAL LOGINS?</h2>
+<p><strong>In Short:</strong> If you choose to register or log in to our Services using a social media account, we may have access to certain information about you.</p>
+<p>Our Services offer you the ability to register and log in using your third-party social media account details. Where you choose to do this, we will receive certain profile information about you from your social media provider. The profile information we receive may vary depending on the social media provider concerned, but will often include your name, email address, friends list, and profile picture, as well as other information you choose to make public.</p>
+<p>We use this information only for the purposes described in this Privacy Notice. Please review your social provider’s privacy notice for their use of your information.</p>
+<h2>HOW LONG DO WE KEEP YOUR INFORMATION?</h2>
+<p><strong>In Short:</strong> We keep your information for as long as necessary to fulfill the purposes outlined in this Privacy Notice unless otherwise required by law.</p>
+<p>We will only keep your personal information for as long as it is necessary for the purposes set out in this Privacy Notice, unless a longer retention period is required or permitted by law. No purpose will require us keeping your personal information for longer than twelve (12) months past the termination of the user's account.</p>
+<p>When we have no ongoing legitimate business need to process your personal information, we will delete or anonymize it, or securely store and isolate it until deletion is possible.</p>
+<h2>HOW DO WE KEEP YOUR INFORMATION SAFE?</h2>
+<p><strong>In Short:</strong> We aim to protect your personal information through a system of organizational and technical security measures.</p>
+<p>We implement appropriate technical and organizational security measures designed to protect the security of any personal information we process. However, no electronic transmission over the Internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Transmission of personal information to and from our Services is at your own risk.</p>
+<h2>DO WE COLLECT INFORMATION FROM MINORS?</h2>
+<p><strong>In Short:</strong> We do not knowingly collect data from or market to children under 18 years of age or the equivalent age as specified by law in your jurisdiction.</p>
+<p>We do not knowingly collect, solicit data from, or market to children under 18 years of age. If we learn that personal information from users less than 18 years of age has been collected, we will deactivate the account and delete such data. If you become aware of any data we may have collected from children, please contact us at support@whosonpole.org.</p>
+<h2>WHAT ARE YOUR PRIVACY RIGHTS?</h2>
+<p><strong>In Short:</strong> Depending on your state of residence in the US or in some regions, such as the EEA, UK, Switzerland, and Canada, you have rights that allow you greater access to and control over your personal information. You may review, change, or terminate your account at any time.</p>
+<p>In some regions you may have rights to access, rectify, erase, restrict, port, or object to processing, and not be subject to automated decisions. To exercise rights, contact us using the details in “HOW CAN YOU CONTACT US ABOUT THIS NOTICE?”</p>
+<p>If you are in the EEA or UK you may complain to your data protection authority. If in Switzerland, contact the Federal Data Protection and Information Commissioner.</p>
+<p><strong>Withdrawing your consent:</strong> If we rely on consent, you may withdraw it anytime by contacting us. This does not affect processing before withdrawal.</p>
+<p><strong>Account Information:</strong> You can review or change your account info or terminate your account in account settings. We may retain some information to prevent fraud, troubleshoot, or comply with law.</p>
+<p><strong>Cookies:</strong> Most browsers accept cookies by default. You can remove or reject cookies, which may affect some features. See our Cookie Notice: <a href="http://www.whosonpole.org/cookies">http://www.whosonpole.org/cookies</a>.</p>
+<h2>CONTROLS FOR DO-NOT-TRACK FEATURES</h2>
+<p>Most browsers and some mobile OS/apps include a Do-Not-Track (DNT) setting. No uniform standard exists, so we do not currently respond to DNT signals. If a standard is adopted, we will follow it and update this notice. California law requires disclosure of our response to DNT; we do not respond at this time.</p>
+<h2>DO UNITED STATES RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?</h2>
+<p><strong>In Short:</strong> If you are a resident of certain US states (e.g., CA, CO, CT, DE, FL, IN, IA, KY, MD, MN, MT, NE, NH, NJ, OR, RI, TN, TX, UT, VA), you may have rights to access, correct, delete, obtain a copy, or opt out of certain processing. These rights may be limited by law.</p>
+<p><strong>Categories of Personal Information We Collect</strong></p>
+<ul>
+  <li>A. Identifiers — NO</li>
+  <li>B. Personal information as defined in the California Customer Records statute — NO</li>
+  <li>C. Protected classification characteristics under state or federal law — NO</li>
+  <li>D. Commercial information — NO</li>
+  <li>E. Biometric information — NO</li>
+  <li>F. Internet or other similar network activity — NO</li>
+  <li>G. Geolocation data — NO</li>
+  <li>H. Audio, electronic, sensory, or similar information — NO</li>
+  <li>I. Professional or employment-related information — NO</li>
+  <li>J. Education Information — NO</li>
+  <li>K. Inferences drawn — NO</li>
+  <li>L. Sensitive personal Information — NO</li>
+</ul>
+<p>We have not disclosed, sold, or shared personal information to third parties for a business or commercial purpose in the preceding twelve (12) months.</p>
+<p><strong>Your Rights</strong></p>
+<ul>
+  <li>Right to know, access, correct, delete, obtain a copy</li>
+  <li>Right to non-discrimination for exercising rights</li>
+  <li>Right to opt out of targeted advertising/sale/profiling where applicable</li>
+</ul>
+<p>Depending on your state, you may also have rights to lists of categories/third parties, profiling review/correction, limit use of sensitive data, or opt out of sensitive data collection.</p>
+<p><strong>How to Exercise Your Rights</strong>: visit <a href="http://www.whosonpole.org/help">http://www.whosonpole.org/help</a>, email hello@whosonpole.org, or use the contact details below.</p>
+<p><strong>Request Verification</strong>: We may need to verify your identity (or agent authority) and may request additional info.</p>
+<p><strong>Appeals</strong>: If we decline your request, you may appeal by emailing us; we will inform you of the outcome and how to escalate to your attorney general if denied.</p>
+<h2>DO OTHER REGIONS HAVE SPECIFIC PRIVACY RIGHTS?</h2>
+<p><strong>In Short:</strong> You may have additional rights based on the country you reside in.</p>
+<p><strong>Australia and New Zealand.</strong> We collect and process under Australia’s Privacy Act 1988 and New Zealand’s Privacy Act 2020. You may request access or correction; complaints can be made to OAIC or NZ Privacy Commissioner.</p>
+<p><strong>Republic of South Africa.</strong> You may request access or correction; complaints can be made to the Information Regulator (South Africa).</p>
+<h2>DO WE MAKE UPDATES TO THIS NOTICE?</h2>
+<p><strong>In Short:</strong> Yes, we will update this notice as necessary to stay compliant with relevant laws.</p>
+<p>We may update this Privacy Notice from time to time. The updated version will be indicated by an updated "Revised" date. If we make material changes, we may notify you by posting a notice or sending you a notification. Review this Privacy Notice frequently.</p>
+<h2>HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</h2>
+<p>If you have questions or comments about this notice, you may contact our Data Protection Officer (DPO) by email at delisa.wray@gmail.com, or contact us by post at: Who’s On Pole, LLC. Data Protection Officer</p>
+<h2>HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</h2>
+<p>Based on the applicable laws of your country or state of residence in the US, you may have the right to request access to the personal information we collect from you, details about how we have processed it, correct inaccuracies, or delete your personal information. You may also have the right to withdraw your consent to our processing of your personal information. To request to review, update, or delete your personal information, please visit: <a href="http://www.whosonpole.org/help">http://www.whosonpole.org/help</a>.</p>
