@@ -38,7 +38,7 @@ export function ComingSoonContent() {
   }
 
   return (
-    <div className="flex h-screen min-h-screen flex-col items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat bg-[url(/images/backsplash_mobile.png)] lg:flex-row lg:items-stretch lg:justify-between lg:bg-background">
+    <div className="relative flex h-screen min-h-screen flex-col items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat bg-[url(/images/backsplash_mobile.png)] lg:flex-row lg:items-stretch lg:justify-between lg:bg-background">
       {/* Left Side - Background Points of Interest */}
 
       <div className="relative flex w-full max-w-xl items-center justify-center p-6 lg:w-1/3">
@@ -140,6 +140,13 @@ export function ComingSoonContent() {
             We're putting the finishing touches on something amazing!
           </p>
         </div>
+      </div>
+      <div className="w-full py-4 text-center text-xs text-white/70 lg:absolute lg:bottom-4">
+        <span>© 2026 Who&apos;s on Pole? All rights reserved.</span>
+        <span className="mx-2 text-white/40">|</span>
+        <a href="/privacy" className="hover:text-white">Privacy Policy</a>
+        <span className="mx-2 text-white/40">|</span>
+        <a href="/terms" className="hover:text-white">Terms of Service</a>
       </div>
     </div>
   )
