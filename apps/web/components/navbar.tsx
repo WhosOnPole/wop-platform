@@ -37,6 +37,11 @@ export function Navbar() {
     return () => subscription.unsubscribe()
   }, [supabase])
 
+  // Re-check user/profile after route changes (e.g., post-onboarding redirect)
+  useEffect(() => {
+    checkUser()
+  }, [pathname])
+
   // Close profile menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -119,7 +124,7 @@ export function Navbar() {
 
   const navItems = user
     ? [
-        { href: '/', label: 'Home' },
+        { href: '/feed', label: 'Home' },
         { href: '/drivers', label: 'Drivers' },
         { href: '/teams', label: 'Teams' },
         { href: '/tracks', label: 'Tracks' },

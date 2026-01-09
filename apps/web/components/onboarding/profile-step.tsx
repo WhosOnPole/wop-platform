@@ -24,6 +24,12 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
+  const maxDob = (() => {
+    const today = new Date()
+    today.setFullYear(today.getFullYear() - 13)
+    return today.toISOString().split('T')[0]
+  })()
+
   useEffect(() => {
     loadExistingData()
   }, [])
@@ -99,9 +105,27 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     if (!session) return
 
-    // Validate required fields
+    // Validate required fields and age >= 13
     if (!formData.username.trim()) {
       setErrors({ username: 'Username is required' })
+      setIsSubmitting(false)
+      return
+    }
+
+    if (!formData.dateOfBirth) {
+      setErrors({ dateOfBirth: 'Date of birth is required' })
+      setIsSubmitting(false)
+      return
+    }
+
+    const birthDate = new Date(formData.dateOfBirth)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--
+
+    if (Number.isNaN(age) || age < 13) {
+      setErrors({ dateOfBirth: 'You must be at least 13 years old to use this service' })
       setIsSubmitting(false)
       return
     }
@@ -151,18 +175,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         socialLinksObj[link.platform.trim().toLowerCase()] = link.url.trim()
       }
     })
-
-    // Calculate age from date of birth
-    let age = null
-    if (formData.dateOfBirth) {
-      const birthDate = new Date(formData.dateOfBirth)
-      const today = new Date()
-      age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--
-      }
-    }
 
     // Upsert profile
     const profileData = {
@@ -273,9 +285,10 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           required
           value={formData.dateOfBirth}
           onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-          max={new Date().toISOString().split('T')[0]}
+          max={maxDob}
           className="mt-1 block w-full rounded-md text-black border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
+        {errors.dateOfBirth && <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>}
       </div>
 
       {/* Location */}

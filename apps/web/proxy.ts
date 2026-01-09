@@ -51,7 +51,7 @@ export async function proxy(req: NextRequest) {
             // If on login/signup, redirect to feed or onboarding
             if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
               const redirectUrl = req.nextUrl.clone()
-              redirectUrl.pathname = profile?.username ? '/feed' : '/coming-soon'
+              redirectUrl.pathname = profile?.username ? '/feed' : '/onboarding'
               return NextResponse.redirect(redirectUrl)
             }
           } catch (error) {
@@ -104,7 +104,7 @@ export async function proxy(req: NextRequest) {
         // Profile must have username to be considered complete
         if (!profile?.username) {
           const redirectUrl = req.nextUrl.clone()
-          redirectUrl.pathname = '/coming-soon'
+          redirectUrl.pathname = '/onboarding'
           return NextResponse.redirect(redirectUrl)
         }
       } catch (error) {
