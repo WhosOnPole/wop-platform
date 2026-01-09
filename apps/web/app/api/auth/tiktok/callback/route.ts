@@ -1,4 +1,4 @@
-import { GET as tiktokHandler } from '../route'
+import { GET as tiktokHandler } from '../tiktok/route'
 
 export const runtime = 'nodejs'
 

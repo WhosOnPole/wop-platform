@@ -29,6 +29,15 @@ export default function LoginPage() {
     // Avoid useSearchParams to prevent Next.js prerender bailout in builds
     const params = new URLSearchParams(window.location.search)
     const err = params.get('error')
+    const logId = params.get('log_id')
+    const status = params.get('status')
+    const code = params.get('code')
+    const refParts = [
+      status ? `status=${status}` : null,
+      code ? `code=${code}` : null,
+      logId ? `log_id=${logId}` : null,
+    ].filter(Boolean)
+    const refSuffix = refParts.length ? ` (ref: ${refParts.join(', ')})` : ''
     if (err) {
       if (err === 'tiktok_config_missing') {
         setError(
@@ -39,7 +48,7 @@ export default function LoginPage() {
       } else if (err === 'tiktok_pkce_missing') {
         setError('Security verification failed. Please try again.')
       } else if (err === 'tiktok_token') {
-        setError('Failed to authenticate with TikTok. Please try again.')
+        setError(`Failed to authenticate with TikTok. Please try again.${refSuffix}`)
       } else if (err === 'tiktok_create_user' || err === 'tiktok_signin') {
         setError('Failed to create account. Please try again or use another login method.')
       } else {

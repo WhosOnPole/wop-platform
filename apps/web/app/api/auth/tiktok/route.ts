@@ -103,14 +103,38 @@ export async function GET(request: Request) {
 
   const tokenJson = await tokenResponse.json()
 
-  if (!tokenResponse.ok || !tokenJson?.data?.access_token || !tokenJson?.data?.open_id) {
-    return NextResponse.redirect(
-      new URL('/login?error=tiktok_token', requestUrl.origin).toString()
-    )
+  const tokenData = tokenJson?.data ?? tokenJson
+  const accessToken: string | undefined = tokenData?.access_token
+  const openId: string | undefined = tokenData?.open_id ?? tokenData?.openId
+
+  if (!tokenResponse.ok || !accessToken || !openId) {
+    const logId =
+      tokenJson?.log_id ?? tokenJson?.data?.log_id ?? tokenJson?.logId ?? tokenJson?.data?.logId
+    const errorCode = tokenJson?.error_code ?? tokenJson?.data?.error_code
+    const errorMessage = tokenJson?.message ?? tokenJson?.data?.message ?? tokenJson?.error
+
+    console.error('TikTok token exchange failed', {
+      status: tokenResponse.status,
+      ok: tokenResponse.ok,
+      redirectUri,
+      hasAccessToken: Boolean(accessToken),
+      hasOpenId: Boolean(openId),
+      logId,
+      errorCode,
+      errorMessage,
+    })
+
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'tiktok_token')
+    redirectUrl.searchParams.set('status', String(tokenResponse.status))
+    if (logId) redirectUrl.searchParams.set('log_id', String(logId))
+    if (errorCode) redirectUrl.searchParams.set('code', String(errorCode))
+
+    return NextResponse.redirect(redirectUrl.toString())
   }
 
-  const accessToken: string = tokenJson.data.access_token
-  const openId: string = tokenJson.data.open_id
+  const accessTokenFinal = accessToken
+  const openIdFinal = openId
 
   // Fetch basic profile
   let displayName: string | null = null
@@ -119,11 +143,11 @@ export async function GET(request: Request) {
     const profileResponse = await fetch(TIKTOK_USERINFO_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessTokenFinal}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        user_id: openId,
+        user_id: openIdFinal,
         fields: ['open_id', 'display_name', 'avatar_url'],
       }),
     })
