@@ -31,7 +31,17 @@ export async function proxy(req: NextRequest) {
     )
 
     // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-    const publicPaths = ['/onboarding', '/login', '/signup', '/auth/callback', '/auth/reset-password', '/banned', '/coming-soon']
+    const publicPaths = [
+      '/onboarding',
+      '/login',
+      '/signup',
+      '/auth/callback',
+      '/auth/reset-password',
+      '/banned',
+      '/coming-soon',
+      '/api/auth/tiktok',
+      '/api/auth/tiktok/callback',
+    ]
     if (publicPaths.some((path) => pathname.startsWith(path))) {
       // Still check session for authenticated users on public paths
       try {

@@ -4,16 +4,18 @@ import { useState, useEffect, useRef } from 'react'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClientComponentClient({
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   })
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
   const authContainerRef = useRef<HTMLDivElement>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Check if already logged in
@@ -23,6 +25,13 @@ export default function LoginPage() {
       }
     })
   }, [router, supabase])
+
+  useEffect(() => {
+    const err = searchParams.get('error')
+    if (err) {
+      setError('Login failed. Please try another method or try again.')
+    }
+  }, [searchParams])
 
   // Monitor for view changes by intercepting toggle link clicks
   useEffect(() => {
@@ -58,6 +67,22 @@ export default function LoginPage() {
               ? 'Welcome back to the F1 fan community'
               : 'Create your account to get started'}
           </p>
+        </div>
+        {error && (
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        )}
+        <button
+          onClick={() => (window.location.href = '/api/auth/tiktok')}
+          className="flex w-full items-center justify-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition hover:bg-gray-50"
+          aria-label="Continue with TikTok"
+        >
+          <img src="/icons/tiktok.svg" alt="TikTok" className="h-5 w-5" />
+          <span>Continue with TikTok</span>
+        </button>
+        <div className="flex items-center space-x-2">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs uppercase text-gray-400">or</span>
+          <div className="h-px flex-1 bg-gray-200" />
         </div>
         <div ref={authContainerRef}>
           <Auth
