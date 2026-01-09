@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Logo } from '@/components/ui/logo'
 import { Clock, Mail, Sparkles, CheckCircle } from 'lucide-react'
 
@@ -144,9 +145,13 @@ export function ComingSoonContent() {
       <div className="w-full py-4 text-center text-xs text-white/70 lg:absolute lg:bottom-4">
         <span>© 2026 Who&apos;s on Pole? All rights reserved.</span>
         <span className="mx-2 text-white/40">|</span>
-        <a href="/privacy" className="hover:text-white">Privacy Policy</a>
+        <Link href="/privacy" className="hover:text-white">
+          Privacy Policy
+        </Link>
         <span className="mx-2 text-white/40">|</span>
-        <a href="/terms" className="hover:text-white">Terms of Service</a>
+        <Link href="/terms" className="hover:text-white">
+          Terms of Service
+        </Link>
       </div>
     </div>
   )
