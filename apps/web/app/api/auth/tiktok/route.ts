@@ -53,6 +53,43 @@ function decryptTikTokState(state: string, clientSecret: string): TikTokStatePay
   }
 }
 
+function normalizeUsername(input: string) {
+  const normalized = input
+    .toLowerCase()
+    .trim()
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 50)
+
+  return normalized
+}
+
+async function findAvailableUsername(args: {
+  supabase: ReturnType<typeof createRouteHandlerClient>
+  base: string
+}) {
+  const base = args.base.slice(0, 42) || 'user'
+
+  // Try base then a few suffixes
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const suffix = attempt === 0 ? '' : `_${Math.floor(Math.random() * 9000) + 1000}`
+    const candidate = `${base}${suffix}`.slice(0, 50)
+
+    const { data: existing } = await args.supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', candidate)
+      .maybeSingle()
+
+    if (!existing) return candidate
+  }
+
+  // last resort
+  return `user_${crypto.randomBytes(4).toString('hex')}`.slice(0, 50)
+}
+
 function getSupabaseKeyKind(key: string) {
   if (key.startsWith('sb_publishable_')) return 'publishable'
   if (key.startsWith('sb_secret_')) return 'secret'
@@ -265,6 +302,16 @@ export async function GET(request: Request) {
     }
   )
 
+  // Build a suggested username from TikTok display name (fallback to open_id prefix)
+  const suggestedBaseRaw = displayName || `tiktok_${openIdFinal.slice(0, 8)}`
+  const suggestedBase = normalizeUsername(suggestedBaseRaw)
+  const preferredUsername = suggestedBase || `tiktok_${openIdFinal.slice(0, 8)}`
+
+  const availableUsername = await findAvailableUsername({
+    supabase,
+    base: preferredUsername,
+  })
+
   // Use a real-looking domain to avoid any edge-case email validators rejecting `.local`
   const email = `tiktok_${openIdFinal}@tiktok.whosonpole.org`
   // Stable deterministic password (no raw secrets in the string)
@@ -284,6 +331,7 @@ export async function GET(request: Request) {
       tiktok_open_id: openIdFinal,
       tiktok_display_name: displayName,
       tiktok_avatar_url: avatarUrl,
+      preferred_username: availableUsername,
     },
   })
 
@@ -318,7 +366,23 @@ export async function GET(request: Request) {
 
   const userId = signInData.user?.id
   let hasUsername = false
+  const isNewUser = !createError
   if (userId) {
+    // Ensure auth metadata has a preferred_username (useful for future providers too)
+    try {
+      await supabase.auth.admin.updateUserById(userId, {
+        user_metadata: {
+          provider: 'tiktok',
+          tiktok_open_id: openIdFinal,
+          tiktok_display_name: displayName,
+          tiktok_avatar_url: avatarUrl,
+          preferred_username: availableUsername,
+        },
+      })
+    } catch (error) {
+      console.error('TikTok updateUserById failed (non-fatal):', error)
+    }
+
     // Ensure profile row exists
     const { data: existingProfile } = await supabase
       .from('profiles')
@@ -332,15 +396,24 @@ export async function GET(request: Request) {
       await supabase.from('profiles').insert({
         id: userId,
         email,
-        username: null,
+        username: availableUsername,
         profile_image_url: avatarUrl,
       })
-    } else if (!existingProfile.username && avatarUrl) {
+    } else if (!existingProfile.username) {
       await supabase
         .from('profiles')
-        .update({ profile_image_url: avatarUrl })
+        .update({ username: availableUsername, profile_image_url: avatarUrl })
         .eq('id', userId)
+      hasUsername = true
+    } else if (avatarUrl) {
+      await supabase.from('profiles').update({ profile_image_url: avatarUrl }).eq('id', userId)
     }
+  }
+
+  if (isNewUser) {
+    const url = new URL('/onboarding', requestUrl.origin)
+    url.searchParams.set('provider', 'tiktok')
+    return NextResponse.redirect(url)
   }
 
   return NextResponse.redirect(new URL(hasUsername ? '/feed' : '/onboarding', requestUrl.origin))

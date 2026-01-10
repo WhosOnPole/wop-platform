@@ -17,12 +17,15 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('profile')
   const [loading, setLoading] = useState(true)
   const [profileComplete, setProfileComplete] = useState(false)
+  const [shouldForceProfileStep, setShouldForceProfileStep] = useState(false)
 
   useEffect(() => {
-    checkOnboardingStatus()
+    const provider = new URLSearchParams(window.location.search).get('provider')
+    if (provider === 'tiktok' || provider === 'instagram') setShouldForceProfileStep(true)
+    checkOnboardingStatus({ shouldForceProfileStep: provider === 'tiktok' || provider === 'instagram' })
   }, [])
 
-  async function checkOnboardingStatus() {
+  async function checkOnboardingStatus(args?: { shouldForceProfileStep?: boolean }) {
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -40,6 +43,14 @@ export default function OnboardingPage() {
       .single()
 
     if (profile?.username) {
+      // If a social provider prefilled username, still force the Profile step so the user can edit.
+      if (args?.shouldForceProfileStep) {
+        setLoading(false)
+        setCurrentStep('profile')
+        setProfileComplete(false)
+        return
+      }
+
       // Profile is complete, check if they need to complete onboarding
       // If they have a username, they've completed the required step
       setProfileComplete(true)
