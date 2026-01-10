@@ -55,14 +55,16 @@ export async function GET(request: Request) {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      path: '/api/auth/tiktok',
+      // Use a broad path so the cookie is reliably sent back to /api/auth/tiktok/callback
+      // (some browsers/platforms can behave unexpectedly with narrower paths during OAuth redirects)
+      path: '/',
       maxAge: 60 * 5,
     })
     response.cookies.set('tiktok_code_verifier', codeVerifier, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      path: '/api/auth/tiktok',
+      path: '/',
       maxAge: 60 * 5,
     })
     return response
@@ -73,10 +75,35 @@ export async function GET(request: Request) {
   const storedState = cookieStore.get('tiktok_oauth_state')?.value
   const storedCodeVerifier = cookieStore.get('tiktok_code_verifier')?.value
 
-  if (!storedState || storedState !== state) {
-    return NextResponse.redirect(
-      new URL('/login?error=tiktok_state_mismatch', requestUrl.origin).toString()
-    )
+  if (!state) {
+    console.error('TikTok OAuth state missing from callback', {
+      hasCookieState: Boolean(storedState),
+    })
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'tiktok_state_mismatch')
+    redirectUrl.searchParams.set('reason', 'missing_state_param')
+    return NextResponse.redirect(redirectUrl.toString())
+  }
+
+  if (!storedState) {
+    console.error('TikTok OAuth state cookie missing on callback', {
+      hasStateParam: Boolean(state),
+    })
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'tiktok_state_mismatch')
+    redirectUrl.searchParams.set('reason', 'missing_state_cookie')
+    return NextResponse.redirect(redirectUrl.toString())
+  }
+
+  if (storedState !== state) {
+    console.error('TikTok OAuth state mismatch', {
+      storedStatePrefix: storedState.slice(0, 8),
+      stateParamPrefix: state.slice(0, 8),
+    })
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'tiktok_state_mismatch')
+    redirectUrl.searchParams.set('reason', 'mismatch')
+    return NextResponse.redirect(redirectUrl.toString())
   }
 
   if (!storedCodeVerifier) {
@@ -160,11 +187,27 @@ export async function GET(request: Request) {
 
   // Create or sign in Supabase user
   const cookieAdapter = await cookies()
+  const supabaseServiceKey =
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseServiceKey) {
+    console.error('Supabase service role key missing for TikTok auth', {
+      hasSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+      hasPublishableKey: Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),
+      hasSupabaseSecretKey: Boolean(process.env.SUPABASE_SECRET_KEY),
+      hasServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    })
+
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'supabase_config_missing')
+    return NextResponse.redirect(redirectUrl.toString())
+  }
+
   const supabase = createRouteHandlerClient(
     { cookies: () => cookieAdapter as any },
     {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.SUPABASE_SECRET_KEY,
+      supabaseKey: supabaseServiceKey,
     }
   )
 
@@ -186,9 +229,12 @@ export async function GET(request: Request) {
 
   if (createError && createError.status !== 422) {
     console.error('TikTok createUser error:', createError)
-    return NextResponse.redirect(
-      new URL('/login?error=tiktok_create_user', requestUrl.origin).toString()
-    )
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'tiktok_create_user')
+    if (createError.status) redirectUrl.searchParams.set('status', String(createError.status))
+    // Avoid leaking full message in URL; keep details in logs
+    if ((createError as any).code) redirectUrl.searchParams.set('code', String((createError as any).code))
+    return NextResponse.redirect(redirectUrl.toString())
   }
 
   const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -198,9 +244,11 @@ export async function GET(request: Request) {
 
   if (signInError || !signInData.session) {
     console.error('TikTok sign-in error:', signInError)
-    return NextResponse.redirect(
-      new URL('/login?error=tiktok_signin', requestUrl.origin).toString()
-    )
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'tiktok_signin')
+    if (signInError?.status) redirectUrl.searchParams.set('status', String(signInError.status))
+    if ((signInError as any)?.code) redirectUrl.searchParams.set('code', String((signInError as any).code))
+    return NextResponse.redirect(redirectUrl.toString())
   }
 
   const userId = signInData.user?.id

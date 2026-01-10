@@ -29,6 +29,7 @@ export default function LoginPage() {
     // Avoid useSearchParams to prevent Next.js prerender bailout in builds
     const params = new URLSearchParams(window.location.search)
     const err = params.get('error')
+    const reason = params.get('reason')
     const logId = params.get('log_id')
     const status = params.get('status')
     const code = params.get('code')
@@ -36,6 +37,7 @@ export default function LoginPage() {
       status ? `status=${status}` : null,
       code ? `code=${code}` : null,
       logId ? `log_id=${logId}` : null,
+      reason ? `reason=${reason}` : null,
     ].filter(Boolean)
     const refSuffix = refParts.length ? ` (ref: ${refParts.join(', ')})` : ''
     if (err) {
@@ -43,14 +45,18 @@ export default function LoginPage() {
         setError(
           'TikTok login is not configured. Please ensure TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET environment variables are set in Vercel and the deployment has been redeployed.'
         )
+      } else if (err === 'supabase_config_missing') {
+        setError(
+          'TikTok login is not configured on the server. Please set SUPABASE_SECRET_KEY (service role key) in Vercel and redeploy.'
+        )
       } else if (err === 'tiktok_state_mismatch') {
-        setError('Security check failed. Please try again.')
+        setError(`Security check failed. Please try again.${refSuffix}`)
       } else if (err === 'tiktok_pkce_missing') {
         setError('Security verification failed. Please try again.')
       } else if (err === 'tiktok_token') {
         setError(`Failed to authenticate with TikTok. Please try again.${refSuffix}`)
       } else if (err === 'tiktok_create_user' || err === 'tiktok_signin') {
-        setError('Failed to create account. Please try again or use another login method.')
+        setError(`Failed to create/sign in account. Please try again.${refSuffix}`)
       } else {
         setError('Login failed. Please try another method or try again.')
       }
