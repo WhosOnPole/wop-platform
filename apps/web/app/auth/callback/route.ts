@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     // Regular OAuth/auth flow
     await supabase.auth.exchangeCodeForSession(code)
 
-    // Check if user has completed onboarding (has username)
+    // Check if user has completed onboarding (username + dob/age)
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -41,12 +41,14 @@ export async function GET(request: NextRequest) {
     if (session) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, date_of_birth, age')
         .eq('id', session.user.id)
         .maybeSingle()
 
-      // If no username, redirect to onboarding
-      if (!profile?.username) {
+      const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth || profile?.age))
+
+      // If not complete, redirect to onboarding Step 1 (Profile)
+      if (!isProfileComplete) {
         return NextResponse.redirect(new URL('/onboarding', requestUrl.origin))
       }
     }

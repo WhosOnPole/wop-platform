@@ -55,16 +55,20 @@ export async function proxy(req: NextRequest) {
         // If authenticated, redirect based on path
         if (session) {
           try {
-            const { data: profile } = await supabase
+                const { data: profile } = await supabase
               .from('profiles')
-              .select('username')
+                  .select('username, date_of_birth, age')
               .eq('id', session.user.id)
               .maybeSingle()
+
+                const isProfileComplete = Boolean(
+                  profile?.username && (profile?.date_of_birth || profile?.age)
+                )
 
             // If on login/signup, redirect to feed or onboarding
             if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
               const redirectUrl = req.nextUrl.clone()
-              redirectUrl.pathname = profile?.username ? '/feed' : '/onboarding'
+                  redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
               return NextResponse.redirect(redirectUrl)
             }
           } catch (error) {
@@ -96,9 +100,9 @@ export async function proxy(req: NextRequest) {
 
       // Check ban status
       try {
-        const { data: profile } = await supabase
+          const { data: profile } = await supabase
           .from('profiles')
-          .select('banned_until, username')
+            .select('banned_until, username, date_of_birth, age')
           .eq('id', session.user.id)
           .maybeSingle()
 
@@ -113,9 +117,10 @@ export async function proxy(req: NextRequest) {
           }
         }
 
-        // Check if user needs to complete onboarding
-        // Profile must have username to be considered complete
-        if (!profile?.username) {
+          // Check if user needs to complete onboarding
+          // Profile is considered complete when it has a username AND dob/age.
+          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth || profile?.age))
+          if (!isProfileComplete) {
           const redirectUrl = req.nextUrl.clone()
           redirectUrl.pathname = '/onboarding'
           return NextResponse.redirect(redirectUrl)

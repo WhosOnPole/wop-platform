@@ -17,6 +17,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     state: '',
     country: '',
   })
+  const [doesShowStateOnProfile, setDoesShowStateOnProfile] = useState(false)
   const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([])
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
@@ -33,6 +34,17 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
   useEffect(() => {
     loadExistingData()
   }, [])
+
+  function normalizeUsername(input: string) {
+    return input
+      .toLowerCase()
+      .trim()
+      .replace(/['’]/g, '')
+      .replace(/[^a-z0-9_]+/g, '_')
+      .replace(/_{2,}/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 50)
+  }
 
   async function loadExistingData() {
     const {
@@ -55,6 +67,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         state: profile.state || '',
         country: profile.country || '',
       })
+      setDoesShowStateOnProfile(Boolean(profile.show_state_on_profile))
       setProfileImagePreview(profile.profile_image_url)
       if (profile.social_links && typeof profile.social_links === 'object') {
         setSocialLinks(
@@ -64,6 +77,23 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           }))
         )
       }
+    }
+
+    // If username isn't set in profile yet, prefill from social provider metadata.
+    // TikTok: user_metadata.preferred_username (set during TikTok OAuth) or display_name.
+    const userMeta = session.user.user_metadata as Record<string, unknown>
+    const preferred =
+      (typeof userMeta.preferred_username === 'string' && userMeta.preferred_username) ||
+      (typeof userMeta.tiktok_display_name === 'string' && userMeta.tiktok_display_name) ||
+      (typeof userMeta.user_name === 'string' && userMeta.user_name) ||
+      (typeof userMeta.username === 'string' && userMeta.username) ||
+      (typeof userMeta.full_name === 'string' && userMeta.full_name) ||
+      (typeof userMeta.name === 'string' && userMeta.name) ||
+      ''
+
+    const normalized = preferred ? normalizeUsername(preferred) : ''
+    if (!profile?.username && normalized) {
+      setFormData((prev) => ({ ...prev, username: prev.username || normalized }))
     }
     setLoading(false)
   }
@@ -187,6 +217,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       city: formData.city.trim() || null,
       state: formData.state.trim() || null,
       country: formData.country.trim() || null,
+      show_state_on_profile: doesShowStateOnProfile,
       social_links: Object.keys(socialLinksObj).length > 0 ? socialLinksObj : null,
     }
 
@@ -213,7 +244,9 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Set Up Your Profile</h2>
-        <p className="mt-1 text-sm text-gray-600">Tell us about yourself (all fields required)</p>
+        <p className="mt-1 text-sm text-gray-600">
+          Tell us about yourself. Username and date of birth are required.
+        </p>
       </div>
 
       {/* Profile Image */}
@@ -295,12 +328,11 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-            City <span className="text-red-500">*</span>
+            City <span className="text-gray-400">(optional)</span>
           </label>
           <input
             type="text"
             id="city"
-            required
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
             className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
@@ -309,12 +341,11 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         </div>
         <div>
           <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-            State <span className="text-red-500">*</span>
+            State <span className="text-gray-400">(optional)</span>
           </label>
           <input
             type="text"
             id="state"
-            required
             value={formData.state}
             onChange={(e) => setFormData({ ...formData, state: e.target.value })}
             className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
@@ -323,18 +354,35 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         </div>
         <div>
           <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-            Country <span className="text-red-500">*</span>
+            Country <span className="text-gray-400">(optional)</span>
           </label>
           <input
             type="text"
             id="country"
-            required
             value={formData.country}
             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
             className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="Country"
           />
         </div>
+      </div>
+
+      {/* Privacy */} 
+      <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-gray-300"
+            checked={doesShowStateOnProfile}
+            onChange={(e) => setDoesShowStateOnProfile(e.target.checked)}
+          />
+          <span>
+            <span className="block text-sm font-medium text-gray-900">Show my state on my profile</span>
+            <span className="block text-sm text-gray-600">
+              If enabled, your state may be visible to other users on your public profile.
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* Social Links */}
