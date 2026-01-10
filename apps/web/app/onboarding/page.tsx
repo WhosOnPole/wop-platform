@@ -17,10 +17,31 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('profile')
   const [loading, setLoading] = useState(true)
   const [profileComplete, setProfileComplete] = useState(false)
+  const [isRedirectingToFeed, setIsRedirectingToFeed] = useState(false)
 
   useEffect(() => {
     checkOnboardingStatus()
   }, [])
+
+  useEffect(() => {
+    if (currentStep !== 'complete') return
+
+    setIsRedirectingToFeed(true)
+
+    const softRedirect = setTimeout(() => {
+      router.replace('/feed')
+    }, 250)
+
+    // Hard fallback: if Next navigation stalls, force a full page load
+    const hardFallback = setTimeout(() => {
+      window.location.href = '/feed'
+    }, 4000)
+
+    return () => {
+      clearTimeout(softRedirect)
+      clearTimeout(hardFallback)
+    }
+  }, [currentStep, router])
 
   async function checkOnboardingStatus() {
     const {
@@ -61,10 +82,6 @@ export default function OnboardingPage() {
       setCurrentStep('tracks')
     } else if (step === 'tracks') {
       setCurrentStep('complete')
-      // Redirect to feed after a brief delay
-      setTimeout(() => {
-        router.push('/feed')
-      }, 1500)
     }
   }
 
@@ -214,7 +231,9 @@ export default function OnboardingPage() {
             <div className="text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-green-500" />
               <h2 className="mt-4 text-2xl font-bold text-gray-900">Welcome to Who's on Pole!</h2>
-              <p className="mt-2 text-gray-600">Redirecting to your feed...</p>
+              <p className="mt-2 text-gray-600">
+                {isRedirectingToFeed ? 'Redirecting to your feed…' : 'Finalizing…'}
+              </p>
             </div>
           )}
         </div>
