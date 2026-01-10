@@ -7,7 +7,7 @@ import { OnboardingProfileStep } from '@/components/onboarding/profile-step'
 import { OnboardingDriversStep } from '@/components/onboarding/drivers-step'
 import { OnboardingTeamsStep } from '@/components/onboarding/teams-step'
 import { OnboardingTracksStep } from '@/components/onboarding/tracks-step'
-import { CheckCircle2, Circle } from 'lucide-react'
+import { CheckCircle2, Circle, ChevronLeft } from 'lucide-react'
 
 type OnboardingStep = 'profile' | 'drivers' | 'teams' | 'tracks' | 'complete'
 
@@ -17,15 +17,12 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('profile')
   const [loading, setLoading] = useState(true)
   const [profileComplete, setProfileComplete] = useState(false)
-  const [shouldForceProfileStep, setShouldForceProfileStep] = useState(false)
 
   useEffect(() => {
-    const provider = new URLSearchParams(window.location.search).get('provider')
-    if (provider === 'tiktok' || provider === 'instagram') setShouldForceProfileStep(true)
-    checkOnboardingStatus({ shouldForceProfileStep: provider === 'tiktok' || provider === 'instagram' })
+    checkOnboardingStatus()
   }, [])
 
-  async function checkOnboardingStatus(args?: { shouldForceProfileStep?: boolean }) {
+  async function checkOnboardingStatus() {
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -35,43 +32,18 @@ export default function OnboardingPage() {
       return
     }
 
-    // Check if profile exists and has username (required for completion)
+    // Onboarding is only for users missing required profile fields.
+    // A completed profile requires: username + dob/age.
     const { data: profile } = await supabase
       .from('profiles')
-      .select('username')
+      .select('username, date_of_birth, age')
       .eq('id', session.user.id)
       .single()
 
-    if (profile?.username) {
-      // If a social provider prefilled username, still force the Profile step so the user can edit.
-      if (args?.shouldForceProfileStep) {
-        setLoading(false)
-        setCurrentStep('profile')
-        setProfileComplete(false)
-        return
-      }
-
-      // Profile is complete, check if they need to complete onboarding
-      // If they have a username, they've completed the required step
-      setProfileComplete(true)
-      // Check if they should skip to feed or continue onboarding
-      const { data: grids } = await supabase
-        .from('grids')
-        .select('type')
-        .eq('user_id', session.user.id)
-
-      const hasAllGrids = grids?.some((g) => g.type === 'driver') &&
-        grids?.some((g) => g.type === 'team') &&
-        grids?.some((g) => g.type === 'track')
-
-      if (hasAllGrids) {
-        // All steps complete, redirect to feed
-        router.push('/feed')
-        return
-      } else {
-        // Profile complete but grids missing, start from drivers step
-        setCurrentStep('drivers')
-      }
+    const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth || profile?.age))
+    if (isProfileComplete) {
+      router.push('/feed')
+      return
     }
 
     setLoading(false)
@@ -94,6 +66,24 @@ export default function OnboardingPage() {
         router.push('/feed')
       }, 1500)
     }
+  }
+
+  function handleBack() {
+    if (currentStep === 'drivers') setCurrentStep('profile')
+    else if (currentStep === 'teams') setCurrentStep('drivers')
+    else if (currentStep === 'tracks') setCurrentStep('teams')
+    else if (currentStep === 'complete') setCurrentStep('tracks')
+  }
+
+  function canNavigateToStep(step: OnboardingStep) {
+    if (step === 'profile') return true
+    // profile step is required before any other steps
+    if (!profileComplete) return false
+
+    const order: OnboardingStep[] = ['profile', 'drivers', 'teams', 'tracks', 'complete']
+    const currentIndex = order.indexOf(currentStep)
+    const targetIndex = order.indexOf(step)
+    return targetIndex <= currentIndex
   }
 
   function handleSkip(step: OnboardingStep) {
@@ -140,7 +130,15 @@ export default function OnboardingPage() {
 
               return (
                 <div key={step.id} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (canNavigateToStep(stepId)) setCurrentStep(stepId)
+                    }}
+                    disabled={!canNavigateToStep(stepId)}
+                    className="flex flex-col items-center disabled:cursor-not-allowed"
+                    aria-label={`Go to ${step.label} step`}
+                  >
                     {isComplete || isPast ? (
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600">
                         <CheckCircle2 className="h-6 w-6 text-white" />
@@ -162,7 +160,7 @@ export default function OnboardingPage() {
                       {step.label}
                       {step.required && <span className="text-red-500">*</span>}
                     </span>
-                  </div>
+                  </button>
                   {index < steps.length - 1 && (
                     <div
                       className={`mx-2 h-0.5 flex-1 ${
@@ -178,6 +176,19 @@ export default function OnboardingPage() {
 
         {/* Step Content */}
         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+          {currentStep !== 'profile' && (
+            <div className="mb-6 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back
+              </button>
+              <span className="text-sm text-gray-500">You can always go back and adjust your selections.</span>
+            </div>
+          )}
           {currentStep === 'profile' && (
             <OnboardingProfileStep onComplete={handleProfileComplete} />
           )}

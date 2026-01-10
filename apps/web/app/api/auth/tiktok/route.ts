@@ -366,7 +366,7 @@ export async function GET(request: Request) {
 
   const userId = signInData.user?.id
   let hasUsername = false
-  const isNewUser = !createError
+  let hasDobOrAge = false
   if (userId) {
     // Ensure auth metadata has a preferred_username (useful for future providers too)
     try {
@@ -386,11 +386,12 @@ export async function GET(request: Request) {
     // Ensure profile row exists
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, date_of_birth, age')
       .eq('id', userId)
       .maybeSingle()
 
     hasUsername = Boolean(existingProfile?.username)
+    hasDobOrAge = Boolean(existingProfile?.date_of_birth || existingProfile?.age)
 
     if (!existingProfile) {
       await supabase.from('profiles').insert({
@@ -399,6 +400,7 @@ export async function GET(request: Request) {
         username: availableUsername,
         profile_image_url: avatarUrl,
       })
+      hasUsername = true
     } else if (!existingProfile.username) {
       await supabase
         .from('profiles')
@@ -410,11 +412,8 @@ export async function GET(request: Request) {
     }
   }
 
-  if (isNewUser) {
-    const url = new URL('/onboarding', requestUrl.origin)
-    url.searchParams.set('provider', 'tiktok')
-    return NextResponse.redirect(url)
-  }
-
-  return NextResponse.redirect(new URL(hasUsername ? '/feed' : '/onboarding', requestUrl.origin))
+  // Onboarding is only required when required profile fields are missing.
+  // A completed profile requires: username + dob/age.
+  const isProfileComplete = Boolean(hasUsername && hasDobOrAge)
+  return NextResponse.redirect(new URL(isProfileComplete ? '/feed' : '/onboarding', requestUrl.origin))
 }

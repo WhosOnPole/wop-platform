@@ -174,12 +174,16 @@ export default async function UserProfilePage({ params }: PageProps) {
                   <Trophy className="h-5 w-5" />
                   <span className="font-semibold">{profile.points} points</span>
                 </div>
-                {profile.city && profile.state && (
+                {profile.city && (
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-4 w-4" />
-                    <span>
-                      {profile.city}, {profile.state}
-                    </span>
+                    <span>{profile.city}</span>
+                  </div>
+                )}
+                {profile.show_state_on_profile && profile.state && (
+                  <div className="flex items-center space-x-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{profile.state}</span>
                   </div>
                 )}
                 {profile.country && (
