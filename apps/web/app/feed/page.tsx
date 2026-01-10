@@ -1,12 +1,12 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { TrendingUp, Calendar, Star, Radio } from 'lucide-react'
+import { TrendingUp, Calendar, Star } from 'lucide-react'
 import { FeedContent } from '@/components/feed/feed-content'
 import { TrendingSection } from '@/components/feed/trending-section'
 import { UpcomingRace } from '@/components/feed/upcoming-race'
 import { HighlightsSection } from '@/components/feed/highlights-section'
-import { HotTakeTuesday } from '@/components/feed/hot-take-tuesday'
+import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -51,7 +51,7 @@ export default async function FeedPage() {
     featuredNews,
     weeklyHighlights,
     upcomingRace,
-    hotTake,
+    activeHotTake,
     trendingPosts,
   ] = await Promise.all([
     // Posts from users you follow
@@ -108,10 +108,11 @@ export default async function FeedPage() {
         }
         return { data: [] }
       }),
-    // Recent polls
+    // Recent active polls (ends_at is null or in the future)
     supabase
       .from('polls')
       .select('*')
+      .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(3),
     // Featured news
@@ -121,39 +122,39 @@ export default async function FeedPage() {
       .eq('is_featured', true)
       .order('created_at', { ascending: false })
       .limit(2),
-    // Weekly highlights
+    // Weekly highlights (with featured fan + grid if set)
     (async () => {
       const { data: highlights } = await supabase
         .from('weekly_highlights')
-        .select('highlighted_fan_id, highlighted_sponsor_id')
+        .select(
+          `
+          highlighted_fan_id,
+          highlighted_sponsor_id,
+          highlighted_fan_grid_id,
+          highlighted_fan:profiles!highlighted_fan_id (
+            id,
+            username,
+            profile_image_url
+          ),
+          highlighted_sponsor:sponsors!highlighted_sponsor_id (
+            id,
+            name,
+            logo_url
+          ),
+          highlighted_fan_grid:grids!highlighted_fan_grid_id (
+            *,
+            user:profiles!user_id (
+              id,
+              username,
+              profile_image_url
+            )
+          )
+        `
+        )
         .eq('week_start_date', weekStart)
         .single()
 
-      if (highlights) {
-        const [fan, sponsor] = await Promise.all([
-          highlights.highlighted_fan_id
-            ? supabase
-                .from('profiles')
-                .select('id, username, profile_image_url')
-                .eq('id', highlights.highlighted_fan_id)
-                .single()
-            : Promise.resolve({ data: null }),
-          highlights.highlighted_sponsor_id
-            ? supabase
-                .from('sponsors')
-                .select('*')
-                .eq('id', highlights.highlighted_sponsor_id)
-                .single()
-            : Promise.resolve({ data: null }),
-        ])
-        return {
-          data: {
-            highlighted_fan: fan.data,
-            highlighted_sponsor: sponsor.data,
-          },
-        }
-      }
-      return { data: null }
+      return { data: highlights || null }
     })(),
     // Upcoming race
     supabase
@@ -163,32 +164,35 @@ export default async function FeedPage() {
       .order('race_time', { ascending: true })
       .limit(1)
       .single(),
-    // Hot Take Tuesday
+    // Active hot take (single) by date range
     (async () => {
-      const today = new Date()
-      if (today.getDay() === 2) {
-        // Tuesday
-        const todayStr = today.toISOString().split('T')[0]
-        const { data } = await supabase
-          .from('hot_takes')
-          .select(
-            `
-            *,
-            featured_grid:grids!featured_grid_id (
-              *,
-              user:profiles!user_id (
-                id,
-                username,
-                profile_image_url
-              )
-            )
+      const nowIso = new Date().toISOString()
+      const { data } = await supabase
+        .from('hot_takes')
+        .select(
           `
+          id,
+          content_text,
+          starts_at,
+          ends_at,
+          featured_grid_id,
+          featured_grid:grids!featured_grid_id (
+            *,
+            user:profiles!user_id (
+              id,
+              username,
+              profile_image_url
+            )
           )
-          .eq('active_date', todayStr)
-          .single()
-        return { data }
-      }
-      return { data: null }
+        `
+        )
+        .lte('starts_at', nowIso)
+        .gt('ends_at', nowIso)
+        .order('starts_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      return { data }
     })(),
     // Trending posts (most active in last 24 hours)
     supabase
@@ -209,6 +213,30 @@ export default async function FeedPage() {
       .order('created_at', { ascending: false })
       .limit(5),
   ])
+
+  // Fetch hot take discussion posts if active hot take exists
+  let hotTakePosts: any[] = []
+  if (activeHotTake.data?.id) {
+    const { data: htPosts } = await supabase
+      .from('posts')
+      .select(
+        `
+        *,
+        like_count,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .eq('parent_page_type', 'hot_take')
+      .eq('parent_page_id', activeHotTake.data.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    hotTakePosts = htPosts || []
+  }
 
   // Build parent lookups for trending posts to avoid 404s
   const trending = trendingPosts.data || []
@@ -277,23 +305,30 @@ export default async function FeedPage() {
         <p className="mt-2 text-gray-600">Stay up to date with the F1 community</p>
       </div>
 
+      {/* Spotlight Carousel: hot take, featured grid, polls */}
+      <div className="mb-6">
+        <SpotlightCarousel
+          spotlight={{
+            hot_take: activeHotTake.data || null,
+            featured_grid: weeklyHighlights.data?.highlighted_fan_grid || null,
+          }}
+          polls={polls.data || []}
+          discussionPosts={hotTakePosts}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Main Feed */}
         <div className="lg:col-span-2">
           <FeedContent
             posts={followingPosts.data || []}
             grids={followingGrids.data || []}
-            polls={polls.data || []}
             featuredNews={featuredNews.data || []}
-            weeklyHighlights={weeklyHighlights.data || null}
           />
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Hot Take Tuesday */}
-          {hotTake.data && <HotTakeTuesday hotTake={hotTake.data} />}
-
           {/* Trending */}
           {trendingWithLinks.length > 0 && (
             <TrendingSection posts={trendingWithLinks} />

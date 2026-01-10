@@ -9,6 +9,7 @@ const pollSchema = z.object({
   question: z.string().min(1),
   options: z.array(z.string().min(1)).min(2),
   is_featured_podium: z.boolean(),
+  ends_at: z.string().optional().nullable(),
 })
 
 interface PollModalProps {
@@ -17,6 +18,7 @@ interface PollModalProps {
     question: string
     options: string[]
     is_featured_podium: boolean
+    ends_at?: string | null
   } | null
   onClose: () => void
 }
@@ -29,6 +31,9 @@ export function PollModal({ poll, onClose }: PollModalProps) {
     question: poll?.question || '',
     options: poll?.options || ['', ''],
     is_featured_podium: poll?.is_featured_podium || false,
+    ends_at: poll?.ends_at
+      ? new Date(poll.ends_at).toISOString().slice(0, 16)
+      : '',
   })
 
   function addOption() {
@@ -62,6 +67,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
         question: formData.question,
         options: formData.options.filter((opt) => opt.trim() !== ''),
         is_featured_podium: formData.is_featured_podium,
+        ends_at: formData.ends_at ? formData.ends_at : null,
       })
 
       if (validated.options.length < 2) {
@@ -79,6 +85,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
       const payload = {
         ...validated,
         admin_id: session.user.id,
+        ends_at: validated.ends_at ? new Date(validated.ends_at).toISOString() : null,
       }
 
       if (poll) {
@@ -176,6 +183,21 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             <label htmlFor="is_featured_podium" className="ml-2 text-sm text-gray-700">
               Featured Podium
             </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Ends At <span className="text-gray-400">(optional)</span>
+            </label>
+            <input
+              type="datetime-local"
+              value={formData.ends_at}
+              onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Poll is active while ends_at is empty or in the future.
+            </p>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

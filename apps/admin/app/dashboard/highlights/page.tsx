@@ -139,6 +139,8 @@ export default async function HighlightsPage() {
             existingSponsor={currentHighlights?.highlighted_sponsor || null}
           />
         </div>
+
+        {/* Hot take spotlight section removed (deprecated) */}
       </div>
     </div>
   )

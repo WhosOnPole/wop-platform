@@ -8,7 +8,9 @@ import { z } from 'zod'
 const hotTakeSchema = z.object({
   content_text: z.string().min(1),
   featured_grid_id: z.string().uuid().optional().or(z.literal('')),
-  active_date: z.string().date(),
+  active_date: z.string().optional().or(z.literal('')),
+  starts_at: z.string().min(1),
+  ends_at: z.string().min(1),
 })
 
 interface HotTakeModalProps {
@@ -28,7 +30,13 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
   const [formData, setFormData] = useState({
     content_text: hotTake?.content_text || '',
     featured_grid_id: hotTake?.featured_grid_id || '',
-    active_date: hotTake?.active_date || new Date().toISOString().split('T')[0],
+    active_date: hotTake?.active_date || '',
+    starts_at: hotTake?.starts_at
+      ? new Date(hotTake.starts_at).toISOString().slice(0, 16)
+      : new Date().toISOString().slice(0, 16),
+    ends_at: hotTake?.ends_at
+      ? new Date(hotTake.ends_at).toISOString().slice(0, 16)
+      : new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16), // default +1h
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -50,10 +58,18 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
         throw new Error('Not authenticated')
       }
 
+      const startsAtIso = new Date(validated.starts_at).toISOString()
+      const endsAtIso = new Date(validated.ends_at).toISOString()
+      if (new Date(startsAtIso) >= new Date(endsAtIso)) {
+        throw new Error('End time must be after start time')
+      }
+
       const payload = {
         content_text: validated.content_text,
         featured_grid_id: validated.featured_grid_id || null,
-        active_date: validated.active_date,
+        active_date: validated.active_date || null,
+        starts_at: startsAtIso,
+        ends_at: endsAtIso,
         admin_id: session.user.id,
       }
 
@@ -117,17 +133,39 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
             />
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Starts at *</label>
+              <input
+                type="datetime-local"
+                value={formData.starts_at}
+                onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })}
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Ends at *</label>
+              <input
+                type="datetime-local"
+                value={formData.ends_at}
+                onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Active Date *</label>
+            <label className="block text-sm font-medium text-gray-700">Active Date (legacy, optional)</label>
             <input
               type="date"
               value={formData.active_date}
               onChange={(e) => setFormData({ ...formData, active_date: e.target.value })}
-              required
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500">
-              This hot take will be shown on this date (typically a Tuesday)
+              Optional legacy field. Scheduling now uses start/end date-times.
             </p>
           </div>
 
