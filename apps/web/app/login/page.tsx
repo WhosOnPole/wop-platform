@@ -30,6 +30,8 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search)
     const err = params.get('error')
     const reason = params.get('reason')
+    const kind = params.get('kind')
+    const role = params.get('role')
     const logId = params.get('log_id')
     const status = params.get('status')
     const code = params.get('code')
@@ -38,6 +40,8 @@ export default function LoginPage() {
       code ? `code=${code}` : null,
       logId ? `log_id=${logId}` : null,
       reason ? `reason=${reason}` : null,
+      kind ? `kind=${kind}` : null,
+      role ? `role=${role}` : null,
     ].filter(Boolean)
     const refSuffix = refParts.length ? ` (ref: ${refParts.join(', ')})` : ''
     if (err) {
@@ -48,6 +52,10 @@ export default function LoginPage() {
       } else if (err === 'supabase_config_missing') {
         setError(
           'TikTok login is not configured on the server. Please set SUPABASE_SECRET_KEY (service role key) in Vercel and redeploy.'
+        )
+      } else if (err === 'supabase_service_key_invalid') {
+        setError(
+          `TikTok login is misconfigured on the server: the Supabase key provided is not a service-role key.${refSuffix}`
         )
       } else if (err === 'tiktok_state_mismatch') {
         setError(`Security check failed. Please try again.${refSuffix}`)

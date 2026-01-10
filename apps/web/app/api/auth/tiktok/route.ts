@@ -11,6 +11,23 @@ const TIKTOK_USERINFO_URL = 'https://open.tiktokapis.com/v2/user/info/'
 
 // Required env (sandbox): TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET, TIKTOK_REDIRECT_URI
 
+function getSupabaseKeyKind(key: string) {
+  if (key.startsWith('sb_publishable_')) return 'publishable'
+  if (key.startsWith('sb_secret_')) return 'secret'
+  if (key.split('.').length === 3) return 'jwt'
+  return 'unknown'
+}
+
+function getJwtRole(jwt: string) {
+  try {
+    const payload = jwt.split('.')[1]
+    const json = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+    return typeof json?.role === 'string' ? json.role : null
+  } catch {
+    return null
+  }
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
@@ -203,6 +220,26 @@ export async function GET(request: Request) {
     return NextResponse.redirect(redirectUrl.toString())
   }
 
+  const supabaseKeyKind = getSupabaseKeyKind(supabaseServiceKey)
+  const supabaseJwtRole = supabaseKeyKind === 'jwt' ? getJwtRole(supabaseServiceKey) : null
+
+  // The admin API requires a service-role key. If Vercel is configured with a publishable/anon key,
+  // GoTrue can respond with generic "unexpected_failure" errors.
+  const isServiceRole =
+    supabaseKeyKind === 'secret' || (supabaseKeyKind === 'jwt' && supabaseJwtRole === 'service_role')
+
+  if (!isServiceRole) {
+    console.error('Invalid Supabase key for admin createUser in TikTok auth', {
+      supabaseKeyKind,
+      supabaseJwtRole,
+    })
+    const redirectUrl = new URL('/login', requestUrl.origin)
+    redirectUrl.searchParams.set('error', 'supabase_service_key_invalid')
+    redirectUrl.searchParams.set('kind', supabaseKeyKind)
+    if (supabaseJwtRole) redirectUrl.searchParams.set('role', supabaseJwtRole)
+    return NextResponse.redirect(redirectUrl.toString())
+  }
+
   const supabase = createRouteHandlerClient(
     { cookies: () => cookieAdapter as any },
     {
@@ -211,8 +248,14 @@ export async function GET(request: Request) {
     }
   )
 
-  const email = `tiktok_${openId}@tiktok.local`
-  const password = `tiktok-${openId}-${clientSecret}`
+  // Use a real-looking domain to avoid any edge-case email validators rejecting `.local`
+  const email = `tiktok_${openIdFinal}@tiktok.whosonpole.org`
+  // Stable deterministic password (no raw secrets in the string)
+  const passwordHash = crypto
+    .createHash('sha256')
+    .update(`${openIdFinal}:${clientSecret}`)
+    .digest('hex')
+  const password = `tiktok-${passwordHash}`
 
   // Upsert auth user
   const { error: createError } = await supabase.auth.admin.createUser({
@@ -221,14 +264,19 @@ export async function GET(request: Request) {
     email_confirm: true,
     user_metadata: {
       provider: 'tiktok',
-      tiktok_open_id: openId,
+      tiktok_open_id: openIdFinal,
       tiktok_display_name: displayName,
       tiktok_avatar_url: avatarUrl,
     },
   })
 
   if (createError && createError.status !== 422) {
-    console.error('TikTok createUser error:', createError)
+    console.error('TikTok createUser error:', {
+      status: createError.status,
+      name: (createError as any).name,
+      code: (createError as any).code,
+      message: createError.message,
+    })
     const redirectUrl = new URL('/login', requestUrl.origin)
     redirectUrl.searchParams.set('error', 'tiktok_create_user')
     if (createError.status) redirectUrl.searchParams.set('status', String(createError.status))
