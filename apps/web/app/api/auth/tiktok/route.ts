@@ -11,6 +11,48 @@ const TIKTOK_USERINFO_URL = 'https://open.tiktokapis.com/v2/user/info/'
 
 // Required env (sandbox): TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET, TIKTOK_REDIRECT_URI
 
+interface TikTokStatePayload {
+  codeVerifier: string
+  createdAt: number
+  nonce: string
+}
+
+function encryptTikTokState(payload: TikTokStatePayload, clientSecret: string) {
+  const key = crypto.createHash('sha256').update(clientSecret).digest() // 32 bytes
+  const iv = crypto.randomBytes(12)
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
+  cipher.setAAD(Buffer.from('tiktok_oauth_state_v1'))
+  const plaintext = Buffer.from(JSON.stringify(payload), 'utf8')
+  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()])
+  const tag = cipher.getAuthTag()
+  return Buffer.concat([iv, tag, ciphertext]).toString('base64url')
+}
+
+function decryptTikTokState(state: string, clientSecret: string): TikTokStatePayload | null {
+  try {
+    const key = crypto.createHash('sha256').update(clientSecret).digest()
+    const raw = Buffer.from(state, 'base64url')
+    const iv = raw.subarray(0, 12)
+    const tag = raw.subarray(12, 28)
+    const ciphertext = raw.subarray(28)
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
+    decipher.setAAD(Buffer.from('tiktok_oauth_state_v1'))
+    decipher.setAuthTag(tag)
+    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
+    const parsed = JSON.parse(plaintext) as TikTokStatePayload
+    if (
+      !parsed ||
+      typeof parsed.codeVerifier !== 'string' ||
+      typeof parsed.createdAt !== 'number' ||
+      typeof parsed.nonce !== 'string'
+    )
+      return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
 function getSupabaseKeyKind(key: string) {
   if (key.startsWith('sb_publishable_')) return 'publishable'
   if (key.startsWith('sb_secret_')) return 'secret'
@@ -53,48 +95,30 @@ export async function GET(request: Request) {
 
   // Step 1: start OAuth
   if (!code) {
-    const oauthState = crypto.randomUUID()
     const codeVerifier = crypto.randomBytes(64).toString('base64url')
     // TikTok docs require hex(SHA256(code_verifier)) for code_challenge
     const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('hex')
+    const encryptedState = encryptTikTokState(
+      { codeVerifier, createdAt: Date.now(), nonce: crypto.randomUUID() },
+      clientSecret
+    )
 
     const authorizeUrl = new URL(TIKTOK_AUTH_URL)
     authorizeUrl.searchParams.set('client_key', clientKey)
     authorizeUrl.searchParams.set('response_type', 'code')
     authorizeUrl.searchParams.set('scope', 'user.info.basic')
     authorizeUrl.searchParams.set('redirect_uri', redirectUri)
-    authorizeUrl.searchParams.set('state', oauthState)
+    authorizeUrl.searchParams.set('state', encryptedState)
     authorizeUrl.searchParams.set('code_challenge', codeChallenge)
     authorizeUrl.searchParams.set('code_challenge_method', 'S256')
 
-    const response = NextResponse.redirect(authorizeUrl.toString())
-    response.cookies.set('tiktok_oauth_state', oauthState, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      // Use a broad path so the cookie is reliably sent back to /api/auth/tiktok/callback
-      // (some browsers/platforms can behave unexpectedly with narrower paths during OAuth redirects)
-      path: '/',
-      maxAge: 60 * 5,
-    })
-    response.cookies.set('tiktok_code_verifier', codeVerifier, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 5,
-    })
-    return response
+    return NextResponse.redirect(authorizeUrl.toString())
   }
 
   // Step 2: handle callback
-  const cookieStore = await cookies()
-  const storedState = cookieStore.get('tiktok_oauth_state')?.value
-  const storedCodeVerifier = cookieStore.get('tiktok_code_verifier')?.value
-
   if (!state) {
     console.error('TikTok OAuth state missing from callback', {
-      hasCookieState: Boolean(storedState),
+      hasCookieState: false,
     })
     const redirectUrl = new URL('/login', requestUrl.origin)
     redirectUrl.searchParams.set('error', 'tiktok_state_mismatch')
@@ -102,31 +126,24 @@ export async function GET(request: Request) {
     return NextResponse.redirect(redirectUrl.toString())
   }
 
-  if (!storedState) {
-    console.error('TikTok OAuth state cookie missing on callback', {
-      hasStateParam: Boolean(state),
-    })
+  const statePayload = decryptTikTokState(state, clientSecret)
+  if (!statePayload) {
+    console.error('TikTok OAuth state invalid (decrypt/parse failed)')
     const redirectUrl = new URL('/login', requestUrl.origin)
     redirectUrl.searchParams.set('error', 'tiktok_state_mismatch')
-    redirectUrl.searchParams.set('reason', 'missing_state_cookie')
+    redirectUrl.searchParams.set('reason', 'invalid_state')
     return NextResponse.redirect(redirectUrl.toString())
   }
 
-  if (storedState !== state) {
-    console.error('TikTok OAuth state mismatch', {
-      storedStatePrefix: storedState.slice(0, 8),
-      stateParamPrefix: state.slice(0, 8),
+  const maxAgeMs = 5 * 60 * 1000
+  if (Date.now() - statePayload.createdAt > maxAgeMs) {
+    console.error('TikTok OAuth state expired', {
+      createdAt: statePayload.createdAt,
     })
     const redirectUrl = new URL('/login', requestUrl.origin)
     redirectUrl.searchParams.set('error', 'tiktok_state_mismatch')
-    redirectUrl.searchParams.set('reason', 'mismatch')
+    redirectUrl.searchParams.set('reason', 'state_expired')
     return NextResponse.redirect(redirectUrl.toString())
-  }
-
-  if (!storedCodeVerifier) {
-    return NextResponse.redirect(
-      new URL('/login?error=tiktok_pkce_missing', requestUrl.origin).toString()
-    )
   }
 
   // Exchange code for access token
@@ -136,7 +153,7 @@ export async function GET(request: Request) {
     code,
     grant_type: 'authorization_code',
     redirect_uri: redirectUri,
-    code_verifier: storedCodeVerifier,
+    code_verifier: statePayload.codeVerifier,
   })
 
   const tokenResponse = await fetch(TIKTOK_TOKEN_URL, {
@@ -326,11 +343,5 @@ export async function GET(request: Request) {
     }
   }
 
-  // Clear state and code verifier cookies
-  const response = NextResponse.redirect(
-    new URL(hasUsername ? '/feed' : '/onboarding', requestUrl.origin)
-  )
-  response.cookies.delete('tiktok_oauth_state')
-  response.cookies.delete('tiktok_code_verifier')
-  return response
+  return NextResponse.redirect(new URL(hasUsername ? '/feed' : '/onboarding', requestUrl.origin))
 }
