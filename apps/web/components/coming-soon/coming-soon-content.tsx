@@ -21,7 +21,12 @@ export function ComingSoonContent() {
       formData.append('email', email)
       formData.append('website', '') // honeypot stays empty
 
-      const response = await fetch('/api/contact-form-handler', {
+      // Use absolute URL to avoid routing issues in production
+      const apiUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/api/contact-form-handler`
+        : '/api/contact-form-handler'
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       })
