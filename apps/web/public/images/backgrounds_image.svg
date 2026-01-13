@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1920 1080">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-3 {
+        opacity: .51;
+      }
+
+      .cls-4 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="210" y1="1290" x2="1710" y2="-210" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111"/>
+      <stop offset="1" stop-color="#212323"/>
+    </linearGradient>
+    <clipPath id="clippath">
+      <rect class="cls-1" x=".43" y="0" width="1919.57" height="1080" transform="translate(1920.43 1080) rotate(-180)"/>
+    </clipPath>
+  </defs>
+  <rect class="cls-2" width="1920" height="1080"/>
+  <g class="cls-3">
+    <g class="cls-4">
+      <image width="1125" height="2436" transform="translate(1919.99 -1994.68) rotate(-180) scale(1.71 -1.7)" xlink:href="../Welcome Animation/background_teal.jpg"/>
+    </g>
+  </g>
+</svg>

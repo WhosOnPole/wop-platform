@@ -11,9 +11,7 @@
 2. **Update the anon key in both files:**
    - Open `apps/web/.env.local` and `apps/admin/.env.local`
    - Replace `your-supabase-anon-key` with your actual Supabase anon key:
-     ```
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuYXdnYnZtZnZyb3ZyY2txeHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNDAwMDAsImV4cCI6MjA3MDcxNjAwMH0.CO_DuBRCIfWmby3C8MJDsdndAYod_4aZNLT5yGBgNvE
-     ```
+
 
 3. **Add service role key to admin app:**
    - Open `apps/admin/.env.local`

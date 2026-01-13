@@ -50,4 +50,3 @@ export function Logo({ variant = 'gradient', size = 'md', href = '/', className 
 
   return logoElement
 }
-
