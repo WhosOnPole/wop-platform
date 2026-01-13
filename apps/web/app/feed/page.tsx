@@ -5,7 +5,6 @@ import { TrendingUp, Calendar, Star } from 'lucide-react'
 import { FeedContent } from '@/components/feed/feed-content'
 import { TrendingSection } from '@/components/feed/trending-section'
 import { UpcomingRace } from '@/components/feed/upcoming-race'
-import { HighlightsSection } from '@/components/feed/highlights-section'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 
 export const dynamic = 'force-dynamic'
@@ -22,6 +21,38 @@ async function getCurrentWeekStart() {
 
 function slugify(name: string) {
   return name.toLowerCase().trim().replace(/\s+/g, '-')
+}
+
+function isSpotlightGridType(value: unknown): value is SpotlightGridType {
+  return value === 'driver' || value === 'team' || value === 'track'
+}
+
+function getSpotlightFeaturedGrid(params: { grid: unknown }) {
+  const { grid } = params
+
+  if (!grid) return null
+  if (typeof grid !== 'object') return null
+
+  const maybeGrid = grid as Record<string, unknown>
+  const type = maybeGrid.type
+
+  if (!isSpotlightGridType(type)) return null
+
+  const user = maybeGrid.user as Record<string, unknown> | null | undefined
+
+  return {
+    id: String(maybeGrid.id),
+    type,
+    blurb: typeof maybeGrid.blurb === 'string' ? maybeGrid.blurb : null,
+    ranked_items: Array.isArray(maybeGrid.ranked_items) ? maybeGrid.ranked_items : [],
+    user: user
+      ? {
+          id: String(user.id),
+          username: String(user.username),
+          profile_image_url: typeof user.profile_image_url === 'string' ? user.profile_image_url : null,
+        }
+      : null,
+  }
 }
 
 export default async function FeedPage() {
@@ -306,20 +337,20 @@ export default async function FeedPage() {
       </div>
 
       {/* Spotlight Carousel: hot take, featured grid, polls */}
-      <div className="mb-6">
+      <div className="mb-20">
         <SpotlightCarousel
           spotlight={{
             hot_take: activeHotTake.data || null,
-            featured_grid: weeklyHighlights.data?.highlighted_fan_grid || null,
+            featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
           }}
           polls={polls.data || []}
           discussionPosts={hotTakePosts}
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid">
         {/* Main Feed */}
-        <div className="lg:col-span-2">
+        <div className="space-y-6">
           <FeedContent
             posts={followingPosts.data || []}
             grids={followingGrids.data || []}
@@ -336,13 +367,10 @@ export default async function FeedPage() {
 
           {/* Upcoming Race */}
           {upcomingRace.data && <UpcomingRace race={upcomingRace.data} />}
-
-          {/* Highlights */}
-          {weeklyHighlights.data && (
-            <HighlightsSection highlights={weeklyHighlights.data} />
-          )}
         </div>
       </div>
     </div>
   )
 }
+
+type SpotlightGridType = 'driver' | 'team' | 'track'

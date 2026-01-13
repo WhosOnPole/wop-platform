@@ -29,6 +29,7 @@ export function HighlightedFanManager({
   const [gridFilter, setGridFilter] = useState<'all' | 'driver' | 'team' | 'track'>('all')
   const [selectedGrid, setSelectedGrid] = useState<any>(null)
   const [loadingGrids, setLoadingGrids] = useState(false)
+  const [gridError, setGridError] = useState<string | null>(null)
 
   useEffect(() => {
     if (fanSearch.length >= 2) {
@@ -68,39 +69,71 @@ export function HighlightedFanManager({
 
   async function loadFanGrids(userId: string) {
     setLoadingGrids(true)
-    const query = supabase
-      .from('grids')
-      .select(
-        `
-        id,
-        type,
-        ranked_items,
-        comment,
-        created_at,
-        user:profiles!user_id (
-          id,
-          username,
-          profile_image_url
-        )
-      `
-      )
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(30)
+    setGridError(null)
 
-    if (gridFilter !== 'all') {
-      query.eq('type', gridFilter)
+    function buildQuery(params: { includeUser: boolean }) {
+      const { includeUser } = params
+
+      const baseSelect = includeUser
+        ? `
+          id,
+          type,
+          ranked_items,
+          blurb,
+          created_at,
+          user:profiles!user_id (
+            id,
+            username,
+            profile_image_url
+          )
+        `
+        : `
+          id,
+          type,
+          ranked_items,
+          blurb,
+          created_at
+        `
+
+      const query = supabase
+        .from('grids')
+        .select(baseSelect)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(30)
+
+      if (gridFilter !== 'all') query.eq('type', gridFilter)
+
+      return query
     }
 
-    const { data, error } = await query
-    if (!error) {
-      setFanGrids(data || [])
+    const { data: dataWithUser, error: withUserError } = await buildQuery({ includeUser: true })
+    if (!withUserError) {
+      setFanGrids(dataWithUser || [])
       // preserve selection if still present
       if (selectedGrid) {
-        const stillExists = (data || []).find((g) => g.id === selectedGrid.id)
+        const stillExists = (dataWithUser || []).find((g) => g.id === selectedGrid.id)
         if (!stillExists) setSelectedGrid(null)
       }
+      setLoadingGrids(false)
+      return
     }
+
+    // Fallback: if the join is failing for any reason, retry without it.
+    const { data: dataNoUser, error: noUserError } = await buildQuery({ includeUser: false })
+    if (!noUserError) {
+      setFanGrids(dataNoUser || [])
+      if (selectedGrid) {
+        const stillExists = (dataNoUser || []).find((g) => g.id === selectedGrid.id)
+        if (!stillExists) setSelectedGrid(null)
+      }
+      setLoadingGrids(false)
+      return
+    }
+
+    setGridError(noUserError.message || withUserError.message || 'Failed to load grids')
+    setFanGrids([])
+    setSelectedGrid(null)
     setLoadingGrids(false)
   }
 
@@ -265,7 +298,13 @@ export function HighlightedFanManager({
             </div>
           )}
 
-          {selectedFan && !loadingGrids && fanGrids.length === 0 && (
+          {selectedFan && !loadingGrids && gridError && (
+            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              Failed to load grids: {gridError}
+            </div>
+          )}
+
+          {selectedFan && !loadingGrids && !gridError && fanGrids.length === 0 && (
             <div className="rounded-md border border-dashed border-gray-300 p-3 text-sm text-gray-600">
               No grids found for this fan.
             </div>

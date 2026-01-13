@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MessageSquare, Heart } from 'lucide-react'
+import { F1InstagramEmbed } from './f1-instagram-embed'
 
 interface User {
   id: string
@@ -63,7 +64,7 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
         <p className="text-gray-500">
-          Your feed is empty. Start following users to see their content here!
+          Start creating grids to see more content here!
         </p>
         <Link
           href="/drivers"

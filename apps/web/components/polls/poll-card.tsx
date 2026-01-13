@@ -19,9 +19,18 @@ interface PollCardProps {
   userResponse: string | undefined
   voteCounts: Record<string, number>
   onVote: (pollId: string, optionId: string) => void
+  showDiscussion?: boolean
+  className?: string
 }
 
-export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardProps) {
+export function PollCard({
+  poll,
+  userResponse,
+  voteCounts,
+  onVote,
+  showDiscussion = true,
+  className,
+}: PollCardProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -82,7 +91,7 @@ export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardPro
   const hasVoted = !!localResponse
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow text-black">
+    <div className={`h-full w-full rounded-lg border border-gray-200 bg-white p-6 shadow text-black ${className || ''}`}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">{poll.question}</h2>
         {poll.is_featured_podium && (
@@ -139,13 +148,15 @@ export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardPro
       )}
 
       {/* Discussion Section */}
-      <div className="mt-6 border-t border-gray-200 pt-6">
-        <DiscussionSection
-          posts={[]}
-          parentPageType="poll"
-          parentPageId={poll.id}
-        />
-      </div>
+      {showDiscussion && (
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <DiscussionSection
+            posts={[]}
+            parentPageType="poll"
+            parentPageId={poll.id}
+          />
+        </div>
+      )}
     </div>
   )
 }

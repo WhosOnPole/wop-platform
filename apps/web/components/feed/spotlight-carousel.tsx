@@ -179,6 +179,7 @@ export function SpotlightCarousel({ spotlight, polls, discussionPosts }: Spotlig
                       userResponse={undefined}
                       voteCounts={{}}
                       onVote={() => {}}
+                      showDiscussion={false}
                     />
                   </div>
                 )}
