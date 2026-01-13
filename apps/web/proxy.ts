@@ -21,6 +21,7 @@ export async function proxy(req: NextRequest) {
       '/coming-soon',
       '/auth/callback',
       '/api/health',
+      '/api/contact-form-handler',
       '/privacy',
       '/terms',
       '/tiktokUltdht23ChFllaZO9MnLlgSt7HMHnZzl.txt',

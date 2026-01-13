@@ -31,12 +31,16 @@ export function ComingSoonContent() {
         body: formData,
       })
 
-      if (!response.ok) throw new Error('Submission failed')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Form submission failed:', response.status, errorData)
+        throw new Error(errorData.error || 'Submission failed')
+      }
 
       setSubmitted(true)
       setEmail('')
     } catch (error) {
-      console.error(error)
+      console.error('Form submission error:', error)
     } finally {
       setLoading(false)
     }
