@@ -145,7 +145,7 @@ export function ComingSoonContent() {
         <div className="relative z-10 text-center space-y-6">
           {/* <Logo variant="white" size="xl" href="/" className="mx-auto" /> */}
           <img src="/images/fans.png" alt="Background Gradient" className="w-2/3 float-right h-full object-cover block mb-0" />
-          <p className="text-white text-start text-2xl w-2/3 float-right ">
+          <p className="text-white text-start text-2xl w-2/3 float-right pl-10">
           Real fans building community where the love for <br></br> Formula 1 doesn’t have a price.<br></br>
           <b>Built slowly. Built ethically. Built together.</b>
           </p>
