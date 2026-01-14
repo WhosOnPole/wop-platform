@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@/utils/supabase-client'
-import { useRouter } from 'next/navigation'
 import { PollCard } from './poll-card'
 
 interface Poll {
@@ -13,24 +11,23 @@ interface Poll {
   created_at: string
 }
 
-interface PollListProps {
+interface PollRailProps {
   polls: Poll[]
   userResponses: Record<string, string>
   voteCounts: Record<string, Record<string, number>>
 }
 
-export function PollList({
+export function PollRail({
   polls: initialPolls,
   userResponses: initialUserResponses,
   voteCounts: initialVoteCounts,
-}: PollListProps) {
+}: PollRailProps) {
   const [polls] = useState(initialPolls)
   const [userResponses, setUserResponses] = useState(initialUserResponses)
   const [voteCounts, setVoteCounts] = useState(initialVoteCounts)
 
   function handleVote(pollId: string, optionId: string) {
     setUserResponses({ ...userResponses, [pollId]: optionId })
-    // Update vote counts optimistically
     setVoteCounts({
       ...voteCounts,
       [pollId]: {
@@ -40,24 +37,27 @@ export function PollList({
     })
   }
 
+  if (polls.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-500">
+        No featured podiums yet.
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-6">
-      {polls.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
-          <p className="text-gray-500">No polls available yet. Check back soon!</p>
-        </div>
-      ) : (
-        polls.map((poll) => (
+    <div className="flex gap-4 overflow-x-auto pb-2">
+      {polls.map((poll) => (
+        <div key={poll.id} className="w-80 flex-shrink-0">
           <PollCard
-            key={poll.id}
             poll={poll}
             userResponse={userResponses[poll.id]}
             voteCounts={voteCounts[poll.id] || {}}
             onVote={handleVote}
+            showDiscussion={false}
           />
-        ))
-      )}
+        </div>
+      ))}
     </div>
   )
 }
-

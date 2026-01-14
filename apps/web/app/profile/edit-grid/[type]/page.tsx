@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter, useParams } from 'next/navigation'
 import { GridEditor } from '@/components/grid-editor/grid-editor'
 

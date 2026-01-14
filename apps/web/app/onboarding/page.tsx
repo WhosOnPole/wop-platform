@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { OnboardingProfileStep } from '@/components/onboarding/profile-step'
 import { OnboardingDriversStep } from '@/components/onboarding/drivers-step'
