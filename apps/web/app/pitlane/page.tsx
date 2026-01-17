@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PitlaneTabs } from '@/components/pitlane/pitlane-tabs'
+import { Search } from 'lucide-react'
 
 export const revalidate = 300
 
@@ -46,7 +47,7 @@ export default async function PitlanePage() {
       .maybeSingle(),
     supabase
       .from('drivers')
-      .select('id, name, headshot_url, image_url')
+      .select('id, name, headshot_url, image_url, nationality')
       .eq('active', true)
       .order('name', { ascending: true }),
     supabase
@@ -65,7 +66,8 @@ export default async function PitlanePage() {
   const teamsData = teams.data || []
   const tracksData = tracks.data || []
 
-  const backgroundImage = nextRace?.track?.image_url || '/images/backsplash.png'
+  const raceTrack = Array.isArray(nextRace?.track) ? nextRace?.track?.[0] : nextRace?.track
+  const backgroundImage = raceTrack?.image_url || '/images/backsplash.png'
   const raceDate =
     nextRace?.race_time &&
     new Date(nextRace.race_time).toLocaleDateString('en-US', {
@@ -79,13 +81,12 @@ export default async function PitlanePage() {
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 space-y-10">
       {/* Header + Search */}
       <div className="space-y-3">
-        <h1 className="text-3xl font-bold text-gray-900">Pitlane</h1>
-        <p className="text-gray-600">Discover drivers, teams, tracks, and upcoming race details.</p>
         <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             type="search"
-            placeholder="Search drivers, teams, tracks"
-            className="w-full rounded-full border border-gray-200 bg-white px-5 py-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            placeholder="Search the pitlane"
+            className="w-full rounded-full bg-white bg-opacity-20 px-10 py-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
         </div>
       </div>
@@ -93,10 +94,10 @@ export default async function PitlanePage() {
       {/* Upcoming race banner */}
       {nextRace ? (
         <section className="overflow-hidden rounded-2xl border border-gray-200 shadow-lg">
-          <div className="relative h-64 w-full">
+          <div className="relative h-[80px] w-full">
             <Image
               src={backgroundImage}
-              alt={nextRace.track?.name || nextRace.name}
+              alt={raceTrack?.name || nextRace.name}
               fill
               priority
               sizes="100vw"
@@ -106,7 +107,7 @@ export default async function PitlanePage() {
             <div className="absolute inset-0 flex items-center">
               <div className="px-6 sm:px-10 text-white space-y-2">
                 <p className="text-sm uppercase tracking-[0.2em] text-white/80">Upcoming Race</p>
-                <h2 className="text-2xl sm:text-3xl font-bold">{nextRace.name}</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold">{nextRace.name}</h2>
                 <p className="text-sm sm:text-base text-white/90">
                   {raceDate || 'Date TBA'}
                   {nextRace.location ? ` • ${nextRace.location}` : ''}
@@ -123,7 +124,7 @@ export default async function PitlanePage() {
           </div>
         </section>
       ) : (
-        <section className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
+        <section className="rounded-2xl border border-dashed border-gray-200 bg-white h-[80px] text-center shadow-sm flex flex-col items-center justify-center">
           <p className="text-gray-700 font-semibold">No upcoming race scheduled yet.</p>
           <p className="text-gray-500 text-sm mt-2">Check back soon for the next race details.</p>
         </section>
@@ -133,29 +134,32 @@ export default async function PitlanePage() {
       <PitlaneTabs drivers={driversData} teams={teamsData} tracks={tracksData} />
 
       {/* Beginners guide banner */}
-      <section className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-[#ff7452] via-[#ff9a76] to-[#ffd166] text-white shadow-lg">
-        <div className="absolute inset-0 opacity-20">
-          <Image
-            src="/images/backsplash.png"
-            alt="Beginners guide"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-        </div>
-        <div className="relative px-6 py-10 sm:px-10 space-y-3">
-          <p className="text-sm uppercase tracking-[0.2em]">New to F1?</p>
-          <h3 className="text-2xl sm:text-3xl font-bold">Start with our Beginner&apos;s Guide</h3>
-          <p className="max-w-2xl text-sm sm:text-base text-white/90">
-            Learn the essentials of Formula 1, the teams, drivers, and the racing calendar before
-            you dive into the action.
-          </p>
-          <Link
-            href="/beginners-guide"
-            className="inline-flex items-center rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-gray-900 shadow hover:bg-white"
-          >
-            Read the guide
-          </Link>
+      <section>
+        <sup className="w-full text-left block text-xs text-gray-500">Beginner's Guide</sup>
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-[#ff7452] via-[#ff9a76] to-[#ffd166] text-white shadow-lg">
+          <div className="absolute inset-0 opacity-20">
+            <Image
+              src="/images/backsplash.png"
+              alt="Beginners guide"
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="relative px-6 py-10 sm:px-10 space-y-3">
+            <p className="text-sm uppercase tracking-[0.2em]">New to F1?</p>
+            <h3 className="text-2xl sm:text-3xl font-bold">Start with our Beginner&apos;s Guide</h3>
+            <p className="max-w-2xl text-sm sm:text-base text-white/90">
+              Learn the essentials of Formula 1, the teams, drivers, and the racing calendar before
+              you dive into the action.
+            </p>
+            <Link
+              href="/beginners-guide"
+              className="inline-flex items-center rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-gray-900 shadow hover:bg-white"
+            >
+              Read the guide
+            </Link>
+          </div>
         </div>
       </section>
     </div>

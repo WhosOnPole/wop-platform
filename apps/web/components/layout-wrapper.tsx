@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Navbar } from '@/components/navbar'
+import { TopNav } from '@/components/navbar/top-nav'
 import { BottomNavbar } from '@/components/navbar/bottom-navbar'
 import { Footer } from '@/components/footer'
 import { LiveRaceBanner } from '@/components/live-race-banner'
@@ -53,13 +53,13 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Navbar />
+      <TopNav />
       <main className={`min-h-screen bg-background ${isAuthenticated ? 'pb-20' : ''}`}>
         {children}
       </main>
       {showFooter ? <Footer /> : null}
       <LiveRaceBanner />
-      {isAuthenticated ? <BottomNavbar /> : null}
+      {isAuthenticated && !isDesktop ? <BottomNavbar /> : null}
     </>
   )
 }

@@ -113,7 +113,7 @@ export function BottomNavbar() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1D1D1D] rounded-t-2xl w-[97%] mx-auto">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-2 py-2 sm:px-6">
         {navItems.map((item) => {
           const Icon = item.icon
