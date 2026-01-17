@@ -35,8 +35,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/polls" className="text-sm text-gray-400 hover:text-white">
-                  Polls
+                <Link href="/podiums" className="text-sm text-gray-400 hover:text-white">
+                  Podiums
                 </Link>
               </li>
               <li>

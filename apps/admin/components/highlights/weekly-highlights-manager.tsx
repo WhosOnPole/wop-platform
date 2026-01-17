@@ -21,17 +21,13 @@ export function WeeklyHighlightsManager({
   // Fan selection
   const [fanSearch, setFanSearch] = useState('')
   const [fanResults, setFanResults] = useState<any[]>([])
-  const [selectedFan, setSelectedFan] = useState<any>(
-    existingHighlights?.highlighted_fan || null
-  )
+  const [selectedFan, setSelectedFan] = useState<any>(existingHighlights?.highlighted_fan || null)
   const [searchingFans, setSearchingFans] = useState(false)
 
   // Sponsor selection
   const [sponsorSearch, setSponsorSearch] = useState('')
   const [sponsorResults, setSponsorResults] = useState<any[]>([])
-  const [selectedSponsor, setSelectedSponsor] = useState<any>(
-    existingHighlights?.highlighted_sponsor || null
-  )
+  const [selectedSponsor, setSelectedSponsor] = useState<any>(existingHighlights?.highlighted_sponsor || null)
   const [searchingSponsors, setSearchingSponsors] = useState(false)
 
   useEffect(() => {
@@ -85,14 +81,14 @@ export function WeeklyHighlightsManager({
     setLoading(true)
 
     try {
-      if (!selectedFan || !selectedSponsor) {
-        throw new Error('Please select both a fan and a sponsor')
-      }
+      if (!selectedFan || !selectedSponsor) throw new Error('Please select both a fan and a sponsor')
 
       const payload = {
         week_start_date: currentWeekStart,
         highlighted_fan_id: selectedFan.id,
         highlighted_sponsor_id: selectedSponsor.id,
+        // Preserve existing grid selection if set elsewhere
+        highlighted_fan_grid_id: existingHighlights?.highlighted_fan_grid_id || null,
       }
 
       const { error: upsertError } = await supabase

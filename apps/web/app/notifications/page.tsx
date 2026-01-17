@@ -78,7 +78,7 @@ function getNotificationUrl(notification: any): string {
       // Mentions are in posts, link to feed
       return '/feed'
     case 'poll_vote':
-      return `/polls/${target_id}`
+      return `/podiums`
     default:
       return '/'
   }

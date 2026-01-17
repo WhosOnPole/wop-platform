@@ -9,7 +9,9 @@ interface HotTake {
   id: string
   content_text: string
   featured_grid_id: string | null
-  active_date: string
+  active_date: string | null
+  starts_at: string
+  ends_at: string
   created_at: string
 }
 
@@ -81,7 +83,7 @@ export function HotTakesTab() {
                   Content
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Active Date
+                  Active Window
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Actions
@@ -97,7 +99,21 @@ export function HotTakesTab() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(hotTake.active_date).toLocaleDateString()}
+                    <div className="space-y-1">
+                      <div>
+                        <span className="font-medium">Start: </span>
+                        {hotTake.starts_at ? new Date(hotTake.starts_at).toLocaleString() : '—'}
+                      </div>
+                      <div>
+                        <span className="font-medium">End: </span>
+                        {hotTake.ends_at ? new Date(hotTake.ends_at).toLocaleString() : '—'}
+                      </div>
+                      {hotTake.active_date && (
+                        <div className="text-xs text-gray-500">
+                          Legacy active_date: {new Date(hotTake.active_date).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">
                     <div className="flex space-x-2">

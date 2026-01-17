@@ -3,15 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClientComponentClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  })
+  const supabase = createClientComponentClient()
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
   const authContainerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)

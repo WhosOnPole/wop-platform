@@ -7,6 +7,9 @@ import { CommunityGridsSection } from '@/components/dtt/community-grids-section'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { TeamDriverHero } from '@/components/teams/team-driver-hero'
 import { TeamLogoSection } from '@/components/teams/team-logo-section'
+import { InstagramPostStrip } from '@/components/drivers/instagram-post-strip'
+import { getRecentInstagramMedia } from '@/services/instagram'
+import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
@@ -39,6 +42,7 @@ export default async function DynamicPage({ params }: PageProps) {
   // Fetch the entity based on type
   let entity: any = null
   let relatedData: any = null
+  let instagramPosts: Array<{ id: string; href: string; imageUrl: string }> = []
 
   if (type === 'drivers') {
     // Try to find driver by slug (name converted to slug format)
@@ -64,6 +68,18 @@ export default async function DynamicPage({ params }: PageProps) {
     ) || drivers?.[0]
 
     entity = driver
+
+    // Fetch Instagram posts if possible
+    if (driver?.instagram_url) {
+      const parsed = getInstagramUsernameFromEmbed({ embedHtml: driver.instagram_url })
+      if (parsed?.username) {
+        try {
+          instagramPosts = await getRecentInstagramMedia({ username: parsed.username, limit: 8 })
+        } catch (err) {
+          console.error('Failed to load Instagram posts', err)
+        }
+      }
+    }
   } else if (type === 'teams') {
     const slugName = slug.replace(/-/g, ' ')
     const { data: teams } = await supabase
@@ -169,6 +185,10 @@ export default async function DynamicPage({ params }: PageProps) {
         ) : null}
         <div className="p-8">
           <h1 className="mb-4 text-4xl font-bold text-gray-900">{entity.name}</h1>
+
+          {type === 'drivers' && instagramPosts.length > 0 && (
+            <InstagramPostStrip posts={instagramPosts} />
+          )}
 
           {/* Stats Section */}
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">

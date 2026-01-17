@@ -11,6 +11,7 @@ interface Poll {
   options: string[]
   is_featured_podium: boolean
   created_at: string
+  ends_at?: string | null
 }
 
 export function PollsTab() {
@@ -84,6 +85,9 @@ export function PollsTab() {
                   Options
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Active Until
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Featured
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -101,6 +105,9 @@ export function PollsTab() {
                     <div className="text-sm text-gray-500">
                       {Array.isArray(poll.options) ? poll.options.length : 0} options
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {poll.ends_at ? new Date(poll.ends_at).toLocaleString() : 'No end date'}
                   </td>
                   <td className="px-6 py-4">
                     {poll.is_featured_podium && (
