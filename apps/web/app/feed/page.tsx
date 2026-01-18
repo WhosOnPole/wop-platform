@@ -23,9 +23,11 @@ interface TrackRace {
   id: string
   name: string
   start_date: string | null
+  race_day_date: string | null
   location: string | null
   country: string | null
   image_url: string | null
+  circuit_ref: string | null
 }
 
 function slugify(name: string) {
@@ -227,7 +229,7 @@ export default async function FeedPage() {
     // Upcoming race (based on tracks.start_date)
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country, start_date')
+      .select('id, name, image_url, location, country, start_date, race_day_date, circuit_ref')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     // Active hot take (single) by date range
