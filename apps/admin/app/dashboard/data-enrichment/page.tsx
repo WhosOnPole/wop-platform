@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DriversTable } from '@/components/data-enrichment/drivers-table'
 import { TeamsTable } from '@/components/data-enrichment/teams-table'
 import { TracksTable } from '@/components/data-enrichment/tracks-table'
-import { OpenF1RefreshButton } from '@/components/data-enrichment/openf1-refresh-button'
 
 export default async function DataEnrichmentPage() {
   const cookieStore = await cookies()
@@ -20,8 +19,8 @@ export default async function DataEnrichmentPage() {
     <div>
       <h1 className="mb-6 text-3xl font-bold text-gray-900">Data Enrichment</h1>
       <p className="mb-8 text-gray-600">
-        Edit driver, team, and track data. Note: Drivers and teams are synced from OpenF1 API.
-        You can only edit enriched fields (images, bios, stats).
+        Edit driver, team, and track data. You can update enriched fields such as images, bios,
+        and stats.
       </p>
 
       <Tabs defaultValue="drivers" className="w-full mb-8">
@@ -44,10 +43,6 @@ export default async function DataEnrichmentPage() {
         </TabsContent>
       </Tabs>
 
-            {/* OpenF1 Refresh Button */}
-      <div className="mb-8">
-        <OpenF1RefreshButton />
-      </div>
     </div>
   )
 }

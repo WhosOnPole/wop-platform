@@ -19,11 +19,11 @@ interface ChatMessage {
 }
 
 interface LiveChatComponentProps {
-  raceId: string
+  trackId: string
   raceTime: Date | null
 }
 
-export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) {
+export function LiveChatComponent({ trackId, raceTime }: LiveChatComponentProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -33,9 +33,9 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Check if chat has ended (3 hours after race time)
+    // Check if chat has ended (24 hours after race time)
     if (raceTime) {
-      const chatEndTime = new Date(raceTime.getTime() + 3 * 60 * 60 * 1000)
+      const chatEndTime = new Date(raceTime.getTime() + 24 * 60 * 60 * 1000)
       if (new Date() > chatEndTime) {
         setIsChatEnded(true)
       }
@@ -46,14 +46,14 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
 
     // Subscribe to new messages
     const channel = supabase
-      .channel(`race-${raceId}`)
+      .channel(`race-${trackId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'live_chat_messages',
-          filter: `race_id=eq.${raceId}`,
+          filter: `track_id=eq.${trackId}`,
         },
         (payload) => {
           // Fetch the full message with user data
@@ -83,7 +83,7 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [raceId, raceTime])
+  }, [trackId, raceTime])
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -103,7 +103,7 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
         )
       `
       )
-      .eq('race_id', raceId)
+      .eq('track_id', trackId)
       .order('created_at', { ascending: true })
       .limit(100)
 
@@ -128,7 +128,7 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
 
     const { error } = await supabase.from('live_chat_messages').insert({
       user_id: session.user.id,
-      race_id: raceId,
+      track_id: trackId,
       message: newMessage.trim(),
     })
 

@@ -12,11 +12,12 @@ export default async function ChatLogsPage() {
     }
   )
 
-  // Fetch all race schedules
+  // Fetch all tracks with start dates
   const { data: races } = await supabase
-    .from('race_schedule')
-    .select('id, name, slug, race_time')
-    .order('race_time', { ascending: false })
+    .from('tracks')
+    .select('id, name, start_date')
+    .not('start_date', 'is', null)
+    .order('start_date', { ascending: false })
 
   return (
     <div>

@@ -14,7 +14,7 @@ export default function HomePage() {
       {/* Desktop Split Layout */}
       <div className="flex h-screen">
         {/* Left Panel - Login/Create Account (1/3) */}
-        <div className="hidden lg:flex lg:w-1/3 bg-background flex-col items-center justify-center p-12">
+        <div className="hidden lg:flex lg:w-1/3 flex-col items-center justify-center p-12">
           <div className="w-full max-w-sm space-y-8">
             <Logo variant="gradient" size="md" href="/" className="mx-auto w-full" />
             <div className="space-y-4">
@@ -64,7 +64,7 @@ export default function HomePage() {
               </p>
               <Link
                 href="/signup"
-                className="inline-block rounded-full bg-background px-8 py-4 text-lg font-bold italic text-white transition-colors hover:opacity-90"
+                className="inline-block rounded-full px-8 py-4 text-lg font-bold italic text-white transition-colors hover:opacity-90"
               >
                 Join Us!
               </Link>

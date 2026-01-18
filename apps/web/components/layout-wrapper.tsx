@@ -54,7 +54,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       <TopNav />
-      <main className={`min-h-screen bg-background ${isAuthenticated ? 'pb-20' : ''}`}>
+      <main className={`min-h-screen ${isAuthenticated ? 'pb-20' : ''}`}>
         {children}
       </main>
       {showFooter ? <Footer /> : null}

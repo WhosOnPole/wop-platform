@@ -8,8 +8,8 @@ A comprehensive full-stack web application built with Next.js 14, Supabase, and 
 - **Frontend (User)**: Next.js 14 App Router (`apps/web`)
 - **Frontend (Admin)**: Next.js 14 App Router (`apps/admin`)
 - **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions)
-- **Data Source**: OpenF1 API for F1 data ingestion
-- **Deployment**: Cloudflare Pages
+- **Data Source**: Handled through the admin dashboard
+- **Deployment**: Vercel
 
 ## 📁 Project Structure
 
@@ -137,7 +137,6 @@ pnpm dev:admin  # Runs on http://localhost:3001
 
 - [Supabase Documentation](https://supabase.com/docs)
 - [Next.js Documentation](https://nextjs.org/docs)
-- [OpenF1 API](https://www.openf1.org/)
 
 ## 📄 License
 

@@ -11,6 +11,10 @@ interface Track {
   image_url: string | null
   built_date: string | null
   track_length: number | null
+  turns: number | null
+  location: string | null
+  country: string | null
+  start_date: string | null
   overview_text: string | null
   history_text: string | null
 }

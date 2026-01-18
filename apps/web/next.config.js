@@ -4,7 +4,7 @@ const { withBotId } = require('botid/next/config')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  // Set tracing root for monorepo builds (Cloudflare/OpenNext)
+  // Set tracing root for monorepo builds
   outputFileTracingRoot: path.join(__dirname, '../../'),
   reactStrictMode: true,
   images: {
