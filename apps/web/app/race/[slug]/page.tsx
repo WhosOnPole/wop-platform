@@ -28,30 +28,25 @@ export default async function RacePage({ params }: PageProps) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Fetch race
-  const { data: race } = await supabase
-    .from('race_schedule')
-    .select(
-      `
-      *,
-      track:tracks!track_id (
-        id,
-        name,
-        image_url
-      )
-    `
-    )
-    .eq('slug', slug)
-    .single()
+  const slugName = slug.replace(/-/g, ' ')
+  const { data: tracks } = await supabase
+    .from('tracks')
+    .select('id, name, image_url, location, country, start_date')
+    .ilike('name', `%${slugName}%`)
+
+  const race = tracks?.find(
+    (track) => track.name.toLowerCase().replace(/\\s+/g, '-') === slug
+  ) || tracks?.[0]
 
   if (!race) {
     notFound()
   }
 
-  const raceTime = race.race_time ? new Date(race.race_time) : null
+  const raceTime = race.start_date ? new Date(race.start_date) : null
   const now = new Date()
+  const graceMs = 24 * 60 * 60 * 1000
   const isLive = raceTime
-    ? now >= raceTime && now <= new Date(raceTime.getTime() + 3 * 60 * 60 * 1000)
+    ? now >= raceTime && now <= new Date(raceTime.getTime() + graceMs)
     : false
   const isUpcoming = raceTime ? raceTime > now : false
   const isPast = raceTime ? raceTime < now : false
@@ -69,7 +64,7 @@ export default async function RacePage({ params }: PageProps) {
       )
     `
     )
-    .eq('race_id', race.id)
+    .eq('track_id', race.id)
     .order('created_at', { ascending: false })
 
   // Check if current user has checked in
@@ -78,7 +73,7 @@ export default async function RacePage({ params }: PageProps) {
     const { data } = await supabase
       .from('race_checkins')
       .select('*')
-      .eq('race_id', race.id)
+      .eq('track_id', race.id)
       .eq('user_id', session.user.id)
       .single()
 
@@ -89,10 +84,10 @@ export default async function RacePage({ params }: PageProps) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Race Header */}
       <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg">
-        {race.track?.image_url && (
+        {race.image_url && (
           <div className="relative h-64 w-full">
             <img
-              src={race.track.image_url}
+              src={race.image_url}
               alt={race.name}
               className="h-full w-full object-cover"
             />
@@ -107,10 +102,12 @@ export default async function RacePage({ params }: PageProps) {
         <div className="p-8">
           <h1 className="mb-4 text-4xl font-bold text-gray-900">{race.name}</h1>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {race.track && (
+            {(race.location || race.country) && (
               <div className="flex items-center space-x-2">
                 <MapPin className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">{race.track.name}</span>
+                <span className="text-gray-700">
+                  {[race.location, race.country].filter(Boolean).join(', ')}
+                </span>
               </div>
             )}
             {raceTime && (
@@ -144,17 +141,17 @@ export default async function RacePage({ params }: PageProps) {
 
       {/* Check-In Section */}
       {session && (
-        <CheckInSection
-          raceId={race.id}
-          raceName={race.name}
-          userCheckIn={userCheckIn}
-          checkIns={checkIns || []}
-        />
+          <CheckInSection
+            trackId={race.id}
+            raceName={race.name}
+            userCheckIn={userCheckIn}
+            checkIns={checkIns || []}
+          />
       )}
 
       {/* Live Chat Section */}
       {isLive || isPast ? (
-        <LiveChatComponent raceId={race.id} raceTime={raceTime} />
+        <LiveChatComponent trackId={race.id} raceTime={raceTime} />
       ) : isUpcoming ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
           <p className="text-gray-600">

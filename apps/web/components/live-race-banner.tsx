@@ -9,7 +9,7 @@ interface LiveRace {
   id: string
   name: string
   slug: string
-  race_time: string
+  start_date: string
 }
 
 export function LiveRaceBanner() {
@@ -27,26 +27,28 @@ export function LiveRaceBanner() {
 
   async function checkForLiveRace() {
     const now = new Date()
-    const threeHoursLater = new Date(now.getTime() + 3 * 60 * 60 * 1000)
+    const graceMs = 24 * 60 * 60 * 1000
 
-    // Find races that are currently live
-    // A race is live if: now() >= race_time AND now() <= race_time + 3 hours
     const { data: races } = await supabase
-      .from('race_schedule')
-      .select('id, name, slug, race_time')
-      .gte('race_time', now.toISOString())
-      .lte('race_time', threeHoursLater.toISOString())
-      .order('race_time', { ascending: false })
+      .from('tracks')
+      .select('id, name, start_date')
+      .not('start_date', 'is', null)
+      .lte('start_date', now.toISOString())
+      .order('start_date', { ascending: false })
       .limit(1)
 
     if (races && races.length > 0) {
-      // Verify the race is actually live (started but not ended)
       const race = races[0]
-      const raceTime = new Date(race.race_time)
-      const raceEndTime = new Date(raceTime.getTime() + 3 * 60 * 60 * 1000)
+      const raceTime = new Date(race.start_date)
+      const raceEndTime = new Date(raceTime.getTime() + graceMs)
 
       if (now >= raceTime && now <= raceEndTime) {
-        setLiveRace(race)
+        setLiveRace({
+          id: race.id,
+          name: race.name,
+          slug: slugify(race.name),
+          start_date: race.start_date,
+        })
         return
       }
     }
@@ -81,3 +83,6 @@ export function LiveRaceBanner() {
   )
 }
 
+function slugify(name: string) {
+  return name.toLowerCase().trim().replace(/\s+/g, '-')
+}

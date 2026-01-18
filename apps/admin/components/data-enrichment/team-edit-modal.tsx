@@ -6,6 +6,7 @@ import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 
 const teamSchema = z.object({
+  name: z.string().min(1).max(200),
   image_url: z.string().url().optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
   instagram_url: z.string().url().optional().or(z.literal('')),
@@ -29,6 +30,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
+    name: team.name || '',
     image_url: team.image_url || '',
     overview_text: team.overview_text || '',
     instagram_url: team.instagram_url || '',
@@ -42,6 +44,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
 
     try {
       const validated = teamSchema.parse({
+        name: formData.name.trim(),
         image_url: formData.image_url || undefined,
         overview_text: formData.overview_text || undefined,
         instagram_url: formData.instagram_url || undefined,
@@ -52,6 +55,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
         .from('teams')
         .update({
           ...validated,
+          name: validated.name,
           image_url: validated.image_url || null,
           overview_text: validated.overview_text || null,
           instagram_url: validated.instagram_url || null,
@@ -84,6 +88,17 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              required
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Image URL</label>
             <input

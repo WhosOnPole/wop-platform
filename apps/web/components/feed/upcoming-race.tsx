@@ -5,7 +5,7 @@ interface Race {
   id: string
   name: string
   slug: string
-  race_time: string | null
+  start_date: string | null
 }
 
 interface UpcomingRaceProps {
@@ -13,9 +13,9 @@ interface UpcomingRaceProps {
 }
 
 export function UpcomingRace({ race }: UpcomingRaceProps) {
-  if (!race.race_time) return null
+  if (!race.start_date) return null
 
-  const raceTime = new Date(race.race_time)
+  const raceTime = new Date(race.start_date)
   const now = new Date()
   const timeUntilRace = raceTime.getTime() - now.getTime()
   const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))

@@ -149,7 +149,6 @@ export async function POST(request: NextRequest) {
     const ip =
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
-      request.headers.get('cf-connecting-ip') || // Cloudflare specific
       'unknown'
 
     const { endpoint } = await request.json()

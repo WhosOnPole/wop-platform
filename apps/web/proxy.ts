@@ -10,11 +10,40 @@ export async function proxy(req: NextRequest) {
   fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'A',location:'middleware.ts:entry',message:'middleware entry',data:{pathname,host:req.headers.get('host')},timestamp:Date.now()})}).catch(()=>{})
   // #endregion
 
-  // Completely bypass middleware for home page to rule it out as a cause of 500 errors
+  // Redirect authenticated users from home to feed/onboarding
   if (pathname === '/') {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'B',location:'middleware.ts:root-bypass',message:'bypass root',data:{pathname},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
+    try {
+      const supabase = createMiddlewareClient(
+        {
+          req: req as any,
+          res: res as any,
+        },
+        {
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+        }
+      )
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, date_of_birth, age')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth || profile?.age))
+        const redirectUrl = req.nextUrl.clone()
+        redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
+        return NextResponse.redirect(redirectUrl)
+      }
+    } catch (error) {
+      console.error('Error checking session for home page:', error)
+    }
+
     return res
   }
 

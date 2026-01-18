@@ -19,14 +19,14 @@ interface CheckIn {
 }
 
 interface CheckInSectionProps {
-  raceId: string
+  trackId: string
   raceName: string
   userCheckIn: any
   checkIns: CheckIn[]
 }
 
 export function CheckInSection({
-  raceId,
+  trackId,
   raceName,
   userCheckIn,
   checkIns: initialCheckIns,
@@ -50,7 +50,7 @@ export function CheckInSection({
 
     const { data, error } = await supabase.from('race_checkins').insert({
       user_id: session.user.id,
-      race_id: raceId,
+      track_id: trackId,
       is_verified: false,
     })
 

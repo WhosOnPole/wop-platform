@@ -122,8 +122,8 @@ export function TopNav() {
 
   return (
     <div className="bg-transparenttext-gray-900">
-      <div className="flex items-center justify-between px-4 py-3">
-        <Logo variant="white" size="sm" href={isAuthed ? '/feed' : '/'} className="h-8" />
+      <div className="flex items-center justify-between p-4">
+        <Logo variant="white" href={isAuthed ? '/feed' : '/'} className="h-9"/>
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">

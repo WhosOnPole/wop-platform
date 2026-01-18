@@ -2,7 +2,7 @@
 
 /**
  * Build-time environment variable verification script
- * Ensures required Supabase env vars are available during Cloudflare Pages build
+ * Ensures required Supabase env vars are available during build
  */
 
 const fs = require('fs')
@@ -42,7 +42,7 @@ const requiredVars = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_PUBLISHA
 const missingVars = requiredVars.filter((varName) => !process.env[varName])
 
 // Only fail in CI environments, allow local builds to proceed
-const isCI = process.env.CI === 'true' || process.env.CF_PAGES === '1' || process.env.VERCEL === '1'
+const isCI = process.env.CI === 'true' || process.env.VERCEL === '1'
 
 if (missingVars.length > 0) {
   if (isCI) {
@@ -51,7 +51,7 @@ if (missingVars.length > 0) {
     missingVars.forEach((varName) => {
       console.error(`   - ${varName}`)
     })
-    console.error('\n💡 SOLUTION: Configure environment variables in your hosting env (Vercel/CF Pages)')
+    console.error('\n💡 SOLUTION: Configure environment variables in your hosting env')
     console.error('\n   1. Go to your project dashboard → Settings')
     console.error('   2. Navigate to environment variables / secrets')
     console.error('   3. Add the missing variables:')
@@ -68,8 +68,7 @@ if (missingVars.length > 0) {
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ? '✅ Found' : '❌ Missing'
       }`,
     )
-    console.error('\n   💭 Note: If variables are set in Cloudflare but still missing here,')
-    console.error('      they may only be available at runtime, not during build.')
+    console.error('\n   💭 Note: Variables must be available at build time for ISR.')
     console.error('      This will prevent ISR (Incremental Static Regeneration) from working.')
     process.exit(1)
   } else {

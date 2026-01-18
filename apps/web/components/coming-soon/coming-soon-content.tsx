@@ -62,7 +62,7 @@ export function ComingSoonContent() {
       {/* Left Side - Background Points of Interest */}
 
       <div className="relative flex w-full max-w-xl items-center justify-center p-8 lg:w-1/3">
-        <div className="w-full max-w-md space-y-8 rounded-lg bg-background lg:bg-background backdrop-blur-sm p-8 shadow-lg">
+        <div className="w-full max-w-md space-y-8 rounded-lg backdrop-blur-sm p-8 shadow-lg">
           <div className="space-y-4 text-center">
             <div className="flex justify-center">
               <div className="rounded-full p-4">

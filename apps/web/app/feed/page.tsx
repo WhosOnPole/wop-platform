@@ -19,8 +19,45 @@ async function getCurrentWeekStart() {
   return monday.toISOString().split('T')[0]
 }
 
+interface TrackRace {
+  id: string
+  name: string
+  start_date: string | null
+  location: string | null
+  country: string | null
+  image_url: string | null
+}
+
 function slugify(name: string) {
   return name.toLowerCase().trim().replace(/\s+/g, '-')
+}
+
+function getClosestRaceFromTracks(params: { tracks: TrackRace[] }) {
+  const { tracks } = params
+  if (tracks.length === 0) return null
+
+  const now = new Date()
+  const graceMs = 24 * 60 * 60 * 1000
+  const nowPlusGrace = new Date(now.getTime() + graceMs)
+
+  const eligible = tracks.filter((track) => {
+    if (!track.start_date) return false
+    return new Date(track.start_date) <= nowPlusGrace
+  })
+
+  if (eligible.length > 0) {
+    return eligible.sort((a, b) => {
+      const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
+      const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
+      return bTime - aTime
+    })[0]
+  }
+
+  return tracks.sort((a, b) => {
+    const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
+    const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
+    return aTime - bTime
+  })[0]
 }
 
 function isSpotlightGridType(value: unknown): value is SpotlightGridType {
@@ -43,7 +80,7 @@ function getSpotlightFeaturedGrid(params: { grid: unknown }) {
   return {
     id: String(maybeGrid.id),
     type,
-    blurb: typeof maybeGrid.blurb === 'string' ? maybeGrid.blurb : null,
+    comment: typeof maybeGrid.blurb === 'string' ? maybeGrid.blurb : null,
     ranked_items: Array.isArray(maybeGrid.ranked_items) ? maybeGrid.ranked_items : [],
     user: user
       ? {
@@ -81,7 +118,7 @@ export default async function FeedPage() {
     polls,
     featuredNews,
     weeklyHighlights,
-    upcomingRace,
+    raceTracks,
     activeHotTake,
     trendingPosts,
   ] = await Promise.all([
@@ -187,14 +224,12 @@ export default async function FeedPage() {
 
       return { data: highlights || null }
     })(),
-    // Upcoming race
+    // Upcoming race (based on tracks.start_date)
     supabase
-      .from('race_schedule')
-      .select('*')
-      .gte('race_time', new Date().toISOString())
-      .order('race_time', { ascending: true })
-      .limit(1)
-      .single(),
+      .from('tracks')
+      .select('id, name, image_url, location, country, start_date')
+      .not('start_date', 'is', null)
+      .order('start_date', { ascending: true }),
     // Active hot take (single) by date range
     (async () => {
       const nowIso = new Date().toISOString()
@@ -244,6 +279,15 @@ export default async function FeedPage() {
       .order('created_at', { ascending: false })
       .limit(5),
   ])
+
+  const upcomingRace = (() => {
+    const race = getClosestRaceFromTracks({ tracks: (raceTracks.data || []) as TrackRace[] })
+    if (!race) return null
+    return {
+      ...race,
+      slug: slugify(race.name),
+    }
+  })()
 
   // Fetch hot take discussion posts if active hot take exists
   let hotTakePosts: any[] = []
@@ -331,11 +375,6 @@ export default async function FeedPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your Feed</h1>
-        <p className="mt-2 text-gray-600">Stay up to date with the F1 community</p>
-      </div>
-
       {/* Spotlight Carousel: hot take, featured grid, polls */}
       <div className="mb-20">
         <SpotlightCarousel
@@ -366,7 +405,7 @@ export default async function FeedPage() {
           )}
 
           {/* Upcoming Race */}
-          {upcomingRace.data && <UpcomingRace race={upcomingRace.data} />}
+          {upcomingRace ? <UpcomingRace race={upcomingRace} /> : null}
         </div>
       </div>
     </div>
