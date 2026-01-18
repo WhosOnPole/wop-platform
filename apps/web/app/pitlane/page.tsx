@@ -73,6 +73,19 @@ export default async function PitlanePage() {
     dateDisplay = `Race Day: ${raceDayDateFormatted}`
   }
   
+  // Calculate counter
+  let counterText = ''
+  if (nextRace?.start_date) {
+    const raceTime = new Date(nextRace.start_date)
+    const now = new Date()
+    const timeUntilRace = raceTime.getTime() - now.getTime()
+    if (timeUntilRace > 0) {
+      const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
+      const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+    }
+  }
+  
   // Check if it's race day
   const isRaceDay = (() => {
     if (!nextRace?.race_day_date) return false
@@ -126,8 +139,8 @@ export default async function PitlanePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
             
-            <div className="absolute inset-0 flex pt-2">
-              <div className="px-2 sm:px-10 text-white space-y-0">
+            <div className="absolute inset-0 flex flex-col justify-between">
+              <div className="px-2 sm:px-10 text-white space-y-0 pt-2">
                 <div className="flex items-center gap-2">
                   {nextRace.country ? (
                     <span className="text-xl leading-none">
@@ -142,6 +155,13 @@ export default async function PitlanePage() {
                   {nextRace.country ? `, ${nextRace.country}` : ''}
                 </p>
               </div>
+              {counterText && (
+                <div className="w-full text-right pb-2 pr-4">
+                  <p className="text-xs text-white/90 tracking-wide">
+                    {counterText}
+                  </p>
+                </div>
+              )}
             </div>
             </section>
           </Link>

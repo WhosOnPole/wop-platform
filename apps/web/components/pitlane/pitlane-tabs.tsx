@@ -167,7 +167,7 @@ function TabButton({ label, active, onClick, showDivider = false }: TabButtonPro
     <button
       onClick={onClick}
       className={`relative px-4 py-2 text-sm transition w-1/3 capitalize ${
-        active ? 'bg-[#EB0E78] text-white text-semibold shadow-sm' : 'bg-[#1D1D1D] text-[#838383] hover:bg-[#EB0E78] hover:text-white'
+        active ? 'bg-white bg-opacity-30 text-white shadow' : 'bg-[#1D1D1D] text-[#838383] hover:bg-white hover:bg-opacity-30'
       }`}
     >
       {label}
