@@ -64,7 +64,7 @@ export function ComingSoonContent() {
             </h1>
             <p className="text-base text-white px-16">
               We're opening the grid soon. <br></br> <br></br>
-              Join the list to be notified when Who's on Pole goes live - and be apart of shaping it from the start.
+              Join the list to be notified when Who's on Pole goes live - and be a part of shaping it from the start.
             </p>
 
           </div>
