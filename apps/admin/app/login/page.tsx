@@ -4,7 +4,7 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -12,6 +12,14 @@ export default function AdminLoginPage() {
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   })
+  const [redirectUrl, setRedirectUrl] = useState<string>('')
+
+  useEffect(() => {
+    // Use current origin dynamically instead of env var
+    if (typeof window !== 'undefined') {
+      setRedirectUrl(`${window.location.origin}/auth/callback`)
+    }
+  }, [])
 
   useEffect(() => {
     // Check if already logged in
@@ -75,13 +83,15 @@ export default function AdminLoginPage() {
             Sign in to access the admin dashboard
           </p>
         </div>
-        <Auth
-          supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
-          providers={['google', 'apple']}
-          redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001'}/auth/callback`}
-          onlyThirdPartyProviders={false}
-        />
+        {redirectUrl && (
+          <Auth
+            supabaseClient={supabase}
+            appearance={{ theme: ThemeSupa }}
+            providers={['google', 'apple']}
+            redirectTo={redirectUrl}
+            onlyThirdPartyProviders={false}
+          />
+        )}
       </div>
     </div>
   )
