@@ -50,6 +50,45 @@ body {
   background: #111111;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   scrollbar-width: none; /* Hide scrollbars in Firefox */
+  /* Support for safe area insets (notch, home indicator) */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Fullscreen mode support */
+html:fullscreen,
+html:-webkit-full-screen,
+html:-moz-full-screen,
+html:-ms-fullscreen {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Use viewport height that accounts for browser chrome on mobile */
+@supports (height: 100dvh) {
+  html {
+    height: 100dvh;
+  }
+  
+  body {
+    min-height: 100dvh;
+  }
+}
+
+/* Fallback for browsers that don't support dvh */
+@supports not (height: 100dvh) {
+  html {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
 }
 
 /* Hide scrollbars (WebKit) */

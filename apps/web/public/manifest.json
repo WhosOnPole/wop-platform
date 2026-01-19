@@ -1,0 +1,19 @@
+{
+  "name": "Who's on Pole? - F1 Fan Community",
+  "short_name": "Who's on Pole?",
+  "description": "Join the ultimate Formula 1 fan community",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/logo_white.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
