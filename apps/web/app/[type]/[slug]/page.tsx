@@ -1,18 +1,30 @@
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import { Trophy, MapPin, Calendar, Users } from 'lucide-react'
-import { TrackTipsSection } from '@/components/dtt/track-tips-section'
-import { CommunityGridsSection } from '@/components/dtt/community-grids-section'
-import { DiscussionSection } from '@/components/dtt/discussion-section'
-import { TeamDriverHero } from '@/components/teams/team-driver-hero'
-import { TeamLogoSection } from '@/components/teams/team-logo-section'
-import { InstagramPostStrip } from '@/components/drivers/instagram-post-strip'
+import { EntityHeroBackground } from '@/components/entity/entity-hero-background'
+import { EntityHeader } from '@/components/entity/entity-header'
+import { EntityOverview } from '@/components/entity/entity-overview'
+import { EntityImageGallery } from '@/components/entity/entity-image-gallery'
+import { EntityTabs } from '@/components/entity/entity-tabs'
+import { TrackSubmissionsTab } from '@/components/entity/tabs/track-submissions-tab'
+import { StatsTab } from '@/components/entity/tabs/stats-tab'
+import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
+import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { getRecentInstagramMedia } from '@/services/instagram'
 import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
+
+// Normalize accented characters and create slug
+function normalizeSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD') // Decompose accented characters (é -> e + ´)
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric except hyphens
+}
 
 interface PageProps {
   params: Promise<{
@@ -23,7 +35,6 @@ interface PageProps {
 
 export default async function DynamicPage({ params }: PageProps) {
   const { type, slug } = await params
-  // Use public client for static generation (no cookies needed)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -45,8 +56,11 @@ export default async function DynamicPage({ params }: PageProps) {
   let instagramPosts: Array<{ id: string; href: string; imageUrl: string }> = []
 
   if (type === 'drivers') {
-    // Try to find driver by slug (name converted to slug format)
-    const slugName = slug.replace(/-/g, ' ')
+    // Decode URL-encoded slug and normalize
+    const decodedSlug = decodeURIComponent(slug)
+    const normalizedSlug = normalizeSlug(decodedSlug)
+    const slugName = decodedSlug.replace(/-/g, ' ')
+    
     const { data: drivers } = await supabase
       .from('drivers')
       .select(
@@ -62,26 +76,28 @@ export default async function DynamicPage({ params }: PageProps) {
       .eq('active', true)
       .ilike('name', `%${slugName}%`)
 
-    // Find the best match (exact match preferred)
     const driver = drivers?.find(
-      (d) => d.name.toLowerCase().replace(/\s+/g, '-') === slug
+      (d) => normalizeSlug(d.name) === normalizedSlug
     ) || drivers?.[0]
 
     entity = driver
 
-    // Fetch Instagram posts if possible
     if (driver?.instagram_url) {
       const parsed = getInstagramUsernameFromEmbed({ embedHtml: driver.instagram_url })
       if (parsed?.username) {
         try {
-          instagramPosts = await getRecentInstagramMedia({ username: parsed.username, limit: 8 })
+          instagramPosts = await getRecentInstagramMedia({ username: parsed.username, limit: 20 })
         } catch (err) {
           console.error('Failed to load Instagram posts', err)
         }
       }
     }
   } else if (type === 'teams') {
-    const slugName = slug.replace(/-/g, ' ')
+    // Decode URL-encoded slug and normalize
+    const decodedSlug = decodeURIComponent(slug)
+    const normalizedSlug = normalizeSlug(decodedSlug)
+    const slugName = decodedSlug.replace(/-/g, ' ')
+    
     const { data: teams } = await supabase
       .from('teams')
       .select('*')
@@ -89,31 +105,46 @@ export default async function DynamicPage({ params }: PageProps) {
       .ilike('name', `%${slugName}%`)
 
     const team = teams?.find(
-      (t) => t.name.toLowerCase().replace(/\s+/g, '-') === slug
+      (t) => normalizeSlug(t.name) === normalizedSlug
     ) || teams?.[0]
 
     entity = team
 
-    // Fetch active drivers for this team
     if (team) {
       const { data: drivers } = await supabase
         .from('drivers')
-        .select('id, name, headshot_url, image_url')
+        .select('id, name, headshot_url, image_url, nationality')
         .eq('team_id', team.id)
         .eq('active', true)
         .order('name')
 
       relatedData = drivers || []
+
+      // Fetch Instagram posts if possible
+      if (team.instagram_url) {
+        const parsed = getInstagramUsernameFromEmbed({ embedHtml: team.instagram_url })
+        if (parsed?.username) {
+          try {
+            instagramPosts = await getRecentInstagramMedia({ username: parsed.username, limit: 20 })
+          } catch (err) {
+            console.error('Failed to load Instagram posts', err)
+          }
+        }
+      }
     }
   } else if (type === 'tracks') {
-    const slugName = slug.replace(/-/g, ' ')
+    // Decode URL-encoded slug and normalize
+    const decodedSlug = decodeURIComponent(slug)
+    const normalizedSlug = normalizeSlug(decodedSlug)
+    const slugName = decodedSlug.replace(/-/g, ' ')
+    
     const { data: tracks } = await supabase
       .from('tracks')
       .select('*')
       .ilike('name', `%${slugName}%`)
 
     const track = tracks?.find(
-      (t) => t.name.toLowerCase().replace(/\s+/g, '-') === slug
+      (t) => normalizeSlug(t.name) === normalizedSlug
     ) || tracks?.[0]
 
     entity = track
@@ -123,11 +154,15 @@ export default async function DynamicPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch related content
-  const [grids, posts] = await Promise.all([
-    // Community grids for this entity
-    supabase
-      .from('grids')
+  // Fetch track submissions by type (for tracks)
+  let trackTips: any[] = []
+  let trackStays: any[] = []
+  let trackMeetups: any[] = []
+  let trackTransit: any[] = []
+
+  if (type === 'tracks') {
+    const { data: allSubmissions } = await supabase
+      .from('track_tips')
       .select(
         `
         *,
@@ -138,187 +173,167 @@ export default async function DynamicPage({ params }: PageProps) {
         )
       `
       )
-      .eq('type', type === 'tracks' ? 'track' : type.slice(0, -1)) // Map 'tracks' -> 'track', 'drivers' -> 'driver', 'teams' -> 'team'
+      .eq('track_id', entity.id)
+      .eq('status', 'approved')
       .order('created_at', { ascending: false })
-      .limit(10),
-    // Discussion posts for this entity
-    supabase
-      .from('posts')
-      .select(
-        `
-        *,
-        like_count,
-        user:profiles!user_id (
-          id,
-          username,
-          profile_image_url
-        )
+
+    if (allSubmissions) {
+      trackTips = allSubmissions.filter((s) => s.type === 'tips' || !s.type)
+      trackStays = allSubmissions.filter((s) => s.type === 'stays')
+      trackMeetups = allSubmissions.filter((s) => s.type === 'meetups')
+      trackTransit = allSubmissions.filter((s) => s.type === 'transit')
+    }
+  }
+
+  // Fetch discussion posts
+  const { data: posts } = await supabase
+    .from('posts')
+    .select(
       `
+      *,
+      like_count,
+      user:profiles!user_id (
+        id,
+        username,
+        profile_image_url
       )
-      .eq('parent_page_type', type === 'tracks' ? 'track' : type.slice(0, -1))
-      .eq('parent_page_id', entity.id)
-      .order('created_at', { ascending: false }),
-  ])
+    `
+    )
+    .eq('parent_page_type', type === 'tracks' ? 'track' : type.slice(0, -1))
+    .eq('parent_page_id', entity.id)
+    .order('created_at', { ascending: false })
+
+  // Collect images for gallery
+  const galleryImages: string[] = []
+  
+  // Admin images first
+  if (entity.admin_images && Array.isArray(entity.admin_images)) {
+    galleryImages.push(...entity.admin_images.filter((url: string) => url))
+  }
+
+  // Then user submission images (tracks) or Instagram (teams/drivers)
+  if (type === 'tracks') {
+    const allSubmissions = [...trackTips, ...trackStays, ...trackMeetups, ...trackTransit]
+    const submissionImages = allSubmissions
+      .map((s) => s.image_url)
+      .filter((url): url is string => Boolean(url))
+    galleryImages.push(...submissionImages)
+  } else {
+    // Teams and drivers: Instagram images
+    const instagramImages = instagramPosts.map((p) => p.imageUrl)
+    galleryImages.push(...instagramImages)
+  }
+
+  // Get background image
+  const backgroundImage =
+    type === 'drivers'
+      ? entity.headshot_url || entity.image_url
+      : type === 'teams'
+      ? entity.image_url
+      : entity.image_url
+
+  // Determine entity type for components
+  const entityType = type === 'tracks' ? 'track' : type === 'teams' ? 'team' : 'driver'
+
+  // Build tabs based on entity type
+  const tabs = []
+  
+  if (type === 'tracks') {
+    tabs.push({
+      id: 'tips',
+      label: 'Tips',
+      content: <TrackSubmissionsTab submissions={trackTips} typeLabel="Tips" />,
+    })
+    tabs.push({
+      id: 'stays',
+      label: 'Stays',
+      content: <TrackSubmissionsTab submissions={trackStays} typeLabel="Stays" />,
+    })
+    tabs.push({
+      id: 'meetups',
+      label: 'Meetups',
+      content: <TrackSubmissionsTab submissions={trackMeetups} typeLabel="Meetups" />,
+    })
+    tabs.push({
+      id: 'transit',
+      label: 'Transit',
+      content: <TrackSubmissionsTab submissions={trackTransit} typeLabel="Transit" />,
+    })
+  } else if (type === 'teams') {
+    tabs.push({
+      id: 'stats',
+      label: 'Stats',
+      content: <StatsTab type="team" stats={entity} />,
+    })
+    tabs.push({
+      id: 'drivers',
+      label: 'Drivers',
+      content: <TeamDriversTab drivers={relatedData || []} />,
+    })
+    tabs.push({
+      id: 'discussion',
+      label: 'Discussion',
+      content: (
+        <DiscussionTab
+          posts={posts || []}
+          parentPageType="team"
+          parentPageId={entity.id}
+        />
+      ),
+    })
+  } else {
+    // Drivers
+    tabs.push({
+      id: 'stats',
+      label: 'Stats',
+      content: <StatsTab type="driver" stats={entity} />,
+    })
+    tabs.push({
+      id: 'discussion',
+      label: 'Discussion',
+      content: (
+        <DiscussionTab
+          posts={posts || []}
+          parentPageType="driver"
+          parentPageId={entity.id}
+        />
+      ),
+    })
+  }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Hero Section */}
-      <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg">
-        {type === 'teams' && relatedData && Array.isArray(relatedData) && relatedData.length > 0 ? (
-          // Driver hero section for teams
-          <TeamDriverHero
-            team={entity}
-            drivers={relatedData}
-            supabaseUrl={supabaseUrl}
+    <div className="relative min-h-screen">
+      {/* Top Section with Background Image - Fixed */}
+      <div className="fixed inset-x-0 top-0 z-10 h-[65vh]">
+        {/* Hero Background */}
+        <EntityHeroBackground imageUrl={backgroundImage} alt={entity.name} />
+        
+        {/* Content over background */}
+        <div className="relative z-10 h-full">
+          {/* Entity Header */}
+          <EntityHeader
+            type={entityType}
+            entity={entity}
+            drivers={type === 'teams' ? relatedData : undefined}
           />
-        ) : type === 'teams' ? (
-          // Team logo for teams without drivers
-          <TeamLogoSection team={entity} supabaseUrl={supabaseUrl} />
-        ) : (type === 'drivers' && (entity.headshot_url || entity.image_url)) || (type !== 'drivers' && entity.image_url) ? (
-          <div className="relative h-64 w-full md:h-96">
-            <img
-              src={type === 'drivers' ? (entity.headshot_url || entity.image_url) : entity.image_url}
-              alt={entity.name}
-              className="h-full w-full object-cover"
-            />
-          </div>
-        ) : null}
-        <div className="p-8">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900">{entity.name}</h1>
 
-          {type === 'drivers' && instagramPosts.length > 0 && (
-            <InstagramPostStrip posts={instagramPosts} />
-          )}
+          {/* Overview (Tracks only) */}
+          {type === 'tracks' && <EntityOverview overviewText={entity.overview_text} />}
 
-          {/* Stats Section */}
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {type === 'drivers' && (
-              <>
-                {entity.teams && (
-                  <div>
-                    <p className="text-sm text-gray-500">Team</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {entity.teams.name}
-                    </p>
-                  </div>
-                )}
-                {entity.age && (
-                  <div>
-                    <p className="text-sm text-gray-500">Age</p>
-                    <p className="text-lg font-semibold text-gray-900">{entity.age}</p>
-                  </div>
-                )}
-                {entity.nationality && (
-                  <div>
-                    <p className="text-sm text-gray-500">Nationality</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {entity.nationality}
-                    </p>
-                  </div>
-                )}
-                {entity.podiums_total !== null && (
-                  <div>
-                    <p className="text-sm text-gray-500">Podiums</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {entity.podiums_total}
-                    </p>
-                  </div>
-                )}
-                {entity.world_championships !== null && (
-                  <div>
-                    <p className="text-sm text-gray-500">World Championships</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {entity.world_championships}
-                    </p>
-                  </div>
-                )}
-                {entity.current_standing && (
-                  <div>
-                    <p className="text-sm text-gray-500">Current Standing</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      #{entity.current_standing}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-
-            {type === 'teams' && entity.overview_text && (
-              <div className="col-span-2 md:col-span-4">
-                <p className="text-gray-700">{entity.overview_text}</p>
-              </div>
-            )}
-
-            {type === 'tracks' && (
-              <>
-                {entity.built_date && (
-                  <div>
-                    <p className="text-sm text-gray-500">Built</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {new Date(entity.built_date).getFullYear()}
-                    </p>
-                  </div>
-                )}
-                {entity.track_length && (
-                  <div>
-                    <p className="text-sm text-gray-500">Length</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {entity.track_length} km
-                    </p>
-                  </div>
-                )}
-                {entity.location && (
-                  <div>
-                    <p className="text-sm text-gray-500">Location</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {entity.location}
-                    </p>
-                  </div>
-                )}
-                {entity.country && (
-                  <div>
-                    <p className="text-sm text-gray-500">Country</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {entity.country}
-                    </p>
-                  </div>
-                )}
-                {entity.overview_text && (
-                  <div className="col-span-2 md:col-span-4">
-                    <p className="text-gray-700">{entity.overview_text}</p>
-                  </div>
-                )}
-                {entity.history_text && (
-                  <div className="col-span-2 md:col-span-4">
-                    <h3 className="mb-2 text-lg font-semibold text-gray-900">History</h3>
-                    <p className="text-gray-700">{entity.history_text}</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          {/* Image Gallery */}
+          <EntityImageGallery images={galleryImages} />
         </div>
       </div>
 
-      {/* Track Tips Section (Tracks Only) */}
-      {type === 'tracks' && <TrackTipsSection trackId={entity.id} />}
+      {/* Spacer to push tabs section down */}
+      <div className="h-[55vh]" />
 
-      {/* Community Grids Section */}
-      {grids.data && grids.data.length > 0 && (
-        <CommunityGridsSection
-          grids={grids.data}
-          entityType={type.slice(0, -1)}
-          entityName={entity.name}
-        />
-      )}
-
-      {/* Discussion Section */}
-      <DiscussionSection
-        posts={posts.data || []}
-        parentPageType={type.slice(0, -1) as 'driver' | 'team' | 'track'}
-        parentPageId={entity.id}
-      />
+      {/* Tabs Section - Slides up over fixed top section */}
+      <div className="relative z-20 bg-[#111111] min-h-[30vh]">
+        <div className="mx-auto max-w-7xl px-6">
+          <EntityTabs tabs={tabs} />
+        </div>
+      </div>
     </div>
   )
 }
-

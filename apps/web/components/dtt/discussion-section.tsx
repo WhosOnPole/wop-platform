@@ -36,13 +36,16 @@ interface DiscussionSectionProps {
   posts: Post[]
   parentPageType: 'driver' | 'team' | 'track' | 'poll' | 'hot_take' | 'profile'
   parentPageId: string
+  variant?: 'light' | 'dark'
 }
 
 export function DiscussionSection({
   posts: initialPosts,
   parentPageType,
   parentPageId,
+  variant = 'light',
 }: DiscussionSectionProps) {
+  const isDark = variant === 'dark'
   const supabase = createClientComponentClient()
   const router = useRouter()
   const [posts, setPosts] = useState(initialPosts)
@@ -499,11 +502,49 @@ export function DiscussionSection({
     return { topLevel, repliesByParent }
   }
 
+  const sectionClasses = isDark
+    ? 'rounded-lg border border-white/20 bg-white/5 p-6'
+    : 'rounded-lg border border-gray-200 bg-white p-6 shadow'
+  const headingIconClasses = isDark ? 'h-5 w-5 text-white/80' : 'h-5 w-5 text-blue-500'
+  const headingTextClasses = isDark
+    ? 'text-xl font-semibold text-white'
+    : 'text-xl font-semibold text-gray-900'
+  const textareaClasses = isDark
+    ? 'w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
+    : 'w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
+  const submitButtonClasses = isDark
+    ? 'mt-2 flex items-center space-x-2 rounded-md bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 disabled:opacity-50'
+    : 'mt-2 flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
+  const emptyTextClasses = isDark
+    ? 'text-center text-white/60'
+    : 'text-center text-gray-500'
+  const postBorderClasses = isDark ? 'border-b border-white/20' : 'border-b border-gray-200'
+  const avatarBgClasses = isDark ? 'bg-white/20' : 'bg-gray-300'
+  const avatarTextClasses = isDark ? 'text-white' : 'text-gray-600'
+  const usernameClasses = isDark
+    ? 'font-medium text-white hover:text-white/80'
+    : 'font-medium text-gray-900 hover:text-blue-600'
+  const timestampClasses = isDark ? 'text-xs text-white/60' : 'text-xs text-gray-500'
+  const contentClasses = isDark ? 'mb-3 text-white/90' : 'mb-3 text-gray-700'
+  const replyButtonClasses = isDark
+    ? 'text-sm text-white/80 hover:text-white'
+    : 'text-sm text-blue-600 hover:text-blue-800'
+  const commentBorderClasses = isDark ? 'border-l-2 border-white/20' : 'border-l-2 border-gray-200'
+  const commentTextClasses = isDark ? 'mb-2 text-sm text-white/90' : 'mb-2 text-sm text-gray-700'
+  const replyTextClasses = isDark ? 'text-xs text-white/80 hover:text-white' : 'text-xs text-blue-600 hover:text-blue-800'
+  const replyTextareaClasses = isDark
+    ? 'w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
+    : 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
+  const replySubmitClasses = isDark
+    ? 'mt-2 rounded-md bg-white/20 px-3 py-1 text-xs text-white hover:bg-white/30'
+    : 'mt-2 rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700'
+  const replyContentClasses = isDark ? 'mb-1 text-xs text-white/90' : 'mb-1 text-xs text-gray-700'
+
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+    <section className={sectionClasses}>
       <div className="mb-6 flex items-center space-x-2">
-        <MessageSquare className="h-5 w-5 text-blue-500" />
-        <h2 className="text-xl font-semibold text-gray-900">Discussion</h2>
+        <MessageSquare className={headingIconClasses} />
+        <h2 className={headingTextClasses}>Discussion</h2>
       </div>
 
       {/* Create Post Form */}
@@ -513,14 +554,10 @@ export function DiscussionSection({
           onChange={(e) => setNewPostContent(e.target.value)}
           placeholder="Start a discussion..."
           rows={4}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black"
+          className={textareaClasses}
           required
         />
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="mt-2 flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
+        <button type="submit" disabled={isSubmitting} className={submitButtonClasses}>
           <Send className="h-4 w-4" />
           <span>Post</span>
         </button>
@@ -529,14 +566,14 @@ export function DiscussionSection({
       {/* Posts List */}
       <div className="space-y-6">
         {posts.length === 0 ? (
-          <p className="text-center text-gray-500">No discussions yet. Be the first to post!</p>
+          <p className={emptyTextClasses}>No discussions yet. Be the first to post!</p>
         ) : (
           posts.map((post) => {
             const postComments = comments[post.id] || []
             const { topLevel, repliesByParent } = groupComments(postComments)
 
             return (
-              <div key={post.id} className="border-b border-gray-200 pb-6 last:border-0">
+              <div key={post.id} className={`${postBorderClasses} pb-6 last:border-0`}>
                 <div className="mb-3 flex items-center space-x-3">
                   {post.user?.profile_image_url ? (
                     <img
@@ -545,8 +582,8 @@ export function DiscussionSection({
                       className="h-8 w-8 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                      <span className="text-xs font-medium text-gray-600">
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${avatarBgClasses}`}>
+                      <span className={`text-xs font-medium ${avatarTextClasses}`}>
                         {post.user?.username?.charAt(0).toUpperCase() || '?'}
                       </span>
                     </div>
@@ -554,16 +591,16 @@ export function DiscussionSection({
                   <div>
                     <Link
                       href={`/u/${post.user?.username || 'unknown'}`}
-                      className="font-medium text-gray-900 hover:text-blue-600"
+                      className={usernameClasses}
                     >
                       {post.user?.username || 'Unknown'}
                     </Link>
-                    <p className="text-xs text-gray-500">
+                    <p className={timestampClasses}>
                       {new Date(post.created_at).toLocaleString()}
                     </p>
                   </div>
                 </div>
-                <p className="mb-3 text-gray-700">{post.content}</p>
+                <p className={contentClasses}>{post.content}</p>
 
                 {/* Post Actions */}
                 <div className="mb-3 flex items-center space-x-4">
@@ -585,7 +622,7 @@ export function DiscussionSection({
                         loadCommentsForPost(post.id)
                       }
                     }}
-                    className="text-sm text-blue-600 hover:text-blue-800"
+                    className="text-sm text-white/80 hover:text-white"
                   >
                     Reply {topLevel.length > 0 ? `(${topLevel.length})` : ''}
                   </button>
@@ -598,7 +635,7 @@ export function DiscussionSection({
 
                 {/* Comments List */}
                 {topLevel.length > 0 && (
-                  <div className="mt-4 ml-11 space-y-4 border-l-2 border-gray-200 pl-4">
+                  <div className="mt-4 ml-11 space-y-4 border-l-2 border-white/20 pl-4">
                     {topLevel.map((comment) => {
                       const commentReplies = repliesByParent[comment.id] || []
 
@@ -612,8 +649,8 @@ export function DiscussionSection({
                                 className="h-6 w-6 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-300">
-                                <span className="text-xs font-medium text-gray-600">
+                              <div className={`flex h-6 w-6 items-center justify-center rounded-full ${avatarBgClasses}`}>
+                                <span className={`text-xs font-medium ${avatarTextClasses}`}>
                                   {comment.user?.username?.charAt(0).toUpperCase() || '?'}
                                 </span>
                               </div>
@@ -621,16 +658,16 @@ export function DiscussionSection({
                             <div>
                               <Link
                                 href={`/u/${comment.user?.username || 'unknown'}`}
-                                className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                                className={`text-sm font-medium ${isDark ? 'text-white hover:text-white/80' : 'text-gray-900 hover:text-blue-600'}`}
                               >
                                 {comment.user?.username || 'Unknown'}
                               </Link>
-                              <p className="text-xs text-gray-500">
+                              <p className={timestampClasses}>
                                 {new Date(comment.created_at).toLocaleString()}
                               </p>
                             </div>
                           </div>
-                          <p className="mb-2 text-sm text-gray-700">{comment.content}</p>
+                          <p className={commentTextClasses}>{comment.content}</p>
 
                           {/* Comment Actions */}
                           <div className="mb-2 flex items-center space-x-4">
@@ -649,7 +686,7 @@ export function DiscussionSection({
                                   showReplyToComment === comment.id ? null : comment.id
                                 setShowReplyToComment(newShowReply)
                               }}
-                              className="text-xs text-blue-600 hover:text-blue-800"
+                              className={replyTextClasses}
                             >
                               Reply
                             </button>
@@ -673,11 +710,11 @@ export function DiscussionSection({
                                 }
                                 placeholder="Write a reply..."
                                 rows={2}
-                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black"
+                                className={replyTextareaClasses}
                               />
                               <button
                                 onClick={() => handleCreateReplyToComment(comment.id, post.id)}
-                                className="mt-2 rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
+                                className={replySubmitClasses}
                               >
                                 Post Reply
                               </button>
@@ -686,7 +723,7 @@ export function DiscussionSection({
 
                           {/* Replies to this comment */}
                           {commentReplies.length > 0 && (
-                            <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 pl-3">
+                            <div className={`mt-2 ml-4 space-y-2 ${commentBorderClasses} pl-3`}>
                               {commentReplies.map((reply) => (
                                 <div key={reply.id} className="py-1">
                                   <div className="mb-1 flex items-center space-x-2">
@@ -697,8 +734,8 @@ export function DiscussionSection({
                                         className="h-5 w-5 rounded-full object-cover"
                                       />
                                     ) : (
-                                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-300">
-                                        <span className="text-xs font-medium text-gray-600">
+                                      <div className={`flex h-5 w-5 items-center justify-center rounded-full ${avatarBgClasses}`}>
+                                        <span className={`text-xs font-medium ${avatarTextClasses}`}>
                                           {reply.user?.username?.charAt(0).toUpperCase() || '?'}
                                         </span>
                                       </div>
@@ -706,16 +743,16 @@ export function DiscussionSection({
                                     <div>
                                       <Link
                                         href={`/u/${reply.user?.username || 'unknown'}`}
-                                        className="text-xs font-medium text-gray-900 hover:text-blue-600"
+                                        className={`text-xs font-medium ${isDark ? 'text-white hover:text-white/80' : 'text-gray-900 hover:text-blue-600'}`}
                                       >
                                         {reply.user?.username || 'Unknown'}
                                       </Link>
-                                      <p className="text-xs text-gray-500">
+                                      <p className={timestampClasses}>
                                         {new Date(reply.created_at).toLocaleString()}
                                       </p>
                                     </div>
                                   </div>
-                                  <p className="mb-1 text-xs text-gray-700">{reply.content}</p>
+                                  <p className={replyContentClasses}>{reply.content}</p>
                                   <div className="flex items-center space-x-3">
                                     <LikeButton
                                       targetId={reply.id}
@@ -752,11 +789,13 @@ export function DiscussionSection({
                       }
                       placeholder="Write a reply..."
                       rows={2}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black"
+                      className={replyTextareaClasses}
                     />
                     <button
                       onClick={() => handleCreateReply(post.id)}
-                      className="mt-2 rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                      className={isDark
+                        ? 'mt-2 rounded-md bg-white/20 px-3 py-1 text-sm text-white hover:bg-white/30'
+                        : 'mt-2 rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700'}
                     >
                       Post Reply
                     </button>

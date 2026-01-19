@@ -4,11 +4,19 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function SignupPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const [redirectUrl, setRedirectUrl] = useState<string>('')
+
+  useEffect(() => {
+    // Use current origin dynamically instead of env var
+    if (typeof window !== 'undefined') {
+      setRedirectUrl(`${window.location.origin}/auth/callback`)
+    }
+  }, [])
 
   useEffect(() => {
     // Check if already logged in
@@ -30,14 +38,16 @@ export default function SignupPage() {
             Create your account to get started
           </p>
         </div>
-        <Auth
-          supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
-          view="sign_up"
-          providers={['google']}
-          redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
-          onlyThirdPartyProviders={false}
-        />
+        {redirectUrl && (
+          <Auth
+            supabaseClient={supabase}
+            appearance={{ theme: ThemeSupa }}
+            view="sign_up"
+            providers={['google']}
+            redirectTo={redirectUrl}
+            onlyThirdPartyProviders={false}
+          />
+        )}
       </div>
     </div>
   )

@@ -12,6 +12,14 @@ export default function LoginPage() {
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
   const authContainerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [redirectUrl, setRedirectUrl] = useState<string>('')
+
+  useEffect(() => {
+    // Use current origin dynamically instead of env var
+    if (typeof window !== 'undefined') {
+      setRedirectUrl(`${window.location.origin}/auth/callback`)
+    }
+  }, [])
 
   useEffect(() => {
     // Check if already logged in
@@ -121,16 +129,18 @@ export default function LoginPage() {
           <span className="text-xs uppercase text-gray-400">or</span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>
-        <div ref={authContainerRef}>
-          <Auth
-            supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa }}
-            providers={['google']}
-            redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`}
-            onlyThirdPartyProviders={false}
-            view={view}
-          />
-        </div>
+        {redirectUrl && (
+          <div ref={authContainerRef}>
+            <Auth
+              supabaseClient={supabase}
+              appearance={{ theme: ThemeSupa }}
+              providers={['google']}
+              redirectTo={redirectUrl}
+              onlyThirdPartyProviders={false}
+              view={view}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
