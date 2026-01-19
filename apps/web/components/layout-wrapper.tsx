@@ -6,6 +6,7 @@ import { TopNav } from '@/components/navbar/top-nav'
 import { BottomNavbar } from '@/components/navbar/bottom-navbar'
 import { Footer } from '@/components/footer'
 import { LiveRaceBanner } from '@/components/live-race-banner'
+import { FullscreenHandler } from '@/components/fullscreen-handler'
 import { createClientComponentClient } from '@/utils/supabase-client'
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -53,6 +54,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <FullscreenHandler autoRequest={true} />
       <TopNav />
       <main className={`min-h-screen ${isAuthenticated ? 'pb-20' : ''}`}>
         {children}
