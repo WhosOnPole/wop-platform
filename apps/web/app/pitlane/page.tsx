@@ -2,8 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
-import { PitlaneTabs } from '@/components/pitlane/pitlane-tabs'
-import { Search } from 'lucide-react'
+import { PitlaneSearchProvider, PitlaneSearchComponent, PitlaneTabsComponent, PitlaneSearchResultsWrapper } from '@/components/pitlane/pitlane-search-wrapper'
 
 export const revalidate = 300
 
@@ -34,7 +33,7 @@ export default async function PitlanePage() {
     supabase
       .from('teams')
       .select('id, name, image_url')
-      .eq('active', true)
+      .eq('active', true) 
       .order('name', { ascending: true }),
     supabase
       .from('tracks')
@@ -104,23 +103,23 @@ export default async function PitlanePage() {
   const bannerHref = isRaceDay ? '#' : `/tracks/${trackSlug}` // TODO: Replace '#' with live chat when implemented
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10">
-      {/* Header + Search */}
-      <div className="space-y-3 px-4 sm:px-6 lg:px-8">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#838383]" />
-          <input
-            type="search"
-            placeholder="Search pit lane"
-            className="w-full rounded-full bg-[#1D1D1D] px-10 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-      </div>
+    <PitlaneSearchProvider>
+      <div className="mx-auto max-w-6xl">
+        {/* Search Input */}
+        <PitlaneSearchComponent />
 
-     {/* Upcoming race banner */}
+        {/* Search Results Overlay */}
+        <PitlaneSearchResultsWrapper
+          drivers={driversData}
+          teams={teamsData}
+          tracks={tracksData}
+          schedule={tracksWithStartDate}
+        />
+
+        {/* Upcoming race banner */}
       {nextRace ? (
-        <div className="">
-          <sup className="w-full text-left block text-xs text-gray-500 px-4 sm:px-6 lg:px-8">Upcoming Race</sup>
+        <div className="mb-12">
+          <sup className="w-full text-left block text-xs text-[#838383] px-4 mb-2">Upcoming Race</sup>
         <Link
           href={bannerHref}
           className="block overflow-hidden mx-4 sm:mx-6 lg:mx-8 hover:opacity-90 rounded-sm"
@@ -167,20 +166,23 @@ export default async function PitlanePage() {
           </Link>
         </div>
       ) : (
-        <section className="bg-[#FFFFFF33] h-[80px] text-center shadow-sm flex flex-col items-center justify-center mx-4 sm:mx-6 lg:mx-8">
+        <section className="bg-[#FFFFFF33] h-[80px] text-center shadow-sm flex flex-col items-center justify-center mb-12">
           <p className="text-white font-semibold">No upcoming race scheduled yet.</p>
           <p className="text-white/50 text-sm mt-2">Check back soon for the next race details.</p>
         </section>
       )}
 
-      {/* Tabs for drivers/teams/tracks */}
-      <div className="px-4 sm:px-6 lg:px-8">
-        <PitlaneTabs drivers={driversData} teams={teamsData} tracks={tracksData} />
-      </div>
+      {/* Tabs for drivers/teams/tracks/schedule */}
+      <PitlaneTabsComponent
+        drivers={driversData}
+        teams={teamsData}
+        tracks={tracksData}
+        schedule={tracksWithStartDate}
+      />
 
       {/* Beginners guide banner */}
       <section>
-        <sup className="w-full text-left block text-xs text-gray-500 px-4 sm:px-6 lg:px-8">Beginner's Guide</sup>
+        <sup className="w-full text-left block text-xs text-gray-500 px-4 mb-1">Beginner's Guide</sup>
         <Link
           href="/beginners-guide"
           className="block relative overflow-hidden text-white shadow-lg hover:opacity-90 transition-opacity cursor-pointer"
@@ -200,13 +202,11 @@ export default async function PitlanePage() {
               Learn the essentials of Formula 1, the teams, drivers, and the racing calendar before
               you dive into the action.
             </p>
-            <span className="inline-flex items-center rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-gray-900 shadow hover:bg-white">
-              Read the guide
-            </span>
           </div>
         </Link>
       </section>
-    </div>
+      </div>
+    </PitlaneSearchProvider>
   )
 }
 

@@ -121,7 +121,7 @@ export function TopNav() {
   ]
 
   return (
-    <div className="bg-transparenttext-gray-900">
+    <div className="bg-transparent text-gray-900 relative z-50">
       <div className="flex items-center justify-between p-4">
         <Logo variant="white" href={isAuthed ? '/feed' : '/'} className="h-9"/>
 
