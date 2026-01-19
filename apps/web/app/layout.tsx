@@ -22,9 +22,6 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: "Who's on Pole?",
   },
-  mobileWebApp: {
-    capable: true,
-  },
   formatDetection: {
     telephone: false,
   },
