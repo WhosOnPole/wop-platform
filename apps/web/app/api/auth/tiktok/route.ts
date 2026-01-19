@@ -112,12 +112,14 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
   const state = requestUrl.searchParams.get('state')
 
+  // SECURITY: Never hardcode secrets - always use environment variables
   const clientKey = process.env.TIKTOK_CLIENT_KEY
   const clientSecret = process.env.TIKTOK_CLIENT_SECRET
   const redirectUri =
     process.env.TIKTOK_REDIRECT_URI || `${requestUrl.origin}/api/auth/tiktok/callback`
 
   // Enhanced error logging for debugging
+  // SECURITY: Never log the actual secret values, only boolean checks
   if (!clientKey || !clientSecret) {
     console.error('TikTok OAuth config missing:', {
       hasClientKey: !!clientKey,

@@ -112,7 +112,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
 
       <div className="px-4 py-5 sm:px-6 h-[330px] overflow-scroll">
         {activeTab === 'schedule' ? (
-          <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+          <div className="space-y-0 md:grid md:grid-cols-2 md:gap-4">
             {!filteredSchedule || filteredSchedule.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-white/50 md:col-span-2">
                 {searchQuery ? 'No races found matching your search.' : 'Nothing to show yet. Check back soon.'}
@@ -383,16 +383,16 @@ function ScheduleCard({ race }: ScheduleCardProps) {
   return (
     <Link
       href={bannerHref}
-      className="block overflow-hidden hover:opacity-90 rounded-sm"
+      className="block overflow-hidden hover:opacity-90 rounded-sm border-b border-gray-900"
     >
       <section className="relative h-[90px] w-full cursor-pointer">
-        <Image
+        {/* <Image
           src={backgroundImage}
           alt={race.circuit_ref || race.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) calc(100vw - 3rem), 1152px"
           className="object-cover opacity-30"
-        />
+        /> */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
 
         <div className="absolute inset-0 flex flex-col justify-between">
@@ -410,6 +410,7 @@ function ScheduleCard({ race }: ScheduleCardProps) {
               {race.location ? ` - ${race.location}` : ''}
               {race.country ? `, ${race.country}` : ''}
             </p>
+            <p className="text-xs text-gray-300 tracking-wide pl-7">{race.circuit_ref ? `${race.name}` : ''}</p>
           </div>
         </div>
       </section>
