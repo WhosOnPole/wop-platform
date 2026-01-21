@@ -3,7 +3,9 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Calendar, MapPin, Users } from 'lucide-react'
 import { CheckInSection } from '@/components/race/check-in-section'
-import { LiveChatComponent } from '@/components/race/live-chat-component'
+import { RealtimeChatBatched } from '@/components/race/realtime-chat-batched'
+import { AdminChatControl } from '@/components/race/admin-chat-control'
+import { isRaceWeekendActive } from '@/utils/race-weekend'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -31,7 +33,7 @@ export default async function RacePage({ params }: PageProps) {
   const slugName = slug.replace(/-/g, ' ')
   const { data: tracks } = await supabase
     .from('tracks')
-    .select('id, name, image_url, location, country, start_date')
+    .select('id, name, image_url, location, country, start_date, race_day_date, chat_enabled')
     .ilike('name', `%${slugName}%`)
 
   const race = tracks?.find(
@@ -50,6 +52,23 @@ export default async function RacePage({ params }: PageProps) {
     : false
   const isUpcoming = raceTime ? raceTime > now : false
   const isPast = raceTime ? raceTime < now : false
+
+  // Check if race weekend is active (using utility function)
+  const raceWeekendActive = isRaceWeekendActive(race)
+
+  // Check if user is admin
+  let isAdmin = false
+  if (session) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, email')
+      .eq('id', session.user.id)
+      .single()
+
+    const isAdminEmail = session.user.email?.endsWith('@whosonpole.org')
+    const isAdminRole = profile?.role === 'admin'
+    isAdmin = isAdminEmail || isAdminRole || false
+  }
 
   // Fetch check-ins
   const { data: checkIns } = await supabase
@@ -149,13 +168,23 @@ export default async function RacePage({ params }: PageProps) {
           />
       )}
 
+      {/* Admin Chat Control */}
+      {isAdmin && raceWeekendActive && (
+        <div className="mb-6">
+          <AdminChatControl
+            trackId={race.id}
+            initialChatEnabled={race.chat_enabled !== false}
+          />
+        </div>
+      )}
+
       {/* Live Chat Section */}
-      {isLive || isPast ? (
-        <LiveChatComponent trackId={race.id} raceTime={raceTime} />
+      {raceWeekendActive ? (
+        <RealtimeChatBatched trackId={race.id} raceName={race.name} />
       ) : isUpcoming ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
           <p className="text-gray-600">
-            Chat will be available when the race starts. Check back on{' '}
+            Chat will be available when the race weekend starts. Check back on{' '}
             {raceTime?.toLocaleDateString()}!
           </p>
         </div>

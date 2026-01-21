@@ -2,6 +2,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { Users, Flag, MessageSquare, FileText } from 'lucide-react'
+import { RaceWeekendWidget } from '@/components/dashboard/race-weekend-widget'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -12,6 +13,56 @@ export default async function DashboardPage() {
       supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     }
   )
+
+  // Get current/upcoming race weekend
+  const now = new Date().toISOString()
+  const { data: currentRace } = await supabase
+    .from('tracks')
+    .select('id, name, location, start_date, race_day_date, chat_enabled')
+    .not('start_date', 'is', null)
+    .not('race_day_date', 'is', null)
+    .or(`start_date.lte.${now},and(start_date.gte.${now},race_day_date.gte.${now})`)
+    .order('start_date', { ascending: true })
+    .limit(1)
+    .single()
+
+  // Get chat metrics for current race
+  let metrics = null
+  if (currentRace?.id) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+
+    const [
+      { count: totalMessages },
+      { data: messages },
+      { count: recentMessages },
+    ] = await Promise.all([
+      supabase
+        .from('live_chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('track_id', currentRace.id)
+        .is('deleted_at', null),
+      supabase
+        .from('live_chat_messages')
+        .select('user_id')
+        .eq('track_id', currentRace.id)
+        .is('deleted_at', null),
+      supabase
+        .from('live_chat_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('track_id', currentRace.id)
+        .is('deleted_at', null)
+        .gte('created_at', oneHourAgo),
+    ])
+
+    const uniqueUsers = new Set(messages?.map((m) => m.user_id) || []).size
+    const messagesPerMinute = recentMessages ? Math.round(recentMessages / 60) : 0
+
+    metrics = {
+      totalMessages: totalMessages || 0,
+      activeUsers: uniqueUsers,
+      messagesPerMinute,
+    }
+  }
 
   // Get counts for dashboard stats
   const [pendingReports, pendingTips, recentNews, recentArticles] = await Promise.all([
@@ -66,6 +117,14 @@ export default async function DashboardPage() {
   return (
     <div>
       <h1 className="mb-8 text-3xl font-bold text-gray-900">Dashboard</h1>
+
+      {/* Race Weekend Widget */}
+      {currentRace && (
+        <RaceWeekendWidget
+          initialRace={currentRace}
+          initialMetrics={metrics}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {

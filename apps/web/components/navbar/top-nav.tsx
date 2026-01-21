@@ -10,6 +10,7 @@ import { StoryModal } from '@/components/create/modals/story-modal'
 import { PollModal } from '@/components/create/modals/poll-modal'
 import { TipModal } from '@/components/create/modals/tip-modal'
 import { PostModal } from '@/components/create/modals/post-modal'
+import { NotificationBell } from '@/components/navbar/notification-bell'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface Profile {
@@ -189,11 +190,13 @@ export function TopNav() {
           ) : null}
 
           {isAuthed ? (
-            <button
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
-              aria-label="Open profile menu"
-            >
+            <>
+              <NotificationBell />
+              <button
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
+                aria-label="Open profile menu"
+              >
               {profile?.profile_image_url ? (
                 <img
                   src={profile.profile_image_url}
@@ -205,7 +208,8 @@ export function TopNav() {
                   {profile?.username?.charAt(0).toUpperCase() || 'U'}
                 </span>
               )}
-            </button>
+              </button>
+            </>
           ) : null}
 
           {isMenuOpen && isAuthed ? (

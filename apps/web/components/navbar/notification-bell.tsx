@@ -31,10 +31,15 @@ export function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-gray-100"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 shadow-sm"
         aria-label="Notifications"
       >
-        <Bell className={`h-5 w-5 ${hasUnread ? 'animate-pulse text-blue-600' : ''}`} />
+        <Bell className={`h-5 w-5 ${hasUnread ? 'text-blue-600' : 'text-gray-600'}`} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
       </button>
 
       {isOpen && <NotificationDropdown onClose={() => setIsOpen(false)} />}

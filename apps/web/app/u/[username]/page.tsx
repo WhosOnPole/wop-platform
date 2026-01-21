@@ -148,6 +148,17 @@ export default async function UserProfilePage({ params }: PageProps) {
     isFollowing = !!follow
   }
 
+  // Fetch follower and following counts
+  const { count: followerCount } = await supabase
+    .from('follows')
+    .select('*', { count: 'exact', head: true })
+    .eq('following_id', profile.id)
+
+  const { count: followingCount } = await supabase
+    .from('follows')
+    .select('*', { count: 'exact', head: true })
+    .eq('follower_id', profile.id)
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Profile Header */}
@@ -174,6 +185,20 @@ export default async function UserProfilePage({ params }: PageProps) {
                   <Trophy className="h-5 w-5" />
                   <span className="font-semibold">{profile.points} points</span>
                 </div>
+                <Link
+                  href={`/u/${profile.username}/followers`}
+                  className="hover:underline"
+                >
+                  <span className="font-semibold">{followerCount || 0}</span>
+                  <span className="ml-1 text-sm opacity-90">followers</span>
+                </Link>
+                <Link
+                  href={`/u/${profile.username}/following`}
+                  className="hover:underline"
+                >
+                  <span className="font-semibold">{followingCount || 0}</span>
+                  <span className="ml-1 text-sm opacity-90">following</span>
+                </Link>
                 {profile.city && (
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-4 w-4" />
