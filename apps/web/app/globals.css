@@ -32,22 +32,22 @@
 :root {
   --background: #111111;
   --foreground: #ffffff;
-  --sunset-start: #d90084;
-  --sunset-end: #ff4300;
+  --sunset-start: #EC553E;
+  --sunset-end: #EB0E78;
   --bright-teal: #25b4b1;
   --racing-orange: #ef771b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #111111;
+    --background: #000000;
     --foreground: #ffffff;
   }
 }
 
 body {
   color: var(--foreground);
-  background: #111111;
+  background: #000000;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   scrollbar-width: none; /* Hide scrollbars in Firefox */
   /* Support for safe area insets (notch, home indicator) */
@@ -107,11 +107,11 @@ html:-ms-fullscreen {
   }
 
   .bg-sunset-gradient {
-    background: linear-gradient(45deg, var(--sunset-start), var(--sunset-end));
+    background: linear-gradient(90deg, var(--sunset-start), var(--sunset-end));
   }
 
   .text-sunset-gradient {
-    background: linear-gradient(45deg, var(--sunset-start), var(--sunset-end));
+    background: linear-gradient(90deg, var(--sunset-start), var(--sunset-end));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

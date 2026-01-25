@@ -122,8 +122,8 @@ export function TopNav() {
   ]
 
   return (
-    <div className="bg-transparent text-gray-900 relative z-50">
-      <div className="flex items-center justify-between p-4">
+    <div className="bg-transparent text-[#838383] relative z-50">
+      <div className="flex items-center justify-between px-4 py-2.5">
         <Logo variant="white" href={isAuthed ? '/feed' : '/'} className="h-9"/>
 
         {/* Desktop nav */}
@@ -136,7 +136,7 @@ export function TopNav() {
                   className={`text-sm font-semibold transition-colors ${
                     pathname.startsWith(item.href)
                       ? 'text-[#3BEFEB]'
-                      : 'text-gray-700 hover:text-gray-900'
+                      : 'text-[#838383#6B6B6B] hover:text-gray-900'
                   }`}
                 >
                   {item.label}
@@ -149,7 +149,7 @@ export function TopNav() {
                   className={`text-sm font-semibold transition-colors ${
                     pathname === item.href
                       ? 'text-[#3BEFEB]'
-                      : 'text-gray-700 hover:text-gray-900'
+                      : 'text-[#6B6B6B] hover:text-gray-900'
                   }`}
                 >
                   {item.label}
@@ -181,7 +181,7 @@ export function TopNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-xs font-semibold text-gray-700 hover:text-gray-900"
+                  className="text-xs font-semibold text-[#6B6B6B] hover:text-gray-900"
                 >
                   {item.label}
                 </Link>
@@ -220,7 +220,7 @@ export function TopNav() {
                     console.info('TODO: settings route')
                     setIsMenuOpen(false)
                   }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#6B6B6B] hover:bg-gray-100"
                 >
                   Settings
                 </button>

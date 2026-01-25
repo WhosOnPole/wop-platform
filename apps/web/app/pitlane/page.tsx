@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PitlaneSearchProvider, PitlaneSearchComponent, PitlaneTabsComponent, PitlaneSearchResultsWrapper } from '@/components/pitlane/pitlane-search-wrapper'
+import { UpcomingRaceBannerActions } from '@/components/pitlane/upcoming-race-banner-actions'
 
 export const revalidate = 300
 
@@ -22,7 +23,7 @@ export default async function PitlanePage() {
   const [tracksWithDates, drivers, teams, tracks] = await Promise.all([
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country, start_date, race_day_date, circuit_ref')
+      .select('id, name, image_url, location, country, start_date, race_day_date, circuit_ref, chat_enabled')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     supabase
@@ -49,32 +50,47 @@ export default async function PitlanePage() {
   const nextRace = getClosestRace({ tracks: tracksWithStartDate })
   const backgroundImage = nextRace?.image_url || '/images/race_banner.png'
   
-  // Format dates in short format
+  // Format dates in short format (e.g., "Mar. 6")
   const formatShortDate = (dateString: string | null) => {
     if (!dateString) return null
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
     })
   }
   
-  const startDateFormatted = formatShortDate(nextRace?.start_date || null)
   const raceDayDateFormatted = formatShortDate(nextRace?.race_day_date || null)
   
-  // Build date display string
+  // Build date display string: "Mar. 6 - City, Country"
   let dateDisplay = 'Date TBA'
-  if (startDateFormatted && raceDayDateFormatted) {
-    dateDisplay = `${startDateFormatted}`
-  } else if (startDateFormatted) {
-    dateDisplay = `Start: ${startDateFormatted}`
-  } else if (raceDayDateFormatted) {
-    dateDisplay = `Race Day: ${raceDayDateFormatted}`
+  if (raceDayDateFormatted) {
+    const locationParts = []
+    if (nextRace?.location) locationParts.push(nextRace.location)
+    if (nextRace?.country) locationParts.push(nextRace.country)
+    const locationStr = locationParts.length > 0 ? ` - ${locationParts.join(', ')}` : ''
+    dateDisplay = `${raceDayDateFormatted}${locationStr}`
+  } else if (nextRace?.start_date) {
+    const startDateFormatted = formatShortDate(nextRace.start_date)
+    const locationParts = []
+    if (nextRace?.location) locationParts.push(nextRace.location)
+    if (nextRace?.country) locationParts.push(nextRace.country)
+    const locationStr = locationParts.length > 0 ? ` - ${locationParts.join(', ')}` : ''
+    dateDisplay = `${startDateFormatted}${locationStr}`
   }
   
-  // Calculate counter
+  // Calculate counter - countdown to race day
   let counterText = ''
-  if (nextRace?.start_date) {
+  if (nextRace?.race_day_date) {
+    const raceTime = new Date(nextRace.race_day_date)
+    const now = new Date()
+    const timeUntilRace = raceTime.getTime() - now.getTime()
+    if (timeUntilRace > 0) {
+      const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
+      const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+    }
+  } else if (nextRace?.start_date) {
+    // Fallback to start_date if race_day_date not available
     const raceTime = new Date(nextRace.start_date)
     const now = new Date()
     const timeUntilRace = raceTime.getTime() - now.getTime()
@@ -85,22 +101,23 @@ export default async function PitlanePage() {
     }
   }
   
-  // Check if it's race day
-  const isRaceDay = (() => {
-    if (!nextRace?.race_day_date) return false
-    const today = new Date()
+  // Check if race weekend is live (within active window)
+  const isLive = (() => {
+    if (!nextRace?.start_date || !nextRace?.race_day_date) return false
+    if (nextRace.chat_enabled === false) return false
+    
+    const now = new Date()
+    const start = new Date(nextRace.start_date)
     const raceDay = new Date(nextRace.race_day_date)
-    // Compare dates only (ignore time)
-    return (
-      today.getFullYear() === raceDay.getFullYear() &&
-      today.getMonth() === raceDay.getMonth() &&
-      today.getDate() === raceDay.getDate()
-    )
+    const end = new Date(raceDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
+    
+    return now >= start && now <= end
   })()
   
   // Determine link destination
   const trackSlug = nextRace ? slugify(nextRace.name) : ''
-  const bannerHref = isRaceDay ? '#' : `/tracks/${trackSlug}` // TODO: Replace '#' with live chat when implemented
+  // When live, link to race page (which shows chat). Otherwise link to track page.
+  const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
 
   return (
     <PitlaneSearchProvider>
@@ -114,20 +131,26 @@ export default async function PitlanePage() {
           teams={teamsData}
           tracks={tracksData}
           schedule={tracksWithStartDate}
+          supabaseUrl={supabaseUrl}
         />
 
         {/* Upcoming race banner */}
       {nextRace ? (
-        <div className="mb-12">
-          <sup className="w-full text-left block text-xs text-[#838383] px-4 mb-2">Upcoming Race</sup>
+        <div className="mb-5 relative mx-4 sm:mx-6 lg:mx-8">
+          <sup className="w-full text-left block text-sm text-[#838383]">Upcoming</sup>
         <Link
           href={bannerHref}
-          className="block overflow-hidden mx-4 sm:mx-6 lg:mx-8 hover:opacity-90 rounded-sm"
-          style={{
-            boxShadow: '0 0 20px rgba(255, 0, 110, 0.6), 0 0 10px rgba(253, 53, 50, 0.5), 0 0 25px rgba(253, 99, 0, 0.4), 0 0 0 .5px rgba(255, 0, 110, 0.4)',
-          }}
+          className="block overflow-hidden hover:opacity-90"
+          style={
+            isLive
+              ? {
+                  boxShadow:
+                    '0 0 20px rgba(255, 0, 110, 0.6), 0 0 5px rgba(253, 53, 50, 0.5), 0 0 15px rgba(253, 99, 0, 0.4), 0 0 0 .5px rgba(255, 0, 110, 0.4)',
+                }
+              : undefined
+          }
         >
-          <section className="relative h-[90px] w-full cursor-pointer">
+          <section className="relative h-[80px] w-full cursor-pointer">
             <Image
               src={backgroundImage}
               alt={nextRace.circuit_ref || nextRace.name}
@@ -138,24 +161,27 @@ export default async function PitlanePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
             
+            {/* Action Buttons - Top Right */}
+            <UpcomingRaceBannerActions
+              trackId={nextRace.id}
+              trackSlug={trackSlug}
+              isLive={isLive}
+            />
+            
             <div className="absolute inset-0 flex flex-col justify-between">
-              <div className="px-2 sm:px-10 text-white space-y-0 pt-2">
-                <div className="flex items-center gap-2">
-                  {nextRace.country ? (
-                    <span className="text-xl leading-none">
-                      {getCountryFlag(nextRace.country)}
-                    </span>
-                  ) : null}
-                  <h2 className="font-display tracking-wider text-lg">{nextRace.circuit_ref || nextRace.name}</h2>
-                </div>
-                <p className="text-xs text-gray-300 tracking-wide pl-7">
+              <div className="px-2 sm:px-10 text-white space-y-1 pt-2">
+                {/* Grand Prix Name */}
+                <h2 className="font-display tracking-wider text-lg">
+                  {nextRace.circuit_ref || nextRace.name}
+                </h2>
+                {/* Date - City, Country */}
+                <p className="text-xs text-gray-300 tracking-wide">
                   {dateDisplay}
-                  {nextRace.location ? ` - ${nextRace.location}` : ''}
-                  {nextRace.country ? `, ${nextRace.country}` : ''}
                 </p>
               </div>
+              {/* Countdown - Left aligned */}
               {counterText && (
-                <div className="w-full text-right pb-2 pr-4">
+                <div className="w-full text-left pb-2 pl-2 sm:pl-10">
                   <p className="text-xs text-white/90 tracking-wide">
                     {counterText}
                   </p>
@@ -164,6 +190,7 @@ export default async function PitlanePage() {
             </div>
             </section>
           </Link>
+          
         </div>
       ) : (
         <section className="bg-[#FFFFFF33] h-[80px] text-center shadow-sm flex flex-col items-center justify-center mb-12">
@@ -178,11 +205,12 @@ export default async function PitlanePage() {
         teams={teamsData}
         tracks={tracksData}
         schedule={tracksWithStartDate}
+        supabaseUrl={supabaseUrl}
       />
 
       {/* Beginners guide banner */}
       <section>
-        <sup className="w-full text-left block text-xs text-gray-500 px-4 mb-1">Beginner's Guide</sup>
+        <sup className="w-full text-left block text-sm text-gray-500 px-4 mb-1">BEGINNER'S GUIDE</sup>
         <Link
           href="/beginners-guide"
           className="block relative overflow-hidden text-white shadow-lg hover:opacity-90 transition-opacity cursor-pointer"
@@ -210,31 +238,53 @@ export default async function PitlanePage() {
   )
 }
 
-function getClosestRace(params: { tracks: Array<{ start_date: string | null } & Record<string, any>> }) {
+function getClosestRace(params: { tracks: Array<{ start_date: string | null; race_day_date?: string | null; chat_enabled?: boolean } & Record<string, any>> }) {
   const { tracks } = params
   if (tracks.length === 0) return null
 
   const now = new Date()
   const graceMs = 24 * 60 * 60 * 1000
-  const nowPlusGrace = new Date(now.getTime() + graceMs)
 
-  const eligible = tracks.filter((track) => {
-    if (!track.start_date) return false
-    return new Date(track.start_date) <= nowPlusGrace
+  // First, find live races (within race weekend window)
+  const liveRaces = tracks.filter((track) => {
+    if (!track.start_date || !track.race_day_date) return false
+    if (track.chat_enabled === false) return false
+    
+    const start = new Date(track.start_date)
+    const raceDay = new Date(track.race_day_date)
+    const end = new Date(raceDay.getTime() + graceMs)
+    
+    return now >= start && now <= end
   })
 
-  if (eligible.length > 0) {
-    return eligible.sort((a, b) => {
+  // If we have a live race, return it
+  if (liveRaces.length > 0) {
+    return liveRaces.sort((a, b) => {
       const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
       const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
-      return bTime - aTime
+      return bTime - aTime // Most recent first
     })[0]
   }
 
+  // Otherwise, find the next upcoming race
+  const upcomingRaces = tracks.filter((track) => {
+    if (!track.start_date) return false
+    return new Date(track.start_date) > now
+  })
+
+  if (upcomingRaces.length > 0) {
+    return upcomingRaces.sort((a, b) => {
+      const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
+      const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
+      return aTime - bTime // Earliest first
+    })[0]
+  }
+
+  // Fallback: return the most recent past race
   return tracks.sort((a, b) => {
     const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
     const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
-    return aTime - bTime
+    return bTime - aTime
   })[0]
 }
 
@@ -242,38 +292,45 @@ function slugify(name: string) {
   return name.toLowerCase().trim().replace(/\s+/g, '-')
 }
 
-function getCountryFlag(country?: string | null) {
-  if (!country) return ''
+function getCountryFlagPath(country?: string | null): string | null {
+  if (!country) return null
   const normalized = country.trim().toLowerCase()
-  const flags: Record<string, string> = {
-    australia: '🇦🇺',
-    austria: '🇦🇹',
-    belgium: '🇧🇪',
-    brazil: '🇧🇷',
-    canada: '🇨🇦',
-    china: '🇨🇳',
-    france: '🇫🇷',
-    germany: '🇩🇪',
-    hungary: '🇭🇺',
-    italy: '🇮🇹',
-    japan: '🇯🇵',
-    mexico: '🇲🇽',
-    monaco: '🇲🇨',
-    netherlands: '🇳🇱',
-    qatar: '🇶🇦',
-    saudi: '🇸🇦',
-    'saudi arabia': '🇸🇦',
-    singapore: '🇸🇬',
-    spain: '🇪🇸',
-    uk: '🇬🇧',
-    'united kingdom': '🇬🇧',
-    'united states': '🇺🇸',
-    usa: '🇺🇸',
-    abu_dhabi: '🇦🇪',
-    'abu dhabi': '🇦🇪',
-    uae: '🇦🇪',
-    'united arab emirates': '🇦🇪',
-    azerbaijan: '🇦🇿',
+  
+  // Map country to flag file name
+  const flagMap: Record<string, string> = {
+    australia: 'australia',
+    austria: 'austria',
+    belgium: 'belgium',
+    brazil: 'brazil',
+    canada: 'canada',
+    china: 'china',
+    hungary: 'hungary',
+    italy: 'italy',
+    japan: 'japan',
+    mexico: 'mexico',
+    monaco: 'monaco',
+    netherlands: 'netherlands',
+    qatar: 'qatar',
+    singapore: 'singapore',
+    spain: 'spain',
+    uk: 'uk',
+    'united kingdom': 'uk',
+    'united states': 'usa',
+    usa: 'usa',
+    abu_dhabi: 'uae',
+    'abu dhabi': 'uae',
+    uae: 'uae',
+    united_arab_emirates: 'uae',
+    'united arab emirates': 'uae',
+    bahrain: 'bahrain',
+    azerbaijan: 'azerbaijan',
+    saudi: 'saudi_arabia',
+    saudi_arabia: 'saudi_arabia',
+    'saudi arabia': 'saudi_arabia',
   }
-  return flags[normalized] || ''
+  
+  const flagName = flagMap[normalized]
+  if (!flagName) return null
+  
+  return `/images/flags/${flagName}_flag.svg`
 }

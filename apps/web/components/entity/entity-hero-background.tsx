@@ -15,7 +15,7 @@ export function EntityHeroBackground({ imageUrl, alt }: EntityHeroBackgroundProp
         }}
         aria-label={alt}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/60" />
     </div>
   )
 }

@@ -237,7 +237,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                           <img
                             src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
                             alt={item.name}
-                            className="h-24 w-24 rounded object-cover"
+                            className={`h-24 w-24 rounded ${type === 'team' ? 'object-contain bg-gray-100 p-2' : 'object-cover'}`}
                           />
                         ) : (
                           <div className="flex h-24 w-24 items-center justify-center rounded bg-gray-200">
@@ -297,7 +297,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                             <img
                               src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
                               alt={item.name}
-                              className="h-12 w-12 rounded object-cover"
+                              className={type === 'team' ? 'h-12 w-12 rounded object-contain' : 'h-12 w-12 rounded object-cover'}
                             />
                           ) : (
                             <div className="flex h-12 w-12 items-center justify-center rounded bg-gray-200">

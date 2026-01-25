@@ -97,10 +97,10 @@ export function BottomNavbar() {
   if (loading || !user) return null
 
   const navItems: NavItem[] = [
-    { key: 'feed', label: 'Feed', href: '/feed', iconType: 'svg' },
-    { key: 'pitlane', label: 'Pitlane', href: '/pitlane', iconType: 'svg' },
-    { key: 'create', label: 'Create', action: 'create', icon: PlusCircle, iconType: 'lucide' },
-    { key: 'podiums', label: 'Podiums', href: '/podiums', iconType: 'svg' },
+    { key: 'feed', label: 'feed', href: '/feed', iconType: 'svg' },
+    { key: 'pitlane', label: 'pit lane', href: '/pitlane', iconType: 'svg' },
+    { key: 'create', label: 'create', action: 'create', icon: PlusCircle, iconType: 'lucide' },
+    { key: 'podiums', label: 'podiums', href: '/podiums', iconType: 'svg' },
     {
       key: 'profile',
       label: 'Profile',
@@ -117,7 +117,7 @@ export function BottomNavbar() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1D1D1D] rounded-t-2xl w-[97%] mx-auto">
-      <div className="mx-auto flex max-w-4xl items-center justify-between p-2">
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-2">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
@@ -131,10 +131,10 @@ export function BottomNavbar() {
                   className="mx-auto flex flex-col items-center justify-center rounded-full px-3 py-1 text-sm font-medium transition-colors focus:outline-none"
                   aria-label="Open create menu"
                 >
-                  <span className="flex w-14 items-center justify-center">
-                    <Icon className={`h-8 w-8 transition-colors ${isActive ? 'text-[#EB0E78]' : 'text-[#525252]'}`} strokeWidth={.9} />
+                  <span className="flex w-14  justify-center">
+                    <Icon className={`h-9 w-9 transition-colors ${isActive ? 'text-sunset-gradient' : 'text-[#525252]'}`} strokeWidth={.9} />
                   </span>
-                  <span className={`text-xs transition-colors ${isActive ? 'text-[#EB0E78]' : 'text-[#525252]'}`}>Create</span>
+                  <span className={`text-xs transition-colors ${isActive ? 'text-sunset-gradient' : 'text-[#525252]'}`}>create</span>
                 </button>
                 {isCreateOpen ? (
                   <CreateMenu
@@ -150,7 +150,7 @@ export function BottomNavbar() {
             <Link
               key={item.key}
               href={item.href || '#'}
-              className="flex flex-1 flex-col items-center justify-center rounded-md px-2 py-1 text-xs font-semibold text-gray-700 transition-colors hover:text-[#EB0E78]"
+              className="flex flex-1 flex-col items-center justify-center rounded-md px-2 py-1 text-xs text-gray-700 transition-colors hover:text-[#EB0E78]"
             >
               {item.iconType === 'image' && item.iconPath ? (
                 <Image
@@ -182,11 +182,11 @@ export function BottomNavbar() {
 }
 
 function NavIcon({ type, active }: { type: string; active: boolean }) {
-  const fillColor = active ? '#EB0E78' : '#525252'
+  const fillColor = active ? 'white' : '#525252'
   
   if (type === 'feed') {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none" className="h-6 w-6">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none" className="h-5 w-5">
         <rect x="0.5" y="0.5" width="15" height="15.5237" rx="5" stroke={fillColor} />
         <line x1="4.25" y1="4.40247" x2="11.875" y2="4.40247" stroke={fillColor} />
         <line x1="4.25" y1="8.06665" x2="11.875" y2="8.06665" stroke={fillColor} />
@@ -206,7 +206,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
         viewBox="0 0 453.405 453.405"
         xmlSpace="preserve"
         stroke={fillColor}
-        className="h-6 w-6"
+        className="h-5 w-5"
       >
         <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
         <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" stroke="#CCCCCC" strokeWidth="6.34767"></g>
@@ -226,7 +226,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
   
   if (type === 'podiums') {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" viewBox="0 0 21 20" fill="none" className="h-6 w-6">
+      <svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" viewBox="0 0 21 20" fill="none" className="h-5 w-5">
         <path d="M12.4556 7.75488L12.5679 8.10059H19.3843L14.1636 11.8936L13.8696 12.1074L13.9819 12.4531L15.9761 18.5898L10.7554 14.7969L10.4614 14.584L10.1675 14.7969L4.9458 18.5898L6.94092 12.4531L7.05322 12.1074L6.75928 11.8936L1.53857 8.10059H8.35498L8.46729 7.75488L10.4614 1.61719L12.4556 7.75488Z" stroke={fillColor} />
       </svg>
     )
@@ -234,7 +234,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
   
   if (type === 'profile') {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="19" height="16" viewBox="0 0 19 16" fill="none" className="h-6 w-6">
+      <svg xmlns="http://www.w3.org/2000/svg" width="19" height="16" viewBox="0 0 19 16" fill="none" className="h-5 w-5">
         <circle cx="8.98242" cy="4.5" r="4" stroke={fillColor} />
         <path d="M0.482422 15.5C0.982422 13.6667 3.38242 10 8.98242 10C14.5824 10 17.3158 13.6667 17.9824 15.5" stroke={fillColor} />
       </svg>

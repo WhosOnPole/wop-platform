@@ -71,9 +71,10 @@ interface PitlaneSearchWrapperProps {
   teams: Team[]
   tracks: Track[]
   schedule: ScheduleTrack[]
+  supabaseUrl?: string
 }
 
-export function PitlaneSearchWrapper({ drivers, teams, tracks, schedule }: PitlaneSearchWrapperProps) {
+export function PitlaneSearchWrapper({ drivers, teams, tracks, schedule, supabaseUrl }: PitlaneSearchWrapperProps) {
   return (
     <PitlaneSearchProvider>
       <PitlaneSearchComponent />
@@ -82,6 +83,7 @@ export function PitlaneSearchWrapper({ drivers, teams, tracks, schedule }: Pitla
         teams={teams} 
         tracks={tracks}
         schedule={schedule}
+        supabaseUrl={supabaseUrl}
       />
     </PitlaneSearchProvider>
   )
@@ -97,9 +99,10 @@ interface PitlaneSearchResultsWrapperProps {
   teams: Team[]
   tracks: Track[]
   schedule: ScheduleTrack[]
+  supabaseUrl?: string
 }
 
-function PitlaneSearchResultsWrapper({ drivers, teams, tracks, schedule }: PitlaneSearchResultsWrapperProps) {
+function PitlaneSearchResultsWrapper({ drivers, teams, tracks, schedule, supabaseUrl }: PitlaneSearchResultsWrapperProps) {
   const { searchQuery, setSearchQuery } = usePitlaneSearch()
   
   const handleClose = () => {
@@ -114,6 +117,7 @@ function PitlaneSearchResultsWrapper({ drivers, teams, tracks, schedule }: Pitla
       tracks={tracks}
       schedule={schedule}
       onClose={handleClose}
+      supabaseUrl={supabaseUrl}
     />
   )
 }
@@ -123,9 +127,10 @@ interface PitlaneTabsComponentProps {
   teams: Team[]
   tracks: Track[]
   schedule: ScheduleTrack[]
+  supabaseUrl?: string
 }
 
-function PitlaneTabsComponent({ drivers, teams, tracks, schedule }: PitlaneTabsComponentProps) {
+function PitlaneTabsComponent({ drivers, teams, tracks, schedule, supabaseUrl }: PitlaneTabsComponentProps) {
   const { searchQuery } = usePitlaneSearch()
   return (
     <div className="px-4 mb-10">
@@ -135,6 +140,7 @@ function PitlaneTabsComponent({ drivers, teams, tracks, schedule }: PitlaneTabsC
         tracks={tracks}
         schedule={schedule}
         searchQuery={searchQuery}
+        supabaseUrl={supabaseUrl}
       />
     </div>
   )

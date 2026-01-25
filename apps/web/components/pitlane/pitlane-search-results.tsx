@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { X } from 'lucide-react'
+import { getTeamIconUrl } from '@/utils/storage-urls'
 
 interface Driver {
   id: string
@@ -45,6 +46,7 @@ interface PitlaneSearchResultsProps {
   tracks: Track[]
   schedule: ScheduleTrack[]
   onClose: () => void
+  supabaseUrl?: string
 }
 
 export function PitlaneSearchResults({
@@ -54,6 +56,7 @@ export function PitlaneSearchResults({
   tracks,
   schedule,
   onClose,
+  supabaseUrl,
 }: PitlaneSearchResultsProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
 
@@ -184,6 +187,7 @@ export function PitlaneSearchResults({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredTeams.map((team) => {
                     const slug = team.name.toLowerCase().replace(/\s+/g, '-')
+                    const iconUrl = supabaseUrl ? getTeamIconUrl(team.name, supabaseUrl) : null
                     return (
                       <Link
                         key={team.id}
@@ -191,8 +195,12 @@ export function PitlaneSearchResults({
                         onClick={onClose}
                         className="group flex flex-col"
                       >
-                        <div className="relative w-full aspect-square overflow-hidden bg-gray-100 rounded-lg">
-                          <Avatar src={team.image_url} alt={team.name} fallback={team.name.charAt(0)} />
+                        <div className="relative w-full aspect-square overflow-hidden rounded-lg">
+                          <div 
+                            className="absolute inset-0 bg-cover bg-center"
+                            style={{ backgroundImage: 'url(/images/pit_bg.jpg)' }}
+                          />
+                          <Avatar src={iconUrl} alt={team.name} fallback={team.name.charAt(0)} variant="team" />
                         </div>
                         <div className="mt-2">
                           <p className="text-sm text-white group-hover:text-gray-400 lowercase leading-tight">
@@ -215,7 +223,7 @@ export function PitlaneSearchResults({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredTracks.map((track) => {
                     const slug = track.name.toLowerCase().replace(/\s+/g, '-')
-                    const flag = getCountryFlag(track.country)
+                    const flagPath = getCountryFlagPath(track.country)
                     return (
                       <Link
                         key={track.id}
@@ -223,14 +231,22 @@ export function PitlaneSearchResults({
                         onClick={onClose}
                         className="group flex flex-col"
                       >
-                        <div className="relative w-full aspect-square overflow-hidden bg-gray-100 rounded-lg">
+                        <div className="relative w-full aspect-square overflow-hidden rounded-lg">
+                          <div 
+                            className="absolute inset-0 bg-cover bg-center"
+                            style={{ backgroundImage: 'url(/images/pit_bg.jpg)' }}
+                          />
                           <Avatar src={track.image_url} alt={track.name} fallback={track.name.charAt(0)} />
                         </div>
                         <div className="mt-2 flex items-start gap-2">
-                          {flag ? (
-                            <span className="text-base leading-none bg-white bg-opacity-30 rounded-full p-1 self-start">
-                              {flag}
-                            </span>
+                          {flagPath ? (
+                            <Image
+                              src={flagPath}
+                              alt={track.country || 'Flag'}
+                              width={16}
+                              height={16}
+                              className="object-contain self-start"
+                            />
                           ) : null}
                           <p className="text-sm text-white group-hover:text-gray-400 lowercase leading-tight">
                             {track.name}
@@ -267,13 +283,21 @@ interface AvatarProps {
   src?: string | null
   alt: string
   fallback: string
+  variant?: 'default' | 'team'
 }
 
-function Avatar({ src, alt, fallback }: AvatarProps) {
+function Avatar({ src, alt, fallback, variant = 'default' }: AvatarProps) {
+  const isTeam = variant === 'team'
   return (
-    <div className="relative h-full w-full overflow-hidden bg-gray-100">
+    <div className={`relative h-full w-full overflow-hidden ${isTeam ? 'bg-transparent p-4' : 'bg-gray-100'}`}>
       {src ? (
-        <Image src={src} alt={alt} fill sizes="240px" className="object-cover" />
+        <Image 
+          src={src} 
+          alt={alt} 
+          fill 
+          sizes="240px" 
+          className={isTeam ? 'object-contain brightness-0 invert' : 'object-cover'} 
+        />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-gray-500">
           {fallback}
@@ -351,10 +375,14 @@ function ScheduleCard({ race, onClose }: ScheduleCardProps) {
         <div className="absolute inset-0 flex flex-col justify-between">
           <div className="px-2 sm:px-10 text-white space-y-0 pt-2">
             <div className="flex items-center gap-2">
-              {race.country ? (
-                <span className="text-xl leading-none">
-                  {getCountryFlag(race.country)}
-                </span>
+              {race.country && getCountryFlagPath(race.country) ? (
+                <Image
+                  src={getCountryFlagPath(race.country)!}
+                  alt={race.country}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
               ) : null}
               <h2 className="font-display tracking-wider text-lg">{race.circuit_ref || race.name}</h2>
             </div>
@@ -410,43 +438,45 @@ function getNationalityFlag(nationality?: string | null) {
   return flags[normalized] || ''
 }
 
-function getCountryFlag(country?: string | null) {
-  if (!country) return ''
+function getCountryFlagPath(country?: string | null): string | null {
+  if (!country) return null
   const normalized = country.trim().toLowerCase()
-  const flags: Record<string, string> = {
-    australia: '🇦🇺',
-    austria: '🇦🇹',
-    belgium: '🇧🇪',
-    brazil: '🇧🇷',
-    canada: '🇨🇦',
-    china: '🇨🇳',
-    france: '🇫🇷',
-    germany: '🇩🇪',
-    hungary: '🇭🇺',
-    italy: '🇮🇹',
-    japan: '🇯🇵',
-    mexico: '🇲🇽',
-    monaco: '🇲🇨',
-    netherlands: '🇳🇱',
-    qatar: '🇶🇦',
-    saudi: '🇸🇦',
-    singapore: '🇸🇬',
-    spain: '🇪🇸',
-    uk: '🇬🇧',
-    'united kingdom': '🇬🇧',
-    'united states': '🇺🇸',
-    usa: '🇺🇸',
-    abu_dhabi: '🇦🇪',
-    'abu dhabi': '🇦🇪',
-    uae: '🇦🇪',
-    united_arab_emirates: '🇦🇪',
-    'united arab emirates': '🇦🇪',
-    sweden: '🇸🇪',
-    'swedish': '🇸🇪',
-    bahrain: '🇧🇭',
-    azerbaijan: '🇦🇿',
-    saudi_arabia: '🇸🇦',
-    'saudi arabia': '🇸🇦',
+  
+  // Map country to flag file name
+  const flagMap: Record<string, string> = {
+    australia: 'australia',
+    austria: 'austria',
+    belgium: 'belgium',
+    brazil: 'brazil',
+    canada: 'canada',
+    china: 'china',
+    hungary: 'hungary',
+    italy: 'italy',
+    japan: 'japan',
+    mexico: 'mexico',
+    monaco: 'monaco',
+    netherlands: 'netherlands',
+    qatar: 'qatar',
+    singapore: 'singapore',
+    spain: 'spain',
+    uk: 'uk',
+    'united kingdom': 'uk',
+    'united states': 'usa',
+    usa: 'usa',
+    abu_dhabi: 'uae',
+    'abu dhabi': 'uae',
+    uae: 'uae',
+    united_arab_emirates: 'uae',
+    'united arab emirates': 'uae',
+    bahrain: 'bahrain',
+    azerbaijan: 'azerbaijan',
+    saudi: 'saudi_arabia',
+    saudi_arabia: 'saudi_arabia',
+    'saudi arabia': 'saudi_arabia',
   }
-  return flags[normalized] || ''
+  
+  const flagName = flagMap[normalized]
+  if (!flagName) return null
+  
+  return `/images/flags/${flagName}_flag.svg`
 }

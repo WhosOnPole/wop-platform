@@ -40,25 +40,47 @@ function getClosestRaceFromTracks(params: { tracks: TrackRace[] }) {
 
   const now = new Date()
   const graceMs = 24 * 60 * 60 * 1000
-  const nowPlusGrace = new Date(now.getTime() + graceMs)
 
-  const eligible = tracks.filter((track) => {
-    if (!track.start_date) return false
-    return new Date(track.start_date) <= nowPlusGrace
+  // First, find live races (within race weekend window)
+  const liveRaces = tracks.filter((track) => {
+    if (!track.start_date || !track.race_day_date) return false
+    if (track.chat_enabled === false) return false
+    
+    const start = new Date(track.start_date)
+    const raceDay = new Date(track.race_day_date)
+    const end = new Date(raceDay.getTime() + graceMs)
+    
+    return now >= start && now <= end
   })
 
-  if (eligible.length > 0) {
-    return eligible.sort((a, b) => {
+  // If we have a live race, return it
+  if (liveRaces.length > 0) {
+    return liveRaces.sort((a, b) => {
       const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
       const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
-      return bTime - aTime
+      return bTime - aTime // Most recent first
     })[0]
   }
 
+  // Otherwise, find the next upcoming race
+  const upcomingRaces = tracks.filter((track) => {
+    if (!track.start_date) return false
+    return new Date(track.start_date) > now
+  })
+
+  if (upcomingRaces.length > 0) {
+    return upcomingRaces.sort((a, b) => {
+      const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
+      const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
+      return aTime - bTime // Earliest first
+    })[0]
+  }
+
+  // Fallback: return the most recent past race
   return tracks.sort((a, b) => {
     const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
     const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
-    return aTime - bTime
+    return bTime - aTime
   })[0]
 }
 
@@ -229,7 +251,7 @@ export default async function FeedPage() {
     // Upcoming race (based on tracks.start_date)
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country, start_date, race_day_date, circuit_ref')
+      .select('id, name, image_url, location, country, start_date, race_day_date, circuit_ref, chat_enabled')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     // Active hot take (single) by date range

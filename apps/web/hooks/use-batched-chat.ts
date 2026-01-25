@@ -87,7 +87,18 @@ export function useBatchedChat({
 
     async function connect() {
       try {
-        // Get chat status first
+        // Check authentication first
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session) {
+          console.warn('Not authenticated, skipping realtime connection')
+          setIsConnected(false)
+          return
+        }
+
+        // Get chat status
         const chatStatus = await getChatStatus(trackId, supabase)
         
         if (!mounted) return
@@ -101,10 +112,11 @@ export function useBatchedChat({
         }
 
         // Create private channel
+        // Note: If Realtime Authorization is not enabled, remove private: true
         const topic = `f1:race:${trackId}`
         channel = supabase.channel(topic, {
           config: {
-            private: true, // Required for Realtime Authorization
+            // private: true, // Uncomment when Realtime Authorization is enabled
           },
         })
 
@@ -180,17 +192,21 @@ export function useBatchedChat({
         )
 
         // Subscribe to channel
-        channel.subscribe((status) => {
+        channel.subscribe((status, err) => {
           if (!mounted) return
 
           if (status === 'SUBSCRIBED') {
             setIsConnected(true)
             setError(null)
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             setIsConnected(false)
-            const err = new Error(`Channel ${status}`)
-            setError(err)
-            onError?.(err)
+            const error = err || new Error(`Channel ${status}`)
+            setError(error)
+            console.error('Channel subscription error:', status, err)
+            onError?.(error)
+          } else if (status === 'CLOSED') {
+            setIsConnected(false)
+            console.warn('Channel closed')
           }
         })
 
@@ -232,15 +248,25 @@ export function useBatchedChat({
         })
 
         if (rpcError) {
-          throw new Error(rpcError.message || 'Failed to send message')
+          console.error('RPC error details:', rpcError)
+          throw new Error(rpcError.message || rpcError.details || 'Failed to send message')
         }
 
         // Message will appear via broadcast, but we can optimistically add it
         // if the RPC returns the inserted row
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           const newMessage = data[0] as ChatMessage
           setMessages((prev) => {
             // Avoid duplicates
+            if (prev.some((m) => m.id === newMessage.id)) {
+              return prev
+            }
+            return [...prev, newMessage].sort((a, b) => a.id - b.id)
+          })
+        } else if (data && !Array.isArray(data)) {
+          // Handle case where function returns a single row object
+          const newMessage = data as ChatMessage
+          setMessages((prev) => {
             if (prev.some((m) => m.id === newMessage.id)) {
               return prev
             }

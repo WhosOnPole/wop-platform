@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter, useParams } from 'next/navigation'
 import { GridEditor } from '@/components/grid-editor/grid-editor'
+import { getTeamIconUrl } from '@/utils/storage-urls'
 
 export default function EditGridPage() {
   const supabase = createClientComponentClient()
@@ -51,14 +52,35 @@ export default function EditGridPage() {
       }
 
       if (result.data) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         setAvailableItems(
-          result.data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            image_url: item.image_url,
-            headshot_url: item.headshot_url || null,
-            team_icon_url: item.teams?.image_url || null,
-          }))
+          result.data.map((item: any) => {
+            const baseItem = {
+              id: item.id,
+              name: item.name,
+              image_url: item.image_url,
+              headshot_url: item.headshot_url || null,
+            }
+            
+            if (type === 'team' && supabaseUrl) {
+              // For teams, use icon.svg from storage
+              return {
+                ...baseItem,
+                image_url: getTeamIconUrl(item.name, supabaseUrl),
+              }
+            } else if (type === 'driver' && item.teams && supabaseUrl) {
+              // For drivers, use team icon from storage
+              return {
+                ...baseItem,
+                team_icon_url: getTeamIconUrl(item.teams.name, supabaseUrl),
+              }
+            }
+            
+            return {
+              ...baseItem,
+              team_icon_url: item.teams?.image_url || null,
+            }
+          })
         )
       }
     } catch (error) {

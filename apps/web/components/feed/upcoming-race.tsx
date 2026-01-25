@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { MessageSquare } from 'lucide-react'
 
 interface Race {
   id: string
@@ -11,6 +12,7 @@ interface Race {
   country: string | null
   image_url: string | null
   circuit_ref: string | null
+  chat_enabled?: boolean
 }
 
 interface UpcomingRaceProps {
@@ -25,6 +27,18 @@ export function UpcomingRace({ race }: UpcomingRaceProps) {
   const timeUntilRace = raceTime.getTime() - now.getTime()
   const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
   const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+
+  // Check if race is live (within race weekend window)
+  const isLive = (() => {
+    if (!race.start_date || !race.race_day_date) return false
+    if (race.chat_enabled === false) return false
+    
+    const start = new Date(race.start_date)
+    const raceDay = new Date(race.race_day_date)
+    const end = new Date(raceDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
+    
+    return now >= start && now <= end
+  })()
 
   // Format dates in short format
   const formatShortDate = (dateString: string | null) => {
@@ -57,16 +71,16 @@ export function UpcomingRace({ race }: UpcomingRaceProps) {
 
   const backgroundImage = race.image_url || '/images/race_banner.png'
   const trackSlug = race.slug
-  const bannerHref = `/tracks/${trackSlug}`
+  // When live, link to race page (which shows chat). Otherwise link to track page.
+  const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
 
   return (
-    <div className="overflow-hidden rounded-lg">
+    <div className="overflow-hidden rounded-lg relative" style={{
+      boxShadow: '0 0 15px rgba(255, 0, 110, 0.6), 0 0 25px rgba(253, 53, 50, 0.5), 0 0 35px rgba(253, 99, 0, 0.4), 0 0 0 2px rgba(255, 0, 110, 0.4)',
+    }}>
       <Link
         href={bannerHref}
         className="block hover:opacity-90 transition-opacity"
-        style={{
-          boxShadow: '0 0 15px rgba(255, 0, 110, 0.6), 0 0 25px rgba(253, 53, 50, 0.5), 0 0 35px rgba(253, 99, 0, 0.4), 0 0 0 2px rgba(255, 0, 110, 0.4)',
-        }}
       >
         <section className="relative w-full cursor-pointer" style={{ minHeight: '140px' }}>
           <Image
@@ -95,6 +109,17 @@ export function UpcomingRace({ race }: UpcomingRaceProps) {
           </div>
         </section>
       </Link>
+      
+      {/* Live Chat Banner - Outside the main link to avoid nesting */}
+      {isLive && (
+        <Link
+          href={`/race/${trackSlug}`}
+          className="absolute bottom-4 right-4 flex items-center space-x-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 transition-colors z-10"
+        >
+          <MessageSquare className="h-4 w-4" />
+          <span>Join the live chat!</span>
+        </Link>
+      )}
     </div>
   )
 }

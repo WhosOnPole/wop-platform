@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Grid, Edit2 } from 'lucide-react'
 import { GridHeartButton } from './grid-heart-button'
+import { getTeamIconUrl } from '@/utils/storage-urls'
 
 interface GridItem {
   id: string
@@ -74,19 +75,32 @@ export function UserGridsSection({
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-sm font-bold text-white">
                 {index + 1}
               </div>
-              {item.image_url || item.headshot_url ? (
-                <img
-                  src={type === 'driver' ? item.headshot_url || item.image_url : item.image_url}
-                  alt={item.name}
-                  className="h-10 w-10 rounded object-cover"
-                />
-              ) : (
+              {(() => {
+                let imageSrc: string | null = null
+                if (type === 'driver') {
+                  imageSrc = item.headshot_url || item.image_url || null
+                } else if (type === 'team') {
+                  // For teams, use storage URL if available
+                  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+                  imageSrc = supabaseUrl && item.name ? getTeamIconUrl(item.name, supabaseUrl) : item.image_url || null
+                } else {
+                  imageSrc = item.image_url || null
+                }
+                
+                return imageSrc ? (
+                  <img
+                    src={imageSrc}
+                    alt={item.name}
+                    className={`h-10 w-10 rounded ${type === 'team' ? 'object-contain' : 'object-cover'}`}
+                  />
+                ) : (
                 <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-200">
                   <span className="text-xs font-medium text-gray-600">
                     {item.name?.charAt(0) || '?'}
                   </span>
                 </div>
-              )}
+              )
+              })()}
               <span className="flex-1 font-medium text-gray-900">{item.name || 'Unknown'}</span>
             </div>
           ))}

@@ -208,7 +208,7 @@ export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedPr
               placeholder={isReadOnly ? 'Chat is read-only' : 'Type a message...'}
               maxLength={500}
               disabled={isReadOnly || isSubmitting}
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-[#838383] focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               required={!isReadOnly}
             />
             <button

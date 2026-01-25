@@ -11,6 +11,7 @@ import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { getRecentInstagramMedia } from '@/services/instagram'
 import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
+import { getTeamLogoUrl, getTeamIconUrl } from '@/utils/storage-urls'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
@@ -229,7 +230,7 @@ export default async function DynamicPage({ params }: PageProps) {
     type === 'drivers'
       ? entity.headshot_url || entity.image_url
       : type === 'teams'
-      ? entity.image_url
+      ? (supabaseUrl ? getTeamLogoUrl(entity.name, supabaseUrl) : entity.image_url)
       : entity.image_url
 
   // Determine entity type for components
@@ -309,19 +310,20 @@ export default async function DynamicPage({ params }: PageProps) {
         <EntityHeroBackground imageUrl={backgroundImage} alt={entity.name} />
         
         {/* Content over background */}
-        <div className="relative z-10 h-full">
-          {/* Entity Header */}
-          <EntityHeader
-            type={entityType}
-            entity={entity}
-            drivers={type === 'teams' ? relatedData : undefined}
-          />
-
+        <div className="relative z-10 h-full flex flex-col">
           {/* Overview (Tracks only) */}
           {type === 'tracks' && <EntityOverview overviewText={entity.overview_text} />}
 
           {/* Image Gallery */}
           <EntityImageGallery images={galleryImages} />
+
+          {/* Entity Header - Positioned at bottom */}
+          <EntityHeader
+            type={entityType}
+            entity={entity}
+            drivers={type === 'teams' ? relatedData : undefined}
+            supabaseUrl={supabaseUrl}
+          />
         </div>
       </div>
 
@@ -329,7 +331,7 @@ export default async function DynamicPage({ params }: PageProps) {
       <div className="h-[55vh]" />
 
       {/* Tabs Section - Slides up over fixed top section */}
-      <div className="relative z-20 bg-[#111111] min-h-[30vh]">
+      <div className="relative z-20 bg-[#000000] min-h-[30vh]">
         <div className="mx-auto max-w-7xl px-6">
           <EntityTabs tabs={tabs} />
         </div>
