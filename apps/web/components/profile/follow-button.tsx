@@ -63,7 +63,7 @@ export function FollowButton({ targetUserId, isInitiallyFollowing }: FollowButto
       className={`flex items-center space-x-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
         isFollowing
           ? 'border border-white/50 bg-transparent text-white hover:bg-white/10'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
+          : 'bg-transparent border border-white/50 text-white hover:bg-white hover:text-black'
       }`}
     >
       {isFollowing ? (

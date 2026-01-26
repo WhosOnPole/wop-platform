@@ -21,7 +21,7 @@ export function EntityTabs({ tabs, defaultTab }: EntityTabsProps) {
   const activeTabContent = tabs.find((tab) => tab.id === activeTab)?.content
 
   return (
-    <div className="relative z-10 pt-8">
+    <div className="sticky top-[10vh] z-30 bg-black pt-8">
       <div className="flex items-center justify-between w-full rounded-full overflow-hidden mb-6">
         <div className="flex w-full capitalize">
           {tabs.map((tab, index) => (

@@ -32,9 +32,9 @@ export function StoryModal({ onClose }: StoryModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-2xl bg-[#1D1D1D] p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Submit a story</h2>
+          <h2 className="text-lg font-semibold text-white">Submit a story</h2>
           <button onClick={onClose} className="text-sm text-gray-500 hover:text-gray-800">
             Close
           </button>
@@ -42,7 +42,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
+            <label className="block text-sm font-medium text-white">Title</label>
             <input
               required
               value={title}
@@ -53,7 +53,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Summary</label>
+            <label className="block text-sm font-medium text-white">Summary</label>
             <input
               required
               value={summary}
@@ -64,7 +64,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Body</label>
+            <label className="block text-sm font-medium text-white">Body</label>
             <textarea
               required
               value={body}
@@ -76,12 +76,12 @@ export function StoryModal({ onClose }: StoryModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Image (optional)</label>
+            <label className="block text-sm font-medium text-white">Image (optional)</label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setImage(e.target.files?.[0] || null)}
-              className="mt-1 w-full text-sm text-gray-700"
+              className="mt-1 w-full text-sm text-white"
             />
           </div>
 

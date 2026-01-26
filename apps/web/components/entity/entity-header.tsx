@@ -40,6 +40,7 @@ interface EntityHeaderProps {
   entity: TrackEntity | TeamEntity | DriverEntity
   drivers?: Driver[]
   supabaseUrl?: string
+  scrollProgress?: number
 }
 
 function getCountryFlagPath(country?: string | null): string | null {
@@ -141,7 +142,11 @@ function slugify(name: string) {
   return name.toLowerCase().trim().replace(/\s+/g, '-')
 }
 
-export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: EntityHeaderProps) {
+export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollProgress = 0 }: EntityHeaderProps) {
+  // Calculate scroll transform - content scrolls up limitedly
+  const maxScroll = 416 // Maximum scroll distance in pixels
+  const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
+
   if (type === 'track') {
     const track = entity as TrackEntity
     const flagPath = getCountryFlagPath(track.country)
@@ -151,6 +156,12 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: Entity
 
     return (
       <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
+        <div
+          style={{
+            transform: `translateY(-${scrollOffset}px)`,
+            transition: 'transform 0.3s ease',
+          }}
+        >
         <div className="flex items-center gap-3 mb-4">
           {flagPath && (
             <Image
@@ -184,6 +195,7 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: Entity
             </div>
           )}
         </div>
+        </div>
       </div>
     )
   }
@@ -193,6 +205,12 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: Entity
 
     return (
       <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
+        <div
+          style={{
+            transform: `translateY(-${scrollOffset}px)`,
+            transition: 'transform 0.3s ease',
+          }}
+        >
         <h1 className="mb-6 text-3xl font-display tracking-wider md:text-6xl">
           {team.name}
         </h1>
@@ -230,6 +248,7 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: Entity
             })}
           </div>
         )}
+        </div>
       </div>
     )
   }
@@ -241,6 +260,12 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: Entity
 
   return (
     <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
+      <div
+        style={{
+          transform: `translateY(-${scrollOffset}px)`,
+          transition: 'transform 0.3s ease',
+        }}
+      >
       <h1 className="mb-4 text-3xl font-display tracking-wider md:text-6xl">
         {driver.name}
       </h1>
@@ -296,6 +321,7 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: Entity
             </Link>
           </div>
         )} */}
+      </div>
       </div>
     </div>
   )

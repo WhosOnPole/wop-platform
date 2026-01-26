@@ -13,40 +13,56 @@ interface TeamDriversTabProps {
   drivers: Driver[]
 }
 
-function getNationalityFlag(nationality?: string | null) {
-  if (!nationality) return ''
+function getNationalityFlagPath(nationality?: string | null): string | null {
+  if (!nationality) return null
   const normalized = nationality.trim().toLowerCase()
-  const flags: Record<string, string> = {
-    british: '🇬🇧',
-    english: '🇬🇧',
-    scottish: '🏴',
-    welsh: '🏴',
-    dutch: '🇳🇱',
-    spanish: '🇪🇸',
-    mexican: '🇲🇽',
-    monégasque: '🇲🇨',
-    monegasque: '🇲🇨',
-    finnish: '🇫🇮',
-    australian: '🇦🇺',
-    canadian: '🇨🇦',
-    japanese: '🇯🇵',
-    chinese: '🇨🇳',
-    german: '🇩🇪',
-    french: '🇫🇷',
-    italian: '🇮🇹',
-    american: '🇺🇸',
-    argentine: '🇦🇷',
-    brazilian: '🇧🇷',
-    thai: '🇹🇭',
-    danish: '🇩🇰',
-    belgian: '🇧🇪',
-    swiss: '🇨🇭',
-    new_zealander: '🇳🇿',
-    'new zealander': '🇳🇿',
-    'south african': '🇿🇦',
-    swedish: '🇸🇪',
+  
+  // Map nationality to flag file name
+  const flagMap: Record<string, string> = {
+    british: 'uk',
+    english: 'uk',
+    scottish: 'uk',
+    welsh: 'uk',
+    dutch: 'netherlands',
+    spanish: 'spain',
+    mexican: 'mexico',
+    monégasque: 'monaco',
+    monegasque: 'monaco',
+    finnish: 'uk', // No Finnish flag, fallback to UK
+    australian: 'australia',
+    canadian: 'canada',
+    japanese: 'japan',
+    chinese: 'china',
+    german: 'uk', // No German flag, fallback to UK
+    french: 'uk', // No French flag, fallback to UK
+    italian: 'italy',
+    american: 'usa',
+    argentine: 'uk', // No Argentine flag, fallback to UK
+    brazilian: 'brazil',
+    thai: 'uk', // No Thai flag, fallback to UK
+    danish: 'uk', // No Danish flag, fallback to UK
+    belgian: 'belgium',
+    swiss: 'uk', // No Swiss flag, fallback to UK
+    new_zealander: 'uk', // No NZ flag, fallback to UK
+    'new zealander': 'uk',
+    'south african': 'uk', // No SA flag, fallback to UK
+    swedish: 'uk', // No Swedish flag, fallback to UK
+    austrian: 'austria',
+    hungarian: 'hungary',
+    qatari: 'qatar',
+    emirati: 'uae',
+    'united arab emirates': 'uae',
+    azerbaijani: 'azerbaijan',
+    bahraini: 'bahrain',
+    singaporean: 'singapore',
+    saudi: 'saudi_arabia',
+    'saudi arabian': 'saudi_arabia',
   }
-  return flags[normalized] || ''
+  
+  const flagName = flagMap[normalized]
+  if (!flagName) return null
+  
+  return `/images/flags/${flagName}_flag.svg`
 }
 
 function slugify(name: string) {
@@ -67,7 +83,7 @@ export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
       {drivers.map((driver) => {
         const slug = slugify(driver.name)
         const imageSrc = driver.headshot_url || driver.image_url
-        const flag = getNationalityFlag(driver.nationality)
+        const flagPath = getNationalityFlagPath(driver.nationality)
 
         return (
           <Link
@@ -91,10 +107,16 @@ export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
               )}
             </div>
             <div className="mt-2 flex items-start gap-2">
-              {flag && (
-                <span className="text-base leading-none bg-white/20 rounded-full p-1 self-start">
-                  {flag}
-                </span>
+              {flagPath && (
+                <div className="relative h-5 w-5 flex-shrink-0 self-start">
+                  <Image
+                    src={flagPath}
+                    alt={driver.nationality || 'Flag'}
+                    fill
+                    sizes="20px"
+                    className="object-contain"
+                  />
+                </div>
               )}
               <p className="text-sm text-white/90 group-hover:text-white lowercase leading-tight">
                 {driver.name}

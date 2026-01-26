@@ -118,6 +118,22 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   if (posts) {
     for (const post of posts) {
+      // Fetch target name based on type
+      let targetName = null
+      if (post.parent_page_type === 'driver' && post.parent_page_id) {
+        const { data } = await supabase.from('drivers').select('name').eq('id', post.parent_page_id).single()
+        targetName = data?.name
+      } else if (post.parent_page_type === 'team' && post.parent_page_id) {
+        const { data } = await supabase.from('teams').select('name').eq('id', post.parent_page_id).single()
+        targetName = data?.name
+      } else if (post.parent_page_type === 'track' && post.parent_page_id) {
+        const { data } = await supabase.from('tracks').select('name').eq('id', post.parent_page_id).single()
+        targetName = data?.name
+      } else if (post.parent_page_type === 'profile' && post.parent_page_id) {
+        const { data } = await supabase.from('profiles').select('username').eq('id', post.parent_page_id).single()
+        targetName = data?.username
+      }
+
       activities.push({
         id: post.id,
         type: 'post',
@@ -125,6 +141,7 @@ export default async function UserProfilePage({ params }: PageProps) {
         created_at: post.created_at,
         target_id: post.parent_page_id,
         target_type: post.parent_page_type,
+        target_name: targetName,
       })
     }
   }
@@ -138,13 +155,34 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   if (comments) {
     for (const comment of comments) {
+      const post = comment.post as any
+      const parentPageType = post?.parent_page_type
+      const parentPageId = post?.parent_page_id
+
+      // Fetch target name based on type
+      let targetName = null
+      if (parentPageType === 'driver' && parentPageId) {
+        const { data } = await supabase.from('drivers').select('name').eq('id', parentPageId).single()
+        targetName = data?.name
+      } else if (parentPageType === 'team' && parentPageId) {
+        const { data } = await supabase.from('teams').select('name').eq('id', parentPageId).single()
+        targetName = data?.name
+      } else if (parentPageType === 'track' && parentPageId) {
+        const { data } = await supabase.from('tracks').select('name').eq('id', parentPageId).single()
+        targetName = data?.name
+      } else if (parentPageType === 'profile' && parentPageId) {
+        const { data } = await supabase.from('profiles').select('username').eq('id', parentPageId).single()
+        targetName = data?.username
+      }
+
       activities.push({
         id: comment.id,
         type: 'comment',
         content: comment.content,
         created_at: comment.created_at,
-        target_id: (comment.post as any)?.parent_page_id,
-        target_type: (comment.post as any)?.parent_page_type,
+        target_id: parentPageId,
+        target_type: parentPageType,
+        target_name: targetName,
       })
     }
   }
@@ -254,12 +292,13 @@ export default async function UserProfilePage({ params }: PageProps) {
           } else if (grid.type === 'track') {
             const { data: track } = await supabase
               .from('tracks')
-              .select('id, name, image_url')
+              .select('id, name, image_url, country')
               .eq('id', item.id)
               .maybeSingle()
             return {
               ...item,
               image_url: track?.image_url || null,
+              country: track?.country || null,
             }
           } else if (grid.type === 'team') {
             // Teams already have name, and we'll use getTeamIconUrl in the component
@@ -282,7 +321,7 @@ export default async function UserProfilePage({ params }: PageProps) {
   const teamGrid = enrichedGrids.find((g) => g.type === 'team')
 
   return (
-    <div className="min-h-screen bg-gray-50 -mt-14">
+    <div className="min-h-screen bg-black -mt-14">
       {/* Hero Section - Fixed background, 60vh height */}
       <div className="fixed top-0 left-0 right-0 h-[60vh] z-0">
         <ProfileHeroSectionWrapper

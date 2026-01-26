@@ -83,10 +83,11 @@ export function ProfileHeroSection({
             {profile.age && showLocation && (
               <>
                 <span>{profile.age}</span>
-                <span>•</span>
+                <span>
+                  •</span>
               </>
             )}
-            {profile.age && !showLocation && <span>{profile.age}</span>}
+            {profile.age && !showLocation && <span>{profile.age} •</span>}
             {locationText && <span>{locationText}</span>}
           </div>
 

@@ -136,7 +136,7 @@ export function ProfilePhotoUpload({
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploading}
-        className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+        className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-sunset-gradient border border-white/50 hover:shadow-lg hover:bg-sunset-gradient hover:border-0 transition-all disabled:opacity-50"
         aria-label="Edit profile photo"
       >
         {isUploading ? (

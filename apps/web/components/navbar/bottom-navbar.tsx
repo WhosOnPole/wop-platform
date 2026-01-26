@@ -134,7 +134,7 @@ export function BottomNavbar() {
                   <span className="flex w-14  justify-center">
                     <Icon className={`h-9 w-9 transition-colors ${isActive ? 'text-sunset-gradient' : 'text-[#525252]'}`} strokeWidth={.9} />
                   </span>
-                  <span className={`text-xs transition-colors ${isActive ? 'text-sunset-gradient' : 'text-[#525252]'}`}>create</span>
+                  <span className={`text-xs transition-colors ${isActive ? 'text-white' : 'text-[#525252]'}`}>create</span>
                 </button>
                 {isCreateOpen ? (
                   <CreateMenu

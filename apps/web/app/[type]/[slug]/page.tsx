@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import { EntityHeroBackground } from '@/components/entity/entity-hero-background'
-import { EntityHeader } from '@/components/entity/entity-header'
+import { EntityHeaderWrapper } from '@/components/entity/entity-header-wrapper'
 import { EntityOverview } from '@/components/entity/entity-overview'
 import { EntityImageGallery } from '@/components/entity/entity-image-gallery'
 import { EntityTabs } from '@/components/entity/entity-tabs'
@@ -320,7 +320,7 @@ export default async function DynamicPage({ params }: PageProps) {
           <EntityImageGallery images={galleryImages} />
 
           {/* Entity Header - Positioned at bottom */}
-          <EntityHeader
+          <EntityHeaderWrapper
             type={entityType}
             entity={entity}
             drivers={type === 'teams' ? relatedData : undefined}

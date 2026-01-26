@@ -67,7 +67,7 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
           Start creating grids to see more content here!
         </p>
         <Link
-          href="/drivers"
+          href="/pitlane"
           className="mt-4 inline-block text-blue-600 hover:text-blue-800"
         >
           Explore Drivers, Teams & Tracks →
