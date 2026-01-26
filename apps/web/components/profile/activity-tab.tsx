@@ -1,0 +1,128 @@
+import Link from 'next/link'
+import Image from 'next/image'
+import { MessageSquare, Heart, MapPin, Grid3x3 } from 'lucide-react'
+
+interface ActivityItem {
+  id: string
+  type: 'post' | 'comment' | 'checkin' | 'like' | 'grid_update'
+  content?: string
+  created_at: string
+  target_id?: string
+  target_type?: string
+  target_name?: string
+  user?: {
+    id: string
+    username: string
+    profile_image_url: string | null
+  } | null
+}
+
+interface ActivityTabProps {
+  activities: ActivityItem[]
+  profileUsername: string
+}
+
+export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
+  function getActivityIcon(item: ActivityItem) {
+    switch (item.type) {
+      case 'post':
+      case 'comment':
+        return <MessageSquare className="h-4 w-4 text-blue-500" />
+      case 'like':
+        return <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+      case 'checkin':
+        // TODO: Implement check-in system to track user check-ins on race starts (not race day start, the race's general start) on track pages when button is enabled
+        return <MapPin className="h-4 w-4 text-green-500" />
+      case 'grid_update':
+        return <Grid3x3 className="h-4 w-4 text-purple-500" />
+      default:
+        return null
+    }
+  }
+
+  function getActivityLabel(item: ActivityItem) {
+    switch (item.type) {
+      case 'post':
+        return 'Posted'
+      case 'comment':
+        return 'Commented'
+      case 'like':
+        return 'Liked'
+      case 'checkin':
+        return 'Checked in at'
+      case 'grid_update':
+        return 'Updated grid'
+      default:
+        return 'Activity'
+    }
+  }
+
+  function getActivityLink(item: ActivityItem): string | null {
+    if (item.target_id && item.target_type) {
+      const slug = item.target_name?.toLowerCase().replace(/\s+/g, '-') || ''
+      if (item.target_type === 'driver') return `/drivers/${slug}`
+      if (item.target_type === 'team') return `/teams/${slug}`
+      if (item.target_type === 'track') return `/tracks/${slug}`
+      if (item.target_type === 'profile') return `/u/${slug}`
+    }
+    return null
+  }
+
+  if (activities.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-500">No activity yet</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {activities.map((item) => {
+        const link = getActivityLink(item)
+        const ActivityContent = link ? Link : 'div'
+        const activityProps = link ? { href: link } : {}
+
+        return (
+          <ActivityContent
+            key={item.id}
+            {...activityProps}
+            className={`flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-4 ${
+              link ? 'hover:shadow-md transition-shadow cursor-pointer' : ''
+            }`}
+          >
+            {/* Icon */}
+            <div className="flex-shrink-0">{getActivityIcon(item)}</div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium text-gray-900">{getActivityLabel(item)}</span>
+                {item.target_name && (
+                  <span className="text-gray-600">
+                    {item.target_type === 'profile' ? '@' : ''}
+                    {item.target_name}
+                  </span>
+                )}
+              </div>
+
+              {item.content && (
+                <p className="mt-1 text-sm text-gray-700 line-clamp-2">{item.content}</p>
+              )}
+
+              {item.type === 'grid_update' && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Updated their {item.target_type} grid
+                </p>
+              )}
+
+              <p className="mt-2 text-xs text-gray-500">
+                {new Date(item.created_at).toLocaleString()}
+              </p>
+            </div>
+          </ActivityContent>
+        )
+      })}
+    </div>
+  )
+}

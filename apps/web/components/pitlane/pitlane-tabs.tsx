@@ -86,7 +86,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
 
   return (
     <section>
-      <sup className="w-full text-left block text-sm text-[#838383] ">Explore the sport and voice your opinion</sup>
+      <sup className="w-full text-left block text-xs text-[#838383] ">Explore the sport and voice your opinion</sup>
       <div className="flex items-center justify-between w-full rounded-full overflow-hidden">
         <div className="flex w-full">
           <TabButton
@@ -226,7 +226,7 @@ function TabButton({ label, icon, active, onClick, showDivider = false }: TabBut
   return (
     <button
       onClick={onClick}
-      className={`relative px-4 py-2.5 text-sm tracking-wide transition w-1/4 uppercase bg-white hover:text-white flex items-center justify-center ${
+      className={`relative px-4 py-2.5 text-xs tracking-wide transition w-1/4 uppercase bg-white hover:text-white flex items-center justify-center ${
         active ? 'text-white bg-opacity-30' : ' text-[#FFFFFF50] bg-opacity-[19%]'
       }`}
     >

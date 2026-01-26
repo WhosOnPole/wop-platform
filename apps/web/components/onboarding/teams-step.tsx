@@ -53,8 +53,8 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
   }
 
   function handleAddToRanked(item: GridItem) {
-    if (rankedList.length >= 5) {
-      alert('Maximum 5 teams allowed')
+    if (rankedList.length >= 10) {
+      alert('Maximum 10 teams allowed')
       return
     }
     const newAvailableList = availableList.filter((i) => i.id !== item.id)
@@ -149,7 +149,7 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Select Your Top 5 Teams</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Select Your Top 10 Teams</h2>
         <p className="mt-1 text-sm text-gray-600">Click teams to add them to your ranking</p>
       </div>
 

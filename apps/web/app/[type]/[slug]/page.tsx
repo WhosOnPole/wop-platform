@@ -231,6 +231,8 @@ export default async function DynamicPage({ params }: PageProps) {
       ? entity.headshot_url || entity.image_url
       : type === 'teams'
       ? (supabaseUrl ? getTeamLogoUrl(entity.name, supabaseUrl) : entity.image_url)
+      : type === 'tracks'
+      ? '/images/grid_bg.png'
       : entity.image_url
 
   // Determine entity type for components

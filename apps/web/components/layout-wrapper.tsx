@@ -56,7 +56,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     <>
       <FullscreenHandler autoRequest={true} />
       <TopNav />
-      <main className={`min-h-screen ${isAuthenticated ? 'pb-20' : ''}`}>
+      <main className={`min-h-screen ${isAuthenticated ? 'pb-20' : ''} pt-14`}>
         {children}
       </main>
       {showFooter ? <Footer /> : null}

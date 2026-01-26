@@ -42,41 +42,47 @@ interface EntityHeaderProps {
   supabaseUrl?: string
 }
 
-function getCountryFlag(country?: string | null) {
-  if (!country) return ''
+function getCountryFlagPath(country?: string | null): string | null {
+  if (!country) return null
   const normalized = country.trim().toLowerCase()
-  const flags: Record<string, string> = {
-    australia: '🇦🇺',
-    austria: '🇦🇹',
-    belgium: '🇧🇪',
-    brazil: '🇧🇷',
-    canada: '🇨🇦',
-    china: '🇨🇳',
-    france: '🇫🇷',
-    germany: '🇩🇪',
-    hungary: '🇭🇺',
-    italy: '🇮🇹',
-    japan: '🇯🇵',
-    mexico: '🇲🇽',
-    monaco: '🇲🇨',
-    netherlands: '🇳🇱',
-    qatar: '🇶🇦',
-    saudi: '🇸🇦',
-    'saudi arabia': '🇸🇦',
-    singapore: '🇸🇬',
-    spain: '🇪🇸',
-    uk: '🇬🇧',
-    'united kingdom': '🇬🇧',
-    'united states': '🇺🇸',
-    usa: '🇺🇸',
-    abu_dhabi: '🇦🇪',
-    'abu dhabi': '🇦🇪',
-    uae: '🇦🇪',
-    'united arab emirates': '🇦🇪',
-    azerbaijan: '🇦🇿',
-    bahrain: '🇧🇭',
+  
+  // Map country to flag file name
+  const flagMap: Record<string, string> = {
+    australia: 'australia',
+    austria: 'austria',
+    belgium: 'belgium',
+    brazil: 'brazil',
+    canada: 'canada',
+    china: 'china',
+    hungary: 'hungary',
+    italy: 'italy',
+    japan: 'japan',
+    mexico: 'mexico',
+    monaco: 'monaco',
+    netherlands: 'netherlands',
+    qatar: 'qatar',
+    singapore: 'singapore',
+    spain: 'spain',
+    uk: 'uk',
+    'united kingdom': 'uk',
+    'united states': 'usa',
+    usa: 'usa',
+    abu_dhabi: 'uae',
+    'abu dhabi': 'uae',
+    uae: 'uae',
+    united_arab_emirates: 'uae',
+    'united arab emirates': 'uae',
+    bahrain: 'bahrain',
+    azerbaijan: 'azerbaijan',
+    saudi: 'saudi_arabia',
+    saudi_arabia: 'saudi_arabia',
+    'saudi arabia': 'saudi_arabia',
   }
-  return flags[normalized] || ''
+  
+  const flagName = flagMap[normalized]
+  if (!flagName) return null
+  
+  return `/images/flags/${flagName}_flag.svg`
 }
 
 function getNationalityFlagPath(nationality?: string | null): string | null {
@@ -138,19 +144,29 @@ function slugify(name: string) {
 export function EntityHeader({ type, entity, drivers = [], supabaseUrl }: EntityHeaderProps) {
   if (type === 'track') {
     const track = entity as TrackEntity
-    const flag = getCountryFlag(track.country)
+    const flagPath = getCountryFlagPath(track.country)
     const yearEstablished = track.built_date
       ? new Date(track.built_date).getFullYear()
       : null
 
     return (
       <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
-        <h1 className="mb-4 text-3xl font-display tracking-wider md:text-6xl">
-          {track.name}
-        </h1>
+        <div className="flex items-center gap-3 mb-4">
+          {flagPath && (
+            <Image
+              src={flagPath}
+              alt={track.country || 'Flag'}
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          )}
+          <h1 className="text-3xl font-display tracking-wider md:text-6xl">
+            {track.name}
+          </h1>
+        </div>
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-lg">
-            {flag && <span className="text-2xl">{flag}</span>}
             <span>
               {track.location || ''}
               {track.location && track.country ? ', ' : ''}

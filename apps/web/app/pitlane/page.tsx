@@ -137,7 +137,7 @@ export default async function PitlanePage() {
         {/* Upcoming race banner */}
       {nextRace ? (
         <div className="mb-5 relative mx-4 sm:mx-6 lg:mx-8">
-          <sup className="w-full text-left block text-sm text-[#838383]">Upcoming</sup>
+          <sup className="w-full text-left block text-xs text-[#838383]">Upcoming</sup>
         <Link
           href={bannerHref}
           className="block overflow-hidden hover:opacity-90"
@@ -169,24 +169,33 @@ export default async function PitlanePage() {
             />
             
             <div className="absolute inset-0 flex flex-col justify-between">
-              <div className="px-2 sm:px-10 text-white space-y-1 pt-2">
-                {/* Grand Prix Name */}
-                <h2 className="font-display tracking-wider text-lg">
-                  {nextRace.circuit_ref || nextRace.name}
-                </h2>
-                {/* Date - City, Country */}
-                <p className="text-xs text-gray-300 tracking-wide">
+              <div className="px-2 sm:px-10 text-white pt-2">
+                {/* Grand Prix Name with Flag - Same line */}
+                <div className="flex items-center gap-2">
+                  {nextRace.country && getCountryFlagPath(nextRace.country) ? (
+                    <Image
+                      src={getCountryFlagPath(nextRace.country)!}
+                      alt={nextRace.country}
+                      width={20}
+                      height={20}
+                      className="object-contain"
+                    />
+                  ) : null}
+                  <h2 className="font-display tracking-wider text-lg">
+                    {nextRace.circuit_ref || nextRace.name}
+                  </h2>
+                </div>
+                {/* Date - City, Country - Below name, aligned with name start */}
+                <p className="text-[10px] text-gray-300 tracking-wide pl-7">
                   {dateDisplay}
                 </p>
-              </div>
-              {/* Countdown - Left aligned */}
-              {counterText && (
-                <div className="w-full text-left pb-2 pl-2 sm:pl-10">
-                  <p className="text-xs text-white/90 tracking-wide">
+                {counterText && (
+                  <p className="text-[10px] text-white/90 tracking-wide pl-7">
                     {counterText}
                   </p>
-                </div>
-              )}
+                )}
+              </div>
+              
             </div>
             </section>
           </Link>

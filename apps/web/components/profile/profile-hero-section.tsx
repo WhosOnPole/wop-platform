@@ -1,0 +1,107 @@
+import { ProfilePhotoUpload } from './profile-photo-upload'
+import { FollowButton } from './follow-button'
+import { getTeamBackgroundGradient } from '@/utils/team-colors'
+
+interface ProfileHeroSectionProps {
+  profile: {
+    id: string
+    username: string
+    profile_image_url: string | null
+    city?: string | null
+    state?: string | null
+    age?: number | null
+    show_state_on_profile?: boolean | null
+  }
+  isOwnProfile: boolean
+  teamBackground?: string | null // Team name for background gradient
+  scrollProgress?: number // 0 to 1, for fade animations
+  isFollowing?: boolean
+  currentUserId?: string | null
+}
+
+export function ProfileHeroSection({
+  profile,
+  isOwnProfile,
+  teamBackground,
+  scrollProgress = 0,
+  isFollowing = false,
+  currentUserId = null,
+}: ProfileHeroSectionProps) {
+  // Get background gradient based on team
+  const backgroundGradient = teamBackground
+    ? getTeamBackgroundGradient(teamBackground)
+    : 'linear-gradient(135deg, #667EEA, #764BA2)' // Default gradient
+
+  // Determine location display
+  const showLocation = profile.show_state_on_profile !== false
+  const locationParts: string[] = []
+  if (profile.city) locationParts.push(profile.city)
+  if (showLocation && profile.state) locationParts.push(profile.state)
+  const locationText = locationParts.length > 0 ? locationParts.join(', ') : null
+
+  // Calculate scroll transform - content scrolls up limitedly
+  const maxScroll = 350 // Maximum scroll distance in pixels
+  const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
+
+  return (
+    <div
+      className="relative w-full h-full"
+      style={{
+        background: backgroundGradient,
+      }}
+    >
+      {/* Scrollable content container */}
+      <div
+        className="relative z-10 h-full flex flex-col justify-end px-6 pt-8 pb-6"
+        style={{
+          transform: `translateY(-${scrollOffset}px)`,
+          transition: 'transform 0.3s ease',
+        }}
+      >
+        {/* Profile Photo - fades out as scroll increases */}
+        <div
+          style={{
+            opacity: Math.max(0, 1 - scrollProgress),
+            transition: 'opacity 0.3s ease',
+          }}
+        >
+          <ProfilePhotoUpload
+            profileImageUrl={profile.profile_image_url}
+            isOwnProfile={isOwnProfile}
+            userId={profile.id}
+          />
+        </div>
+
+        {/* Username - scrolls with content */}
+        <h1 className="mt-4 text-4xl font-display tracking-wider text-white md:text-5xl lg:text-6xl">
+          {profile.username}
+        </h1>
+
+        {/* Age + Location + Follow Button Row */}
+        <div className="mt-2 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-white/90 md:text-base">
+            {profile.age && showLocation && (
+              <>
+                <span>{profile.age}</span>
+                <span>•</span>
+              </>
+            )}
+            {profile.age && !showLocation && <span>{profile.age}</span>}
+            {locationText && <span>{locationText}</span>}
+          </div>
+
+          {/* Follow Button - only show if not own profile */}
+          {!isOwnProfile && currentUserId && (
+            <FollowButton
+              targetUserId={profile.id}
+              isInitiallyFollowing={isFollowing}
+            />
+          )}
+        </div>
+
+        {/* Badges Section - TODO */}
+        {/* TODO: Implement badge system to display user badges here */}
+      </div>
+    </div>
+  )
+}

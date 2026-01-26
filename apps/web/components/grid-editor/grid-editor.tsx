@@ -29,7 +29,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
   const [loading, setLoading] = useState(true)
   const [existingGridId, setExistingGridId] = useState<string | null>(null)
 
-  const maxItems = type === 'team' ? 5 : 10
+  const maxItems = 10
 
   useEffect(() => {
     setAvailableList(availableItems)
@@ -166,21 +166,51 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
       .single()
 
     if (existingGridId) {
-      // Update existing grid
-      const { error } = await supabase
+      // Update existing grid - store previous state first
+      // Fetch current grid to get current ranked_items
+      const { data: currentGrid } = await supabase
+        .from('grids')
+        .select('ranked_items')
+        .eq('id', existingGridId)
+        .single()
+
+      const previousState = currentGrid?.ranked_items || null
+
+      // Update grid with new ranked_items and store previous state
+      const { error: updateError } = await supabase
         .from('grids')
         .update({
           ranked_items: rankedItemIds,
           blurb: blurb.trim() || null,
+          previous_state: previousState, // Store previous state
+          updated_at: new Date().toISOString(),
         })
         .eq('id', existingGridId)
 
-      if (error) {
-        console.error('Error updating grid:', error)
+      if (updateError) {
+        console.error('Error updating grid:', updateError)
         alert('Failed to update grid')
-      } else {
-        router.push(`/u/${profile?.username || session.user.id}`)
+        setIsSubmitting(false)
+        return
       }
+
+      // Create activity post for grid update
+      const gridTypeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'
+      const postContent = blurb.trim() || `Updated their Top ${gridTypeLabel} grid`
+
+      const { error: postError } = await supabase.from('posts').insert({
+        user_id: session.user.id,
+        content: postContent,
+        parent_page_type: 'profile',
+        parent_page_id: session.user.id,
+      })
+
+      if (postError) {
+        console.error('Error creating activity post:', postError)
+        // Don't fail the whole operation if post creation fails
+      }
+
+      router.push(`/u/${profile?.username || session.user.id}`)
     } else {
       // Insert new grid
       const { error } = await supabase.from('grids').insert({
