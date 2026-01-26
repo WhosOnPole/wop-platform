@@ -10,7 +10,7 @@ interface Track {
   chat_enabled?: boolean
 }
 
-interface ChatStatus {
+export interface ChatStatus {
   mode: 'open' | 'read_only' | 'closed'
   opens_at?: string | null
   closes_at?: string | null
