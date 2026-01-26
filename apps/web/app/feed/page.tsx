@@ -311,6 +311,7 @@ export default async function FeedPage() {
     return {
       ...race,
       slug: slugify(race.name),
+      chat_enabled: race.chat_enabled ?? undefined,
     }
   })()
 
