@@ -232,7 +232,7 @@ export default async function DynamicPage({ params }: PageProps) {
       : type === 'teams'
       ? (supabaseUrl ? getTeamLogoUrl(entity.name, supabaseUrl) : entity.image_url)
       : type === 'tracks'
-      ? '/images/grid_bg.png'
+      ? '/images/pit_bg.jpg'
       : entity.image_url
 
   // Determine entity type for components
@@ -309,7 +309,12 @@ export default async function DynamicPage({ params }: PageProps) {
       {/* Top Section with Background Image - Fixed */}
       <div className="fixed inset-x-0 top-0 z-10 h-[65vh]">
         {/* Hero Background */}
-        <EntityHeroBackground imageUrl={backgroundImage} alt={entity.name} />
+        <EntityHeroBackground 
+          imageUrl={backgroundImage} 
+          alt={entity.name}
+          entityType={entityType}
+          entityId={entity.id}
+        />
         
         {/* Content over background */}
         <div className="relative z-10 h-full flex flex-col">

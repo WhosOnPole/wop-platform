@@ -114,7 +114,7 @@ export function GridDisplayCard({
           <div className="w-1/2">
             <Link
               href={getItemHref(firstItem)}
-              className="relative block h-[170px] w-[170px] rounded-lg border border-gray-200 overflow-hidden hover:opacity-90 transition-opacity"
+              className="relative block h-[170px] w-[170px] rounded-xl border border-[#666666]/10 overflow-hidden hover:opacity-90 transition-opacity"
               style={{
                 backgroundImage: grid.type === 'track' 
                   ? 'url(/images/pit_bg.jpg)'

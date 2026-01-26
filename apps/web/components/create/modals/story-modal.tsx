@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useRef } from 'react'
+import { X, Plus } from 'lucide-react'
 
 interface StoryModalProps {
   onClose: () => void
@@ -12,6 +13,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
   const [body, setBody] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   function reset() {
     setTitle('')
@@ -35,12 +37,16 @@ export function StoryModal({ onClose }: StoryModalProps) {
       <div className="w-full max-w-lg rounded-2xl bg-[#1D1D1D] p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Submit a story</h2>
-          <button onClick={onClose} className="text-sm text-gray-500 hover:text-gray-800">
-            Close
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label="Close">
+            <X className="h-6 w-6" />
           </button>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
+        <p className="text-xs text-gray-500">
+            Story will go to admin dashboard as “user story” for approval. Once approved, it will
+            appear in the feed.
+          </p>
           <div>
             <label className="block text-sm font-medium text-white">Title</label>
             <input
@@ -52,16 +58,6 @@ export function StoryModal({ onClose }: StoryModalProps) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white">Summary</label>
-            <input
-              required
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              placeholder="Brief summary"
-            />
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-white">Body</label>
@@ -76,19 +72,23 @@ export function StoryModal({ onClose }: StoryModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white">Image (optional)</label>
+            <label className="block text-sm font-medium text-white mb-2">Image (optional)</label>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={(e) => setImage(e.target.files?.[0] || null)}
-              className="mt-1 w-full text-sm text-white"
+              className="hidden"
             />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center justify-center w-20 h-20 border-2 border-white border-dashed rounded-lg bg-transparent hover:bg-white/10 transition-colors"
+            >
+              <Plus className="h-6 w-6 text-white" />
+            </button>
           </div>
 
-          <p className="text-xs text-gray-500">
-            Story will go to admin dashboard as “user story” for approval. Once approved, it will
-            appear in the feed.
-          </p>
 
           <div className="flex justify-end gap-2">
             <button
@@ -101,7 +101,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-lg bg-transparent border border-white px-4 py-2 text-sm font-semibold text-white shadow hover:bg-sunset-gradient hover:border-0 disabled:opacity-60"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
