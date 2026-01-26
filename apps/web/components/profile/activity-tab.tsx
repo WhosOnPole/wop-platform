@@ -80,17 +80,12 @@ export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
     <div className="space-y-4">
       {activities.map((item) => {
         const link = getActivityLink(item)
-        const ActivityContent = link ? Link : 'div'
-        const activityProps = link ? { href: link } : {}
+        const className = `flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-4 ${
+          link ? 'hover:shadow-md transition-shadow cursor-pointer' : ''
+        }`
 
-        return (
-          <ActivityContent
-            key={item.id}
-            {...activityProps}
-            className={`flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-4 ${
-              link ? 'hover:shadow-md transition-shadow cursor-pointer' : ''
-            }`}
-          >
+        const content = (
+          <>
             {/* Icon */}
             <div className="flex-shrink-0">{getActivityIcon(item)}</div>
 
@@ -120,7 +115,17 @@ export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
                 {new Date(item.created_at).toLocaleString()}
               </p>
             </div>
-          </ActivityContent>
+          </>
+        )
+
+        return link ? (
+          <Link key={item.id} href={link} className={className}>
+            {content}
+          </Link>
+        ) : (
+          <div key={item.id} className={className}>
+            {content}
+          </div>
         )
       })}
     </div>
