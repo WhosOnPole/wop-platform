@@ -28,6 +28,7 @@ interface TrackRace {
   country: string | null
   image_url: string | null
   circuit_ref: string | null
+  chat_enabled: boolean | null
 }
 
 function slugify(name: string) {
