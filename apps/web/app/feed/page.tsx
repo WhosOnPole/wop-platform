@@ -141,7 +141,9 @@ export default async function FeedPage() {
     followingPosts,
     followingGrids,
     polls,
+    adminPolls,
     featuredNews,
+    sponsors,
     weeklyHighlights,
     raceTracks,
     activeHotTake,
@@ -201,13 +203,21 @@ export default async function FeedPage() {
         }
         return { data: [] }
       }),
-    // Recent active polls (ends_at is null or in the future)
+    // Recent active polls (ends_at is null or in the future) - regular polls only
     supabase
       .from('polls')
       .select('*')
+      .is('admin_id', null)
       .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(3),
+    // Admin polls (ends_at is null or in the future)
+    supabase
+      .from('polls')
+      .select('*')
+      .not('admin_id', 'is', null)
+      .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
+      .order('created_at', { ascending: false }),
     // Featured news
     supabase
       .from('news_stories')
@@ -215,6 +225,11 @@ export default async function FeedPage() {
       .eq('is_featured', true)
       .order('created_at', { ascending: false })
       .limit(2),
+    // All sponsors
+    supabase
+      .from('sponsors')
+      .select('id, name, logo_url, website_url, description')
+      .order('name'),
     // Weekly highlights (with featured fan + grid if set)
     (async () => {
       const { data: highlights } = await supabase
@@ -315,6 +330,22 @@ export default async function FeedPage() {
     }
   })()
 
+  // Check if upcoming race is live (for carousel display)
+  const isUpcomingRaceLive = (() => {
+    if (!upcomingRace || !upcomingRace.start_date || !upcomingRace.race_day_date) return false
+    if (upcomingRace.chat_enabled === false) return false
+    
+    const now = new Date()
+    const start = new Date(upcomingRace.start_date)
+    const raceDay = new Date(upcomingRace.race_day_date)
+    const end = new Date(raceDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
+    
+    return now >= start && now <= end
+  })()
+
+  // Only show upcoming race in carousel when live
+  const upcomingRaceForCarousel = isUpcomingRaceLive ? upcomingRace : null
+
   // Fetch hot take discussion posts if active hot take exists
   let hotTakePosts: any[] = []
   if (activeHotTake.data?.id) {
@@ -400,38 +431,74 @@ export default async function FeedPage() {
   })
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Spotlight Carousel: hot take, featured grid, polls */}
-      <div className="mb-20">
-        <SpotlightCarousel
-          spotlight={{
-            hot_take: activeHotTake.data || null,
-            featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
-          }}
-          polls={polls.data || []}
-          discussionPosts={hotTakePosts}
-        />
+    <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-semibold text-white font-display mb-6">Post. React. <br/> Express Yourself.</h1>
+      
+      {/* Desktop: Grid layout with main feed on left and banner cards on right */}
+      <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
+        {/* Main Feed - Desktop (larger left column) */}
+        <div className="lg:col-span-8 space-y-6">
+          <FeedContent
+            posts={followingPosts.data || []}
+            grids={followingGrids.data || []}
+            featuredNews={[]}
+          />
+        </div>
+
+        {/* Right Column - Banner Cards and Trending */}
+        <div className="lg:col-span-4 space-y-4">
+          {/* Banner Cards Sidebar - Desktop */}
+          <SpotlightCarousel
+            spotlight={{
+              hot_take: activeHotTake.data || null,
+              featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
+            }}
+            polls={adminPolls.data || []}
+            discussionPosts={hotTakePosts}
+            upcomingRace={upcomingRaceForCarousel}
+            sponsors={(sponsors.data || []) as Array<{ id: string; name: string; logo_url: string | null; website_url: string | null; description: string | null }>}
+            featuredNews={(featuredNews.data || []) as Array<{ id: string; title: string; image_url: string | null; content: string; created_at: string }>}
+          />
+
+          {/* Trending */}
+          {trendingWithLinks.length > 0 && (
+            <TrendingSection posts={trendingWithLinks} />
+          )}
+        </div>
       </div>
 
-      <div className="grid">
+      {/* Mobile: Stacked layout */}
+      <div className="lg:hidden">
+        {/* Spotlight Carousel: hot take, featured grid, polls, upcoming race, sponsors, news */}
+        <div className="mb-8">
+          <SpotlightCarousel
+            spotlight={{
+              hot_take: activeHotTake.data || null,
+              featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
+            }}
+            polls={adminPolls.data || []}
+            discussionPosts={hotTakePosts}
+            upcomingRace={upcomingRaceForCarousel}
+            sponsors={(sponsors.data || []) as Array<{ id: string; name: string; logo_url: string | null; website_url: string | null; description: string | null }>}
+            featuredNews={(featuredNews.data || []) as Array<{ id: string; title: string; image_url: string | null; content: string; created_at: string }>}
+          />
+        </div>
+
         {/* Main Feed */}
         <div className="space-y-6">
           <FeedContent
             posts={followingPosts.data || []}
             grids={followingGrids.data || []}
-            featuredNews={featuredNews.data || []}
+            featuredNews={[]}
           />
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="mt-6 space-y-6">
           {/* Trending */}
           {trendingWithLinks.length > 0 && (
             <TrendingSection posts={trendingWithLinks} />
           )}
-
-          {/* Upcoming Race */}
-          {upcomingRace ? <UpcomingRace race={upcomingRace} /> : null}
         </div>
       </div>
     </div>

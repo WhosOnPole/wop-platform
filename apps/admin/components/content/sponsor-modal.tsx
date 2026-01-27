@@ -9,6 +9,7 @@ const sponsorSchema = z.object({
   name: z.string().min(1),
   logo_url: z.string().url().optional().or(z.literal('')),
   website_url: z.string().url().optional().or(z.literal('')),
+  description: z.string().optional().or(z.literal('')),
 })
 
 interface SponsorModalProps {
@@ -17,6 +18,7 @@ interface SponsorModalProps {
     name: string
     logo_url: string | null
     website_url: string | null
+    description: string | null
   } | null
   onClose: () => void
 }
@@ -29,6 +31,7 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
     name: sponsor?.name || '',
     logo_url: sponsor?.logo_url || '',
     website_url: sponsor?.website_url || '',
+    description: sponsor?.description || '',
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -41,12 +44,14 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
         name: formData.name,
         logo_url: formData.logo_url || undefined,
         website_url: formData.website_url || undefined,
+        description: formData.description || undefined,
       })
 
       const payload = {
         name: validated.name,
         logo_url: validated.logo_url || null,
         website_url: validated.website_url || null,
+        description: validated.description || null,
       }
 
       if (sponsor) {
@@ -125,6 +130,17 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
               value={formData.website_url}
               onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={4}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              placeholder="Enter sponsor description..."
             />
           </div>
 

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { TopNav } from '@/components/navbar/top-nav'
-import { BottomNavbar } from '@/components/navbar/bottom-navbar'
 import { Footer } from '@/components/footer'
 import { LiveRaceBanner } from '@/components/live-race-banner'
 import { FullscreenHandler } from '@/components/fullscreen-handler'
@@ -56,12 +55,11 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     <>
       <FullscreenHandler autoRequest={true} />
       <TopNav />
-      <main className={`min-h-screen ${isAuthenticated ? 'pb-20' : ''} pt-14`}>
+      <main className="min-h-screen pt-14">
         {children}
       </main>
       {showFooter ? <Footer /> : null}
       <LiveRaceBanner />
-      {isAuthenticated && !isDesktop ? <BottomNavbar /> : null}
     </>
   )
 }
