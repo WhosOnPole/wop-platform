@@ -42,28 +42,64 @@ export function ProfilePageClient({
   const touchStartY = useRef(0)
   const isSwipe = useRef(false)
 
-  // Scroll tracking
+  // Scroll tracking with snap-to-place behavior
   useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout | null = null
+    let lastScrollY = 0
+    let scrollVelocity = 0
+
     function handleScroll() {
       const scrollY = window.scrollY
-      // Calculate threshold: hero is 60vh, top nav is ~56px (pt-14)
-      // Username is positioned at bottom of hero, so threshold is approximately 60vh - top nav height
       const topNavHeight = 56 // pt-14 = 3.5rem = 56px
       const heroHeight = window.innerHeight * 0.6 // 60vh
-      // Username position is roughly at bottom of hero, so threshold is hero height minus some offset
-      // Based on image, username appears around 20-25% from top, so threshold is approximately hero height - (hero height * 0.4)
-      const scrollThreshold = heroHeight - topNavHeight - 100 // Adjust offset to match username position
+      const scrollThreshold = heroHeight - topNavHeight - 100
       const progress = Math.min(scrollY / scrollThreshold, 1)
       const sticky = scrollY >= scrollThreshold
 
+      // Calculate scroll velocity
+      const deltaY = scrollY - lastScrollY
+      scrollVelocity = Math.abs(deltaY)
+      lastScrollY = scrollY
+
       setScrollProgress(progress)
       setIsSticky(sticky)
+
+      // Snap-to-place: if user has scrolled past a small threshold, automatically finish the animation
+      // This prevents laggy behavior by completing the transition quickly
+      if (scrollY > 20 && scrollY < scrollThreshold) {
+        // Clear any existing timeout
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout)
+        }
+
+        // If scroll velocity is low (user is slowing down) or we're past 15% of threshold, snap
+        const shouldSnap = scrollVelocity < 5 || progress > 0.15
+
+        if (shouldSnap) {
+          // Small delay to allow natural scroll to continue, then snap
+          scrollTimeout = setTimeout(() => {
+            const currentScrollY = window.scrollY
+            // Only snap if we're still in the transition zone
+            if (currentScrollY > 20 && currentScrollY < scrollThreshold) {
+              window.scrollTo({
+                top: scrollThreshold,
+                behavior: 'smooth',
+              })
+            }
+          }, 100) // Short delay to detect if scrolling stopped
+        }
+      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll() // Initial check
 
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout)
+      }
+    }
   }, [])
 
   // Mobile swipe gesture detection

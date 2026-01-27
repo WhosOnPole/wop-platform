@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
 type TabKey = 'activity' | 'drivers' | 'tracks' | 'teams'
 
 interface ProfileTabsProps {
@@ -19,21 +17,19 @@ export function ProfileTabs({ activeTab, onTabChange, teamBackground }: ProfileT
   ]
 
   return (
-    <div className="sticky top-[14rem] z-30 bg-black transition-colors duration-300 md:top-[16rem]">
-      <div className="flex w-full border-b border-white/20">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => onTabChange(tab.key)}
-            className={`relative flex-1 px-4 py-3 text-sm font-medium uppercase tracking-wide transition-colors ${
-              activeTab === tab.key
-                ? 'text-white border-b-2 border-white'
-                : 'text-white/60 hover:text-white/80'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <div className="sticky top-[14rem] z-30 bg-black transition-colors duration-300 md:top-[16rem] px-4 pt-4">
+      <div className="flex items-center justify-between w-full rounded-full overflow-hidden">
+        <div className="flex w-full">
+          {tabs.map((tab, index) => (
+            <TabButton
+              key={tab.key}
+              label={tab.label}
+              active={activeTab === tab.key}
+              onClick={() => onTabChange(tab.key)}
+              showDivider={index < tabs.length - 1}
+            />
+          ))}
+        </div>
       </div>
       
       {/* Teams tab background - variable based on #1 team pick */}
@@ -46,5 +42,28 @@ export function ProfileTabs({ activeTab, onTabChange, teamBackground }: ProfileT
         />
       )}
     </div>
+  )
+}
+
+interface TabButtonProps {
+  label: string
+  active: boolean
+  onClick: () => void
+  showDivider?: boolean
+}
+
+function TabButton({ label, active, onClick, showDivider = false }: TabButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative px-4 py-2.5 text-xs tracking-wide transition w-1/4 uppercase bg-white hover:text-white flex items-center justify-center ${
+        active ? 'text-white bg-opacity-30' : ' text-[#FFFFFF50] bg-opacity-[19%]'
+      }`}
+    >
+      {label}
+      {showDivider ? (
+        <span className="pointer-events-none absolute right-0 top-1 bottom-1 w-[.5px] bg-white/20" />
+      ) : null}
+    </button>
   )
 }
