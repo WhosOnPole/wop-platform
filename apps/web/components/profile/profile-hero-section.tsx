@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { Settings } from 'lucide-react'
 import { ProfilePhotoUpload } from './profile-photo-upload'
 import { FollowButton } from './follow-button'
 import { getTeamBackgroundGradient } from '@/utils/team-colors'
@@ -50,6 +52,17 @@ export function ProfileHeroSection({
         background: backgroundGradient,
       }}
     >
+      {/* Settings gear icon - only visible on own profile */}
+      {isOwnProfile && (
+        <Link
+          href="/settings"
+          className="absolute top-16 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors block md:hidden"
+          aria-label="Settings"
+        >
+          <Settings className="h-5 w-5" />
+        </Link>
+      )}
+
       {/* Scrollable content container */}
       <div
         className="relative z-10 h-full flex flex-col justify-end px-6 pt-8 pb-6"
