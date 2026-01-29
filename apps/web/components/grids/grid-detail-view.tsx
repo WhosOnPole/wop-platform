@@ -50,9 +50,9 @@ interface GridDetailViewProps {
   isOwnProfile: boolean
   supabaseUrl?: string
   mode: 'view' | 'edit'
-  /** Edit mode: controlled ranked list (10 slots, null = empty) and save handler; view mode ignores */
-  rankedList?: (RankItem | null)[]
-  onRankedListChange?: (items: (RankItem | null)[]) => void
+  /** Edit mode: controlled ranked list and save handler; view mode ignores */
+  rankedList?: RankItem[]
+  onRankedListChange?: (items: RankItem[]) => void
   onSave?: () => void
   /** Edit mode: blurb and handlers for editing */
   blurb?: string
@@ -99,12 +99,9 @@ export function GridDetailView({
   availableItems,
 }: GridDetailViewProps) {
   const items = mode === 'edit' && rankedList ? rankedList : grid.ranked_items
-  const slots = mode === 'edit' && Array.isArray(items) ? (items as (RankItem | null)[]) : (items as RankItem[]).map((i) => i as RankItem)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [pickerOpen, setPickerOpen] = useState(false)
-  const selectedSlotItem = Array.isArray(slots) && slots[selectedIndex] != null ? (slots[selectedIndex] as RankItem) : null
-  const firstFilledItem = Array.isArray(slots) ? (slots as (RankItem | null)[]).find((i): i is RankItem => i != null) : (items[0] as RankItem | undefined)
-  const selectedItem = selectedSlotItem ?? firstFilledItem ?? null
+  const selectedItem = items[selectedIndex]
   const type = grid.type
 
   const heroBackground =
@@ -251,7 +248,7 @@ export function GridDetailView({
       <div className="bg-black px-4 py-6">
         {mode === 'view' && (
           <GridRankPills
-            rankedItems={items}
+            rankedItems={grid.ranked_items}
             type={type}
             selectedIndex={selectedIndex}
             onSelectIndex={setSelectedIndex}
@@ -261,17 +258,25 @@ export function GridDetailView({
         {mode === 'edit' && onRankedListChange && (
           <>
             <GridRankPillsDnd
-              rankedItems={slots}
+              rankedItems={items}
               type={type}
               selectedIndex={selectedIndex}
-              onSelectIndex={(i) => {
-                setSelectedIndex(i)
-                setPickerOpen(true)
-              }}
+              onSelectIndex={setSelectedIndex}
               onRankedListChange={onRankedListChange}
               supabaseUrl={supabaseUrl}
             />
             <DragHint />
+            {availableItems && availableItems.length > 0 && (
+              <div className="flex justify-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  className="text-sm text-[#25B4B1] hover:text-[#3BEFEB]"
+                >
+                  Change pick at rank {selectedIndex + 1}
+                </button>
+              </div>
+            )}
             {onSave && (
               <div className="flex justify-end gap-3 mt-6">
                 <button
@@ -284,7 +289,7 @@ export function GridDetailView({
                 <button
                   type="button"
                   onClick={onSave}
-                  disabled={!(rankedList ?? []).some((i) => i != null)}
+                  disabled={items.length === 0}
                   className="rounded-full bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                 >
                   Save Ranking
@@ -299,14 +304,12 @@ export function GridDetailView({
                 items={availableItems}
                 selectedRankIndex={selectedIndex}
                 onSelect={(item) => {
-                  if (!onRankedListChange || rankedList == null) return
-                  const fullItem = availableItems.find((a) => a.id === item.id) ?? (item as RankItem)
-                  const next = [...rankedList]
-                  next[selectedIndex] = fullItem
-                  for (let i = 0; i < next.length; i++) {
-                    if (i !== selectedIndex && next[i]?.id === item.id) next[i] = null
-                  }
-                  onRankedListChange(next)
+                  if (!onRankedListChange) return
+                  const without = (rankedList ?? []).filter((i) => i.id !== item.id)
+                  const fullItem = availableItems.find((a) => a.id === item.id) ?? item
+                  const idx = Math.min(selectedIndex, without.length)
+                  without.splice(idx, 0, fullItem as RankItem)
+                  onRankedListChange(without.slice(0, 10))
                 }}
               />
             )}

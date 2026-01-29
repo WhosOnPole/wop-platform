@@ -18,25 +18,13 @@ type RankItem = {
   track_slug?: string
 }
 
-const GRID_SLOTS = 10
-
-function toSlots(items: RankItem[]): (RankItem | null)[] {
-  const next: (RankItem | null)[] = [...items].slice(0, GRID_SLOTS)
-  while (next.length < GRID_SLOTS) next.push(null)
-  return next
-}
-
-function fromSlots(slots: (RankItem | null)[]): RankItem[] {
-  return slots.filter((s): s is RankItem => s != null)
-}
-
 export default function EditGridPage() {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const params = useParams()
   const type = params.type as 'driver' | 'team' | 'track'
   const [loading, setLoading] = useState(true)
-  const [slots, setSlots] = useState<(RankItem | null)[]>(() => toSlots([]))
+  const [rankedList, setRankedList] = useState<RankItem[]>([])
   const [availableItems, setAvailableItems] = useState<RankItem[]>([])
   const [blurb, setBlurb] = useState('')
   const [existingGridId, setExistingGridId] = useState<string | null>(null)
@@ -81,9 +69,9 @@ export default function EditGridPage() {
         const ordered = rankedIds
           .map((r) => catalog.find((c) => c.id === r.id))
           .filter((c): c is RankItem => !!c)
-        setSlots(toSlots(ordered))
+        setRankedList(ordered)
       } else {
-        setSlots(toSlots([]))
+        setRankedList([])
       }
     } catch (error) {
       console.error('Error loading edit grid:', error)
@@ -123,9 +111,8 @@ export default function EditGridPage() {
   }
 
   async function handleSave() {
-    const filled = fromSlots(slots)
-    if (filled.length === 0) {
-      alert('Please add at least one item to your grid')
+    if (rankedList.length === 0) {
+      alert('Please rank at least one item')
       return
     }
     const { data: { session } } = await supabase.auth.getSession()
@@ -135,7 +122,7 @@ export default function EditGridPage() {
     }
 
     setIsSubmitting(true)
-    const rankedItemIds = filled.map((item) => ({ id: item.id, name: item.name }))
+    const rankedItemIds = rankedList.map((item) => ({ id: item.id, name: item.name }))
     const { data: profileData } = await supabase
       .from('profiles')
       .select('username')
@@ -201,7 +188,7 @@ export default function EditGridPage() {
   const gridForView = {
     id: existingGridId || '',
     type,
-    ranked_items: fromSlots(slots),
+    ranked_items: rankedList,
     blurb: blurb || null,
     like_count: 0,
     is_liked: false,
@@ -214,8 +201,8 @@ export default function EditGridPage() {
       isOwnProfile
       supabaseUrl={supabaseUrl}
       mode="edit"
-      rankedList={slots}
-      onRankedListChange={setSlots}
+      rankedList={rankedList}
+      onRankedListChange={setRankedList}
       blurb={blurb}
       onBlurbChange={setBlurb}
       onSave={handleSave}
