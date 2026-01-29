@@ -65,7 +65,7 @@ export function GridHeartButton({
       disabled={isLoading}
       className={`inline-flex items-center gap-1 align-middle rounded-full px-3 py-1.5 text-sm leading-none transition-colors ${
         isLiked
-          ? 'bg-red-100 text-red-600 hover:bg-red-200'
+          ? 'bg-sunset-gradient text-white hover:opacity-90'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       } disabled:opacity-50`}
       title={isLiked ? 'Unlike this grid' : 'Like this grid'}

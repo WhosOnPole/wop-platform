@@ -147,10 +147,13 @@ export function TopNav() {
     return pathname.startsWith(href)
   }
 
+  const isGridPage = pathname.startsWith('/grid/') || pathname.startsWith('/profile/edit-grid/')
+  const showNavBg = !isGridPage && hasScrolled
+
   return (
     <div
       className={`fixed top-0 left-0 right-0 text-[#838383] z-50 transition-colors ${
-        hasScrolled ? 'bg-gradient-to-b from-black via-black/70 to-transparent' : 'bg-transparent'
+        showNavBg ? 'bg-gradient-to-b from-black via-black/70 to-transparent' : 'bg-transparent'
       }`}
     >
       <div className="flex items-center justify-between px-4 py-2.5">

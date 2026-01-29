@@ -306,15 +306,9 @@ export function GridDisplayCard({
           </div>
         )}
 
-        {/* View More Link - TODO */}
-        {/* TODO: Implement detailed grid view modal/page for full grid display with expanded details */}
         <Link
-          href="#"
+          href={`/grid/${grid.id}`}
           className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
-          onClick={(e) => {
-            e.preventDefault()
-            // TODO: Open detailed grid view modal/page
-          }}
         >
           View more <ChevronRight className="h-4 w-4" />
         </Link>
