@@ -12,12 +12,15 @@ interface RankItem {
   [key: string]: unknown
 }
 
+const GRID_SLOTS = 10
+
 interface GridRankPillsDndProps {
-  rankedItems: RankItem[]
+  /** Array of up to 10 items; empty slots can be null. Will be padded to 10 for display. */
+  rankedItems: (RankItem | null)[]
   type: GridType
   selectedIndex: number
   onSelectIndex: (index: number) => void
-  onRankedListChange: (items: RankItem[]) => void
+  onRankedListChange: (items: (RankItem | null)[]) => void
   supabaseUrl?: string
 }
 
@@ -45,25 +48,33 @@ export function GridRankPillsDnd({
   onRankedListChange,
   supabaseUrl,
 }: GridRankPillsDndProps) {
-  const items = [...rankedItems].slice(0, 10)
+  const slots = (() => {
+    const next = [...rankedItems].slice(0, GRID_SLOTS)
+    while (next.length < GRID_SLOTS) next.push(null)
+    return next.slice(0, GRID_SLOTS)
+  })()
 
   function onDragEnd(result: DropResult) {
     const { source, destination } = result
     if (!destination || source.index === destination.index) return
-    const next = Array.from(items)
+    const next = Array.from(slots)
     const [removed] = next.splice(source.index, 1)
     next.splice(destination.index, 0, removed)
     onRankedListChange(next)
   }
 
-  function renderPill(item: RankItem, index: number) {
+  function getDraggableId(index: number): string {
+    const item = slots[index]
+    return item ? item.id : `slot-empty-${index}`
+  }
+
+  function renderPill(item: RankItem | null, index: number) {
     const rank = index + 1
     const isSelected = selectedIndex === index
-    const secondary = secondaryLabel(item, type)
-    const short = shortName(item, type)
+    const isEmpty = item == null
 
     return (
-      <Draggable key={item.id} draggableId={item.id} index={index}>
+      <Draggable key={getDraggableId(index)} draggableId={getDraggableId(index)} index={index}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
@@ -72,19 +83,35 @@ export function GridRankPillsDnd({
               snapshot.isDragging ? 'bg-[#d9d9d9]/50 shadow-lg' : isSelected ? 'bg-[#d9d9d9]/40' : 'bg-[#d9d9d9]/25 hover:bg-[#d9d9d9]/35'
             }`}
             style={provided.draggableProps.style}
+            onClick={() => onSelectIndex(index)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onSelectIndex(index)
+              }
+            }}
+            aria-label={isEmpty ? `Rank ${rank}, add pick` : `Rank ${rank}, ${item.name}`}
           >
             <span className="flex-shrink-0 w-6 text-sm font-semibold">{rank}</span>
-            {type === 'driver' && secondary ? (
-              <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
-                <span className="flex-shrink-0 font-medium">{short}</span>
-                <span className="flex flex-shrink-0 items-center justify-center text-white/60 text-[10px] leading-none" aria-hidden>•</span>
-                <span className="min-w-0 truncate text-white/90">{secondary}</span>
-              </span>
+            {isEmpty ? (
+              <span className="flex-1 text-sm text-white/60">Add</span>
             ) : (
               <>
-                <span className="flex-shrink-0 text-sm font-medium">{short}</span>
-                {secondary && (
-                  <span className="min-w-0 truncate flex-1 text-sm text-white/90">{secondary}</span>
+                {type === 'driver' && (item.team_name ?? '') ? (
+                  <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
+                    <span className="flex-shrink-0 font-medium">{shortName(item, type)}</span>
+                    <span className="flex flex-shrink-0 items-center justify-center text-white/60 text-[10px] leading-none" aria-hidden>•</span>
+                    <span className="min-w-0 truncate text-white/90">{secondaryLabel(item, type)}</span>
+                  </span>
+                ) : (
+                  <>
+                    <span className="flex-shrink-0 text-sm font-medium">{shortName(item, type)}</span>
+                    {secondaryLabel(item, type) && (
+                      <span className="min-w-0 truncate flex-1 text-sm text-white/90">{secondaryLabel(item, type)}</span>
+                    )}
+                  </>
                 )}
               </>
             )}
@@ -92,6 +119,7 @@ export function GridRankPillsDnd({
               {...provided.dragHandleProps}
               className="flex-shrink-0 p-1 cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
               aria-label="Drag to reorder"
+              onClick={(e) => e.stopPropagation()}
             >
               <Menu className="h-4 w-4" />
             </span>
@@ -110,7 +138,7 @@ export function GridRankPillsDnd({
             {...provided.droppableProps}
             className="grid grid-cols-2 gap-2 w-full max-w-md mx-auto"
           >
-            {items.map((item, index) => renderPill(item, index))}
+            {slots.map((item, index) => renderPill(item, index))}
             {provided.placeholder}
           </div>
         )}
