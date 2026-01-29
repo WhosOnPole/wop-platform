@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { X } from 'lucide-react'
 import { getTeamIconUrl } from '@/utils/storage-urls'
+import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface Driver {
   id: string
@@ -149,7 +150,6 @@ export function PitlaneSearchResults({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredDrivers.map((driver) => {
                     const slug = driver.name.toLowerCase().replace(/\s+/g, '-')
-                    const imageSrc = driver.headshot_url || driver.image_url
                     const flag = getNationalityFlag(driver.nationality)
                     return (
                       <Link
@@ -158,8 +158,13 @@ export function PitlaneSearchResults({
                         onClick={onClose}
                         className="group flex flex-col"
                       >
-                        <div className="relative w-full aspect-square overflow-hidden bg-gray-100 rounded-lg">
-                          <Avatar src={imageSrc} alt={driver.name} fallback={driver.name.charAt(0)} />
+                        <div className="relative w-full aspect-square overflow-hidden rounded-lg">
+                          <DriverCardMedia
+                            driverName={driver.name}
+                            supabaseUrl={supabaseUrl}
+                            fallbackSrc={driver.headshot_url || driver.image_url}
+                            sizes="240px"
+                          />
                         </div>
                         <div className="mt-2 flex items-start gap-2">
                           {flag ? (

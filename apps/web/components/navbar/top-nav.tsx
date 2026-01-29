@@ -29,6 +29,7 @@ export function TopNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [activeModal, setActiveModal] = useState<'story' | 'poll' | 'tip' | 'post' | null>(null)
+  const [hasScrolled, setHasScrolled] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -102,6 +103,17 @@ export function TopNav() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isCreateOpen])
 
+  useEffect(() => {
+    function handleScroll() {
+      setHasScrolled(window.scrollY > 8)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
 
   const profileHref = profile?.username ? `/u/${profile.username}` : '/profile'
   const isAuthed = !!user
@@ -136,7 +148,11 @@ export function TopNav() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-transparent text-[#838383] z-50">
+    <div
+      className={`fixed top-0 left-0 right-0 text-[#838383] z-50 transition-colors ${
+        hasScrolled ? 'bg-gradient-to-b from-black via-black/70 to-transparent' : 'bg-transparent'
+      }`}
+    >
       <div className="flex items-center justify-between px-4 py-2.5">
         <Logo variant="white" href={isAuthed ? '/feed' : '/'} className="h-9"/>
 

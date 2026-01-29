@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getTeamIconUrl } from '@/utils/storage-urls'
+import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface Driver {
   id: string
@@ -51,6 +52,13 @@ type TabKey = 'drivers' | 'teams' | 'tracks' | 'schedule'
 
 export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = [], searchQuery = '', supabaseUrl }: PitlaneTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('drivers')
+  const contentRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+  const isSwipe = useRef(false)
+
+  const TAB_ORDER: TabKey[] = ['drivers', 'tracks', 'teams', 'schedule']
+  const SWIPE_THRESHOLD = 50 // Minimum distance in pixels
 
   // Filter function for search
   const filterItems = <T extends { name: string }>(items: T[] | undefined, query: string): T[] => {
@@ -83,6 +91,77 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
     if (activeTab === 'schedule') return filteredSchedule
     return filteredTracks
   }, [activeTab, filteredDrivers, filteredTeams, filteredTracks, filteredSchedule])
+
+  // Mobile swipe gesture detection (match profile behavior)
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window
+    if (!isMobile || !contentRef.current) return
+
+    const content = contentRef.current
+
+    function handleTouchStart(e: TouchEvent) {
+      touchStartX.current = e.touches[0].clientX
+      touchStartY.current = e.touches[0].clientY
+      isSwipe.current = false
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      if (!touchStartX.current || !touchStartY.current) return
+
+      const touchX = e.touches[0].clientX
+      const touchY = e.touches[0].clientY
+      const deltaX = touchX - touchStartX.current
+      const deltaY = touchY - touchStartY.current
+
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+        isSwipe.current = true
+        e.preventDefault()
+      }
+    }
+
+    function handleTouchEnd(e: TouchEvent) {
+      if (!touchStartX.current || !touchStartY.current || !isSwipe.current) {
+        touchStartX.current = 0
+        touchStartY.current = 0
+        return
+      }
+
+      const touchX = e.changedTouches[0].clientX
+      const touchY = e.changedTouches[0].clientY
+      const deltaX = touchX - touchStartX.current
+      const deltaY = touchY - touchStartY.current
+      const absDeltaX = Math.abs(deltaX)
+      const absDeltaY = Math.abs(deltaY)
+
+      if (absDeltaX > SWIPE_THRESHOLD && absDeltaX > absDeltaY) {
+        const currentIndex = TAB_ORDER.indexOf(activeTab)
+        const nextIndex =
+          deltaX > 0
+            ? currentIndex === 0
+              ? TAB_ORDER.length - 1
+              : currentIndex - 1
+            : currentIndex === TAB_ORDER.length - 1
+              ? 0
+              : currentIndex + 1
+
+        setActiveTab(TAB_ORDER[nextIndex])
+      }
+
+      touchStartX.current = 0
+      touchStartY.current = 0
+      isSwipe.current = false
+    }
+
+    content.addEventListener('touchstart', handleTouchStart, { passive: true })
+    content.addEventListener('touchmove', handleTouchMove, { passive: false })
+    content.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      content.removeEventListener('touchstart', handleTouchStart)
+      content.removeEventListener('touchmove', handleTouchMove)
+      content.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [activeTab])
 
   return (
     <section>
@@ -119,7 +198,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
         </div>
       </div>
 
-      <div className="px-4 py-5 sm:px-6 h-[400px] overflow-scroll">
+      <div ref={contentRef} className="px-4 py-5 sm:px-6 h-[400px] overflow-scroll">
         {activeTab === 'schedule' ? (
           <div className="space-y-0 md:grid md:grid-cols-2 md:gap-4">
             {!filteredSchedule || filteredSchedule.length === 0 ? (
@@ -143,7 +222,6 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                 if (activeTab === 'drivers') {
                   const driver = item as Driver
                   const slug = driver.name.toLowerCase().replace(/\s+/g, '-')
-                  const imageSrc = driver.headshot_url || driver.image_url
                   return (
                     <Link
                       key={driver.id}
@@ -151,7 +229,12 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       className="group flex flex-col"
                     >
                       <div className="relative w-25 h-28 overflow-hidden rounded-2xl">
-                        <Avatar src={imageSrc} alt={driver.name} fallback={driver.name.charAt(0)} />
+                        <DriverCardMedia
+                          driverName={driver.name}
+                          supabaseUrl={supabaseUrl}
+                          fallbackSrc={driver.headshot_url || driver.image_url}
+                          sizes="100px"
+                        />
                       </div>
                     </Link>
                   )
