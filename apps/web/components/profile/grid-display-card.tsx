@@ -7,6 +7,7 @@ import { Heart, ChevronRight } from 'lucide-react'
 import { GridHeartButton } from './grid-heart-button'
 import { GridSnapshot } from './grid-snapshot'
 import { getTeamIconUrl } from '@/utils/storage-urls'
+import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface GridItem {
   id: string
@@ -115,17 +116,33 @@ export function GridDisplayCard({
             <Link
               href={getItemHref(firstItem)}
               className="relative block h-[170px] w-[170px] rounded-xl border border-[#666666]/10 overflow-hidden hover:opacity-90 transition-opacity"
-              style={{
-                backgroundImage: grid.type === 'track' 
-                  ? 'url(/images/pit_bg.jpg)'
-                  : getItemImageUrl(firstItem) 
-                    ? `url(${getItemImageUrl(firstItem)})` 
-                    : undefined,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundColor: grid.type === 'track' || getItemImageUrl(firstItem) ? undefined : '#f3f4f6',
-              }}
+              style={
+                grid.type === 'driver'
+                  ? undefined
+                  : {
+                      backgroundImage:
+                        grid.type === 'track'
+                          ? 'url(/images/pit_bg.jpg)'
+                          : getItemImageUrl(firstItem)
+                            ? `url(${getItemImageUrl(firstItem)})`
+                            : undefined,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundColor:
+                        grid.type === 'track' || getItemImageUrl(firstItem) ? undefined : '#f3f4f6',
+                    }
+              }
             >
+              {grid.type === 'driver' && (
+                <div className="absolute inset-0 z-0">
+                  <DriverCardMedia
+                    driverName={firstItem.name}
+                    supabaseUrl={supabaseUrl}
+                    fallbackSrc={firstItem.headshot_url || firstItem.image_url}
+                    sizes="170px"
+                  />
+                </div>
+              )}
               {/* Overlay gradient for text readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               
@@ -135,7 +152,7 @@ export function GridDisplayCard({
                   <div 
                     className="text-white font-bold leading-tight"
                     style={{
-                      fontSize: grid.type === 'driver' ? '14px' : '12px',
+                      fontSize: grid.type === 'driver' ? '20px' : '18px',
                       fontFamily: 'Inter, sans-serif',
                       letterSpacing: '0.05em',
                     }}
@@ -188,17 +205,33 @@ export function GridDisplayCard({
                 key={item.id}
                 href={getItemHref(item)}
                 className="relative block h-[50px] w-[50px] rounded-lg border border-gray-200 overflow-hidden hover:opacity-90 transition-opacity"
-                style={{
-                  backgroundImage: grid.type === 'track' 
-                    ? 'url(/images/pit_bg.jpg)'
-                    : getItemImageUrl(item) 
-                      ? `url(${getItemImageUrl(item)})` 
-                      : undefined,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundColor: grid.type === 'track' || getItemImageUrl(item) ? undefined : '#f3f4f6',
-                }}
+                style={
+                  grid.type === 'driver'
+                    ? undefined
+                    : {
+                        backgroundImage:
+                          grid.type === 'track'
+                            ? 'url(/images/pit_bg.jpg)'
+                            : getItemImageUrl(item)
+                              ? `url(${getItemImageUrl(item)})`
+                              : undefined,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundColor:
+                          grid.type === 'track' || getItemImageUrl(item) ? undefined : '#f3f4f6',
+                      }
+                }
               >
+                {grid.type === 'driver' && (
+                  <div className="absolute inset-0 z-0">
+                    <DriverCardMedia
+                      driverName={item.name}
+                      supabaseUrl={supabaseUrl}
+                      fallbackSrc={item.headshot_url || item.image_url}
+                      sizes="50px"
+                    />
+                  </div>
+                )}
                 {/* Overlay gradient for text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 
@@ -240,15 +273,6 @@ export function GridDisplayCard({
                   </div>
                 )}
                 
-                {/* Fallback if no image (non-tracks) */}
-                {grid.type !== 'track' && !getItemImageUrl(item) && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-[10px] font-bold text-gray-400 mb-0.5">{rank}</div>
-                    <span className="text-xs font-bold text-gray-600">
-                      {item.name.charAt(0)}
-                    </span>
-                  </div>
-                )}
               </Link>
             )
           })}
@@ -282,15 +306,9 @@ export function GridDisplayCard({
           </div>
         )}
 
-        {/* View More Link - TODO */}
-        {/* TODO: Implement detailed grid view modal/page for full grid display with expanded details */}
         <Link
-          href="#"
+          href={`/grid/${grid.id}`}
           className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
-          onClick={(e) => {
-            e.preventDefault()
-            // TODO: Open detailed grid view modal/page
-          }}
         >
           View more <ChevronRight className="h-4 w-4" />
         </Link>

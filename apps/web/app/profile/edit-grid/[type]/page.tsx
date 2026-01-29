@@ -3,8 +3,20 @@
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter, useParams } from 'next/navigation'
-import { GridEditor } from '@/components/grid-editor/grid-editor'
-import { getTeamIconUrl } from '@/utils/storage-urls'
+import { GridDetailView } from '@/components/grids/grid-detail-view'
+import { getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
+
+type RankItem = {
+  id: string
+  name: string
+  nationality?: string | null
+  headshot_url?: string | null
+  image_url?: string | null
+  team_name?: string | null
+  location?: string | null
+  country?: string | null
+  track_slug?: string
+}
 
 export default function EditGridPage() {
   const supabase = createClientComponentClient()
@@ -12,108 +24,189 @@ export default function EditGridPage() {
   const params = useParams()
   const type = params.type as 'driver' | 'team' | 'track'
   const [loading, setLoading] = useState(true)
-  const [availableItems, setAvailableItems] = useState<any[]>([])
+  const [rankedList, setRankedList] = useState<RankItem[]>([])
+  const [availableItems, setAvailableItems] = useState<RankItem[]>([])
+  const [blurb, setBlurb] = useState('')
+  const [existingGridId, setExistingGridId] = useState<string | null>(null)
+  const [profile, setProfile] = useState<{ id: string; username: string; profile_image_url: string | null } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined
 
   useEffect(() => {
     if (!['driver', 'team', 'track'].includes(type)) {
       router.push('/')
       return
     }
-
-    loadAvailableItems()
+    loadAll()
   }, [type])
 
-  async function loadAvailableItems() {
+  async function loadAll() {
     setLoading(true)
-    
     try {
-      let result
-      
-      if (type === 'driver') {
-        result = await supabase
-          .from('drivers')
-          .select('id, name, image_url, headshot_url, team_id, teams:team_id(image_url)')
-          .eq('active', true)
-          .order('name')
-      } else if (type === 'team') {
-        result = await supabase
-          .from('teams')
-          .select('id, name, image_url')
-          .eq('active', true)
-          .order('name')
-      } else if (type === 'track') {
-        result = await supabase
-          .from('tracks')
-          .select('id, name, image_url')
-          .order('name')
-      } else {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
         setLoading(false)
         return
       }
 
-      if (result.data) {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        setAvailableItems(
-          result.data.map((item: any) => {
-            const baseItem = {
-              id: item.id,
-              name: item.name,
-              image_url: item.image_url,
-              headshot_url: item.headshot_url || null,
-            }
-            
-            if (type === 'team' && supabaseUrl) {
-              // For teams, use icon.svg from storage
-              return {
-                ...baseItem,
-                image_url: getTeamIconUrl(item.name, supabaseUrl),
-              }
-            } else if (type === 'driver' && item.teams && supabaseUrl) {
-              // For drivers, use team icon from storage
-              return {
-                ...baseItem,
-                team_icon_url: getTeamIconUrl(item.teams.name, supabaseUrl),
-              }
-            }
-            
-            return {
-              ...baseItem,
-              team_icon_url: item.teams?.image_url || null,
-            }
-          })
-        )
+      const [profileRes, gridRes, catalogRes] = await Promise.all([
+        supabase.from('profiles').select('id, username, profile_image_url').eq('id', session.user.id).single(),
+        supabase.from('grids').select('*').eq('user_id', session.user.id).eq('type', type).single(),
+        loadCatalog(type),
+      ])
+
+      const profileData = profileRes.data
+      const existingGrid = gridRes.data
+      const catalog = catalogRes
+      setAvailableItems(catalog)
+
+      if (profileData) setProfile(profileData)
+      if (existingGrid) {
+        setExistingGridId(existingGrid.id)
+        setBlurb(existingGrid.blurb || '')
+        const rankedIds = (existingGrid.ranked_items || []) as Array<{ id: string; name: string }>
+        const ordered = rankedIds
+          .map((r) => catalog.find((c) => c.id === r.id))
+          .filter((c): c is RankItem => !!c)
+        setRankedList(ordered)
+      } else {
+        setRankedList([])
       }
     } catch (error) {
-      console.error('Error loading items:', error)
+      console.error('Error loading edit grid:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) {
+  async function loadCatalog(t: 'driver' | 'team' | 'track'): Promise<RankItem[]> {
+    if (t === 'driver') {
+      const { data } = await supabase
+        .from('drivers')
+        .select('id, name, image_url, headshot_url, nationality, teams:team_id(name)')
+        .eq('active', true)
+        .order('name')
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        nationality: d.nationality ?? null,
+        headshot_url: d.headshot_url ?? null,
+        image_url: d.image_url ?? null,
+        team_name: Array.isArray(d.teams) ? d.teams[0]?.name : d.teams?.name ?? null,
+      }))
+    }
+    if (t === 'track') {
+      const { data } = await supabase.from('tracks').select('id, name, location, country').order('name')
+      return (data || []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        location: t.location ?? null,
+        country: t.country ?? null,
+        track_slug: getTrackSlug(t.name),
+      }))
+    }
+    const { data } = await supabase.from('teams').select('id, name').eq('active', true).order('name')
+    return (data || []).map((t: any) => ({ id: t.id, name: t.name }))
+  }
+
+  async function handleSave() {
+    if (rankedList.length === 0) {
+      alert('Please rank at least one item')
+      return
+    }
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    setIsSubmitting(true)
+    const rankedItemIds = rankedList.map((item) => ({ id: item.id, name: item.name }))
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', session.user.id)
+      .single()
+
+    if (existingGridId) {
+      const { data: currentGrid } = await supabase
+        .from('grids')
+        .select('ranked_items')
+        .eq('id', existingGridId)
+        .single()
+      const previousState = currentGrid?.ranked_items || null
+      const { error: updateError } = await supabase
+        .from('grids')
+        .update({
+          ranked_items: rankedItemIds,
+          blurb: blurb.trim() || null,
+          previous_state: previousState,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingGridId)
+
+      if (updateError) {
+        console.error('Error updating grid:', updateError)
+        alert('Failed to update grid')
+        setIsSubmitting(false)
+        return
+      }
+      const gridTypeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'
+      await supabase.from('posts').insert({
+        user_id: session.user.id,
+        content: blurb.trim() || `Updated their Top ${gridTypeLabel} grid`,
+        parent_page_type: 'profile',
+        parent_page_id: session.user.id,
+      })
+    } else {
+      const { error } = await supabase.from('grids').insert({
+        user_id: session.user.id,
+        type,
+        ranked_items: rankedItemIds,
+        blurb: blurb.trim() || null,
+      })
+      if (error) {
+        console.error('Error saving grid:', error)
+        alert('Failed to save grid')
+        setIsSubmitting(false)
+        return
+      }
+    }
+    router.push(`/u/${profileData?.username || session.user.id}`)
+    setIsSubmitting(false)
+  }
+
+  if (loading || !profile) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-        </div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
       </div>
     )
   }
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Edit Your Top {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'}{' '}
-          Ranking
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'team' ? 'teams' : 'tracks'}
-        </p>
-      </div>
+  const gridForView = {
+    id: existingGridId || '',
+    type,
+    ranked_items: rankedList,
+    blurb: blurb || null,
+    like_count: 0,
+    is_liked: false,
+  }
 
-      <GridEditor type={type} availableItems={availableItems} />
-    </div>
+  return (
+    <GridDetailView
+      grid={gridForView}
+      owner={profile}
+      isOwnProfile
+      supabaseUrl={supabaseUrl}
+      mode="edit"
+      rankedList={rankedList}
+      onRankedListChange={setRankedList}
+      blurb={blurb}
+      onBlurbChange={setBlurb}
+      onSave={handleSave}
+      availableItems={availableItems}
+    />
   )
 }
-

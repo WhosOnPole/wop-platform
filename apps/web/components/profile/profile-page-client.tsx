@@ -6,9 +6,9 @@ import { GridDisplayCard } from './grid-display-card'
 import { ActivityTab } from './activity-tab'
 import { ProfileDiscussionSection } from './profile-discussion-section'
 
-type TabKey = 'activity' | 'drivers' | 'tracks' | 'teams'
+type TabKey = 'drivers' | 'tracks' | 'teams' | 'activity'
 
-const TAB_ORDER: TabKey[] = ['activity', 'drivers', 'tracks', 'teams']
+const TAB_ORDER: TabKey[] = ['drivers', 'tracks', 'teams',  'activity']
 const SWIPE_THRESHOLD = 50 // Minimum distance in pixels
 
 interface ProfilePageClientProps {
@@ -34,7 +34,7 @@ export function ProfilePageClient({
   profilePosts,
   supabaseUrl,
 }: ProfilePageClientProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>('activity')
+  const [activeTab, setActiveTab] = useState<TabKey>('drivers')
   const [scrollProgress, setScrollProgress] = useState(0)
   const [isSticky, setIsSticky] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -203,12 +203,7 @@ export function ProfilePageClient({
         }`}
       >
         <div className={isSticky ? 'px-4 py-6 sm:px-6 lg:px-8' : ''}>
-          {activeTab === 'activity' && (
-          <div className="mx-auto max-w-4xl">
-            <ActivityTab activities={activities} profileUsername={profile.username} />
-          </div>
-        )}
-
+          {/* Drivers tab */}
         {activeTab === 'drivers' && driverGrid && (
           <div className="mx-auto max-w-4xl">
             <GridDisplayCard
@@ -227,6 +222,7 @@ export function ProfilePageClient({
           </div>
         )}
 
+        {/* Tracks tab */}
         {activeTab === 'tracks' && trackGrid && (
           <div className="mx-auto max-w-4xl">
             <GridDisplayCard
@@ -245,6 +241,7 @@ export function ProfilePageClient({
           </div>
         )}
 
+        {/* Teams tab */}
         {activeTab === 'teams' && teamGrid && (
           <div className="mx-auto max-w-4xl">
             <GridDisplayCard
@@ -260,6 +257,13 @@ export function ProfilePageClient({
                 profileUsername={profile.username}
               />
             </div>
+          </div>
+        )}
+
+        {/* Activity tab */}
+        {activeTab === 'activity' && (
+          <div className="mx-auto max-w-4xl">
+            <ActivityTab activities={activities} profileUsername={profile.username} />
           </div>
         )}
 

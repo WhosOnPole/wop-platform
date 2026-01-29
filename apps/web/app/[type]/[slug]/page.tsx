@@ -11,7 +11,7 @@ import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { getRecentInstagramMedia } from '@/services/instagram'
 import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
-import { getTeamLogoUrl, getTeamIconUrl } from '@/utils/storage-urls'
+import { getTeamLogoUrl, getTeamBackgroundUrl, getTeamIconUrl } from '@/utils/storage-urls'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
@@ -226,14 +226,27 @@ export default async function DynamicPage({ params }: PageProps) {
   }
 
   // Get background image
-  const backgroundImage =
-    type === 'drivers'
-      ? entity.headshot_url || entity.image_url
-      : type === 'teams'
-      ? (supabaseUrl ? getTeamLogoUrl(entity.name, supabaseUrl) : entity.image_url)
-      : type === 'tracks'
-      ? '/images/pit_bg.jpg'
-      : entity.image_url
+  let backgroundImage: string | null | undefined
+  if (type === 'drivers') {
+    backgroundImage = entity.headshot_url || entity.image_url
+  } else if (type === 'teams') {
+    if (!supabaseUrl) {
+      backgroundImage = entity.image_url
+    } else {
+      const backgroundUrl = getTeamBackgroundUrl(entity.name, supabaseUrl)
+      const logoUrl = getTeamLogoUrl(entity.name, supabaseUrl)
+      try {
+        const headRes = await fetch(backgroundUrl, { method: 'HEAD' })
+        backgroundImage = headRes.ok ? backgroundUrl : logoUrl
+      } catch {
+        backgroundImage = logoUrl
+      }
+    }
+  } else if (type === 'tracks') {
+    backgroundImage = '/images/pit_bg.jpg'
+  } else {
+    backgroundImage = entity.image_url
+  }
 
   // Determine entity type for components
   const entityType = type === 'tracks' ? 'track' : type === 'teams' ? 'team' : 'driver'

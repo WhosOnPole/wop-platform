@@ -50,12 +50,14 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   }
 
   const showFooter = isDesktop || !isAuthenticated
+  const isGridFullBleed =
+    pathname?.startsWith('/grid/') || pathname?.startsWith('/profile/edit-grid/')
 
   return (
     <>
       <FullscreenHandler autoRequest={true} />
       <TopNav />
-      <main className="min-h-screen pt-14">
+      <main className={`min-h-screen ${!isGridFullBleed ? 'pt-14' : ''}`}>
         {children}
       </main>
       {showFooter ? <Footer /> : null}

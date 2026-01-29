@@ -10,10 +10,10 @@ interface ProfileTabsProps {
 
 export function ProfileTabs({ activeTab, onTabChange, teamBackground }: ProfileTabsProps) {
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'activity', label: 'ACTIVITY' },
     { key: 'drivers', label: 'DRIVERS' },
     { key: 'tracks', label: 'TRACKS' },
     { key: 'teams', label: 'TEAMS' },
+    { key: 'activity', label: 'ACTIVITY' },
   ]
 
   return (
@@ -31,7 +31,7 @@ export function ProfileTabs({ activeTab, onTabChange, teamBackground }: ProfileT
           ))}
         </div>
       </div>
-      
+       
       {/* Teams tab background - variable based on #1 team pick */}
       {activeTab === 'teams' && teamBackground && (
         <div

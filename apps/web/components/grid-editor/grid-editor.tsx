@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 import { Save, X } from 'lucide-react'
+import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface GridItem {
   id: string
@@ -30,6 +31,7 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
   const [existingGridId, setExistingGridId] = useState<string | null>(null)
 
   const maxItems = 10
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined
 
   useEffect(() => {
     setAvailableList(availableItems)
@@ -263,9 +265,19 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                         }`}
                         style={{ ...provided.draggableProps.style }}
                       >
-                        {(type === 'driver' && (item.headshot_url || item.image_url)) || (type !== 'driver' && item.image_url) ? (
+                        {type === 'driver' ? (
+                          <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded">
+                            <DriverCardMedia
+                              driverName={item.name}
+                              supabaseUrl={supabaseUrl}
+                              fallbackSrc={item.headshot_url || item.image_url}
+                              sizes="96px"
+                              className="rounded"
+                            />
+                          </div>
+                        ) : (type === 'team' && item.image_url) || (type === 'track' && item.image_url) ? (
                           <img
-                            src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
+                            src={item.image_url || ''}
                             alt={item.name}
                             className={`h-24 w-24 rounded ${type === 'team' ? 'object-contain bg-gray-100 p-2' : 'object-cover'}`}
                           />
@@ -323,9 +335,19 @@ export function GridEditor({ type, availableItems }: GridEditorProps) {
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
                             {index + 1}
                           </div>
-                          {(type === 'driver' && (item.headshot_url || item.image_url)) || (type !== 'driver' && item.image_url) ? (
+                          {type === 'driver' ? (
+                            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded">
+                              <DriverCardMedia
+                                driverName={item.name}
+                                supabaseUrl={supabaseUrl}
+                                fallbackSrc={item.headshot_url || item.image_url}
+                                sizes="48px"
+                                className="rounded"
+                              />
+                            </div>
+                          ) : (type === 'team' && item.image_url) || (type === 'track' && item.image_url) ? (
                             <img
-                              src={type === 'driver' ? (item.headshot_url || item.image_url || '') : (item.image_url || '')}
+                              src={item.image_url || ''}
                               alt={item.name}
                               className={type === 'team' ? 'h-12 w-12 rounded object-contain' : 'h-12 w-12 rounded object-cover'}
                             />
