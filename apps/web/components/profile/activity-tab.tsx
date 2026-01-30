@@ -75,7 +75,7 @@ export function ActivityTab({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-col gap-4">
       {/* Followers / Following at top */}
       <div className="flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-4">
         <Link
@@ -94,64 +94,70 @@ export function ActivityTab({
         </Link>
       </div>
 
-      {activities.length === 0 ? (
-        <div className="py-12 text-center rounded-lg border border-gray-200 bg-white">
-          <p className="text-gray-500">No activity yet</p>
-        </div>
-      ) : (
-    <div className="space-y-4">
-      {activities.map((item) => {
-        const link = getActivityLink(item)
-        const className = `flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-4 ${
-          link ? 'hover:shadow-md transition-shadow cursor-pointer' : ''
-        }`
-
-        const content = (
-          <>
-            {/* Icon */}
-            <div className="flex-shrink-0">{getActivityIcon(item)}</div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium text-gray-900">{getActivityLabel(item)}</span>
-                {item.target_name && (
-                  <span className="text-gray-600">
-                    {item.target_type === 'profile' ? '@' : ''}
-                    {item.target_name}
-                  </span>
-                )}
-              </div>
-
-              {item.content && (
-                <p className="mt-1 text-sm text-gray-700 line-clamp-2">{item.content}</p>
-              )}
-
-              {item.type === 'grid_update' && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Updated their {item.target_type} grid
-                </p>
-              )}
-
-              <p className="mt-2 text-xs text-gray-500">
-                {new Date(item.created_at).toLocaleString()}
-              </p>
-            </div>
-          </>
-        )
-
-        return link ? (
-          <Link key={item.id} href={link} className={className}>
-            {content}
-          </Link>
-        ) : (
-          <div key={item.id} className={className}>
-            {content}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+        {activities.length === 0 ? (
+          <div className="py-12 text-center rounded-lg border border-gray-200 bg-white">
+            <p className="text-gray-500">No activity yet</p>
           </div>
-        )
-      })}
-    </div>
-      )}
+        ) : (
+          <div className="space-y-4">
+            {activities.map((item) => {
+              const link = getActivityLink(item)
+              const className = `flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-4 ${
+                link ? 'hover:shadow-md transition-shadow cursor-pointer' : ''
+              }`
+
+              const content = (
+                <>
+                  {/* Icon */}
+                  <div className="flex-shrink-0">{getActivityIcon(item)}</div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium text-gray-900">{getActivityLabel(item)}</span>
+                      {item.target_name && (
+                        <span className="text-gray-600">
+                          {item.target_type === 'profile' ? '@' : ''}
+                          {item.target_name}
+                        </span>
+                      )}
+                    </div>
+
+                    {item.content && (
+                      <p className="mt-1 text-sm text-gray-700 line-clamp-2">{item.content}</p>
+                    )}
+
+                    {item.type === 'grid_update' && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Updated their {item.target_type} grid
+                      </p>
+                    )}
+
+                    <p className="mt-2 text-xs text-gray-500">
+                      {new Date(item.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </>
+              )
+
+              if (link) {
+                return (
+                  <Link key={item.id} href={link} className={className}>
+                    {content}
+                  </Link>
+                )
+              }
+
+              return (
+                <div key={item.id} className={className}>
+                  {content}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

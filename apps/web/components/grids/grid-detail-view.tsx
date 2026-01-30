@@ -162,7 +162,7 @@ export function GridDetailView({
           </>
         )}
         {/* Hero image: full-bleed layer, centered horizontally (x), aligned to bottom of section (y), responsive */}
-        <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 z-[1] flex items-end justify-center pointer-events-none">
           {selectedItem && !isPlaceholderSelected && type === 'driver' && (
             <div
               key={selectedIndex}

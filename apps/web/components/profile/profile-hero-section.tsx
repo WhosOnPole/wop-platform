@@ -51,7 +51,7 @@ export function ProfileHeroSection({
   const locationText = locationParts.length > 0 ? locationParts.join(', ') : null
 
   // Calculate scroll transform - content scrolls up limitedly
-  const maxScroll = 90 // Maximum scroll distance in pixels
+  const maxScroll = 130 // Maximum scroll distance in pixels
   const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
 
   return (
@@ -77,7 +77,7 @@ export function ProfileHeroSection({
       {isOwnProfile && (
         <Link
           href="/settings"
-          className="absolute top-16 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors block md:hidden"
+          className="absolute top-16 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors md:hidden"
           aria-label="Settings"
         >
           <Settings className="h-5 w-5" />

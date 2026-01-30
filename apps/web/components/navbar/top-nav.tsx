@@ -120,16 +120,16 @@ export function TopNav() {
   const profileHref = profile?.username ? `/u/${profile.username}` : '/profile'
   const isAuthed = !!user
   const authedNavItems = [
+    { href: profileHref, label: 'Profile' },
     { href: '/feed', label: 'Feed' },
     { href: '/pitlane', label: 'Pit Lane' },
     { href: '/podiums', label: 'Spotlight' },
-    { href: profileHref, label: 'Profile' },
   ]
   const mobileDropdownItems = [
+    { href: profileHref, label: 'Profile', type: 'profile' as const },
     { href: '/feed', label: 'Feed', type: 'feed' as const },
     { href: '/pitlane', label: 'Pit Lane', type: 'pitlane' as const },
     { href: '/podiums', label: 'Spotlight', type: 'podiums' as const },
-    { href: profileHref, label: 'Profile', type: 'profile' as const },
   ]
 
   async function handleLogout() {

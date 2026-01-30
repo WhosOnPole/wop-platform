@@ -187,12 +187,12 @@ export function GridDisplayCard({
               {/* Vertical text on left edge (rotate -90deg like grid titles) */}
               {getVerticalText(firstItem) && (
                 <div
-                  className={`absolute z-30 flex h-[70%] max-h-[120px] w-5 md:w-6 items-center justify-center overflow-visible ${grid.type === 'track' ? 'left-1 top-4' : 'left-2 top-2'}`}
+                  className={`absolute z-30 flex h-[70%] max-h-[120px] w-5 md:w-6 items-start mt-4 justify-center overflow-visible ${grid.type === 'track' ? 'left-1 ' : 'left-2 top-2'}`}
                 >
                   <span
                     className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                     style={{
-                      fontSize: 'clamp(10px, 2.5vw, 20px)',
+                      fontSize: 'clamp(30px, 2.5vw, 20px)',
                       fontFamily: 'Inter, sans-serif',
                       letterSpacing: grid.type === 'track' ? '0' : '0.05em',
                       transform: 'rotate(-90deg)',

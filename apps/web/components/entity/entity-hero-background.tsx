@@ -59,7 +59,7 @@ export function EntityHeroBackground({
 
       {/* Team: two driver body.png overlay, split left/right, bottom strip */}
       {showTeamDriverBodies && (
-        <div className="absolute inset-x-0 bottom-0 z-[1] flex items-end justify-center pointer-events-none h-[min(68vh,480px)] min-h-[220px]">
+        <div className="absolute inset-x-0 bottom-0 z-[1] flex items-end justify-center pointer-events-none h-[min(68vh,480px)] min-h-[220px] translate-y-4">
           <div
             className="grid w-full h-full max-w-5xl mx-auto"
             style={{
@@ -69,15 +69,15 @@ export function EntityHeroBackground({
             {driversToShow.map((driver) => (
               <div
                 key={driver.id}
-                className="relative flex items-end justify-center min-h-0 w-full"
+                className="relative flex items-start justify-center min-h-0 w-full"
               >
                 <div className="relative w-full h-full">
                   <Image
                     src={getDriverBodyImageUrl(driver.name, supabaseUrl!)}
                     alt=""
                     fill
-                    sizes="(max-width: 768px) 68vw, 480px"
-                    className="object-contain object-bottom"
+                    sizes="(max-width: 668px) 60vw, 400px"
+                    className="object-cover object-top pt-32"
                   />
                 </div>
               </div>

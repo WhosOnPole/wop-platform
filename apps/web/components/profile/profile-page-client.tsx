@@ -203,6 +203,8 @@ export function ProfilePageClient({
     }
   }
 
+  const isActivityTab = activeTab === 'activity'
+
   return (
     <div className="relative min-h-screen z-10">
       {/* Tabs */}
@@ -217,11 +219,13 @@ export function ProfilePageClient({
         ref={contentRef} 
         className={`bg-black ${
           isSticky 
-            ? 'fixed top-[calc(10rem+4.5rem)] left-0 right-0 bottom-20 overflow-y-auto z-20 md:top-[calc(14rem+4.5rem)]' 
+            ? `fixed top-[calc(10rem+4.5rem)] left-0 right-0 bottom-20 z-20 md:top-[calc(14rem+4.5rem)] ${
+                isActivityTab ? 'overflow-y-hidden' : 'overflow-y-auto'
+              }` 
             : 'px-4 py-6 sm:px-6 lg:px-8'
         }`}
       >
-        <div className={isSticky ? 'px-4 py-6 sm:px-6 lg:px-8' : ''}>
+        <div className={isSticky ? 'px-4 py-6 sm:px-6 lg:px-8 h-full min-h-0' : ''}>
           {/* Drivers tab */}
         {activeTab === 'drivers' && driverGrid && (
           <div className="mx-auto max-w-4xl">
@@ -261,7 +265,7 @@ export function ProfilePageClient({
 
         {/* Activity tab */}
         {activeTab === 'activity' && (
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-4xl h-full min-h-0">
             <ActivityTab
               activities={activities}
               profileUsername={profile.username}
