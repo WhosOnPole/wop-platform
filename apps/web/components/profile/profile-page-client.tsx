@@ -20,6 +20,8 @@ interface ProfilePageClientProps {
   teamGrid?: any
   activities: any[]
   profilePosts: any[]
+  followerCount?: number
+  followingCount?: number
   supabaseUrl?: string
 }
 
@@ -32,6 +34,8 @@ export function ProfilePageClient({
   teamGrid,
   activities,
   profilePosts,
+  followerCount = 0,
+  followingCount = 0,
   supabaseUrl,
 }: ProfilePageClientProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('drivers')
@@ -212,13 +216,6 @@ export function ProfilePageClient({
               supabaseUrl={supabaseUrl}
               onCommentClick={scrollToComments}
             />
-            <div id="profile-comments" className="mt-8">
-              <ProfileDiscussionSection
-                posts={profilePosts}
-                profileId={profile.id}
-                profileUsername={profile.username}
-              />
-            </div>
           </div>
         )}
 
@@ -231,13 +228,7 @@ export function ProfilePageClient({
               supabaseUrl={supabaseUrl}
               onCommentClick={scrollToComments}
             />
-            <div id="profile-comments" className="mt-8">
-              <ProfileDiscussionSection
-                posts={profilePosts}
-                profileId={profile.id}
-                profileUsername={profile.username}
-              />
-            </div>
+
           </div>
         )}
 
@@ -250,20 +241,18 @@ export function ProfilePageClient({
               supabaseUrl={supabaseUrl}
               onCommentClick={scrollToComments}
             />
-            <div id="profile-comments" className="mt-8">
-              <ProfileDiscussionSection
-                posts={profilePosts}
-                profileId={profile.id}
-                profileUsername={profile.username}
-              />
-            </div>
           </div>
         )}
 
         {/* Activity tab */}
         {activeTab === 'activity' && (
           <div className="mx-auto max-w-4xl">
-            <ActivityTab activities={activities} profileUsername={profile.username} />
+            <ActivityTab
+              activities={activities}
+              profileUsername={profile.username}
+              followerCount={followerCount}
+              followingCount={followingCount}
+            />
           </div>
         )}
 

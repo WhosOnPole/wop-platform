@@ -56,6 +56,18 @@ export default async function UserProfilePage({ params }: PageProps) {
     isFollowing = !!follow
   }
 
+  // Follower and following counts for activity tab
+  const [{ count: followerCount }, { count: followingCount }] = await Promise.all([
+    supabase
+      .from('follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('following_id', profile.id),
+    supabase
+      .from('follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('follower_id', profile.id),
+  ])
+
   // Fetch user's #1 team pick for background
   const { data: backgroundTeamGrid } = await supabase
     .from('grids')
@@ -346,6 +358,8 @@ export default async function UserProfilePage({ params }: PageProps) {
         teamGrid={teamGrid}
         activities={activities}
         profilePosts={profilePosts || []}
+        followerCount={followerCount ?? 0}
+        followingCount={followingCount ?? 0}
         supabaseUrl={supabaseUrl}
       />
     </div>

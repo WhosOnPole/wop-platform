@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import Image from 'next/image'
 import Link from 'next/link'
-import { PitlaneSearchProvider, PitlaneSearchComponent, PitlaneTabsComponent, PitlaneSearchResultsWrapper } from '@/components/pitlane/pitlane-search-wrapper'
+import { PitlaneSearchProvider, PitlaneTabsComponent } from '@/components/pitlane/pitlane-search-wrapper'
 import { UpcomingRaceBannerActions } from '@/components/pitlane/upcoming-race-banner-actions'
 
 export const revalidate = 300
@@ -122,18 +122,6 @@ export default async function PitlanePage() {
   return (
     <PitlaneSearchProvider>
       <div className="mx-auto max-w-6xl">
-        {/* Search Input */}
-        <PitlaneSearchComponent />
-
-        {/* Search Results Overlay */}
-        <PitlaneSearchResultsWrapper
-          drivers={driversData}
-          teams={teamsData}
-          tracks={tracksData}
-          schedule={tracksWithStartDate}
-          supabaseUrl={supabaseUrl}
-        />
-
         {/* Upcoming race banner */}
       {nextRace ? (
         <div className="mb-5 relative mx-4 sm:mx-6 lg:mx-8">

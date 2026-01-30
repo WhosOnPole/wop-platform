@@ -244,8 +244,8 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="mt-2 text-gray-600">Manage your profile and account settings</p>
+        <h1 className="text-3xl font-bold font-display">Settings</h1>
+        <p className="mt-2">Manage your profile and account settings</p>
       </div>
 
       <div className="space-y-6">
@@ -390,13 +390,7 @@ export default function SettingsPage() {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-700">Social Links</label>
-                <button
-                  type="button"
-                  onClick={addSocialLink}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  + Add Link
-                </button>
+ this 
               </div>
               <div className="space-y-2">
                 {socialLinks.map((link, index) => (

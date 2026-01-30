@@ -11,7 +11,8 @@ import { PollModal } from '@/components/create/modals/poll-modal'
 import { TipModal } from '@/components/create/modals/tip-modal'
 import { PostModal } from '@/components/create/modals/post-modal'
 import { NotificationBell } from '@/components/navbar/notification-bell'
-import { PlusCircle, Settings, LogOut } from 'lucide-react'
+import { GlobalSearchModal } from '@/components/search/global-search-modal'
+import { PlusCircle, Settings, LogOut, Search } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface Profile {
@@ -29,6 +30,7 @@ export function TopNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [activeModal, setActiveModal] = useState<'story' | 'poll' | 'tip' | 'post' | null>(null)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [hasScrolled, setHasScrolled] = useState(false)
 
   useEffect(() => {
@@ -242,6 +244,14 @@ export function TopNav() {
 
           {isAuthed ? (
             <>
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5 text-white" />
+              </button>
               <NotificationBell />
               <button
                 onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -343,6 +353,7 @@ export function TopNav() {
       {activeModal === 'poll' ? <PollModal onClose={() => setActiveModal(null)} /> : null}
       {activeModal === 'tip' ? <TipModal onClose={() => setActiveModal(null)} /> : null}
       {activeModal === 'post' ? <PostModal onClose={() => setActiveModal(null)} /> : null}
+      <GlobalSearchModal open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   )
 }

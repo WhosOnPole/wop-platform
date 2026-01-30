@@ -11,7 +11,7 @@ import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { getRecentInstagramMedia } from '@/services/instagram'
 import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
-import { getTeamLogoUrl, getTeamBackgroundUrl, getTeamIconUrl } from '@/utils/storage-urls'
+import { getTeamLogoUrl, getTeamBackgroundUrl, getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
@@ -248,6 +248,8 @@ export default async function DynamicPage({ params }: PageProps) {
     backgroundImage = entity.image_url
   }
 
+  const trackSlugForHero = type === 'tracks' && entity?.name ? getTrackSlug(entity.name) : null
+
   // Determine entity type for components
   const entityType = type === 'tracks' ? 'track' : type === 'teams' ? 'team' : 'driver'
 
@@ -322,11 +324,14 @@ export default async function DynamicPage({ params }: PageProps) {
       {/* Top Section with Background Image - Fixed */}
       <div className="fixed inset-x-0 top-0 z-10 h-[65vh]">
         {/* Hero Background */}
-        <EntityHeroBackground 
-          imageUrl={backgroundImage} 
+        <EntityHeroBackground
+          imageUrl={backgroundImage}
           alt={entity.name}
           entityType={entityType}
           entityId={entity.id}
+          trackSlug={trackSlugForHero ?? undefined}
+          trackName={type === 'tracks' ? entity.name : undefined}
+          supabaseUrl={type === 'tracks' ? supabaseUrl : undefined}
         />
         
         {/* Content over background */}

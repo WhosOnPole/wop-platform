@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { MessageSquare, Heart, MapPin, Grid3x3 } from 'lucide-react'
 
 interface ActivityItem {
@@ -20,9 +19,16 @@ interface ActivityItem {
 interface ActivityTabProps {
   activities: ActivityItem[]
   profileUsername: string
+  followerCount?: number
+  followingCount?: number
 }
 
-export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
+export function ActivityTab({
+  activities,
+  profileUsername,
+  followerCount = 0,
+  followingCount = 0,
+}: ActivityTabProps) {
   function getActivityIcon(item: ActivityItem) {
     switch (item.type) {
       case 'post':
@@ -68,15 +74,31 @@ export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
     return null
   }
 
-  if (activities.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-gray-500">No activity yet</p>
-      </div>
-    )
-  }
-
   return (
+    <div className="space-y-4">
+      {/* Followers / Following at top */}
+      <div className="flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-4">
+        <Link
+          href={`/u/${profileUsername}/followers`}
+          className="flex flex-col items-center gap-0.5 text-gray-700 hover:text-gray-900 transition-colors"
+        >
+          <span className="text-lg font-semibold tabular-nums">{followerCount}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Followers</span>
+        </Link>
+        <Link
+          href={`/u/${profileUsername}/following`}
+          className="flex flex-col items-center gap-0.5 text-gray-700 hover:text-gray-900 transition-colors"
+        >
+          <span className="text-lg font-semibold tabular-nums">{followingCount}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Following</span>
+        </Link>
+      </div>
+
+      {activities.length === 0 ? (
+        <div className="py-12 text-center rounded-lg border border-gray-200 bg-white">
+          <p className="text-gray-500">No activity yet</p>
+        </div>
+      ) : (
     <div className="space-y-4">
       {activities.map((item) => {
         const link = getActivityLink(item)
@@ -128,6 +150,8 @@ export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
           </div>
         )
       })}
+    </div>
+      )}
     </div>
   )
 }

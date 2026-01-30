@@ -111,19 +111,88 @@ export function GridDetailView({
         : '/images/grid_bg.png'
       : '/images/grid_bg.png'
 
+  const isDriverOrTrack = type === 'driver' || type === 'track'
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Top half: hero */}
-      <div
-        className="relative min-h-[50vh] flex flex-col bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroBackground})` }}
-      >
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-20 pb-6">
-          {/* Name + flag above the image, top left */}
+      <div className="relative h-[55vh] flex flex-col">
+        {/* Background: driver/track use gradient + dimmed image; team uses plain image */}
+        {isDriverOrTrack ? (
+          <div
+            className="absolute inset-0 z-0"
+            style={{
+              opacity: 0.5,
+              backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%), url(${heroBackground})`,
+              backgroundColor: 'lightgray',
+              backgroundPosition: '-0.213px 0px',
+              backgroundSize: '100.092% 106.904%',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+        ) : (
+          <>
+            <div
+              className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${heroBackground})` }}
+            />
+            <div className="absolute inset-0 z-0 bg-black/30" />
+          </>
+        )}
+        {/* Hero image: full-bleed layer, centered horizontally (x), aligned to bottom of section (y), responsive */}
+        <div className="absolute inset-0 z-[1] flex items-end justify-center pointer-events-none">
+          {selectedItem && type === 'driver' && (
+            <div
+              key={selectedIndex}
+              className="transition-all duration-300 h-[min(85vw,320px)] w-[min(85vw,320px)] min-h-[200px] min-w-[200px] mb-2"
+            >
+              <DriverHeroMedia
+                driverName={selectedItem.name}
+                supabaseUrl={supabaseUrl}
+                fallbackSrc={
+                  (selectedItem as DriverRankItem).headshot_url ||
+                  (selectedItem as DriverRankItem).image_url
+                }
+                className="h-full w-full"
+              />
+            </div>
+          )}
+          {selectedItem && type === 'track' && (
+            <div
+              key={selectedIndex}
+              className="transition-all duration-300 flex items-center justify-center h-[min(50vh,320px)] w-full max-w-[min(90vw,320px)]"
+            >
+              <TrackHeroMedia
+                trackSlug={(selectedItem as TrackRankItem).track_slug ?? ''}
+                trackName={selectedItem.name}
+                supabaseUrl={supabaseUrl}
+                className="h-full w-full max-h-full"
+              />
+            </div>
+          )}
+          {selectedItem && type === 'team' && (
+            <div
+              key={selectedIndex}
+              className="transition-all duration-300 flex items-center justify-center h-full min-h-[200px] w-full max-w-[min(90vw,360px)]"
+            >
+              <TeamHeroMedia
+                teamId={selectedItem.id}
+                teamName={selectedItem.name}
+                supabaseUrl={supabaseUrl}
+                className="h-full max-h-[min(45vh,260px)] w-full"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-14 pb-0">
+          {/* Name + flag above, top left */}
           {selectedItem && (
             <div className="flex flex-col items-start text-left shrink-0 mb-4">
               <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-4xl font-serif text-white font-normal font-display w-full">
+                  {selectedItem.name}
+                </h1>
                 {type === 'driver' && (selectedItem as DriverRankItem).nationality && (
                   <>
                     <Image
@@ -145,28 +214,20 @@ export function GridDetailView({
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-serif font-semibold text-white mt-1">
-                {selectedItem.name}
-              </h1>
             </div>
           )}
 
-          <div className="flex w-full gap-4 items-stretch min-h-0 flex-1">
+          <div className="flex w-full gap-4 items-end min-h-0 flex-1">
             {/* Left: vertical label */}
-            <div
-              className="flex items-center justify-center shrink-0"
-              style={{
-                width: 23,
-                height: 400,
-              }}
-            >
+            <div className="flex min-h-0 w-[25px] shrink-0 items-end justify-center overflow-hidden self-stretch">
               <span
-                className="block text-[30px] font-extrabold uppercase leading-normal text-transparent"
+                className="block shrink-0 text-[30px] font-extrabold uppercase leading-none text-transparent"
                 style={{
                   fontFamily: 'Inter, sans-serif',
-                  width: 400,
-                  height: 23,
+                  width: 0,
+                  height: 30,
                   transform: 'rotate(-90deg)',
+                  transformOrigin: 'center center',
                   WebkitTextStroke: '1px #25B4B1',
                   color: 'rgba(255,255,255,0)',
                 }}
@@ -175,70 +236,35 @@ export function GridDetailView({
               </span>
             </div>
 
-            {/* Center: hero media (large, vertically centered) with blurb overlayed at left edge */}
-            <div className="relative flex-1 flex items-center justify-center min-w-0 min-h-[320px]">
-              {/* Hero media - large and centered */}
-              <div className="flex items-center justify-center w-full h-full min-h-[280px]">
-                {selectedItem && type === 'driver' && (
-                  <div key={selectedIndex} className="transition-all duration-300">
-                    <DriverHeroMedia
-                      driverName={selectedItem.name}
-                      supabaseUrl={supabaseUrl}
-                      fallbackSrc={
-                        (selectedItem as DriverRankItem).headshot_url ||
-                        (selectedItem as DriverRankItem).image_url
-                      }
-                      size={320}
-                    />
-                  </div>
-                )}
-                {selectedItem && type === 'track' && (
-                  <div key={selectedIndex} className="transition-all duration-300 h-full max-h-[320px] w-full max-w-[320px] flex items-center justify-center">
-                    <TrackHeroMedia
-                      trackSlug={(selectedItem as TrackRankItem).track_slug ?? ''}
-                      trackName={selectedItem.name}
-                      supabaseUrl={supabaseUrl}
-                    />
-                  </div>
-                )}
-                {selectedItem && type === 'team' && (
-                  <div key={selectedIndex} className="transition-all duration-300 h-full flex items-center justify-center">
-                    <TeamHeroMedia
-                      teamId={selectedItem.id}
-                      teamName={selectedItem.name}
-                      supabaseUrl={supabaseUrl}
-                    />
-                  </div>
-                )}
-              </div>
+            {/* Spacer so blurb can sit on the right */}
+            <div className="flex-1 min-w-0" />
 
-              {/* Blurb overlayed at left edge of center area */}
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-full max-w-[280px]">
-                {mode === 'edit' && onBlurbChange ? (
-                  <div className="rounded-lg bg-black/86 p-4 text-white w-full">
-                    <label className="block text-sm font-medium mb-2">Blurb (optional, max 140)</label>
-                    <textarea
-                      value={blurbOverride ?? grid.blurb ?? ''}
-                      onChange={(e) => {
-                        if (e.target.value.length <= 140) onBlurbChange(e.target.value)
-                      }}
-                      rows={3}
-                      placeholder="Add a blurb about your ranking..."
-                      className="w-full rounded bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 border border-white/20 focus:border-[#25B4B1] focus:outline-none"
-                    />
-                    <p className="mt-1 text-xs text-white/60">{(blurbOverride ?? grid.blurb ?? '').length}/140</p>
-                  </div>
-                ) : (
-                  <GridBlurbCard
-                    gridId={grid.id}
-                    blurb={grid.blurb ?? null}
-                    likeCount={grid.like_count ?? 0}
-                    isLiked={grid.is_liked ?? false}
-                    owner={owner}
-                    isOwnProfile={isOwnProfile}
+            {/* Blurb on the right, bottom of top section */}
+            <div className="shrink-0 w-full max-w-[280px] rounded-lg bg-black/80 p-2 text-white self-end mb-2">
+              {mode === 'edit' && onBlurbChange ? (
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-2">Blurb (optional, max 140)</label>
+                  <textarea
+                    value={blurbOverride ?? grid.blurb ?? ''}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 140) onBlurbChange(e.target.value)
+                    }}
+                    rows={3}
+                    placeholder="Add a blurb about your ranking..."
+                    className="w-full rounded bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 border border-white/20 focus:border-[#25B4B1] focus:outline-none"
                   />
-                )}
-              </div>
+                  <p className="mt-1 text-xs text-white/60">{(blurbOverride ?? grid.blurb ?? '').length}/140</p>
+                </div>
+              ) : (
+                <GridBlurbCard
+                  gridId={grid.id}
+                  blurb={grid.blurb ?? null}
+                  likeCount={grid.like_count ?? 0}
+                  isLiked={grid.is_liked ?? false}
+                  owner={owner}
+                  isOwnProfile={isOwnProfile}
+                />
+              )}
             </div>
           </div>
         </div>

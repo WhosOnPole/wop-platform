@@ -17,16 +17,15 @@ export function TrackHeroMedia({
   className = '',
 }: TrackHeroMediaProps) {
   const [failed, setFailed] = useState(false)
-  const svgUrl = supabaseUrl ? getTrackSvgUrl(trackSlug, supabaseUrl) : null
+  const svgUrl = supabaseUrl && trackSlug ? getTrackSvgUrl(trackSlug, supabaseUrl) : null
 
   if (!svgUrl || failed) {
     return (
       <div
-        className={`flex items-center justify-center text-white/60 text-lg ${className}`}
+        className={`flex items-center justify-center ${className}`}
         style={{ minHeight: 200 }}
-      >
-        {trackName}
-      </div>
+        aria-label={trackName}
+      />
     )
   }
 
@@ -35,7 +34,7 @@ export function TrackHeroMedia({
       <img
         src={svgUrl}
         alt=""
-        className="max-h-[min(50vh,280px)] w-auto object-contain"
+        className="h-full max-h-full w-auto object-contain"
         onError={() => setFailed(true)}
         aria-hidden
       />

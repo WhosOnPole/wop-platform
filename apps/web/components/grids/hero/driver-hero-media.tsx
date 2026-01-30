@@ -9,7 +9,7 @@ interface DriverHeroMediaProps {
   supabaseUrl?: string
   fallbackSrc?: string | null
   className?: string
-  /** Size in px for the circular image (default 280) */
+  /** Size in px for the circular image; omit to fill container (responsive) */
   size?: number
 }
 
@@ -18,17 +18,22 @@ export function DriverHeroMedia({
   supabaseUrl,
   fallbackSrc,
   className = '',
-  size = 280,
+  size,
 }: DriverHeroMediaProps) {
   const [useFallback, setUseFallback] = useState(false)
   const profileUrl = supabaseUrl ? getDriverProfileImageUrl(driverName, supabaseUrl) : null
   const showProfile = profileUrl && !useFallback
   const showFallback = (useFallback && fallbackSrc) || (!profileUrl && fallbackSrc)
 
+  const sizeStyle =
+    size != null
+      ? { width: size, height: size, minWidth: size, minHeight: size }
+      : { width: '100%', height: '100%', minWidth: 0, minHeight: 0 }
+
   return (
     <div
       className={`relative overflow-hidden rounded-full ${className}`}
-      style={{ width: size, height: size, minWidth: size, minHeight: size }}
+      style={sizeStyle}
     >
       {showProfile && (
         <img
