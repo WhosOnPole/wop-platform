@@ -363,7 +363,7 @@ export function GridDetailView({
                 <button
                   type="button"
                   onClick={() => setPickerOpen(true)}
-                  className="text-sm text-[#25B4B1] hover:text-[#3BEFEB]"
+                  className="text-sm text-[#25B4B1] hover:text-[#3BEFEB] bg-white/30 rounded-full px-4 py-2"
                 >
                   Change pick at rank {selectedIndex + 1}
                 </button>

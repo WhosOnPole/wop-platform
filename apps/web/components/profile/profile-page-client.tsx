@@ -24,6 +24,14 @@ interface ProfilePageClientProps {
   supabaseUrl?: string
 }
 
+function buildPlaceholderGrid(gridType: 'driver' | 'team' | 'track') {
+  return {
+    id: `__placeholder__${gridType}`,
+    type: gridType,
+    ranked_items: [],
+  }
+}
+
 export function ProfilePageClient({
   profile,
   isOwnProfile,
@@ -204,6 +212,9 @@ export function ProfilePageClient({
   }
 
   const isActivityTab = activeTab === 'activity'
+  const driverGridDisplay = driverGrid ?? buildPlaceholderGrid('driver')
+  const trackGridDisplay = trackGrid ?? buildPlaceholderGrid('track')
+  const teamGridDisplay = teamGrid ?? buildPlaceholderGrid('team')
 
   return (
     <div className="relative min-h-screen z-10">
@@ -227,10 +238,10 @@ export function ProfilePageClient({
       >
         <div className={isSticky ? 'px-4 py-6 sm:px-6 lg:px-8 h-full min-h-0' : ''}>
           {/* Drivers tab */}
-        {activeTab === 'drivers' && driverGrid && (
+        {activeTab === 'drivers' && driverGridDisplay && (
           <div className="mx-auto max-w-4xl">
             <GridDisplayCard
-              grid={driverGrid}
+              grid={driverGridDisplay}
               isOwnProfile={isOwnProfile}
               supabaseUrl={supabaseUrl}
               onCommentClick={scrollToComments}
@@ -239,10 +250,10 @@ export function ProfilePageClient({
         )}
 
         {/* Tracks tab */}
-        {activeTab === 'tracks' && trackGrid && (
+        {activeTab === 'tracks' && trackGridDisplay && (
           <div className="mx-auto max-w-4xl">
             <GridDisplayCard
-              grid={trackGrid}
+              grid={trackGridDisplay}
               isOwnProfile={isOwnProfile}
               supabaseUrl={supabaseUrl}
               onCommentClick={scrollToComments}
@@ -252,10 +263,10 @@ export function ProfilePageClient({
         )}
 
         {/* Teams tab */}
-        {activeTab === 'teams' && teamGrid && (
+        {activeTab === 'teams' && teamGridDisplay && (
           <div className="mx-auto max-w-4xl">
             <GridDisplayCard
-              grid={teamGrid}
+              grid={teamGridDisplay}
               isOwnProfile={isOwnProfile}
               supabaseUrl={supabaseUrl}
               onCommentClick={scrollToComments}
@@ -275,22 +286,6 @@ export function ProfilePageClient({
           </div>
         )}
 
-        {/* Empty states */}
-        {activeTab === 'drivers' && !driverGrid && (
-          <div className="mx-auto max-w-4xl py-12 text-center text-white">
-            <p>No driver grid yet</p>
-          </div>
-        )}
-        {activeTab === 'tracks' && !trackGrid && (
-          <div className="mx-auto max-w-4xl py-12 text-center text-white">
-            <p>No track grid yet</p>
-          </div>
-        )}
-        {activeTab === 'teams' && !teamGrid && (
-          <div className="mx-auto max-w-4xl py-12 text-center text-white">
-            <p>No team grid yet</p>
-          </div>
-        )}
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@ interface GridItem {
   headshot_url?: string | null
   country?: string | null
   location?: string | null
+  is_placeholder?: boolean
 }
 
 interface GridDisplayCardProps {
@@ -33,6 +34,25 @@ interface GridDisplayCardProps {
   onCommentClick?: () => void
 }
 
+function buildFilledItems({
+  items,
+  gridType,
+}: {
+  items: GridItem[]
+  gridType: GridDisplayCardProps['grid']['type']
+}): GridItem[] {
+  return Array.from({ length: 10 }, (_, index) => {
+    const existingItem = items[index]
+    if (existingItem) return existingItem
+
+    return {
+      id: `__placeholder__${gridType}_${index + 1}`,
+      name: '',
+      is_placeholder: true,
+    }
+  })
+}
+
 export function GridDisplayCard({
   grid,
   isOwnProfile,
@@ -40,8 +60,10 @@ export function GridDisplayCard({
   onCommentClick,
 }: GridDisplayCardProps) {
   const rankedItems = Array.isArray(grid.ranked_items) ? grid.ranked_items : []
-  const firstItem = rankedItems[0]
-  const otherItems = rankedItems.slice(1, 10) // Items 2-10
+  const filledItems = buildFilledItems({ items: rankedItems, gridType: grid.type })
+  const firstItem = filledItems[0]
+  const otherItems = filledItems.slice(1, 10) // Items 2-10
+  const isPlaceholderGrid = grid.id.startsWith('__placeholder__')
 
   const [firstTrackSvgFailed, setFirstTrackSvgFailed] = useState(false)
   const [failedTrackIds, setFailedTrackIds] = useState<Set<string>>(new Set())
@@ -117,106 +139,117 @@ export function GridDisplayCard({
         {/* #1 Item - 50% width, square aspect */}
         {firstItem && (
           <div className="w-1/2 min-w-0 flex-shrink-0">
-            <Link
-              href={getItemHref(firstItem)}
-              className="relative block aspect-square w-full rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
-              style={
-                grid.type === 'driver'
-                  ? undefined
-                  : {
-                      backgroundImage:
-                        grid.type === 'track'
-                          ? 'url(/images/grid_bg.png)'
-                          : getItemImageUrl(firstItem)
-                            ? `url(${getItemImageUrl(firstItem)})`
-                            : 'url(/images/pit_bg.jpg)',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundColor:
-                        grid.type === 'track' || getItemImageUrl(firstItem)
-                          ? undefined
-                          : '#f3f4f6',
-                    }
-              }
-            >
-              {grid.type === 'driver' && (
-                <div className="absolute inset-0 z-0">
-                  <DriverCardMedia
-                    driverName={firstItem.name}
-                    supabaseUrl={supabaseUrl}
-                    fallbackSrc={firstItem.headshot_url || firstItem.image_url}
-                    sizes="(max-width: 768px) 50vw, 200px"
-                  />
+            {firstItem.is_placeholder ? (
+              <div className="relative block aspect-square w-full rounded-xl overflow-hidden border border-dashed border-white/20 bg-white/5">
+                <div className="absolute top-2 right-2 z-30">
+                  <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
                 </div>
-              )}
-              {/* Dark overlay (tracks and teams) */}
-              {(grid.type === 'track' || grid.type === 'team') && (
-                <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
-              )}
-              {/* Track SVG from storage: scale + bleed right (matches pitlane track cards) */}
-              {grid.type === 'track' && getItemImageUrl(firstItem) && !firstTrackSvgFailed && (
-                <div
-                  className="absolute inset-0 z-10 flex items-center justify-center p-2"
-                  style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
-                >
-                  <img
-                    src={getItemImageUrl(firstItem)!}
-                    alt=""
-                    className="h-full max-h-full w-auto object-contain"
-                    onError={() => setFirstTrackSvgFailed(true)}
-                    aria-hidden
-                  />
-                </div>
-              )}
-              {/* Team: centered uppercase Inter text overlay */}
-              {grid.type === 'team' && (
-                <span
-                  className="absolute inset-0 z-10 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: 'clamp(12px, 2vw, 18px)',
-                  }}
-                >
-                  {firstItem.name}
-                </span>
-              )}
-              {/* Overlay gradient for text readability (drivers/tracks) */}
-              {grid.type !== 'team' && (
-                <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              )}
-              {/* Vertical text on left edge (rotate -90deg like grid titles) */}
-              {getVerticalText(firstItem) && (
-                <div
-                  className={`absolute z-30 flex h-[70%] max-h-[120px] w-5 md:w-6 items-start mt-4 justify-center overflow-visible ${grid.type === 'track' ? 'left-1 ' : 'left-2 top-2'}`}
-                >
+              </div>
+            ) : (
+              <Link
+                href={getItemHref(firstItem)}
+                className="relative block aspect-square w-full rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
+                style={
+                  grid.type === 'driver'
+                    ? undefined
+                    : {
+                        backgroundImage:
+                          grid.type === 'track'
+                            ? 'url(/images/grid_bg.png)'
+                            : getItemImageUrl(firstItem)
+                              ? `url(${getItemImageUrl(firstItem)})`
+                              : 'url(/images/pit_bg.jpg)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundColor:
+                          grid.type === 'track' || getItemImageUrl(firstItem)
+                            ? undefined
+                            : '#f3f4f6',
+                      }
+                }
+              >
+                {grid.type === 'driver' && (
+                  <div className="absolute inset-0 z-0">
+                    <DriverCardMedia
+                      driverName={firstItem.name}
+                      supabaseUrl={supabaseUrl}
+                      fallbackSrc={firstItem.headshot_url || firstItem.image_url}
+                      sizes="(max-width: 768px) 50vw, 200px"
+                    />
+                  </div>
+                )}
+                {/* Dark overlay (tracks and teams) */}
+                {(grid.type === 'track' || grid.type === 'team') && (
+                  <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
+                )}
+                {/* Track SVG from storage: scale + bleed right (matches pitlane track cards) */}
+                {grid.type === 'track' && getItemImageUrl(firstItem) && !firstTrackSvgFailed && (
+                  <div
+                    className="absolute inset-0 z-10 flex items-center justify-center p-2"
+                    style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+                  >
+                    <img
+                      src={getItemImageUrl(firstItem)!}
+                      alt=""
+                      className="h-full max-h-full w-auto object-contain"
+                      onError={() => setFirstTrackSvgFailed(true)}
+                      aria-hidden
+                    />
+                  </div>
+                )}
+                {/* Team: centered uppercase Inter text overlay */}
+                {grid.type === 'team' && (
                   <span
-                    className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                    className="absolute inset-0 z-10 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
                     style={{
-                      fontSize: 'clamp(30px, 2.5vw, 20px)',
                       fontFamily: 'Inter, sans-serif',
-                      letterSpacing: grid.type === 'track' ? '0' : '0.05em',
-                      transform: 'rotate(-90deg)',
-                      transformOrigin: 'center center',
+                      fontSize: 'clamp(12px, 2vw, 18px)',
                     }}
                   >
-                    {getVerticalText(firstItem)}
+                    {firstItem.name}
                   </span>
+                )}
+                {/* Overlay gradient for text readability (drivers/tracks) */}
+                {grid.type !== 'team' && (
+                  <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                )}
+                {/* Vertical text on left edge (rotate -90deg like grid titles) */}
+                {getVerticalText(firstItem) && (
+                  <div
+                    className={`absolute z-30 flex h-[70%] w-5 md:w-6 items-start mt-4 justify-center overflow-visible ${grid.type === 'track' ? 'left-1 ' : 'left-2 top-2'}`}
+                  >
+                    <span
+                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                      style={{
+                        fontSize:
+                          grid.type === 'driver'
+                            ? 'clamp(30px, 2.5vw, 20px)'
+                            : 'clamp(25px, 1.6vw, 16px)',
+                        fontFamily: 'Inter, sans-serif',
+                        letterSpacing: grid.type === 'track' ? '0' : '0.05em',
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: grid.type === 'driver' ? 'center center' : ' 90% 100%',
+                      }}
+                    >
+                      {getVerticalText(firstItem)}
+                    </span>
+                  </div>
+                )}
+                {/* Rating/Rank number on top right */}
+                <div className="absolute top-2 right-2 z-30">
+                  <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white leading-none">1</div>
                 </div>
-              )}
-              {/* Rating/Rank number on top right */}
-              <div className="absolute top-2 right-2 z-30">
-                <div className="text-[clamp(2rem,8vw,3.75rem)] font-bold text-white leading-none">1</div>
-              </div>
 
-              {/* Fallback if no image (non-tracks, non-teams) */}
-              {grid.type !== 'track' && grid.type !== 'team' && !getItemImageUrl(firstItem) && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-gray-600">
-                    {firstItem.name.charAt(0)}
-                  </span>
-                </div>
-              )}
-            </Link>
+                {/* Fallback if no image (non-tracks, non-teams) */}
+                {grid.type !== 'track' && grid.type !== 'team' && !getItemImageUrl(firstItem) && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-4xl font-bold text-gray-600">
+                      {firstItem.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </Link>
+            )}
           </div>
         )}
 
@@ -224,6 +257,18 @@ export function GridDisplayCard({
         <div className="w-1/2 min-w-0 grid grid-cols-3 gap-1">
           {otherItems.map((item, index) => {
             const rank = index + 2
+            if (item.is_placeholder)
+              return (
+                <div
+                  key={item.id}
+                  className="relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden border border-dashed border-white/20 bg-white/5"
+                >
+                  <div className="absolute top-0.5 right-0.5 z-30">
+                    <div className="text-[clamp(8px,2vw,10px)] font-bold text-white/30 leading-none">{rank}</div>
+                  </div>
+                </div>
+              )
+
             return (
               <Link
                 key={item.id}
@@ -283,7 +328,7 @@ export function GridDisplayCard({
                     className="absolute inset-0 z-10 flex items-center justify-center px-0.5 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
                     style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '7px',
+                      fontSize: '10px',
                     }}
                   >
                     {item.name}
@@ -301,7 +346,7 @@ export function GridDisplayCard({
                     <span
                       className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                       style={{
-                        fontSize: grid.type === 'driver' ? '8px' : '7px',
+                        fontSize: grid.type === 'driver' ? '8px' : '15px',
                         fontFamily: 'Inter, sans-serif',
                         letterSpacing: '0',
                         transform: 'rotate(-90deg)',
@@ -324,7 +369,8 @@ export function GridDisplayCard({
       </div>
 
       {/* Actions: Comment, Like, View More - Left aligned */}
-      <div className="flex items-center gap-4 w-full">
+      {!isPlaceholderGrid && (
+        <div className="flex items-center gap-4 w-full">
         {/* Comment Bubble */}
         <button
           onClick={onCommentClick}
@@ -356,10 +402,11 @@ export function GridDisplayCard({
         >
           View Grid <ChevronRight className="h-4 w-4" />
         </Link>
-      </div>
+        </div>
+      )}
 
       {/* Grid Snapshot (if history exists) */}
-      {grid.previous_state && grid.updated_at && (
+      {!isPlaceholderGrid && grid.previous_state && grid.updated_at && (
         <div className="mt-4">
           <GridSnapshot
             previousState={grid.previous_state}
