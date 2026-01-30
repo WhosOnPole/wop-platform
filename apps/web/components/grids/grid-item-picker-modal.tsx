@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import { X } from 'lucide-react'
 import type { GridType } from './grid-rank-pills'
-import { getTeamIconUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
 import { DriverCardMedia } from '@/components/drivers/driver-card-media'
 
 interface GridItemPickerModalProps {
@@ -113,12 +113,27 @@ export function GridItemPickerModal({
                           darkenBackgroundOnly
                         />
                       ) : type === 'team' ? (
-                        <PickerAvatar
-                          src={supabaseUrl ? getTeamIconUrl(item.name, supabaseUrl) : null}
-                          alt={item.name}
-                          fallback={item.name.charAt(0).toUpperCase()}
-                          variant="team"
-                        />
+                        <>
+                          <div
+                            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+                            style={{
+                              backgroundImage: supabaseUrl
+                                ? `url(${getTeamBackgroundUrl(item.name, supabaseUrl)})`
+                                : 'url(/images/pit_bg.jpg)',
+                            }}
+                            aria-hidden
+                          />
+                          <div className="absolute inset-0 z-10 bg-black/30" aria-hidden />
+                          <span
+                            className="absolute inset-0 z-20 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                            style={{
+                              fontFamily: 'Inter, sans-serif',
+                              fontSize: 'clamp(10px, 2.5vw, 14px)',
+                            }}
+                          >
+                            {item.name}
+                          </span>
+                        </>
                       ) : (
                         <TrackCardMedia
                           trackName={item.name}

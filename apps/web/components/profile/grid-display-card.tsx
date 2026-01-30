@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Heart, ChevronRight, Pencil } from 'lucide-react'
 import { GridHeartButton } from './grid-heart-button'
 import { GridSnapshot } from './grid-snapshot'
-import { getTeamIconUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface GridItem {
@@ -46,12 +46,12 @@ export function GridDisplayCard({
   const [firstTrackSvgFailed, setFirstTrackSvgFailed] = useState(false)
   const [failedTrackIds, setFailedTrackIds] = useState<Set<string>>(new Set())
 
-  // Get image URL for an item (tracks use storage SVG, not image_url)
+  // Get image URL for an item (tracks use storage SVG; teams use background.jpg for tile bg)
   function getItemImageUrl(item: GridItem): string | null {
     if (grid.type === 'driver') {
       return item.headshot_url || item.image_url || null
     } else if (grid.type === 'team') {
-      return supabaseUrl ? getTeamIconUrl(item.name, supabaseUrl) : null
+      return supabaseUrl ? getTeamBackgroundUrl(item.name, supabaseUrl) : null
     } else if (grid.type === 'track') {
       return supabaseUrl ? getTrackSvgUrl(getTrackSlug(item.name), supabaseUrl) : null
     }
@@ -128,7 +128,7 @@ export function GridDisplayCard({
                           ? 'url(/images/grid_bg.png)'
                           : getItemImageUrl(firstItem)
                             ? `url(${getItemImageUrl(firstItem)})`
-                            : undefined,
+                            : 'url(/images/pit_bg.jpg)',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       backgroundColor:
@@ -148,8 +148,8 @@ export function GridDisplayCard({
                   />
                 </div>
               )}
-              {/* Dark overlay (tracks only, matches pitlane) */}
-              {grid.type === 'track' && (
+              {/* Dark overlay (tracks and teams) */}
+              {(grid.type === 'track' || grid.type === 'team') && (
                 <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
               )}
               {/* Track SVG from storage: scale + bleed right (matches pitlane track cards) */}
@@ -167,8 +167,22 @@ export function GridDisplayCard({
                   />
                 </div>
               )}
-              {/* Overlay gradient for text readability */}
-              <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              {/* Team: centered uppercase Inter text overlay */}
+              {grid.type === 'team' && (
+                <span
+                  className="absolute inset-0 z-10 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(12px, 2vw, 18px)',
+                  }}
+                >
+                  {firstItem.name}
+                </span>
+              )}
+              {/* Overlay gradient for text readability (drivers/tracks) */}
+              {grid.type !== 'team' && (
+                <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              )}
               {/* Vertical text on left edge (rotate -90deg like grid titles) */}
               {getVerticalText(firstItem) && (
                 <div
@@ -193,8 +207,8 @@ export function GridDisplayCard({
                 <div className="text-6xl font-bold text-white leading-none">1</div>
               </div>
 
-              {/* Fallback if no image (non-tracks) */}
-              {grid.type !== 'track' && !getItemImageUrl(firstItem) && (
+              {/* Fallback if no image (non-tracks, non-teams) */}
+              {grid.type !== 'track' && grid.type !== 'team' && !getItemImageUrl(firstItem) && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-4xl font-bold text-gray-600">
                     {firstItem.name.charAt(0)}
@@ -223,7 +237,7 @@ export function GridDisplayCard({
                             ? 'url(/images/grid_bg.png)'
                             : getItemImageUrl(item)
                               ? `url(${getItemImageUrl(item)})`
-                              : undefined,
+                              : 'url(/images/pit_bg.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundColor:
@@ -243,8 +257,8 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Dark overlay (tracks only, matches pitlane) */}
-                {grid.type === 'track' && (
+                {/* Dark overlay (tracks and teams) */}
+                {(grid.type === 'track' || grid.type === 'team') && (
                   <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
                 )}
                 {/* Track SVG from storage: scale + bleed right (matches pitlane track cards) */}
@@ -262,8 +276,22 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Overlay gradient for text readability */}
-                <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                {/* Team: centered uppercase Inter text overlay (small tiles) */}
+                {grid.type === 'team' && (
+                  <span
+                    className="absolute inset-0 z-10 flex items-center justify-center px-0.5 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '7px',
+                    }}
+                  >
+                    {item.name}
+                  </span>
+                )}
+                {/* Overlay gradient for text readability (drivers/tracks) */}
+                {grid.type !== 'team' && (
+                  <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                )}
                 {/* Vertical text on left edge (rotate -90deg like grid titles) */}
                 {getVerticalText(item) && (
                   <div

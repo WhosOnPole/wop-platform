@@ -195,13 +195,13 @@ export function GridDetailView({
           {selectedItem && !isPlaceholderSelected && type === 'team' && (
             <div
               key={selectedIndex}
-              className="transition-all duration-300 flex items-center justify-center h-full min-h-[200px] w-full max-w-[min(90vw,360px)]"
+              className="transition-all duration-300 absolute inset-0 flex items-end justify-center min-h-0"
             >
               <TeamHeroMedia
                 teamId={selectedItem.id}
                 teamName={selectedItem.name}
                 supabaseUrl={supabaseUrl}
-                className="h-full max-h-[min(45vh,260px)] w-full"
+                className="w-full h-[min(58vh,380px)] min-h-[220px]"
               />
             </div>
           )}

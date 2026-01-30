@@ -52,24 +52,27 @@ export function TeamHeroMedia({
 
   return (
     <div
-      className={`relative flex items-center justify-center gap-2 w-full max-w-[min(85vw,360px)] h-full min-h-[200px] ${className}`}
+      className={`relative grid w-full h-full min-h-[220px] ${className}`}
+      style={{ gridTemplateColumns: drivers.length === 1 ? '1fr' : '1fr 1fr' }}
     >
       {drivers.slice(0, 2).map((d) => (
         <div
           key={d.id}
-          className="relative flex-1 h-full min-h-[180px] max-h-[min(45vh,260px)]"
+          className="relative flex items-end justify-center min-h-0 w-full"
         >
-          <Image
-            src={getDriverBodyImageUrl(d.name, supabaseUrl)}
-            alt=""
-            fill
-            sizes="180px"
-            className="object-contain object-bottom"
-            onError={(e) => {
-              const t = e.target as HTMLImageElement
-              if (t) t.style.display = 'none'
-            }}
-          />
+          <div className="relative w-full h-full min-h-[220px]">
+            <Image
+              src={getDriverBodyImageUrl(d.name, supabaseUrl)}
+              alt=""
+              fill
+              sizes="(max-width: 768px) 50vw, 380px"
+              className="object-contain object-bottom"
+              onError={(e) => {
+                const t = e.target as HTMLImageElement
+                if (t) t.style.display = 'none'
+              }}
+            />
+          </div>
         </div>
       ))}
     </div>

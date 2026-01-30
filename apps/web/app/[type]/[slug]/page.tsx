@@ -338,7 +338,8 @@ export default async function DynamicPage({ params }: PageProps) {
           entityId={entity.id}
           trackSlug={trackSlugForHero ?? undefined}
           trackName={type === 'tracks' ? entity.name : undefined}
-          supabaseUrl={type === 'tracks' ? supabaseUrl : undefined}
+          supabaseUrl={type === 'tracks' || type === 'teams' ? supabaseUrl : undefined}
+          teamDrivers={type === 'teams' ? relatedData : undefined}
         />
         
         {/* Content over background */}

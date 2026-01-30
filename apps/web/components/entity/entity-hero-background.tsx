@@ -1,4 +1,6 @@
+import Image from 'next/image'
 import { TrackHeroMedia } from '@/components/grids/hero/track-hero-media'
+import { getDriverBodyImageUrl } from '@/utils/storage-urls'
 
 interface EntityHeroBackgroundProps {
   imageUrl: string | null | undefined
@@ -8,6 +10,7 @@ interface EntityHeroBackgroundProps {
   trackSlug?: string
   trackName?: string
   supabaseUrl?: string
+  teamDrivers?: Array<{ id: string; name: string }>
 }
 
 export function EntityHeroBackground({
@@ -18,9 +21,13 @@ export function EntityHeroBackground({
   trackSlug,
   trackName,
   supabaseUrl,
+  teamDrivers,
 }: EntityHeroBackgroundProps) {
   const isTrack = entityType === 'track'
+  const isTeam = entityType === 'team'
   const showTrackSvg = isTrack && trackSlug && supabaseUrl
+  const showTeamDriverBodies = isTeam && supabaseUrl && teamDrivers && teamDrivers.length > 0
+  const driversToShow = showTeamDriverBodies ? teamDrivers.slice(0, 2) : []
 
   return (
     <div className="absolute inset-0 z-0">
@@ -47,6 +54,35 @@ export function EntityHeroBackground({
             supabaseUrl={supabaseUrl}
             className="h-[min(50vh,320px)] w-full max-w-[min(90vw,320px)] max-h-full"
           />
+        </div>
+      )}
+
+      {/* Team: two driver body.png overlay, split left/right, bottom strip */}
+      {showTeamDriverBodies && (
+        <div className="absolute inset-x-0 bottom-0 z-[1] flex items-end justify-center pointer-events-none h-[min(68vh,480px)] min-h-[220px]">
+          <div
+            className="grid w-full h-full max-w-5xl mx-auto"
+            style={{
+              gridTemplateColumns: driversToShow.length === 1 ? '1fr' : '1fr 1fr',
+            }}
+          >
+            {driversToShow.map((driver) => (
+              <div
+                key={driver.id}
+                className="relative flex items-end justify-center min-h-0 w-full"
+              >
+                <div className="relative w-full h-full">
+                  <Image
+                    src={getDriverBodyImageUrl(driver.name, supabaseUrl!)}
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 68vw, 480px"
+                    className="object-contain object-bottom"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

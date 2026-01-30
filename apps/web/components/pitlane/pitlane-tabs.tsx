@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getTeamIconUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface Driver {
@@ -245,7 +245,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                 if (activeTab === 'teams') {
                   const team = item as Team
                   const slug = team.name.toLowerCase().replace(/\s+/g, '-')
-                  const iconUrl = supabaseUrl ? getTeamIconUrl(team.name, supabaseUrl) : null
+                  const bgUrl = supabaseUrl ? getTeamBackgroundUrl(team.name, supabaseUrl) : null
                   return (
                     <Link
                       key={team.id}
@@ -253,11 +253,23 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       className="group flex flex-col"
                     >
                       <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
-                        <div 
-                          className="absolute inset-0 bg-cover bg-center"
-                          style={{ backgroundImage: 'url(/images/pit_bg.jpg)' }}
+                        <div
+                          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+                          style={{
+                            backgroundImage: bgUrl ? `url(${bgUrl})` : 'url(/images/pit_bg.jpg)',
+                          }}
+                          aria-hidden
                         />
-                        <Avatar src={iconUrl} alt={team.name} fallback={team.name.charAt(0)} variant="team" />
+                        <div className="absolute inset-0 z-10 bg-black/30" aria-hidden />
+                        <span
+                          className="absolute inset-0 z-20 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: 'clamp(10px, 2.5vw, 14px)',
+                          }}
+                        >
+                          {team.name}
+                        </span>
                       </div>
                     </Link>
                   )
