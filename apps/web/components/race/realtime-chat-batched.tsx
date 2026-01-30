@@ -12,9 +12,11 @@ import type { ChatStatus } from '@/utils/race-weekend'
 interface RealtimeChatBatchedProps {
   trackId: string
   raceName?: string
+  /** When true, no card border/background (used inside race page live chat container) */
+  liveLayout?: boolean
 }
 
-export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedProps) {
+export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: RealtimeChatBatchedProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const [newMessage, setNewMessage] = useState('')
@@ -120,30 +122,38 @@ export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedPr
     }
   }
 
+  const isLiveLayout = liveLayout
+
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow">
-      <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+    <div
+      className={
+        isLiveLayout
+          ? 'flex flex-col h-full min-h-0 rounded-[20px] overflow-hidden'
+          : 'rounded-lg border border-gray-200 bg-white shadow'
+      }
+    >
+      <div
+        className={
+          isLiveLayout
+            ? 'border-b border-white/20 px-4 py-3 shrink-0'
+            : 'border-b border-gray-200 bg-gray-50 px-6 py-4'
+        }
+      >
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5 text-blue-500" />
-            <h2 className="text-xl font-semibold text-gray-900">
-              {raceName ? `${raceName} Chat` : 'Live Chat'}
-            </h2>
-          </div>
           <div className="flex items-center space-x-3">
             {/* Connection status */}
             {usePolling ? (
-              <div className="flex items-center space-x-1 text-sm text-yellow-600">
+              <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-yellow-300' : 'text-yellow-600'}`}>
                 <WifiOff className="h-4 w-4" />
                 <span>Polling</span>
               </div>
             ) : isConnectedState ? (
-              <div className="flex items-center space-x-1 text-sm text-green-600">
+              <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-green-300' : 'text-green-600'}`}>
                 <Wifi className="h-4 w-4" />
                 <span>Live</span>
               </div>
             ) : (
-              <div className="flex items-center space-x-1 text-sm text-gray-500">
+              <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-white/60' : 'text-gray-500'}`}>
                 <WifiOff className="h-4 w-4" />
                 <span>Connecting...</span>
               </div>
@@ -151,13 +161,13 @@ export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedPr
 
             {/* Chat status */}
             {isReadOnly && (
-              <div className="flex items-center space-x-1 text-sm text-yellow-600">
+              <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-yellow-300' : 'text-yellow-600'}`}>
                 <AlertCircle className="h-4 w-4" />
                 <span>Read-only</span>
               </div>
             )}
             {isChatClosed && (
-              <div className="flex items-center space-x-1 text-sm text-gray-500">
+              <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-white/60' : 'text-gray-500'}`}>
                 <AlertCircle className="h-4 w-4" />
                 <span>
                   {status?.reason || 'Chat inactive'}
@@ -169,9 +179,9 @@ export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedPr
       </div>
 
       {/* Messages */}
-      <div className="h-96 overflow-y-auto p-6">
+      <div className={isLiveLayout ? 'flex-1 min-h-0 overflow-y-auto p-4' : 'h-96 overflow-y-auto p-6'}>
         {messages.length === 0 ? (
-          <p className="text-center text-gray-500">
+          <p className={`text-center ${isLiveLayout ? 'text-white/60' : 'text-gray-500'}`}>
             {isChatClosed
               ? 'Chat is not available at this time.'
               : 'No messages yet. Be the first to chat!'}
@@ -185,6 +195,7 @@ export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedPr
                 isOwnMessage={message.user_id === currentUserId}
                 isAdmin={isAdmin}
                 onDelete={isAdmin ? handleDeleteMessage : undefined}
+                theme={(isLiveLayout ? 'dark' : 'light') as 'light' | 'dark'}
               />
             ))}
             <div ref={messagesEndRef} />
@@ -194,9 +205,12 @@ export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedPr
 
       {/* Input Form */}
       {!isChatClosed && (
-        <form onSubmit={handleSendMessage} className="border-t border-gray-200 p-4">
+        <form
+          onSubmit={handleSendMessage}
+          className={isLiveLayout ? 'border-t border-white/20 p-4 shrink-0' : 'border-t border-gray-200 p-4'}
+        >
           {isReadOnly && (
-            <p className="mb-2 text-sm text-yellow-600">
+            <p className={`mb-2 text-sm ${isLiveLayout ? 'text-yellow-300' : 'text-yellow-600'}`}>
               Chat is read-only. You can view messages but cannot send new ones.
             </p>
           )}
@@ -208,25 +222,33 @@ export function RealtimeChatBatched({ trackId, raceName }: RealtimeChatBatchedPr
               placeholder={isReadOnly ? 'Chat is read-only' : 'Type a message...'}
               maxLength={500}
               disabled={isReadOnly || isSubmitting}
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-[#838383] focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className={
+                isLiveLayout
+                  ? 'flex-1 rounded-md border border-white/30 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] disabled:bg-white/5 disabled:cursor-not-allowed'
+                  : 'flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-[#838383] focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed'
+              }
               required={!isReadOnly}
             />
             <button
               type="submit"
               disabled={isSubmitting || !newMessage.trim() || isReadOnly}
-              className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={
+                isLiveLayout
+                  ? 'flex items-center space-x-2 rounded-md bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:bg-[#2cc5c2] disabled:opacity-50 disabled:cursor-not-allowed'
+                  : 'flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
+              }
             >
               <Send className="h-4 w-4" />
               <span>Send</span>
             </button>
           </div>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className={`mt-1 text-xs ${isLiveLayout ? 'text-white/50' : 'text-gray-500'}`}>
             {newMessage.length}/500 characters
-            {status?.slow_mode_ms && (
+            {/* {status?.slow_mode_ms && (
               <span className="ml-2">
                 • Slow mode: {status.slow_mode_ms / 1000}s
               </span>
-            )}
+            )} */}
           </p>
         </form>
       )}

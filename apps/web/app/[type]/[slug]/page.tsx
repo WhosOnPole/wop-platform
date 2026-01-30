@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { EntityHeroBackground } from '@/components/entity/entity-hero-background'
 import { EntityHeaderWrapper } from '@/components/entity/entity-header-wrapper'
@@ -9,9 +11,11 @@ import { TrackSubmissionsTab } from '@/components/entity/tabs/track-submissions-
 import { StatsTab } from '@/components/entity/tabs/stats-tab'
 import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
+import { CheckInSection } from '@/components/race/check-in-section'
 import { getRecentInstagramMedia } from '@/services/instagram'
 import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
 import { getTeamLogoUrl, getTeamBackgroundUrl, getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
+import { isRaceWeekendActive } from '@/utils/race-weekend'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
@@ -260,6 +264,50 @@ export default async function DynamicPage({ params }: PageProps) {
   // Determine entity type for components
   const entityType = type === 'tracks' ? 'track' : type === 'teams' ? 'team' : 'driver'
 
+  // Track page: when race weekend has started, fetch check-ins and show CheckInSection
+  let trackCheckIns: any[] = []
+  let trackUserCheckIn: any = null
+  const trackRaceWeekendActive = type === 'tracks' && entity && isRaceWeekendActive(entity)
+
+  if (trackRaceWeekendActive && type === 'tracks' && entity) {
+    const cookieStore = await cookies()
+    const authClient = createServerComponentClient(
+      { cookies: () => cookieStore as any },
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      }
+    )
+    const { data: { session } } = await authClient.auth.getSession()
+
+    const { data: checkIns } = await supabase
+      .from('race_checkins')
+      .select(
+        `
+        *,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .eq('track_id', entity.id)
+      .order('created_at', { ascending: false })
+
+    trackCheckIns = checkIns ?? []
+
+    if (session) {
+      const { data: userCheckIn } = await supabase
+        .from('race_checkins')
+        .select('*')
+        .eq('track_id', entity.id)
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+      trackUserCheckIn = userCheckIn
+    }
+  }
+
   // Build tabs based on entity type
   const tabs = []
   
@@ -366,6 +414,17 @@ export default async function DynamicPage({ params }: PageProps) {
       {/* Tabs Section - Slides up over fixed top section */}
       <div className="relative z-20 bg-[#000000] min-h-[30vh]">
         <div className="mx-auto max-w-7xl px-6">
+          {/* Race check-in: track page when race weekend has started */}
+          {trackRaceWeekendActive && type === 'tracks' && entity && (
+            <div className="pt-6 pb-4">
+              <CheckInSection
+                trackId={entity.id}
+                raceName={entity.name}
+                userCheckIn={trackUserCheckIn}
+                checkIns={trackCheckIns}
+              />
+            </div>
+          )}
           <EntityTabs tabs={tabs} />
         </div>
       </div>

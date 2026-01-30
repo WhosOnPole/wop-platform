@@ -1,8 +1,6 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { Calendar, MapPin, Users } from 'lucide-react'
-import { CheckInSection } from '@/components/race/check-in-section'
 import { RealtimeChatBatched } from '@/components/race/realtime-chat-batched'
 import { AdminChatControl } from '@/components/race/admin-chat-control'
 import { isRaceWeekendActive } from '@/utils/race-weekend'
@@ -70,106 +68,56 @@ export default async function RacePage({ params }: PageProps) {
     isAdmin = isAdminEmail || isAdminRole || false
   }
 
-  // Fetch check-ins
-  const { data: checkIns } = await supabase
-    .from('race_checkins')
-    .select(
-      `
-      *,
-      user:profiles!user_id (
-        id,
-        username,
-        profile_image_url
-      )
-    `
-    )
-    .eq('track_id', race.id)
-    .order('created_at', { ascending: false })
+  // When live: full-screen chat_bg, no scroll, header + styled chat box
+  if (raceWeekendActive) {
+    return (
+      <div className="fixed inset-0 flex flex-col overflow-hidden bg-black">
+        {/* Full viewport background */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/images/chat_bg.png)' }}
+          aria-hidden
+        />
+        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 py-6 sm:px-6 lg:px-8">
+          {/* Top header outside race chat */}
+          <h1 className="font-display text-2xl tracking-wider text-white sm:text-3xl shrink-0">
+            {race.name} RACEtalk
+          </h1>
 
-  // Check if current user has checked in
-  let userCheckIn = null
-  if (session) {
-    const { data } = await supabase
-      .from('race_checkins')
-      .select('*')
-      .eq('track_id', race.id)
-      .eq('user_id', session.user.id)
-      .single()
+          {/* Admin above chat (when admin) */}
+          {isAdmin && (
+            <div className="mt-4 shrink-0">
+              <AdminChatControl
+                trackId={race.id}
+                initialChatEnabled={race.chat_enabled !== false}
+              />
+            </div>
+          )}
 
-    userCheckIn = data
-  }
-
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Race Header */}
-      <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg">
-        {race.image_url && (
-          <div className="relative h-64 w-full">
-            <img
-              src={race.image_url}
-              alt={race.name}
-              className="h-full w-full object-cover"
+          {/* Race chat in styled container */}
+          <div
+            className="mt-4 flex-1 min-h-0 flex flex-col rounded-[20px] overflow-hidden"
+            style={{
+              border: '1px solid #525252',
+              background: 'rgba(0, 0, 0, 0.40)',
+            }}
+          >
+            <RealtimeChatBatched
+              trackId={race.id}
+              raceName={race.name}
+              liveLayout
             />
-            {isLive && (
-              <div className="absolute top-4 right-4 flex items-center space-x-2 rounded-full bg-red-600 px-4 py-2">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                <span className="text-sm font-bold text-white">LIVE</span>
-              </div>
-            )}
-          </div>
-        )}
-        <div className="p-8">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900">{race.name}</h1>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {(race.location || race.country) && (
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">
-                  {[race.location, race.country].filter(Boolean).join(', ')}
-                </span>
-              </div>
-            )}
-            {raceTime && (
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">
-                  {raceTime.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </span>
-              </div>
-            )}
-            {raceTime && (
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">
-                  {raceTime.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZoneName: 'short',
-                  })}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </div>
+    )
+  }
 
-      {/* Check-In Section */}
-      {session && (
-          <CheckInSection
-            trackId={race.id}
-            raceName={race.name}
-            userCheckIn={userCheckIn}
-            checkIns={checkIns || []}
-          />
-      )}
-
+  // Not live: standard scrollable page
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Admin Chat Control */}
-      {isAdmin && raceWeekendActive && (
+      {isAdmin && (
         <div className="mb-6">
           <AdminChatControl
             trackId={race.id}
@@ -178,10 +126,7 @@ export default async function RacePage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Live Chat Section */}
-      {raceWeekendActive ? (
-        <RealtimeChatBatched trackId={race.id} raceName={race.name} />
-      ) : isUpcoming ? (
+      {isUpcoming ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
           <p className="text-gray-600">
             Chat will be available when the race weekend starts. Check back on{' '}

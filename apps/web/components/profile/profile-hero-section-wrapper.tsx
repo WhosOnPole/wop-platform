@@ -15,6 +15,7 @@ interface ProfileHeroSectionWrapperProps {
   }
   isOwnProfile: boolean
   teamBackground?: string | null
+  supabaseUrl?: string
   isFollowing?: boolean
   currentUserId?: string | null
 }
@@ -23,6 +24,7 @@ export function ProfileHeroSectionWrapper({
   profile,
   isOwnProfile,
   teamBackground,
+  supabaseUrl,
   isFollowing = false,
   currentUserId = null,
 }: ProfileHeroSectionWrapperProps) {
@@ -52,6 +54,7 @@ export function ProfileHeroSectionWrapper({
       profile={profile}
       isOwnProfile={isOwnProfile}
       teamBackground={teamBackground}
+      supabaseUrl={supabaseUrl}
       scrollProgress={scrollProgress}
       isFollowing={isFollowing}
       currentUserId={currentUserId}

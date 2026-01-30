@@ -3,6 +3,7 @@ import { Settings } from 'lucide-react'
 import { ProfilePhotoUpload } from './profile-photo-upload'
 import { FollowButton } from './follow-button'
 import { getTeamBackgroundGradient } from '@/utils/team-colors'
+import { getTeamBackgroundUrl } from '@/utils/storage-urls'
 
 interface ProfileHeroSectionProps {
   profile: {
@@ -15,24 +16,32 @@ interface ProfileHeroSectionProps {
     show_state_on_profile?: boolean | null
   }
   isOwnProfile: boolean
-  teamBackground?: string | null // Team name for background gradient
+  teamBackground?: string | null // Top team name for background (image or gradient)
+  supabaseUrl?: string // When set with teamBackground, use team's background.jpg
   scrollProgress?: number // 0 to 1, for fade animations
   isFollowing?: boolean
   currentUserId?: string | null
 }
 
+const DEFAULT_GRADIENT = 'linear-gradient(135deg, #667EEA, #764BA2)'
+
 export function ProfileHeroSection({
   profile,
   isOwnProfile,
   teamBackground,
+  supabaseUrl,
   scrollProgress = 0,
   isFollowing = false,
   currentUserId = null,
 }: ProfileHeroSectionProps) {
-  // Get background gradient based on team
+  // Use top team's background.jpg when available; otherwise gradient
+  const useTeamBackgroundImage = Boolean(teamBackground && supabaseUrl)
+  const backgroundImageUrl = useTeamBackgroundImage
+    ? getTeamBackgroundUrl(teamBackground!, supabaseUrl!)
+    : null
   const backgroundGradient = teamBackground
     ? getTeamBackgroundGradient(teamBackground)
-    : 'linear-gradient(135deg, #667EEA, #764BA2)' // Default gradient
+    : DEFAULT_GRADIENT
 
   // Determine location display
   const showLocation = profile.show_state_on_profile !== false
@@ -46,12 +55,24 @@ export function ProfileHeroSection({
   const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
 
   return (
-    <div
-      className="relative w-full h-full"
-      style={{
-        background: backgroundGradient,
-      }}
-    >
+    <div className="relative w-full h-full">
+      {/* Background: top team's background.jpg when available, else gradient */}
+      {backgroundImageUrl ? (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-black/40" aria-hidden />
+        </>
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{ background: backgroundGradient }}
+          aria-hidden
+        />
+      )}
       {/* Settings gear icon - only visible on own profile */}
       {isOwnProfile && (
         <Link

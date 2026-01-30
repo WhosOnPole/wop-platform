@@ -21,6 +21,7 @@ interface ChatMessageItemProps {
   isOwnMessage: boolean
   isAdmin: boolean
   onDelete?: (messageId: number) => void
+  theme?: 'light' | 'dark'
 }
 
 export function ChatMessageItem({
@@ -28,7 +29,9 @@ export function ChatMessageItem({
   isOwnMessage,
   isAdmin,
   onDelete,
+  theme = 'light',
 }: ChatMessageItemProps) {
+  const isDark = theme === 'dark'
   const [showMenu, setShowMenu] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -110,11 +113,17 @@ export function ChatMessageItem({
       >
         {/* Avatar */}
         <div
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-300 ${
-            isOwnMessage ? 'bg-blue-500' : ''
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+            isDark
+              ? isOwnMessage
+                ? 'bg-[#25B4B1]'
+                : 'bg-white/30'
+              : isOwnMessage
+                ? 'bg-blue-500'
+                : 'bg-gray-300'
           }`}
         >
-          <span className="text-xs font-medium text-gray-600">
+          <span className={`text-xs font-medium ${isDark ? 'text-white' : 'text-gray-600'}`}>
             {message.display_name?.charAt(0).toUpperCase() || '?'}
           </span>
         </div>
@@ -126,16 +135,20 @@ export function ChatMessageItem({
           <div className="flex items-center space-x-2">
             <Link
               href={profileUrl}
-              className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
+              className={`text-sm font-medium transition-colors ${
+                isDark
+                  ? 'text-white hover:text-[#25B4B1]'
+                  : 'text-gray-900 hover:text-blue-600'
+              }`}
             >
               {message.display_name || 'Unknown'}
             </Link>
-            <span className="text-xs text-gray-500">{timestamp}</span>
+            <span className={`text-xs ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{timestamp}</span>
           </div>
           <p
-            className={`mt-1 text-sm text-gray-700 ${
-              isOwnMessage ? 'text-right' : ''
-            }`}
+            className={`mt-1 text-sm ${
+              isDark ? 'text-white/90' : 'text-gray-700'
+            } ${isOwnMessage ? 'text-right' : ''}`}
           >
             {message.message}
           </p>
@@ -145,7 +158,7 @@ export function ChatMessageItem({
         <div className="relative shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1 text-gray-400 hover:text-gray-600"
+            className={`p-1 ${isDark ? 'text-white/50 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
             aria-label="Message options"
           >
             <MoreVertical className="h-4 w-4" />

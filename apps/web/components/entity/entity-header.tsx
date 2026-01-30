@@ -218,31 +218,13 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
           <div className="flex flex-wrap gap-4">
             {drivers.map((driver) => {
               const driverSlug = slugify(driver.name)
-              const imageSrc = driver.headshot_url || driver.image_url
               return (
                 <Link
                   key={driver.id}
                   href={`/drivers/${driverSlug}`}
-                  className="group flex flex-col items-center"
+                  className="text-lg text-white/90 hover:text-white transition-colors"
                 >
-                  <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white/30 bg-white/10 transition-all group-hover:border-white/60">
-                    {imageSrc ? (
-                      <Image
-                        src={imageSrc}
-                        alt={driver.name}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-white">
-                        {driver.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <span className="mt-2 text-sm text-white/90 group-hover:text-white">
-                    {driver.name}
-                  </span>
+                  {driver.name}
                 </Link>
               )
             })}

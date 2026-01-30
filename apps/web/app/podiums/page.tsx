@@ -74,7 +74,7 @@ export default async function PodiumsPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-10">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">Podiums</h1>
+        <h1 className="text-3xl font-bold font-display">Podiums</h1>
         <p className="text-gray-600">
           Vote on community polls and see featured picks from the admins.
         </p>

@@ -26,15 +26,17 @@ export function TipModal({ onClose }: TipModalProps) {
     let isMounted = true
     async function loadTracks() {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('tracks')
           .select('id, name')
-          .eq('active', true)
           .order('name', { ascending: true })
 
-        if (isMounted && data) setTracks(data)
-      } catch (error) {
-        console.error('Error loading tracks for tip modal:', error)
+        if (error) {
+          console.error('Error loading tracks for tip modal:', error)
+        }
+        if (isMounted) {
+          setTracks(data ?? [])
+        }
       } finally {
         if (isMounted) setTracksLoading(false)
       }

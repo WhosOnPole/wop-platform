@@ -341,6 +341,7 @@ export default async function UserProfilePage({ params }: PageProps) {
           profile={profile}
           isOwnProfile={isOwnProfile}
           teamBackground={teamBackground}
+          supabaseUrl={supabaseUrl ?? undefined}
           isFollowing={isFollowing}
           currentUserId={session?.user.id || null}
         />
