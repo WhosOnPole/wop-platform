@@ -78,7 +78,7 @@ export default async function RacePage({ params }: PageProps) {
           style={{ backgroundImage: 'url(/images/chat_bg.png)' }}
           aria-hidden
         />
-        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 py-6 sm:px-6 lg:px-8 pt-16">
           {/* Top header outside race chat */}
           <h1 className="font-display text-2xl tracking-wider text-white sm:text-3xl shrink-0">
             {race.name} RACEtalk

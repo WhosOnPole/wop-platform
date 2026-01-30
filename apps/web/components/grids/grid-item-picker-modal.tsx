@@ -87,7 +87,6 @@ export function GridItemPickerModal({
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${typeLabel}s...`}
               className="w-full rounded-lg bg-white/10 border border-white/20 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none"
-              autoFocus
             />
           </div>
 
