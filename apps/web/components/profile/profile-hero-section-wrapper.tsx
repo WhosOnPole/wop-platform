@@ -31,11 +31,13 @@ export function ProfileHeroSectionWrapper({
   useEffect(() => {
     function handleScroll() {
       const scrollY = window.scrollY
-      const topNavHeight = 56 // pt-14 = 3.5rem = 56px
       const heroHeight = window.innerHeight * 0.6 // 60vh
+      const isMd = window.matchMedia('(min-width: 768px)').matches
+      const tabsStickyTop = (isMd ? 16 : 14) * 16
       // Calculate when tabs become sticky - this is when content should stop scrolling
-      const scrollThreshold = heroHeight - topNavHeight - 100 // Match profile-page-client calculation
-      const progress = Math.min(scrollY / scrollThreshold, 1)
+      const scrollThreshold = heroHeight - tabsStickyTop // Match profile-page-client calculation
+      const clampedScrollY = Math.min(scrollY, scrollThreshold)
+      const progress = scrollThreshold > 0 ? Math.min(clampedScrollY / scrollThreshold, 1) : 0
       setScrollProgress(progress)
     }
 

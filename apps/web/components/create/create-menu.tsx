@@ -2,19 +2,48 @@
 
 import Image from 'next/image'
 
+type CreateMenuKey = 'story' | 'poll' | 'tip' | 'post'
+
 interface CreateMenuProps {
   onClose: () => void
-  onSelect: (key: 'story' | 'poll' | 'tip' | 'post') => void
+  onSelect: (key: CreateMenuKey) => void
+  variant?: 'dropdown' | 'sheet'
 }
 
-const menuItems = [
+const menuItems: Array<{ key: CreateMenuKey; label: string; icon: string }> = [
   { key: 'story', label: 'submit a story', icon: '/images/flame.svg' },
   { key: 'poll', label: 'create a poll', icon: '/images/poll.svg' },
   { key: 'tip', label: 'track tip', icon: '/images/bulb.svg' },
   { key: 'post', label: 'post', icon: '/images/chat.svg' },
 ]
 
-export function CreateMenu({ onClose, onSelect }: CreateMenuProps) {
+export function CreateMenu({ onClose, onSelect, variant = 'dropdown' }: CreateMenuProps) {
+  if (variant === 'sheet') {
+    return (
+      <div className="divide-y divide-white/10">
+        {menuItems.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => {
+              onSelect(item.key)
+              onClose()
+            }}
+            className="flex items-center gap-4 w-full px-4 py-4 text-left text-base font-medium text-white hover:bg-white/5 transition-colors"
+          >
+            <Image
+              src={item.icon}
+              alt=""
+              width={18}
+              height={18}
+              className="object-contain"
+            />
+            {item.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="absolute bottom-full left-1/2 z-50 w-48 px-4 py-4 -translate-x-1/2 mb-0 rounded-3xl bg-[#1D1D1D] animate-slide-up overflow-hidden">
       <div className="divide-y divide-[#6B6B6B]">
@@ -22,10 +51,10 @@ export function CreateMenu({ onClose, onSelect }: CreateMenuProps) {
           <button
             key={item.key}
             onClick={() => {
-              onSelect(item.key as CreateMenuProps['onSelect'] extends (k: infer T) => void ? T : never)
+              onSelect(item.key)
               onClose()
             }}
-            className="flex items-center gap-4 pl-2  w-full py-2 text-left text-sm font-normal text-white hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-4 pl-2 w-full py-2 text-left text-sm font-normal text-white hover:bg-white/5 transition-colors"
           >
             <Image
               src={item.icon}

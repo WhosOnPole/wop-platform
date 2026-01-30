@@ -24,17 +24,18 @@ export function EntityHeroBackground({
 
   return (
     <div className="absolute inset-0 z-0">
-      {/* Background: image for drivers/teams; dark fallback for tracks when we show SVG from storage */}
-      {!showTrackSvg && imageUrl && (
+      {/* Background: image for drivers/teams; entity_bg for tracks (then darkened) */}
+      {imageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${imageUrl})` }}
           aria-label={alt}
         />
       )}
-      {showTrackSvg && (
-        <div className="absolute inset-0 bg-[rgb(30,30,30)]" aria-label={alt} />
-      )}
+      {/* Dark overlay: stronger for tracks so entity_bg is darkened */}
+      {showTrackSvg ? (
+        <div className="absolute inset-0 bg-black/50" aria-hidden />
+      ) : null}
       <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/60" />
 
       {/* Track SVG from storage (track pages) */}

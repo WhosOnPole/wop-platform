@@ -14,6 +14,7 @@ interface GridItem {
   image_url?: string | null
   headshot_url?: string | null
   country?: string | null
+  location?: string | null
 }
 
 interface GridDisplayCardProps {
@@ -82,8 +83,8 @@ export function GridDisplayCard({
       // Teams: no text
       return ''
     } else if (grid.type === 'track') {
-      // Country, all caps
-      return (item.country || '').toUpperCase()
+      // Location, all caps
+      return (item.location || '').toUpperCase()
     }
     return ''
   }
@@ -124,18 +125,16 @@ export function GridDisplayCard({
                   : {
                       backgroundImage:
                         grid.type === 'track'
-                          ? undefined
+                          ? 'url(/images/grid_bg.png)'
                           : getItemImageUrl(firstItem)
                             ? `url(${getItemImageUrl(firstItem)})`
                             : undefined,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                       backgroundColor:
-                        grid.type === 'track'
-                          ? 'rgb(55 65 81)'
-                          : getItemImageUrl(firstItem)
-                            ? undefined
-                            : '#f3f4f6',
+                        grid.type === 'track' || getItemImageUrl(firstItem)
+                          ? undefined
+                          : '#f3f4f6',
                     }
               }
             >
@@ -149,44 +148,50 @@ export function GridDisplayCard({
                   />
                 </div>
               )}
-              {/* Overlay gradient for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              
-              {/* Vertical text on left edge */}
-              {getVerticalText(firstItem) && (
-                <div className="absolute left-2 top-2 flex flex-col items-start">
-                  <div 
-                    className="text-white font-bold leading-tight"
-                    style={{
-                      fontSize: grid.type === 'driver' ? '20px' : '18px',
-                      fontFamily: 'Inter, sans-serif',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    {getVerticalText(firstItem).split('').map((char, i) => (
-                      <span key={i} className="block">{char}</span>
-                    ))}
-                  </div>
-                </div>
+              {/* Dark overlay (tracks only, matches pitlane) */}
+              {grid.type === 'track' && (
+                <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
               )}
-              
-              {/* Rating/Rank number on top right */}
-              <div className="absolute top-2 right-2">
-                <div className="text-6xl font-bold text-white leading-none">1</div>
-              </div>
-              
-              {/* Track SVG from storage (tracks only) */}
+              {/* Track SVG from storage: scale + bleed right (matches pitlane track cards) */}
               {grid.type === 'track' && getItemImageUrl(firstItem) && !firstTrackSvgFailed && (
-                <div className="absolute inset-0 flex items-center justify-center p-2">
+                <div
+                  className="absolute inset-0 z-10 flex items-center justify-center p-2"
+                  style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+                >
                   <img
                     src={getItemImageUrl(firstItem)!}
                     alt=""
-                    className="h-full max-h-full w-auto object-contain opacity-90"
+                    className="h-full max-h-full w-auto object-contain"
                     onError={() => setFirstTrackSvgFailed(true)}
                     aria-hidden
                   />
                 </div>
               )}
+              {/* Overlay gradient for text readability */}
+              <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              {/* Vertical text on left edge (rotate -90deg like grid titles) */}
+              {getVerticalText(firstItem) && (
+                <div
+                  className={`absolute z-30 flex h-[120px] w-6 items-center justify-center overflow-visible ${grid.type === 'track' ? 'left-1 top-4' : 'left-2 top-2'}`}
+                >
+                  <span
+                    className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                    style={{
+                      fontSize: grid.type === 'driver' ? '20px' : '18px',
+                      fontFamily: 'Inter, sans-serif',
+                      letterSpacing: grid.type === 'track' ? '0' : '0.05em',
+                      transform: 'rotate(-90deg)',
+                      transformOrigin: 'center center',
+                    }}
+                  >
+                    {getVerticalText(firstItem)}
+                  </span>
+                </div>
+              )}
+              {/* Rating/Rank number on top right */}
+              <div className="absolute top-2 right-2 z-30">
+                <div className="text-6xl font-bold text-white leading-none">1</div>
+              </div>
 
               {/* Fallback if no image (non-tracks) */}
               {grid.type !== 'track' && !getItemImageUrl(firstItem) && (
@@ -215,18 +220,16 @@ export function GridDisplayCard({
                     : {
                         backgroundImage:
                           grid.type === 'track'
-                            ? undefined
+                            ? 'url(/images/grid_bg.png)'
                             : getItemImageUrl(item)
                               ? `url(${getItemImageUrl(item)})`
                               : undefined,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundColor:
-                          grid.type === 'track'
-                            ? 'rgb(55 65 81)'
-                            : getItemImageUrl(item)
-                              ? undefined
-                              : '#f3f4f6',
+                          grid.type === 'track' || getItemImageUrl(item)
+                            ? undefined
+                            : '#f3f4f6',
                       }
                 }
               >
@@ -240,44 +243,50 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Overlay gradient for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                
-                {/* Vertical text on left edge */}
-                {getVerticalText(item) && (
-                  <div className="absolute left-0.5 top-0.5 flex flex-col items-start">
-                    <div 
-                      className="text-white font-bold leading-tighter"
-                      style={{
-                        fontSize: grid.type === 'driver' ? '8px' : '7px',
-                        fontFamily: 'Inter, sans-serif',
-                        letterSpacing: '0',
-                      }}
-                    >
-                      {getVerticalText(item).split('').map((char, i) => (
-                        <span key={i} className="block">{char}</span>
-                      ))}
-                    </div>
-                  </div>
+                {/* Dark overlay (tracks only, matches pitlane) */}
+                {grid.type === 'track' && (
+                  <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
                 )}
-                
-                {/* Rating/Rank number on top right */}
-                <div className="absolute top-0.5 right-0.5">
-                  <div className="text-[10px] font-bold text-white leading-none">{rank}</div>
-                </div>
-
-                {/* Track SVG from storage (tracks only) */}
+                {/* Track SVG from storage: scale + bleed right (matches pitlane track cards) */}
                 {grid.type === 'track' && getItemImageUrl(item) && !failedTrackIds.has(item.id) && (
-                  <div className="absolute inset-0 flex items-center justify-center p-0.5">
+                  <div
+                    className="absolute inset-0 z-10 flex items-center justify-center p-0.5"
+                    style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+                  >
                     <img
                       src={getItemImageUrl(item)!}
                       alt=""
-                      className="h-full max-h-full w-auto object-contain opacity-90"
+                      className="h-full max-h-full w-auto object-contain"
                       onError={() => setFailedTrackIds((s) => new Set(s).add(item.id))}
                       aria-hidden
                     />
                   </div>
                 )}
+                {/* Overlay gradient for text readability */}
+                <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                {/* Vertical text on left edge (rotate -90deg like grid titles) */}
+                {getVerticalText(item) && (
+                  <div
+                    className={`absolute z-30 flex h-[44px] w-3 items-center justify-center overflow-visible ${grid.type === 'track' ? 'left-0.5 top-1' : 'left-0.5 top-0.5'}`}
+                  >
+                    <span
+                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                      style={{
+                        fontSize: grid.type === 'driver' ? '8px' : '7px',
+                        fontFamily: 'Inter, sans-serif',
+                        letterSpacing: '0',
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: 'center center',
+                      }}
+                    >
+                      {getVerticalText(item)}
+                    </span>
+                  </div>
+                )}
+                {/* Rating/Rank number on top right */}
+                <div className="absolute top-0.5 right-0.5 z-30">
+                  <div className="text-[10px] font-bold text-white leading-none">{rank}</div>
+                </div>
 
               </Link>
             )

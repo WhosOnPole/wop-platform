@@ -16,6 +16,7 @@ type RankItem = {
   location?: string | null
   country?: string | null
   track_slug?: string
+  is_placeholder?: boolean
 }
 
 export default function EditGridPage() {
@@ -31,6 +32,23 @@ export default function EditGridPage() {
   const [profile, setProfile] = useState<{ id: string; username: string; profile_image_url: string | null } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined
+
+  function getPlaceholderItem(index: number): RankItem {
+    return {
+      id: `__placeholder__${index}`,
+      name: '',
+      is_placeholder: true,
+    }
+  }
+
+  function padToTen(items: RankItem[]): RankItem[] {
+    const filled = items.filter((i) => !i.is_placeholder).slice(0, 10)
+    const padded: RankItem[] = []
+    for (let i = 0; i < 10; i++) {
+      padded.push(filled[i] ?? getPlaceholderItem(i))
+    }
+    return padded
+  }
 
   useEffect(() => {
     if (!['driver', 'team', 'track'].includes(type)) {
@@ -69,9 +87,9 @@ export default function EditGridPage() {
         const ordered = rankedIds
           .map((r) => catalog.find((c) => c.id === r.id))
           .filter((c): c is RankItem => !!c)
-        setRankedList(ordered)
+        setRankedList(padToTen(ordered))
       } else {
-        setRankedList([])
+        setRankedList(padToTen([]))
       }
     } catch (error) {
       console.error('Error loading edit grid:', error)
@@ -111,7 +129,8 @@ export default function EditGridPage() {
   }
 
   async function handleSave() {
-    if (rankedList.length === 0) {
+    const realItems = rankedList.filter((i) => !i.is_placeholder).slice(0, 10)
+    if (realItems.length === 0) {
       alert('Please rank at least one item')
       return
     }
@@ -122,7 +141,7 @@ export default function EditGridPage() {
     }
 
     setIsSubmitting(true)
-    const rankedItemIds = rankedList.map((item) => ({ id: item.id, name: item.name }))
+    const rankedItemIds = realItems.map((item) => ({ id: item.id, name: item.name }))
     const { data: profileData } = await supabase
       .from('profiles')
       .select('username')

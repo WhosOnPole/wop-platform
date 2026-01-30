@@ -17,6 +17,7 @@ export type GridType = 'driver' | 'team' | 'track'
 interface RankItemBase {
   id: string
   name: string
+  is_placeholder?: boolean
   [key: string]: unknown
 }
 
@@ -103,6 +104,7 @@ export function GridDetailView({
   const [pickerOpen, setPickerOpen] = useState(false)
   const selectedItem = items[selectedIndex]
   const type = grid.type
+  const isPlaceholderSelected = Boolean(selectedItem && selectedItem.is_placeholder)
 
   const heroBackground =
     type === 'team' && selectedItem
@@ -141,7 +143,7 @@ export function GridDetailView({
         )}
         {/* Hero image: full-bleed layer, centered horizontally (x), aligned to bottom of section (y), responsive */}
         <div className="absolute inset-0 z-[1] flex items-end justify-center pointer-events-none">
-          {selectedItem && type === 'driver' && (
+          {selectedItem && !isPlaceholderSelected && type === 'driver' && (
             <div
               key={selectedIndex}
               className="transition-all duration-300 h-[min(85vw,320px)] w-[min(85vw,320px)] min-h-[200px] min-w-[200px] mb-2"
@@ -157,7 +159,7 @@ export function GridDetailView({
               />
             </div>
           )}
-          {selectedItem && type === 'track' && (
+          {selectedItem && !isPlaceholderSelected && type === 'track' && (
             <div
               key={selectedIndex}
               className="transition-all duration-300 flex items-center justify-center h-[min(50vh,320px)] w-full max-w-[min(90vw,320px)]"
@@ -170,7 +172,7 @@ export function GridDetailView({
               />
             </div>
           )}
-          {selectedItem && type === 'team' && (
+          {selectedItem && !isPlaceholderSelected && type === 'team' && (
             <div
               key={selectedIndex}
               className="transition-all duration-300 flex items-center justify-center h-full min-h-[200px] w-full max-w-[min(90vw,360px)]"
@@ -191,9 +193,11 @@ export function GridDetailView({
             <div className="flex flex-col items-start text-left shrink-0 mb-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-4xl font-serif text-white font-normal font-display w-full">
-                  {selectedItem.name}
+                  {isPlaceholderSelected
+                    ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
+                    : selectedItem.name}
                 </h1>
-                {type === 'driver' && (selectedItem as DriverRankItem).nationality && (
+                {type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality && (
                   <>
                     <Image
                       src={getNationalityFlagPath((selectedItem as DriverRankItem).nationality) ?? ''}
@@ -207,7 +211,7 @@ export function GridDetailView({
                     </span>
                   </>
                 )}
-                {type === 'track' && (selectedItem as TrackRankItem).country && (
+                {type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country && (
                   <span className="text-white/90 text-sm">
                     {(selectedItem as TrackRankItem).location && `${(selectedItem as TrackRankItem).location}, `}
                     {(selectedItem as TrackRankItem).country}
@@ -331,11 +335,19 @@ export function GridDetailView({
                 selectedRankIndex={selectedIndex}
                 onSelect={(item) => {
                   if (!onRankedListChange) return
-                  const without = (rankedList ?? []).filter((i) => i.id !== item.id)
-                  const fullItem = availableItems.find((a) => a.id === item.id) ?? item
-                  const idx = Math.min(selectedIndex, without.length)
-                  without.splice(idx, 0, fullItem as RankItem)
-                  onRankedListChange(without.slice(0, 10))
+                  const fullItem = (availableItems.find((a) => a.id === item.id) ?? item) as RankItem
+                  const next = Array.from({ length: 10 }, (_, i) => {
+                    const current = (rankedList ?? [])[i]
+                    return current ?? { id: `__placeholder__${i}`, name: '', is_placeholder: true }
+                  })
+
+                  for (let i = 0; i < next.length; i++) {
+                    if (next[i]?.id === fullItem.id)
+                      next[i] = { id: `__placeholder__${i}`, name: '', is_placeholder: true } as RankItem
+                  }
+
+                  next[selectedIndex] = fullItem
+                  onRankedListChange(next.slice(0, 10))
                 }}
               />
             )}

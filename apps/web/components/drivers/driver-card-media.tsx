@@ -13,6 +13,8 @@ interface DriverCardMediaProps {
   sizes: string
   className?: string
   bodyObjectPosition?: string
+  /** When true, darkens only the background layer (e.g. pitlane cards); driver image stays clear */
+  darkenBackgroundOnly?: boolean
 }
 
 /**
@@ -26,6 +28,7 @@ export function DriverCardMedia({
   sizes,
   className = '',
   bodyObjectPosition = DRIVER_BODY_OBJECT_POSITION,
+  darkenBackgroundOnly = false,
 }: DriverCardMediaProps) {
   const [useFallback, setUseFallback] = useState(false)
 
@@ -37,20 +40,23 @@ export function DriverCardMedia({
     <div
       className={`relative h-full w-full overflow-hidden bg-[url('/images/driver_bg.png')] bg-cover bg-center ${className}`}
     >
+      {darkenBackgroundOnly && (
+        <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
+      )}
       {showBody && (
         <Image
           src={bodyUrl}
           alt=""
           fill
           sizes={sizes}
-          className="object-cover"
+          className="object-cover relative z-10"
           style={{ objectPosition: bodyObjectPosition }}
           onError={() => setUseFallback(true)}
           aria-hidden
         />
       )}
       {showFallback && (
-        <div className="absolute inset-0 p-2">
+        <div className="absolute inset-0 z-10 p-2">
           <div className="relative h-full w-full">
             <Image
               src={fallbackSrc!}

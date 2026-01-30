@@ -42,7 +42,7 @@ export function ProfileHeroSection({
   const locationText = locationParts.length > 0 ? locationParts.join(', ') : null
 
   // Calculate scroll transform - content scrolls up limitedly
-  const maxScroll = 350 // Maximum scroll distance in pixels
+  const maxScroll = 140 // Maximum scroll distance in pixels
   const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
 
   return (

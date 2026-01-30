@@ -24,13 +24,12 @@ function shortName(item: RankItem, type: GridType): string {
     const lastName = parts[parts.length - 1] || item.name
     return lastName.substring(0, 3).toUpperCase()
   }
-  if (type === 'track') return (item.country || '').toUpperCase().slice(0, 3) || item.name.slice(0, 3)
   return item.name.slice(0, 3).toUpperCase()
 }
 
 function secondaryLabel(item: RankItem, type: GridType): string {
   if (type === 'driver') return item.team_name || ''
-  if (type === 'track') return [item.name].filter(Boolean).join(' ') || ''
+  if (type === 'track') return item.name || ''
   return ''
 }
 
@@ -50,6 +49,22 @@ export function GridRankPills({
     const isSelected = selectedIndex === index
     const secondary = secondaryLabel(item, type)
     const short = shortName(item, type)
+
+    if (type === 'track') {
+      return (
+        <button
+          key={item.id}
+          type="button"
+          onClick={() => onSelectIndex(index)}
+          className={`flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-white transition-colors ${
+            isSelected ? 'bg-[#d9d9d9]/40' : 'bg-[#d9d9d9]/25 hover:bg-[#d9d9d9]/35'
+          }`}
+        >
+          <span className="flex-shrink-0 w-6 text-sm font-semibold">{rank}</span>
+          <span className="min-w-0 truncate text-sm text-white/90">{secondary}</span>
+        </button>
+      )
+    }
 
     return (
       <button

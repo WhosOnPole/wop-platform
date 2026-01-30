@@ -46,53 +46,71 @@ export function ProfilePageClient({
   const touchStartY = useRef(0)
   const isSwipe = useRef(false)
 
-  // Scroll tracking with snap-to-place behavior
+  // Scroll tracking with clamp-to-threshold behavior
   useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout | null = null
-    let lastScrollY = 0
-    let scrollVelocity = 0
+    let isAdjustingScroll = false
 
     function handleScroll() {
-      const scrollY = window.scrollY
-      const topNavHeight = 56 // pt-14 = 3.5rem = 56px
-      const heroHeight = window.innerHeight * 0.6 // 60vh
-      const scrollThreshold = heroHeight - topNavHeight - 100
-      const progress = Math.min(scrollY / scrollThreshold, 1)
-      const sticky = scrollY >= scrollThreshold
+      if (isAdjustingScroll) return
 
-      // Calculate scroll velocity
-      const deltaY = scrollY - lastScrollY
-      scrollVelocity = Math.abs(deltaY)
-      lastScrollY = scrollY
+      const heroHeight = window.innerHeight * 0.6 // 60vh
+      const isMd = window.matchMedia('(min-width: 768px)').matches
+      const tabsStickyTop = (isMd ? 16 : 14) * 16
+      // Stop window scroll exactly when tabs hit their sticky position.
+      const scrollThreshold = heroHeight - tabsStickyTop
+      if (scrollThreshold <= 0) return
+
+      const scrollY = window.scrollY
+      const contentEl = contentRef.current
+
+      // Clamp window scroll to the sticky threshold and transfer extra scroll
+      // into the tab content container once sticky begins.
+      if (contentEl) {
+        // Scrolling down past the threshold: keep window pinned and scroll inner content instead.
+        if (scrollY > scrollThreshold) {
+          const overflow = scrollY - scrollThreshold
+          isAdjustingScroll = true
+          window.scrollTo({ top: scrollThreshold, behavior: 'auto' })
+          contentEl.scrollTop = contentEl.scrollTop + overflow
+          requestAnimationFrame(() => {
+            isAdjustingScroll = false
+          })
+          return
+        }
+
+        // Scrolling up while inner content still has scroll: consume the scroll by
+        // moving inner content back to top before letting the window scroll up.
+        if (scrollY < scrollThreshold && contentEl.scrollTop > 0) {
+          const needed = scrollThreshold - scrollY
+          const prevTop = contentEl.scrollTop
+          const nextTop = Math.max(0, prevTop - needed)
+          const consumed = prevTop - nextTop
+          contentEl.scrollTop = nextTop
+
+          if (consumed > 0) {
+            const remaining = needed - consumed
+            isAdjustingScroll = true
+            window.scrollTo({ top: scrollThreshold - remaining, behavior: 'auto' })
+            requestAnimationFrame(() => {
+              isAdjustingScroll = false
+            })
+          }
+        }
+      } else if (scrollY > scrollThreshold) {
+        isAdjustingScroll = true
+        window.scrollTo({ top: scrollThreshold, behavior: 'auto' })
+        requestAnimationFrame(() => {
+          isAdjustingScroll = false
+        })
+        return
+      }
+
+      const clampedScrollY = Math.min(window.scrollY, scrollThreshold)
+      const progress = Math.min(clampedScrollY / scrollThreshold, 1)
+      const sticky = clampedScrollY >= scrollThreshold || (contentRef.current?.scrollTop ?? 0) > 0
 
       setScrollProgress(progress)
       setIsSticky(sticky)
-
-      // Snap-to-place: if user has scrolled past a small threshold, automatically finish the animation
-      // This prevents laggy behavior by completing the transition quickly
-      if (scrollY > 20 && scrollY < scrollThreshold) {
-        // Clear any existing timeout
-        if (scrollTimeout) {
-          clearTimeout(scrollTimeout)
-        }
-
-        // If scroll velocity is low (user is slowing down) or we're past 15% of threshold, snap
-        const shouldSnap = scrollVelocity < 5 || progress > 0.15
-
-        if (shouldSnap) {
-          // Small delay to allow natural scroll to continue, then snap
-          scrollTimeout = setTimeout(() => {
-            const currentScrollY = window.scrollY
-            // Only snap if we're still in the transition zone
-            if (currentScrollY > 20 && currentScrollY < scrollThreshold) {
-              window.scrollTo({
-                top: scrollThreshold,
-                behavior: 'smooth',
-              })
-            }
-          }, 100) // Short delay to detect if scrolling stopped
-        }
-      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -100,9 +118,6 @@ export function ProfilePageClient({
 
     return () => {
       window.removeEventListener('scroll', handleScroll)
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
-      }
     }
   }, [])
 
@@ -202,7 +217,7 @@ export function ProfilePageClient({
         ref={contentRef} 
         className={`bg-black ${
           isSticky 
-            ? 'fixed top-[calc(14rem+3rem)] left-0 right-0 bottom-20 overflow-y-auto z-20 md:top-[calc(16rem+3rem)]' 
+            ? 'fixed top-[calc(10rem+4.5rem)] left-0 right-0 bottom-20 overflow-y-auto z-20 md:top-[calc(14rem+4.5rem)]' 
             : 'px-4 py-6 sm:px-6 lg:px-8'
         }`}
       >

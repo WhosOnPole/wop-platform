@@ -235,6 +235,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                           supabaseUrl={supabaseUrl}
                           fallbackSrc={driver.headshot_url || driver.image_url}
                           sizes="100px"
+                          darkenBackgroundOnly
                         />
                       </div>
                     </Link>
@@ -264,7 +265,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
 
                 const track = item as Track
                 const slug = track.name.toLowerCase().replace(/\s+/g, '-')
-                const countryText = track.country ? track.country.toUpperCase() : ''
+                const locationText = track.location ? track.location.toUpperCase() : ''
                 const trackSvgUrl = supabaseUrl ? getTrackSvgUrl(getTrackSlug(track.name), supabaseUrl) : null
                 const showTrackSvg = trackSvgUrl && !failedTrackSvgIds.has(track.id)
                 return (
@@ -273,36 +274,41 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                     href={`/tracks/${slug}`}
                     className="group flex flex-col"
                   >
-                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-gray-700">
-                      {/* Track SVG from storage */}
+                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
+                      <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/pit_bg.jpg)' }} aria-hidden />
+                      <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
+                      {/* Track SVG from storage: scale(1.1) so it's larger and bleeds right (parent overflow-hidden clips) */}
                       {showTrackSvg && (
-                        <div className="absolute inset-0 flex items-center justify-center p-2 z-0">
+                        <div
+                          className="absolute inset-0 z-10 flex items-center justify-center p-2"
+                          style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+                        >
                           <img
                             src={trackSvgUrl}
                             alt=""
-                            className="h-full max-h-full w-auto object-contain opacity-90"
+                            className="h-full max-h-full w-auto object-contain"
                             onError={() => setFailedTrackSvgIds((s) => new Set(s).add(track.id))}
                             aria-hidden
                           />
                         </div>
                       )}
                       {/* Overlay gradient for text readability */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-[1]" />
-                      {/* Vertical country name on left edge */}
-                      {countryText && (
-                        <div className="absolute left-1 top-1 flex flex-col items-start z-10">
-                          <div
-                            className="text-white font-bold leading-tight"
+                      <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                      {/* Vertical location on left edge (rotate -90deg like grid titles) */}
+                      {locationText && (
+                        <div className="absolute left-1 top-4 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
+                          <span
+                            className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                             style={{
-                              fontSize: '7px',
+                              fontSize: '12px',
                               fontFamily: 'Inter, sans-serif',
                               letterSpacing: '0',
+                              transform: 'rotate(-90deg)',
+                              transformOrigin: 'center center',
                             }}
                           >
-                            {countryText.split('').map((char, i) => (
-                              <span key={i} className="block">{char}</span>
-                            ))}
-                          </div>
+                            {locationText}
+                          </span>
                         </div>
                       )}
                     </div>

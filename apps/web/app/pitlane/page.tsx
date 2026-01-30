@@ -121,7 +121,7 @@ export default async function PitlanePage() {
 
   return (
     <PitlaneSearchProvider>
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-6xl mt-6">
         {/* Upcoming race banner */}
       {nextRace ? (
         <div className="mb-5 relative mx-4 sm:mx-6 lg:mx-8">

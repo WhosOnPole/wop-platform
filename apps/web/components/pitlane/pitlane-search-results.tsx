@@ -165,6 +165,7 @@ export function PitlaneSearchResults({
                             supabaseUrl={supabaseUrl}
                             fallbackSrc={driver.headshot_url || driver.image_url}
                             sizes="240px"
+                            darkenBackgroundOnly
                           />
                         </div>
                         <div className="mt-2 flex items-start gap-2">
@@ -229,7 +230,7 @@ export function PitlaneSearchResults({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredTracks.map((track) => {
                     const slug = track.name.toLowerCase().replace(/\s+/g, '-')
-                    const countryText = track.country ? track.country.toUpperCase() : ''
+                    const locationText = track.location ? track.location.toUpperCase() : ''
                     const trackSvgUrl = supabaseUrl ? getTrackSvgUrl(getTrackSlug(track.name), supabaseUrl) : null
                     const showTrackSvg = trackSvgUrl && !failedTrackSvgIds.has(track.id)
                     return (
@@ -239,33 +240,39 @@ export function PitlaneSearchResults({
                         onClick={onClose}
                         className="group flex flex-col"
                       >
-                        <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-700">
+                        <div className="relative w-full aspect-square overflow-hidden rounded-lg">
+                          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/pit_bg.jpg)' }} aria-hidden />
+                          <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
+                          {/* Track SVG: scale(1.1) so it's larger and bleeds right (parent overflow-hidden clips) */}
                           {showTrackSvg && (
-                            <div className="absolute inset-0 flex items-center justify-center p-2 z-0">
+                            <div
+                              className="absolute inset-0 z-10 flex items-center justify-center p-2"
+                              style={{ transform: 'scale(1.1)', transformOrigin: 'center left' }}
+                            >
                               <img
                                 src={trackSvgUrl}
                                 alt=""
-                                className="h-full max-h-full w-auto object-contain opacity-90"
+                                className="h-full max-h-full w-auto object-contain"
                                 onError={() => setFailedTrackSvgIds((s) => new Set(s).add(track.id))}
                                 aria-hidden
                               />
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-[1]" />
-                          {countryText && (
-                            <div className="absolute left-1 top-1 flex flex-col items-start z-10">
-                              <div
-                                className="text-white font-bold leading-tight"
+                          <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                          {locationText && (
+                            <div className="absolute left-1 top-1 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
+                              <span
+                                className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                                 style={{
                                   fontSize: '7px',
                                   fontFamily: 'Inter, sans-serif',
                                   letterSpacing: '0',
+                                  transform: 'rotate(-90deg)',
+                                  transformOrigin: 'center center',
                                 }}
                               >
-                                {countryText.split('').map((char, i) => (
-                                  <span key={i} className="block">{char}</span>
-                                ))}
-                              </div>
+                                {locationText}
+                              </span>
                             </div>
                           )}
                         </div>

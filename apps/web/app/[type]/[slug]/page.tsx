@@ -27,6 +27,13 @@ function normalizeSlug(text: string): string {
     .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric except hyphens
 }
 
+function getIlikeQueryFromSlug(slug: string): string {
+  return slug
+    .trim()
+    .replace(/-+/g, '%')
+    .replace(/%+/g, '%')
+}
+
 interface PageProps {
   params: Promise<{
     type: string
@@ -60,7 +67,7 @@ export default async function DynamicPage({ params }: PageProps) {
     // Decode URL-encoded slug and normalize
     const decodedSlug = decodeURIComponent(slug)
     const normalizedSlug = normalizeSlug(decodedSlug)
-    const slugName = decodedSlug.replace(/-/g, ' ')
+    const ilikeQuery = getIlikeQueryFromSlug(decodedSlug)
     
     const { data: drivers } = await supabase
       .from('drivers')
@@ -75,7 +82,7 @@ export default async function DynamicPage({ params }: PageProps) {
       `
       )
       .eq('active', true)
-      .ilike('name', `%${slugName}%`)
+      .ilike('name', `%${ilikeQuery}%`)
 
     const driver = drivers?.find(
       (d) => normalizeSlug(d.name) === normalizedSlug
@@ -97,13 +104,13 @@ export default async function DynamicPage({ params }: PageProps) {
     // Decode URL-encoded slug and normalize
     const decodedSlug = decodeURIComponent(slug)
     const normalizedSlug = normalizeSlug(decodedSlug)
-    const slugName = decodedSlug.replace(/-/g, ' ')
+    const ilikeQuery = getIlikeQueryFromSlug(decodedSlug)
     
     const { data: teams } = await supabase
       .from('teams')
       .select('*')
       .eq('active', true)
-      .ilike('name', `%${slugName}%`)
+      .ilike('name', `%${ilikeQuery}%`)
 
     const team = teams?.find(
       (t) => normalizeSlug(t.name) === normalizedSlug
@@ -137,12 +144,12 @@ export default async function DynamicPage({ params }: PageProps) {
     // Decode URL-encoded slug and normalize
     const decodedSlug = decodeURIComponent(slug)
     const normalizedSlug = normalizeSlug(decodedSlug)
-    const slugName = decodedSlug.replace(/-/g, ' ')
+    const ilikeQuery = getIlikeQueryFromSlug(decodedSlug)
     
     const { data: tracks } = await supabase
       .from('tracks')
       .select('*')
-      .ilike('name', `%${slugName}%`)
+      .ilike('name', `%${ilikeQuery}%`)
 
     const track = tracks?.find(
       (t) => normalizeSlug(t.name) === normalizedSlug
@@ -243,7 +250,7 @@ export default async function DynamicPage({ params }: PageProps) {
       }
     }
   } else if (type === 'tracks') {
-    backgroundImage = '/images/pit_bg.jpg'
+    backgroundImage = '/images/entity_bg.png'
   } else {
     backgroundImage = entity.image_url
   }

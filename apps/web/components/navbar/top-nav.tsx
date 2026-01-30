@@ -244,14 +244,6 @@ export function TopNav() {
 
           {isAuthed ? (
             <>
-              <button
-                type="button"
-                onClick={() => setIsSearchOpen(true)}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
-                aria-label="Search"
-              >
-                <Search className="h-5 w-5 text-white" />
-              </button>
               <NotificationBell />
               <button
                 onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -297,7 +289,28 @@ export function TopNav() {
 
               {/* Mobile: Feed, Pitlane, Spotlight, Profile, Create as circles */}
               <div className="md:hidden p-4">
-                <div className="flex flex-col gap-5 items-start">
+                <div className="flex flex-col gap-4 items-start">
+                  <div className="w-full flex items-center justify-between pb-3 border-b border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsSearchOpen(true)
+                      }}
+                      className="relative flex h-8 w-8 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
+                      aria-label="Search"
+                    >
+                      <Search className="h-5 w-5 text-white" />
+                    </button>
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="relative flex h-8 w-8 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
+                      aria-label="Settings"
+                    >
+                      <Settings className="h-5 w-5 text-white" />
+                    </Link>
+                  </div>
                   {mobileDropdownItems.map((item) => {
                     const active = isActive(item.href)
                     return (
@@ -324,7 +337,10 @@ export function TopNav() {
                   <div className="flex flex-row items-center gap-3 relative" data-create-menu>
                     <button
                       type="button"
-                      onClick={() => setIsCreateOpen((prev) => !prev)}
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsCreateOpen((prev) => !prev)
+                      }}
                       className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none shadow-lg ${
                         isCreateOpen
                           ? 'bg-gradient-to-r from-[#EC553E] to-[#EB0E78] text-white'
@@ -335,12 +351,6 @@ export function TopNav() {
                       <PlusCircle className="h-6 w-6" strokeWidth={0.9} />
                     </button>
                     <span className="text-sm font-medium text-white">Create</span>
-                    {isCreateOpen ? (
-                      <CreateMenu
-                        onClose={() => setIsCreateOpen(false)}
-                        onSelect={(key) => setActiveModal(key)}
-                      />
-                    ) : null}
                   </div>
                 </div>
               </div>
@@ -354,6 +364,56 @@ export function TopNav() {
       {activeModal === 'tip' ? <TipModal onClose={() => setActiveModal(null)} /> : null}
       {activeModal === 'post' ? <PostModal onClose={() => setActiveModal(null)} /> : null}
       <GlobalSearchModal open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+      {isCreateOpen ? (
+        <div className="fixed inset-0 z-[60] md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60 animate-create-overlay-in"
+            aria-label="Close create menu"
+            onClick={() => setIsCreateOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 animate-create-sheet-in" data-create-menu>
+            <div className="max-h-[80vh] overflow-y-auto rounded-t-3xl border border-white/10 bg-[#1D1D1D]">
+              <div className="px-6 pt-5 pb-4 text-center text-sm font-semibold text-white">
+                Create
+              </div>
+              <div className="px-3 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+                <CreateMenu
+                  variant="sheet"
+                  onClose={() => setIsCreateOpen(false)}
+                  onSelect={(key) => setActiveModal(key)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <style jsx>{`
+            @keyframes create-sheet-in {
+              from {
+                transform: translateY(100%);
+              }
+              to {
+                transform: translateY(0);
+              }
+            }
+            @keyframes create-overlay-in {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+            .animate-create-sheet-in {
+              animation: create-sheet-in 240ms ease-out;
+            }
+            .animate-create-overlay-in {
+              animation: create-overlay-in 160ms ease-out;
+            }
+          `}</style>
+        </div>
+      ) : null}
     </div>
   )
 }
