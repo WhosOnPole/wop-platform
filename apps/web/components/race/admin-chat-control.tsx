@@ -50,11 +50,11 @@ export function AdminChatControl({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow">
+    <div className="rounded-lg border border-white/10 bg-black/30 backdrop-blur-sm p-4 shadow">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Admin Controls</h3>
-          <p className="mt-1 text-xs text-gray-500">
+          <h3 className="text-sm font-semibold">Admin Controls</h3>
+          <p className="mt-1 text-xs">
             {chatEnabled
               ? 'Chat is currently enabled'
               : 'Chat is currently disabled'}

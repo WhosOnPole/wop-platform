@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MessageSquare } from 'lucide-react'
 
 interface Race {
   id: string
@@ -109,17 +108,6 @@ export function UpcomingRace({ race }: UpcomingRaceProps) {
           </div>
         </section>
       </Link>
-      
-      {/* Live Chat Banner - Outside the main link to avoid nesting */}
-      {isLive && (
-        <Link
-          href={`/race/${trackSlug}`}
-          className="absolute bottom-4 right-4 flex items-center space-x-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 transition-colors z-10"
-        >
-          <MessageSquare className="h-4 w-4" />
-          <span>Join the live chat!</span>
-        </Link>
-      )}
     </div>
   )
 }

@@ -144,7 +144,7 @@ function slugify(name: string) {
 
 export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollProgress = 0 }: EntityHeaderProps) {
   // Calculate scroll transform - content scrolls up limitedly
-  const maxScroll = 416 // Maximum scroll distance in pixels
+  const maxScroll = 80 // Maximum scroll distance in pixels
   const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
 
   if (type === 'track') {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Circle, Dot, Radio } from 'lucide-react'
+import { Radio } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { UpcomingRaceCard } from './upcoming-race-card'
@@ -97,9 +97,8 @@ export function SpotlightCarousel({
 
   if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors && !hasFeaturedNews) return null
 
-  const cardHeight = '25vh'
-  const minCardHeight = 220
-  const maxCardHeight = 380
+  // Match live-chat banner (UpcomingRaceCard) height
+  const bannerCardHeight = 120
 
   const cards = useMemo(() => {
     const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor' | 'news'; data: any }> = []
@@ -179,21 +178,20 @@ export function SpotlightCarousel({
       {/* Desktop: Vertical scrollable layout */}
       <div className="hidden lg:block">
         <div className=" max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-          {cards.map((card, idx) => {
-            return (
+          {cards.map((card, idx) => (
               <div
                 key={`${card.type}-${idx}`}
-                className="w-full"
-                style={{ minHeight: '100px', maxHeight: '200px', marginBottom: '24px' }}
+                className="w-full overflow-hidden"
+                style={{ height: bannerCardHeight, marginBottom: '24px' }}
               >
                 {card.type === 'hot_take' && (
-                  <div className="flex h-full w-full flex-col rounded-lg border border-red-200 bg-red-50 p-6 shadow">
+                  <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
                     <div className=" flex items-center space-x-2">
-                      <Radio className="h-5 w-5 text-red-600" />
-                      <h2 className="text-lg font-bold text-red-900">Hot Take</h2>
+                      <Radio className="h-5 w-5 text-white/90" />
+                      <h2 className="text-lg font-bold text-white">Hot Take</h2>
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className="text-gray-900 text-base leading-relaxed line-clamp-5">
+                      <p className="text-white/90 text-base leading-relaxed line-clamp-5">
                         {card.data.hot_take?.content_text || 'Hot take unavailable'}
                       </p>
                     </div>
@@ -202,7 +200,7 @@ export function SpotlightCarousel({
                         <button
                           type="button"
                           onClick={() => setIsDiscussionOpen(true)}
-                          className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                          className="rounded-md border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
                         >
                           Join the discussion
                         </button>
@@ -212,12 +210,12 @@ export function SpotlightCarousel({
                 )}
 
                 {card.type === 'grid' && (
-                  <div className="flex h-full w-full flex-col rounded-lg border border-gray-200 bg-white p-6 shadow">
-                    <div className="text-sm font-medium text-gray-600">Featured Fan Grid</div>
+                  <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
+                    <div className="text-sm font-medium text-white/90">Featured Fan Grid</div>
                     {card.data.user && (
                       <Link
                         href={`/u/${card.data.user.username}`}
-                        className="text-blue-600 hover:underline text-sm"
+                        className="text-white/90 hover:text-white text-sm"
                       >
                         {card.data.user.username}
                       </Link>
@@ -225,11 +223,11 @@ export function SpotlightCarousel({
                     <div className="mt-4 flex-1 space-y-2 overflow-auto">
                       {Array.isArray(card.data.ranked_items) &&
                         card.data.ranked_items.slice(0, 3).map((item: any, i: number) => (
-                          <div key={i} className="flex items-center space-x-3 rounded-md bg-gray-50 p-3">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-800 text-xs font-bold text-white">
+                          <div key={i} className="flex items-center space-x-3 rounded-md bg-white/10 p-3">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
                               {i + 1}
                             </span>
-                            <span className="text-sm text-gray-900 truncate">
+                            <span className="text-sm text-white/90 truncate">
                               {item?.name || item?.title || 'Unknown'}
                             </span>
                           </div>
@@ -246,6 +244,7 @@ export function SpotlightCarousel({
                       voteCounts={{}}
                       onVote={() => {}}
                       showDiscussion={false}
+                      variant="dark"
                     />
                   </div>
                 )}
@@ -262,15 +261,14 @@ export function SpotlightCarousel({
                   <FeaturedNewsCard newsStory={card.data} />
                 )}
               </div>
-            )
-          })}
+            ))}
         </div>
       </div>
 
       {/* Mobile: Horizontal scrolling carousel */}
       <div
         className="lg:hidden mb-6 space-y-3"
-        style={{ height: cardHeight, minHeight: minCardHeight, maxHeight: maxCardHeight }}
+        style={{ height: bannerCardHeight, minHeight: bannerCardHeight, maxHeight: bannerCardHeight }}
       >
         <div
           ref={scrollContainerRef}
@@ -288,13 +286,13 @@ export function SpotlightCarousel({
                   className="w-full min-w-full h-full flex-shrink-0 snap-start"
                 >
                   {card.type === 'hot_take' && (
-                    <div className="flex h-full w-full flex-col rounded-lg border border-red-200 bg-red-50 p-6 shadow">
+                    <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
                       <div className="mb-4 flex items-center space-x-2">
-                        <Radio className="h-5 w-5 text-red-600" />
-                        <h2 className="text-lg font-bold text-red-900">Hot Take</h2>
+                        <Radio className="h-5 w-5 text-white/90" />
+                        <h2 className="text-lg font-bold text-white">Hot Take</h2>
                       </div>
                       <div className="flex-1 overflow-hidden">
-                        <p className="text-gray-900 text-base leading-relaxed line-clamp-5">
+                        <p className="text-white/90 text-base leading-relaxed line-clamp-5">
                           {card.data.hot_take?.content_text || 'Hot take unavailable'}
                         </p>
                       </div>
@@ -303,7 +301,7 @@ export function SpotlightCarousel({
                           <button
                             type="button"
                             onClick={() => setIsDiscussionOpen(true)}
-                            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                            className="rounded-md border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
                           >
                             Join the discussion
                           </button>
@@ -313,12 +311,12 @@ export function SpotlightCarousel({
                   )}
 
                   {card.type === 'grid' && (
-                    <div className="flex h-full w-full flex-col rounded-lg border border-gray-200 bg-white p-6 shadow">
-                      <div className="mb-2 text-sm font-medium text-gray-600">Featured Fan Grid</div>
+                    <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
+                      <div className="mb-2 text-sm font-medium text-white/90">Featured Fan Grid</div>
                       {card.data.user && (
                         <Link
                           href={`/u/${card.data.user.username}`}
-                          className="text-blue-600 hover:underline text-sm"
+                          className="text-white/90 hover:text-white text-sm"
                         >
                           {card.data.user.username}
                         </Link>
@@ -326,11 +324,11 @@ export function SpotlightCarousel({
                       <div className="mt-4 flex-1 space-y-2 overflow-auto">
                         {Array.isArray(card.data.ranked_items) &&
                           card.data.ranked_items.slice(0, 3).map((item: any, i: number) => (
-                            <div key={i} className="flex items-center space-x-3 rounded-md bg-gray-50 p-3">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-800 text-xs font-bold text-white">
+                            <div key={i} className="flex items-center space-x-3 rounded-md bg-white/10 p-3">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
                                 {i + 1}
                               </span>
-                              <span className="text-sm text-gray-900 truncate">
+                              <span className="text-sm text-white/90 truncate">
                                 {item?.name || item?.title || 'Unknown'}
                               </span>
                             </div>
@@ -347,6 +345,7 @@ export function SpotlightCarousel({
                         voteCounts={{}}
                         onVote={() => {}}
                         showDiscussion={false}
+                        variant="dark"
                       />
                     </div>
                   )}
@@ -368,15 +367,22 @@ export function SpotlightCarousel({
           </div>
         </div>
 
-        <div className="flex justify-center space-x-2">
+        <div className="flex justify-center items-center gap-1.5">
           {cards.map((_, idx) => (
             <button
               key={idx}
               aria-label={`Go to card ${idx + 1}`}
-              className="text-gray-400 hover:text-gray-700"
+              className="rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1"
               onClick={() => scrollToIndex(idx)}
             >
-              {idx === activeIndex ? <Dot className="h-5 w-5" /> : <Circle className="h-4 w-4" />}
+              <span
+                className={`block rounded-full transition-colors ${
+                  idx === activeIndex
+                    ? 'h-1.5 w-1.5 bg-gray-600'
+                    : 'h-1 w-1 bg-gray-400/60 hover:bg-gray-400/80'
+                }`}
+                aria-hidden
+              />
             </button>
           ))}
         </div>
@@ -384,19 +390,19 @@ export function SpotlightCarousel({
 
       {isDiscussionOpen && spotlight?.hot_take?.id && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-6 shadow-2xl">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
             <div className="mb-4 flex items-start justify-between">
               <div>
-                <div className="flex items-center space-x-2 text-red-700">
+                <div className="flex items-center space-x-2 text-white/90">
                   <Radio className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold">Hot Take Discussion</h3>
+                  <h3 className="text-lg font-semibold text-white">Hot Take Discussion</h3>
                 </div>
-                <p className="mt-2 text-gray-900">{spotlight.hot_take.content_text}</p>
+                <p className="mt-2 text-white/90">{spotlight.hot_take.content_text}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsDiscussionOpen(false)}
-                className="rounded-md bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                className="rounded-md border border-white/30 bg-transparent px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-white/10"
               >
                 Close
               </button>
@@ -405,6 +411,7 @@ export function SpotlightCarousel({
               posts={discussionPosts || []}
               parentPageType="hot_take"
               parentPageId={spotlight.hot_take.id}
+              variant="dark"
             />
           </div>
         </div>

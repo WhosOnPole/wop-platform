@@ -124,7 +124,7 @@ export default async function PitlanePage() {
       <div className="mx-auto max-w-6xl mt-6">
         {/* Upcoming race banner */}
       {nextRace ? (
-        <div className="mb-5 relative mx-4 sm:mx-6 lg:mx-8">
+        <div className="mb-5 relative mx-4 mb-8 sm:mx-6 lg:mx-8">
           <sup className="w-full text-left block text-xs text-[#838383]">Upcoming</sup>
         <Link
           href={bannerHref}
@@ -207,10 +207,10 @@ export default async function PitlanePage() {
 
       {/* Beginners guide banner */}
       <section>
-        <sup className="w-full text-left block text-sm text-gray-500 px-4 mb-1">BEGINNER'S GUIDE</sup>
+
         <Link
           href="/beginners-guide"
-          className="block relative overflow-hidden text-white shadow-lg hover:opacity-90 transition-opacity cursor-pointer"
+          className="block relative overflow-hidden text-white shadow-lg hover:opacity-90 transition-opacity cursor-pointer mt-1"
         >
           <div className="absolute inset-0 opacity-40">
             <Image

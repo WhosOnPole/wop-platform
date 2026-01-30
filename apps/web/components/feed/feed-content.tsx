@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { MessageSquare, Heart } from 'lucide-react'
+import { LikeButton } from '@/components/discussion/like-button'
+import { FeedPostCommentSection } from './feed-post-comment-section'
 import { F1InstagramEmbed } from './f1-instagram-embed'
 
 interface User {
@@ -8,11 +9,14 @@ interface User {
   profile_image_url: string | null
 }
 
-interface Post {
+export interface Post {
   id: string
   content: string
   created_at: string
   user: User | null
+  like_count?: number
+  is_liked?: boolean
+  comment_count?: number
 }
 
 interface Grid {
@@ -62,13 +66,13 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
 
   if (!hasContent) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
-        <p className="text-gray-500">
+      <div className="rounded-lg border border-white/10 bg-black/40 p-12 text-center shadow backdrop-blur-sm">
+        <p className="text-white/90">
           Start creating grids to see more content here!
         </p>
         <Link
           href="/pitlane"
-          className="mt-4 inline-block text-blue-600 hover:text-blue-800"
+          className="mt-4 inline-block text-[#25B4B1] hover:text-[#25B4B1]/90"
         >
           Explore Drivers, Teams & Tracks →
         </Link>
@@ -85,7 +89,7 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
           return (
             <div
               key={`post-${post.id}`}
-              className="rounded-lg border border-gray-200 bg-white p-6 shadow"
+              className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
               <div className="mb-4 flex items-center space-x-3">
                 {post.user?.profile_image_url ? (
@@ -95,8 +99,8 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
-                    <span className="text-sm font-medium text-gray-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                    <span className="text-sm font-medium text-white/90">
                       {post.user?.username?.charAt(0).toUpperCase() || '?'}
                     </span>
                   </div>
@@ -104,25 +108,28 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
                 <div>
                   <Link
                     href={`/u/${post.user?.username || 'unknown'}`}
-                    className="font-medium text-gray-900 hover:text-blue-600"
+                    className="font-medium text-white/90 hover:text-white"
                   >
                     {post.user?.username || 'Unknown'}
                   </Link>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-white/70">
                     {new Date(post.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
-              <p className="text-gray-700">{post.content}</p>
-              <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
-                <button className="flex items-center space-x-1 hover:text-blue-600">
-                  <Heart className="h-4 w-4" />
-                  <span>Like</span>
-                </button>
-                <button className="flex items-center space-x-1 hover:text-blue-600">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>Comment</span>
-                </button>
+              <p className="text-white/90">{post.content}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
+                <LikeButton
+                  targetId={post.id}
+                  targetType="post"
+                  initialLikeCount={post.like_count ?? 0}
+                  initialIsLiked={post.is_liked ?? false}
+                  variant="dark"
+                />
+                <FeedPostCommentSection
+                  postId={post.id}
+                  initialCommentCount={post.comment_count ?? 0}
+                />
               </div>
             </div>
           )
@@ -133,7 +140,7 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
           return (
             <div
               key={`grid-${grid.id}`}
-              className="rounded-lg border border-gray-200 bg-white p-6 shadow"
+              className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
               <div className="mb-4 flex items-center space-x-3">
                 {grid.user?.profile_image_url ? (
@@ -143,8 +150,8 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
-                    <span className="text-sm font-medium text-gray-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                    <span className="text-sm font-medium text-white/90">
                       {grid.user?.username?.charAt(0).toUpperCase() || '?'}
                     </span>
                   </div>
@@ -152,29 +159,29 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
                 <div>
                   <Link
                     href={`/u/${grid.user?.username || 'unknown'}`}
-                    className="font-medium text-gray-900 hover:text-blue-600"
+                    className="font-medium text-white/90 hover:text-white"
                   >
                     {grid.user?.username || 'Unknown'}
                   </Link>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-white/70">
                     Top {grid.type === 'driver' ? 'Drivers' : grid.type === 'team' ? 'Teams' : 'Tracks'}
                   </p>
                 </div>
               </div>
               {grid.comment && (
-                <p className="mb-4 italic text-gray-600">&quot;{grid.comment}&quot;</p>
+                <p className="mb-4 italic text-white/90">&quot;{grid.comment}&quot;</p>
               )}
               <div className="space-y-2">
                 {Array.isArray(grid.ranked_items) &&
                   grid.ranked_items.slice(0, 3).map((item: any, index: number) => (
                     <div
                       key={index}
-                      className="flex items-center space-x-2 rounded-md bg-gray-50 p-2"
+                      className="flex items-center space-x-2 rounded-md bg-white/10 p-2"
                     >
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#25B4B1] text-xs font-bold text-white">
                         {index + 1}
                       </span>
-                      <span className="text-sm text-gray-900">{item.name || 'Unknown'}</span>
+                      <span className="text-sm text-white/90">{item.name || 'Unknown'}</span>
                     </div>
                   ))}
               </div>
@@ -187,7 +194,7 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
           return (
             <div
               key={`news-${news.id}`}
-              className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow"
+              className="overflow-hidden rounded-lg border border-white/10 bg-black/40 shadow backdrop-blur-sm"
             >
               {news.image_url && (
                 <img
@@ -197,11 +204,11 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
                 />
               )}
               <div className="p-6">
-                <h3 className="mb-2 text-xl font-bold text-gray-900">{news.title}</h3>
-                <p className="mb-4 text-gray-600 line-clamp-2">{news.content}</p>
+                <h3 className="mb-2 text-xl font-bold text-white">{news.title}</h3>
+                <p className="mb-4 text-white/90 line-clamp-2">{news.content}</p>
                 <Link
                   href={`/news/${news.id}`}
-                  className="text-blue-600 hover:text-blue-800 font-medium"
+                  className="font-medium text-[#25B4B1] hover:text-[#25B4B1]/90"
                 >
                   Read more →
                 </Link>

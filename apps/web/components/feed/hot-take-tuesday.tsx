@@ -26,26 +26,26 @@ interface HotTakeTuesdayProps {
 
 export function HotTakeTuesday({ hotTake }: HotTakeTuesdayProps) {
   return (
-    <div className="rounded-lg border-2 border-red-200 bg-red-50 p-6 shadow">
+    <div className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm">
       <div className="mb-4 flex items-center space-x-2">
-        <Radio className="h-5 w-5 text-red-600" />
-        <h2 className="text-lg font-bold text-red-900">Hot Take Tuesday</h2>
+        <Radio className="h-5 w-5 text-white/90" />
+        <h2 className="text-lg font-bold text-white">Hot Take Tuesday</h2>
       </div>
-      <p className="mb-4 text-gray-800">{hotTake.content_text}</p>
+      <p className="mb-4 text-white/90">{hotTake.content_text}</p>
 
       {hotTake.featured_grid && (
-        <div className="rounded-md bg-white p-4">
-          <p className="mb-2 text-sm font-medium text-gray-700">
+        <div className="rounded-md bg-white/10 p-4">
+          <p className="mb-2 text-sm font-medium text-white/90">
             Featured Grid by{' '}
             <Link
               href={`/u/${hotTake.featured_grid.user?.username || 'unknown'}`}
-              className="text-blue-600 hover:underline"
+              className="text-[#25B4B1] hover:text-[#25B4B1]/90 hover:underline"
             >
               {hotTake.featured_grid.user?.username || 'Unknown'}
             </Link>
           </p>
           {hotTake.featured_grid.comment && (
-            <p className="mb-3 italic text-gray-600">
+            <p className="mb-3 italic text-white/90">
               &quot;{hotTake.featured_grid.comment}&quot;
             </p>
           )}
@@ -54,9 +54,9 @@ export function HotTakeTuesday({ hotTake }: HotTakeTuesdayProps) {
               hotTake.featured_grid.ranked_items.slice(0, 3).map((item: any, index: number) => (
                 <div
                   key={index}
-                  className="flex items-center space-x-2 text-sm text-gray-700"
+                  className="flex items-center space-x-2 text-sm text-white/90"
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#25B4B1] text-xs font-bold text-white">
                     {index + 1}
                   </span>
                   <span>{item.name || 'Unknown'}</span>

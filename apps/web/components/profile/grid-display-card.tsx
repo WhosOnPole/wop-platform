@@ -94,17 +94,18 @@ export function GridDisplayCard({
 
   return (
     <div className="mb-8 shadow-sm">
-      {/* Grid Title */}
-      <div className="mb-4 flex items-center justify-between float-right">
-        {isOwnProfile && (
+      {/* Edit button: own line, top right of grid */}
+      {isOwnProfile && (
+        <div className="mb-2 flex justify-end">
           <Link
             href={`/profile/edit-grid/${grid.type}`}
-            className="text-sm text-white hover:text-sunset-end float-right justify-end ml-auto self-end"
+            className="text-white hover:text-sunset-end transition-colors"
+            aria-label={`Edit ${grid.type} grid`}
           >
             <Pencil className="h-6 w-6" />
           </Link>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Grid Blurb */}
       {grid.blurb && (
@@ -112,13 +113,13 @@ export function GridDisplayCard({
       )}
 
       {/* Grid Display: #1 (50%) + Items 2-10 (3x3 grid, 50%) */}
-      <div className="mb-4 flex gap-4">
-        {/* #1 Item - 50% width */}
+      <div className="mb-4 flex gap-2 items-start">
+        {/* #1 Item - 50% width, square aspect */}
         {firstItem && (
-          <div className="w-1/2">
+          <div className="w-1/2 min-w-0 flex-shrink-0">
             <Link
               href={getItemHref(firstItem)}
-              className="relative block h-[170px] w-[170px] rounded-xl border border-[#666666]/10 overflow-hidden hover:opacity-90 transition-opacity"
+              className="relative block aspect-square w-full rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
               style={
                 grid.type === 'driver'
                   ? undefined
@@ -144,7 +145,7 @@ export function GridDisplayCard({
                     driverName={firstItem.name}
                     supabaseUrl={supabaseUrl}
                     fallbackSrc={firstItem.headshot_url || firstItem.image_url}
-                    sizes="170px"
+                    sizes="(max-width: 768px) 50vw, 200px"
                   />
                 </div>
               )}
@@ -186,12 +187,12 @@ export function GridDisplayCard({
               {/* Vertical text on left edge (rotate -90deg like grid titles) */}
               {getVerticalText(firstItem) && (
                 <div
-                  className={`absolute z-30 flex h-[120px] w-6 items-center justify-center overflow-visible ${grid.type === 'track' ? 'left-1 top-4' : 'left-2 top-2'}`}
+                  className={`absolute z-30 flex h-[70%] max-h-[120px] w-5 md:w-6 items-center justify-center overflow-visible ${grid.type === 'track' ? 'left-1 top-4' : 'left-2 top-2'}`}
                 >
                   <span
                     className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                     style={{
-                      fontSize: grid.type === 'driver' ? '20px' : '18px',
+                      fontSize: 'clamp(10px, 2.5vw, 20px)',
                       fontFamily: 'Inter, sans-serif',
                       letterSpacing: grid.type === 'track' ? '0' : '0.05em',
                       transform: 'rotate(-90deg)',
@@ -204,7 +205,7 @@ export function GridDisplayCard({
               )}
               {/* Rating/Rank number on top right */}
               <div className="absolute top-2 right-2 z-30">
-                <div className="text-6xl font-bold text-white leading-none">1</div>
+                <div className="text-[clamp(2rem,8vw,3.75rem)] font-bold text-white leading-none">1</div>
               </div>
 
               {/* Fallback if no image (non-tracks, non-teams) */}
@@ -219,15 +220,15 @@ export function GridDisplayCard({
           </div>
         )}
 
-        {/* Items 2-10 - 3x3 grid, 50% width */}
-        <div className="w-1/2 grid grid-cols-3 gap-2">
+        {/* Items 2-10 - 3x3 grid, 50% width, square cells */}
+        <div className="w-1/2 min-w-0 grid grid-cols-3 gap-1">
           {otherItems.map((item, index) => {
             const rank = index + 2
             return (
               <Link
                 key={item.id}
                 href={getItemHref(item)}
-                className="relative block h-[50px] w-[50px] rounded-lg border border-gray-200 overflow-hidden hover:opacity-90 transition-opacity"
+                className="relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
                 style={
                   grid.type === 'driver'
                     ? undefined
@@ -253,7 +254,7 @@ export function GridDisplayCard({
                       driverName={item.name}
                       supabaseUrl={supabaseUrl}
                       fallbackSrc={item.headshot_url || item.image_url}
-                      sizes="50px"
+                      sizes="(max-width: 768px) 28vw, 80px"
                     />
                   </div>
                 )}
@@ -313,7 +314,7 @@ export function GridDisplayCard({
                 )}
                 {/* Rating/Rank number on top right */}
                 <div className="absolute top-0.5 right-0.5 z-30">
-                  <div className="text-[10px] font-bold text-white leading-none">{rank}</div>
+                  <div className="text-[clamp(8px,2vw,10px)] font-bold text-white leading-none">{rank}</div>
                 </div>
 
               </Link>

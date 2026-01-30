@@ -121,13 +121,13 @@ export function TopNav() {
   const isAuthed = !!user
   const authedNavItems = [
     { href: '/feed', label: 'Feed' },
-    { href: '/pitlane', label: 'Pitlane' },
+    { href: '/pitlane', label: 'Pit Lane' },
     { href: '/podiums', label: 'Spotlight' },
     { href: profileHref, label: 'Profile' },
   ]
   const mobileDropdownItems = [
     { href: '/feed', label: 'Feed', type: 'feed' as const },
-    { href: '/pitlane', label: 'Pitlane', type: 'pitlane' as const },
+    { href: '/pitlane', label: 'Pit Lane', type: 'pitlane' as const },
     { href: '/podiums', label: 'Spotlight', type: 'podiums' as const },
     { href: profileHref, label: 'Profile', type: 'profile' as const },
   ]
@@ -138,9 +138,9 @@ export function TopNav() {
     router.push('/')
   }
   const unauthNavItems = [
-    { href: '/', label: 'Home' },
+    { href: '/', label: 'About Us' },
     { href: '/features', label: 'Features' },
-    { href: '/login', label: 'Login' },
+    { href: '/login', label: 'Login/Signup' },
   ]
 
   function isActive(href?: string) {
@@ -155,7 +155,7 @@ export function TopNav() {
   return (
     <div
       className={`fixed top-0 left-0 right-0 text-[#838383] z-50 transition-colors ${
-        showNavBg ? 'bg-gradient-to-b from-black via-black/70 to-transparent' : 'bg-transparent'
+        showNavBg ? 'bg-gradient-to-b from-black via-black/30 to-transparent' : 'bg-transparent'
       }`}
     >
       <div className="flex items-center justify-between px-4 py-2.5">
@@ -288,7 +288,7 @@ export function TopNav() {
               </div>
 
               {/* Mobile: Feed, Pitlane, Spotlight, Profile, Create as circles */}
-              <div className="md:hidden p-4">
+              <div className="md:hidden p-4 px-6">
                 <div className="flex flex-col gap-4 items-start">
                   <div className="w-full flex items-center justify-between pb-3 border-b border-white/10">
                     <button
@@ -318,11 +318,11 @@ export function TopNav() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex flex-row items-center gap-3"
+                        className="flex flex-row items-center gap-4"
                         aria-label={item.label}
                       >
                         <span
-                          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-colors ${
+                          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${
                             active
                               ? 'bg-sunset-gradient text-white'
                               : 'border border-white/30 text-white/30 hover:bg-gray-200'

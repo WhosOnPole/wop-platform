@@ -1,9 +1,8 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { TrendingUp, Calendar, Star } from 'lucide-react'
-import { FeedContent } from '@/components/feed/feed-content'
-import { TrendingSection } from '@/components/feed/trending-section'
+import { Calendar, Star } from 'lucide-react'
+import { FeedContent, type Post } from '@/components/feed/feed-content'
 import { UpcomingRace } from '@/components/feed/upcoming-race'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 
@@ -147,7 +146,6 @@ export default async function FeedPage() {
     weeklyHighlights,
     raceTracks,
     activeHotTake,
-    trendingPosts,
   ] = await Promise.all([
     // Posts from users you follow
     supabase
@@ -162,6 +160,7 @@ export default async function FeedPage() {
             .select(
               `
               *,
+              like_count,
               user:profiles!user_id (
                 id,
                 username,
@@ -300,24 +299,6 @@ export default async function FeedPage() {
 
       return { data }
     })(),
-    // Trending posts (most active in last 24 hours)
-    supabase
-      .from('posts')
-      .select(
-        `
-        *,
-        parent_page_type,
-        parent_page_id,
-        user:profiles!user_id (
-          id,
-          username,
-          profile_image_url
-        )
-      `
-      )
-      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .order('created_at', { ascending: false })
-      .limit(5),
   ])
 
   const upcomingRace = (() => {
@@ -343,8 +324,21 @@ export default async function FeedPage() {
     return now >= start && now <= end
   })()
 
-  // Only show upcoming race in carousel when live
-  const upcomingRaceForCarousel = isUpcomingRaceLive ? upcomingRace : null
+  // Only show upcoming race in carousel when live; fetch distinct users in chat (last 10 min) once per page load
+  let upcomingRaceForCarousel: (typeof upcomingRace & { liveChatUserCount?: number }) | null =
+    isUpcomingRaceLive ? upcomingRace : null
+  if (upcomingRaceForCarousel?.id) {
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    const { data: recentMessages } = await supabase
+      .from('live_chat_messages')
+      .select('user_id')
+      .eq('track_id', upcomingRaceForCarousel.id)
+      .gte('created_at', tenMinutesAgo)
+    const liveChatUserCount = recentMessages
+      ? new Set(recentMessages.map((r: { user_id: string }) => r.user_id)).size
+      : 0
+    upcomingRaceForCarousel = { ...upcomingRaceForCarousel, liveChatUserCount }
+  }
 
   // Fetch hot take discussion posts if active hot take exists
   let hotTakePosts: any[] = []
@@ -370,65 +364,37 @@ export default async function FeedPage() {
     hotTakePosts = htPosts || []
   }
 
-  // Build parent lookups for trending posts to avoid 404s
-  const trending = trendingPosts.data || []
-  const driverIds = trending
-    .filter((p) => p.parent_page_type === 'driver' && p.parent_page_id)
-    .map((p) => p.parent_page_id as string)
-  const teamIds = trending
-    .filter((p) => p.parent_page_type === 'team' && p.parent_page_id)
-    .map((p) => p.parent_page_id as string)
-  const trackIds = trending
-    .filter((p) => p.parent_page_type === 'track' && p.parent_page_id)
-    .map((p) => p.parent_page_id as string)
+  // Current user's like state for feed posts (for LikeButton initialIsLiked)
+  const followingPostsList = followingPosts.data || []
+  const feedPostIds = followingPostsList.map((p: { id: string }) => p.id)
+  let userLikedPostIds = new Set<string>()
+  if (feedPostIds.length > 0) {
+    const { data: postLikes } = await supabase
+      .from('votes')
+      .select('target_id')
+      .eq('user_id', session.user.id)
+      .eq('target_type', 'post')
+      .in('target_id', feedPostIds)
+    postLikes?.forEach((row: { target_id: string }) => userLikedPostIds.add(row.target_id))
+  }
+  // Comment counts per post (for Comment button label)
+  let commentCountByPostId: Record<string, number> = {}
+  if (feedPostIds.length > 0) {
+    const { data: commentRows } = await supabase
+      .from('comments')
+      .select('post_id')
+      .in('post_id', feedPostIds)
+    commentRows?.forEach((row: { post_id: string }) => {
+      commentCountByPostId[row.post_id] = (commentCountByPostId[row.post_id] ?? 0) + 1
+    })
+  }
 
-  const [driverLookup, teamLookup, trackLookup] = await Promise.all([
-    driverIds.length
-      ? supabase
-          .from('drivers')
-          .select('id, name')
-          .in('id', driverIds)
-          .then((res) => Object.fromEntries((res.data || []).map((d) => [d.id, slugify(d.name)])))
-      : {},
-    teamIds.length
-      ? supabase
-          .from('teams')
-          .select('id, name')
-          .in('id', teamIds)
-          .then((res) => Object.fromEntries((res.data || []).map((t) => [t.id, slugify(t.name)])))
-      : {},
-    trackIds.length
-      ? supabase
-          .from('tracks')
-          .select('id, name')
-          .in('id', trackIds)
-          .then((res) => Object.fromEntries((res.data || []).map((t) => [t.id, slugify(t.name)])))
-      : {},
-  ])
-
-  const trendingWithLinks = trending.map((post) => {
-    const type = post.parent_page_type as string | null
-    const parentId = post.parent_page_id as string | null
-    let href = '/feed'
-
-    if (type && parentId) {
-      const slug =
-        type === 'driver'
-          ? (driverLookup as Record<string, string>)[parentId]
-          : type === 'team'
-          ? (teamLookup as Record<string, string>)[parentId]
-          : type === 'track'
-          ? (trackLookup as Record<string, string>)[parentId]
-          : null
-
-      if (slug) {
-        const pathType = type === 'track' ? 'tracks' : `${type}s`
-        href = `/${pathType}/${slug}`
-      }
-    }
-
-    return { ...post, href }
-  })
+  const enrichedFeedPosts = followingPostsList.map((p: Record<string, unknown> & { id: string; like_count?: number | null }) => ({
+    ...p,
+    like_count: p.like_count ?? 0,
+    is_liked: userLikedPostIds.has(p.id),
+    comment_count: commentCountByPostId[p.id] ?? 0,
+  })) as Post[]
 
   return (
     <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
@@ -439,7 +405,7 @@ export default async function FeedPage() {
         {/* Main Feed - Desktop (larger left column) */}
         <div className="lg:col-span-8 space-y-6">
           <FeedContent
-            posts={followingPosts.data || []}
+            posts={enrichedFeedPosts}
             grids={followingGrids.data || []}
             featuredNews={[]}
           />
@@ -459,11 +425,6 @@ export default async function FeedPage() {
             sponsors={(sponsors.data || []) as Array<{ id: string; name: string; logo_url: string | null; website_url: string | null; description: string | null }>}
             featuredNews={(featuredNews.data || []) as Array<{ id: string; title: string; image_url: string | null; content: string; created_at: string }>}
           />
-
-          {/* Trending */}
-          {trendingWithLinks.length > 0 && (
-            <TrendingSection posts={trendingWithLinks} />
-          )}
         </div>
       </div>
 
@@ -487,18 +448,10 @@ export default async function FeedPage() {
         {/* Main Feed */}
         <div className="space-y-6">
           <FeedContent
-            posts={followingPosts.data || []}
+            posts={enrichedFeedPosts}
             grids={followingGrids.data || []}
             featuredNews={[]}
           />
-        </div>
-
-        {/* Sidebar */}
-        <div className="mt-6 space-y-6">
-          {/* Trending */}
-          {trendingWithLinks.length > 0 && (
-            <TrendingSection posts={trendingWithLinks} />
-          )}
         </div>
       </div>
     </div>

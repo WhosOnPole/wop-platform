@@ -33,11 +33,10 @@ export function ProfileHeroSectionWrapper({
   useEffect(() => {
     function handleScroll() {
       const scrollY = window.scrollY
-      const heroHeight = window.innerHeight * 0.6 // 60vh
+      const heroHeight = window.innerHeight * 0.4 // 40vh - matches page spacer
       const isMd = window.matchMedia('(min-width: 768px)').matches
-      const tabsStickyTop = (isMd ? 16 : 14) * 16
-      // Calculate when tabs become sticky - this is when content should stop scrolling
-      const scrollThreshold = heroHeight - tabsStickyTop // Match profile-page-client calculation
+      const tabsStickyTop = (isMd ? 18.5 : 14.5) * 16
+      const scrollThreshold = Math.max(0, heroHeight - tabsStickyTop - 24)
       const clampedScrollY = Math.min(scrollY, scrollThreshold)
       const progress = scrollThreshold > 0 ? Math.min(clampedScrollY / scrollThreshold, 1) : 0
       setScrollProgress(progress)

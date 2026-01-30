@@ -377,7 +377,7 @@ export default async function DynamicPage({ params }: PageProps) {
   return (
     <div className="relative min-h-screen">
       {/* Top Section with Background Image - Fixed */}
-      <div className="fixed inset-x-0 top-0 z-10 h-[65vh]">
+      <div className="fixed inset-x-0 top-0 z-10 h-[40vh]">
         {/* Hero Background */}
         <EntityHeroBackground
           imageUrl={backgroundImage}
@@ -409,7 +409,7 @@ export default async function DynamicPage({ params }: PageProps) {
       </div>
 
       {/* Spacer to push tabs section down */}
-      <div className="h-[55vh]" />
+      <div className="h-[40vh]" />
 
       {/* Tabs Section - Slides up over fixed top section */}
       <div className="relative z-20 bg-[#000000] min-h-[30vh]">

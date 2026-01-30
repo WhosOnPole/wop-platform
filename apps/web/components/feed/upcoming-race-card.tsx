@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MessageSquare } from 'lucide-react'
 
 interface Race {
   id: string
@@ -13,6 +12,8 @@ interface Race {
   image_url: string | null
   circuit_ref: string | null
   chat_enabled?: boolean
+  /** When live, distinct users who sent a message in last 10 min (feed banner only) */
+  liveChatUserCount?: number | null
 }
 
 interface UpcomingRaceCardProps {
@@ -75,7 +76,7 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
   const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
 
   return (
-    <div className="flex h-full w-full overflow-hidden rounded-lg relative" style={{
+    <div className="flex h-[120px] min-h-[120px] w-full max-h-[120px] overflow-hidden rounded-lg relative" style={{
       boxShadow: isLive ? '0 0 20px rgba(255, 0, 110, 0.6), 0 0 5px rgba(253, 53, 50, 0.5), 0 0 15px rgba(253, 99, 0, 0.4), 0 0 0 .5px rgba(255, 0, 110, 0.4)' : '0 0 15px rgba(255, 0, 110, 0.6), 0 0 25px rgba(253, 53, 50, 0.5), 0 0 35px rgba(253, 99, 0, 0.4), 0 0 0 2px rgba(255, 0, 110, 0.4)',
     }}>
       <Link
@@ -93,33 +94,38 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
 
           <div className="absolute inset-0 flex flex-col justify-center">
-            <div className="px-6 py-4 text-white space-y-2">
-              <h2 className="font-display tracking-wider text-lg">{race.circuit_ref || race.name}</h2>
-              <p className="text-sm text-white/90">
-                {dateDisplay}
-                {race.location ? ` • ${race.location}` : ''}
-                {race.country ? `, ${race.country}` : ''}
-              </p>
-              {counterText && (
-                <p className="text-sm font-medium text-white/95 mt-2">
-                  {counterText}
-                </p>
+            <div className="px-6 py-4 text-white space-y-1">
+              {isLive ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-white/95">
+                    Join The Live Chat!
+                  </p>
+                  <h2 className="font-display tracking-wider text-lg">{race.circuit_ref || race.name}</h2>
+                  {typeof race.liveChatUserCount === 'number' && (
+                    <p className="text-sm text-white/90">
+                      {race.liveChatUserCount} {race.liveChatUserCount === 1 ? 'user' : 'users'} in chat
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h2 className="font-display tracking-wider text-lg">{race.circuit_ref || race.name}</h2>
+                  <p className="text-sm text-white/90">
+                    {dateDisplay}
+                    {race.location ? ` • ${race.location}` : ''}
+                    {race.country ? `, ${race.country}` : ''}
+                  </p>
+                  {counterText && (
+                    <p className="text-sm font-medium text-white/95 mt-2">
+                      {counterText}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>
         </section>
       </Link>
-      
-      {/* Live Chat Banner - Outside the main link to avoid nesting */}
-      {isLive && (
-        <Link
-          href={`/race/${trackSlug}`}
-          className="absolute bottom-4 right-4 flex items-center space-x-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 transition-colors z-10"
-        >
-          <MessageSquare className="h-4 w-4" />
-          <span>Join the live chat!</span>
-        </Link>
-      )}
     </div>
   )
 }

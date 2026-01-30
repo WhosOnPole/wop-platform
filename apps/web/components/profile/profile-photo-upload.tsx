@@ -27,7 +27,7 @@ export function ProfilePhotoUpload({
             sizes="128px"
           />
         ) : (
-          <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-gray-300">
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gray-300">
             <span className="text-4xl font-bold text-gray-600">?</span>
           </div>
         )}
@@ -36,7 +36,7 @@ export function ProfilePhotoUpload({
   }
 
   return (
-    <div className="relative h-32 w-32 flex-shrink-0" style={{ paddingLeft: '24px' }}>
+    <div className="relative h-36 w-36 flex-shrink-0">
       {profileImageUrl ? (
         <Image
           src={profileImageUrl}
@@ -46,8 +46,8 @@ export function ProfilePhotoUpload({
           sizes="128px"
         />
       ) : (
-        <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-gray-300">
-          <span className="text-4xl font-bold text-gray-600">?</span>
+        <div className="flex h-36 w-36 items-center justify-center rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+          <Image src="/images/seal_color.png" alt="Profile" fill className="object-cover" sizes="144px" />
         </div>
       )}
     </div>

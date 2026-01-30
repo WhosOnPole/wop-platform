@@ -69,17 +69,17 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
   )
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-lg">
+    <div className="rounded-lg border border-white/10 bg-black/40 p-6 shadow-lg backdrop-blur-sm">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Featured Grid Of The Day</h2>
-        <p className="text-pink-600 font-medium">
-          <Link href={`/u/${highlightedFan.username}`} className="hover:underline">
+        <h2 className="mb-1 text-2xl font-bold text-white">Featured Grid Of The Day</h2>
+        <p className="font-medium text-[#25B4B1]">
+          <Link href={`/u/${highlightedFan.username}`} className="hover:underline hover:text-[#25B4B1]/90">
             {highlightedFan.username}&apos;s Grid
           </Link>
         </p>
         {driverGrid.blurb && (
-          <p className="text-sm text-gray-600 mt-2">{driverGrid.blurb}</p>
+          <p className="mt-2 text-sm text-white/90">{driverGrid.blurb}</p>
         )}
       </div>
 

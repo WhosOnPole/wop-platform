@@ -55,9 +55,9 @@ export function EntityHeaderWrapper({
     function handleScroll() {
       const scrollY = window.scrollY
       const topNavHeight = 56 // pt-14 = 3.5rem = 56px
-      const heroHeight = window.innerHeight * 0.65 // 65vh for entity pages
-      // Calculate when tabs become sticky - this is when content should stop scrolling
-      const scrollThreshold = heroHeight - topNavHeight - 100
+      const heroHeight = window.innerHeight * 0.4 // 40vh - matches page spacer
+      // Cap scroll range so top section doesn't over-scroll (align with 40vh section height)
+      const scrollThreshold = Math.max(1, heroHeight - topNavHeight - 120)
       const progress = Math.min(scrollY / scrollThreshold, 1)
       setScrollProgress(progress)
     }

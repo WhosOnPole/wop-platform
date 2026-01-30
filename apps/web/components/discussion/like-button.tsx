@@ -11,6 +11,7 @@ interface LikeButtonProps {
   initialLikeCount: number
   initialIsLiked: boolean
   onLikeChange?: (targetId: string, isLiked: boolean) => void
+  variant?: 'light' | 'dark'
 }
 
 export function LikeButton({
@@ -19,6 +20,7 @@ export function LikeButton({
   initialLikeCount,
   initialIsLiked,
   onLikeChange,
+  variant = 'light',
 }: LikeButtonProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
@@ -221,15 +223,20 @@ export function LikeButton({
     return (count || 0) > 0
   }
 
+  const isDark = variant === 'dark'
+  const buttonClasses = isDark
+    ? isLiked
+      ? 'text-[#25B4B1] hover:text-[#25B4B1]/90'
+      : 'text-white/90 hover:text-white'
+    : isLiked
+      ? 'text-pink-600 hover:text-pink-700'
+      : 'text-gray-600 hover:text-gray-700'
+
   return (
     <button
       onClick={handleToggleLike}
       disabled={isLoading}
-      className={`inline-flex items-center gap-1 align-middle leading-none transition-colors disabled:opacity-50 ${
-        isLiked
-          ? 'text-pink-600 hover:text-pink-700'
-          : 'text-gray-600 hover:text-gray-700'
-      }`}
+      className={`inline-flex items-center gap-1 align-middle leading-none transition-colors disabled:opacity-50 ${buttonClasses}`}
       title={isLiked ? 'Unlike' : 'Like'}
     >
       <Heart className={`h-4 w-4 shrink-0 ${isLiked ? 'fill-current' : ''}`} />

@@ -14,7 +14,7 @@ interface SponsorCardProps {
 
 export function SponsorCard({ sponsor }: SponsorCardProps) {
   const content = (
-    <div className="flex h-full w-full flex-col rounded-lg border border-gray-200 bg-white p-6 shadow">
+    <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm">
       <div className="flex h-full gap-4">
         {/* Logo - Full height on left */}
         {sponsor.logo_url && (
@@ -29,9 +29,9 @@ export function SponsorCard({ sponsor }: SponsorCardProps) {
         
         {/* Name and Description - Stacked on right */}
         <div className="flex flex-1 flex-col justify-center">
-          <h3 className="mb-2 text-xl font-bold text-gray-900">{sponsor.name}</h3>
+          <h3 className="mb-2 text-xl font-bold text-white">{sponsor.name}</h3>
           {sponsor.description && (
-            <p className="text-sm text-gray-600 line-clamp-3">
+            <p className="text-sm text-white/90 line-clamp-3">
               {sponsor.description}
             </p>
           )}

@@ -52,11 +52,12 @@ export function ProfilePageClient({
     function handleScroll() {
       if (isAdjustingScroll) return
 
-      const heroHeight = window.innerHeight * 0.6 // 60vh
+      const heroHeight = window.innerHeight * 0.4 // 40vh - matches page spacer
       const isMd = window.matchMedia('(min-width: 768px)').matches
-      const tabsStickyTop = (isMd ? 16 : 14) * 16
-      // Stop window scroll exactly when tabs hit their sticky position.
-      const scrollThreshold = heroHeight - tabsStickyTop
+      // Match sticky content top: calc(10rem+4.5rem) / calc(14rem+4.5rem)
+      const tabsStickyTop = (isMd ? 18.5 : 14.5) * 16
+      // Stop window scroll when tabs hit sticky; reduce slightly so top section doesn't over-scroll
+      const scrollThreshold = Math.max(0, heroHeight - tabsStickyTop - 24)
       if (scrollThreshold <= 0) return
 
       const scrollY = window.scrollY
