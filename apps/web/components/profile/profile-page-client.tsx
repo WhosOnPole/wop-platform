@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { ProfileTabs } from './profile-tabs'
 import { GridDisplayCard } from './grid-display-card'
 import { ActivityTab } from './activity-tab'
-import { ProfileDiscussionSection } from './profile-discussion-section'
 
 type TabKey = 'drivers' | 'tracks' | 'teams' | 'activity'
 

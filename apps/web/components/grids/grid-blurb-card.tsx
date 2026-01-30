@@ -23,7 +23,7 @@ export function GridBlurbCard({
   isOwnProfile,
 }: GridBlurbCardProps) {
   return (
-    <div className="rounded-lg bg-black/86 text-white w-full max-w-[280px]">
+    <div className="rounded-lg bg-black/86 text-white w-full max-w-[280px] p-2">
       <div className="flex items-start justify-between gap-2">
         <div className="flex gap-2 min-w-0">
           <Link href={`/u/${owner.username}`} className="flex-shrink-0">

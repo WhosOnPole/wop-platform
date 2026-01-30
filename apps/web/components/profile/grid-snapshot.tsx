@@ -46,13 +46,13 @@ export function GridSnapshot({
   const displayItems = isExpanded ? previousState : previousState.slice(0, 4)
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50">
+    <div className="rounded-lg border border-gray-400 border-opacity-20 bg-white/[19%] mt-20">
       {/* Header - Collapsible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between p-3 text-left hover:bg-gray-100 transition-colors"
+        className="flex w-full items-center justify-between p-3 text-left hover:bg-white/[30%] hover:rounded-t-lg transition-colors"
       >
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-sm">
           Updated {daysAgo === 0 ? 'today' : daysAgo === 1 ? '1 day' : `${daysAgo} days`} ago
         </span>
         {isExpanded ? (
@@ -64,7 +64,7 @@ export function GridSnapshot({
 
       {/* 4-column grid of thin rectangular panels */}
       {isExpanded && (
-        <div className="grid grid-cols-4 gap-2 p-3">
+        <div className="grid grid-cols-4 gap-2 p-3 bg-white/[19%]">
           {displayItems.map((item, index) => {
             const rank = index + 1
             const teamIconUrl = getTeamIcon(item)

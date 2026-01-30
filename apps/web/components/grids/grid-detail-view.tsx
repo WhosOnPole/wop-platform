@@ -11,6 +11,7 @@ import { GridBlurbCard } from './grid-blurb-card'
 import { GridRankPills } from './grid-rank-pills'
 import { GridRankPillsDnd } from './grid-rank-pills-dnd'
 import { GridItemPickerModal } from './grid-item-picker-modal'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export type GridType = 'driver' | 'team' | 'track'
 
@@ -105,6 +106,11 @@ export function GridDetailView({
   const selectedItem = items[selectedIndex]
   const type = grid.type
   const isPlaceholderSelected = Boolean(selectedItem && selectedItem.is_placeholder)
+  const doesHaveBlurb = Boolean(grid.blurb && grid.blurb.trim().length > 0)
+  const isBlurbEditable = mode === 'edit' && Boolean(onBlurbChange)
+  const shouldShowBlurbPanel = isBlurbEditable || doesHaveBlurb
+  const isBlurbCollapsible = mode === 'view' && doesHaveBlurb
+  const [isBlurbOpen, setIsBlurbOpen] = useState(true)
 
   const heroBackground =
     type === 'team' && selectedItem
@@ -114,6 +120,20 @@ export function GridDetailView({
       : '/images/grid_bg.png'
 
   const isDriverOrTrack = type === 'driver' || type === 'track'
+
+  function handleSelectRankIndex(index: number) {
+    setSelectedIndex(index)
+
+    if (mode !== 'edit' || !availableItems || availableItems.length === 0) return
+
+    const next = Array.from({ length: 10 }, (_, i) => {
+      const current = items[i]
+      return current ?? { id: `__placeholder__${i}`, name: '', is_placeholder: true }
+    })
+
+    const selected = next[index]
+    if (selected?.is_placeholder) setPickerOpen(true)
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -142,7 +162,7 @@ export function GridDetailView({
           </>
         )}
         {/* Hero image: full-bleed layer, centered horizontally (x), aligned to bottom of section (y), responsive */}
-        <div className="absolute inset-0 z-[1] flex items-end justify-center pointer-events-none">
+        <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none">
           {selectedItem && !isPlaceholderSelected && type === 'driver' && (
             <div
               key={selectedIndex}
@@ -162,7 +182,7 @@ export function GridDetailView({
           {selectedItem && !isPlaceholderSelected && type === 'track' && (
             <div
               key={selectedIndex}
-              className="transition-all duration-300 flex items-center justify-center h-[min(50vh,320px)] w-full max-w-[min(90vw,320px)]"
+              className="transition-all duration-300 flex items-center justify-center h-[min(60vh,420px)] w-full max-w-[min(100vw,420px)]"
             >
               <TrackHeroMedia
                 trackSlug={(selectedItem as TrackRankItem).track_slug ?? ''}
@@ -187,7 +207,7 @@ export function GridDetailView({
           )}
         </div>
 
-        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-14 pb-0">
+        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-14 pb-0 overflow-x-hidden">
           {/* Name + flag above, top left */}
           {selectedItem && (
             <div className="flex flex-col items-start text-left shrink-0 mb-4">
@@ -221,7 +241,7 @@ export function GridDetailView({
             </div>
           )}
 
-          <div className="flex w-full gap-4 items-end min-h-0 flex-1">
+          <div className="relative flex w-full gap-4 items-end min-h-0 flex-1">
             {/* Left: vertical label */}
             <div className="flex min-h-0 w-[25px] shrink-0 items-end justify-center overflow-hidden self-stretch">
               <span
@@ -244,32 +264,74 @@ export function GridDetailView({
             <div className="flex-1 min-w-0" />
 
             {/* Blurb on the right, bottom of top section */}
-            <div className="shrink-0 w-full max-w-[280px] rounded-lg bg-black/80 p-2 text-white self-end mb-2">
-              {mode === 'edit' && onBlurbChange ? (
-                <div className="w-full">
-                  <label className="block text-sm font-medium mb-2">Blurb (optional, max 140)</label>
-                  <textarea
-                    value={blurbOverride ?? grid.blurb ?? ''}
-                    onChange={(e) => {
-                      if (e.target.value.length <= 140) onBlurbChange(e.target.value)
-                    }}
-                    rows={3}
-                    placeholder="Add a blurb about your ranking..."
-                    className="w-full rounded bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 border border-white/20 focus:border-[#25B4B1] focus:outline-none"
-                  />
-                  <p className="mt-1 text-xs text-white/60">{(blurbOverride ?? grid.blurb ?? '').length}/140</p>
+            {shouldShowBlurbPanel ? (
+              <div
+                className={`transition-transform duration-300 ease-out ${
+                  isBlurbCollapsible
+                    ? `absolute -right-4 bottom-2 ${isBlurbOpen ? 'translate-x-0' : 'translate-x-[calc(100%-44px)]'}`
+                    : 'shrink-0 self-end mb-2 translate-x-0'
+                }`}
+              >
+                <div
+                  className={`relative bg-black/80 text-white overflow-hidden ${
+                    isBlurbCollapsible
+                      ? isBlurbOpen
+                        ? 'w-[280px] rounded-lg p-2'
+                        : 'w-[280px] h-20 rounded-l-xl rounded-r-none p-0'
+                      : 'w-full max-w-[280px] rounded-lg p-2'
+                  }`}
+                >
+                  {isBlurbCollapsible ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsBlurbOpen((prev) => !prev)}
+                      className={`absolute left-0 top-0 flex h-full w-[44px] items-center justify-center rounded-l-xl ${
+                        isBlurbOpen ? 'hover:bg-white/5' : 'hover:bg-black/70'
+                      }`}
+                      aria-label={isBlurbOpen ? 'Hide blurb panel' : 'Show blurb panel'}
+                      aria-expanded={isBlurbOpen}
+                    >
+                      {isBlurbOpen ? (
+                        <ChevronRight className="h-5 w-5 text-white/80" />
+                      ) : (
+                        <ChevronLeft className="h-5 w-5 text-white/80" />
+                      )}
+                    </button>
+                  ) : null}
+
+                  {mode === 'edit' && onBlurbChange ? (
+                  <div className="w-full">
+                    <label className="block text-sm font-medium mb-2">Blurb (optional, max 140)</label>
+                    <textarea
+                      value={blurbOverride ?? grid.blurb ?? ''}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 140) onBlurbChange(e.target.value)
+                      }}
+                      rows={3}
+                      placeholder="Add a blurb about your ranking..."
+                      className="w-full rounded bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 border border-white/20 focus:border-[#25B4B1] focus:outline-none"
+                    />
+                    <p className="mt-1 text-xs text-white/60">{(blurbOverride ?? grid.blurb ?? '').length}/140</p>
+                  </div>
+                ) : (
+                    <>
+                      {isBlurbCollapsible && !isBlurbOpen ? null : (
+                        <div className={isBlurbCollapsible ? 'pl-[44px]' : ''}>
+                          <GridBlurbCard
+                            gridId={grid.id}
+                            blurb={grid.blurb ?? null}
+                            likeCount={grid.like_count ?? 0}
+                            isLiked={grid.is_liked ?? false}
+                            owner={owner}
+                            isOwnProfile={isOwnProfile}
+                          />
+                        </div>
+                      )}
+                    </>
+                )}
                 </div>
-              ) : (
-                <GridBlurbCard
-                  gridId={grid.id}
-                  blurb={grid.blurb ?? null}
-                  likeCount={grid.like_count ?? 0}
-                  isLiked={grid.is_liked ?? false}
-                  owner={owner}
-                  isOwnProfile={isOwnProfile}
-                />
-              )}
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -281,7 +343,7 @@ export function GridDetailView({
             rankedItems={grid.ranked_items}
             type={type}
             selectedIndex={selectedIndex}
-            onSelectIndex={setSelectedIndex}
+            onSelectIndex={handleSelectRankIndex}
             supabaseUrl={supabaseUrl}
           />
         )}
@@ -291,7 +353,7 @@ export function GridDetailView({
               rankedItems={items}
               type={type}
               selectedIndex={selectedIndex}
-              onSelectIndex={setSelectedIndex}
+              onSelectIndex={handleSelectRankIndex}
               onRankedListChange={onRankedListChange}
               supabaseUrl={supabaseUrl}
             />
@@ -333,6 +395,7 @@ export function GridDetailView({
                 type={type}
                 items={availableItems}
                 selectedRankIndex={selectedIndex}
+                supabaseUrl={supabaseUrl}
                 onSelect={(item) => {
                   if (!onRankedListChange) return
                   const fullItem = (availableItems.find((a) => a.id === item.id) ?? item) as RankItem

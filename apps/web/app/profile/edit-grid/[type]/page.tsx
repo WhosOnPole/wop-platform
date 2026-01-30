@@ -42,7 +42,17 @@ export default function EditGridPage() {
   }
 
   function padToTen(items: RankItem[]): RankItem[] {
-    const filled = items.filter((i) => !i.is_placeholder).slice(0, 10)
+    const unique: RankItem[] = []
+    const seenIds = new Set<string>()
+    for (const item of items) {
+      if (item.is_placeholder) continue
+      if (seenIds.has(item.id)) continue
+      seenIds.add(item.id)
+      unique.push(item)
+      if (unique.length >= 10) break
+    }
+
+    const filled = unique.slice(0, 10)
     const padded: RankItem[] = []
     for (let i = 0; i < 10; i++) {
       padded.push(filled[i] ?? getPlaceholderItem(i))

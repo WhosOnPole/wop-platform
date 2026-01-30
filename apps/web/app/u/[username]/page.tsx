@@ -304,12 +304,13 @@ export default async function UserProfilePage({ params }: PageProps) {
           } else if (grid.type === 'track') {
             const { data: track } = await supabase
               .from('tracks')
-              .select('id, name, image_url, country')
+              .select('id, name, image_url, location, country')
               .eq('id', item.id)
               .maybeSingle()
             return {
               ...item,
               image_url: track?.image_url || null,
+              location: track?.location || null,
               country: track?.country || null,
             }
           } else if (grid.type === 'team') {

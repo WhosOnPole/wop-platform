@@ -83,9 +83,10 @@ export function GridRankPillsDnd({
     return (
       <Draggable key={item.id} draggableId={item.id} index={index} isDragDisabled={isPlaceholder}>
         {(provided, snapshot) => (
-          <div
+          <button
             ref={provided.innerRef}
             {...provided.draggableProps}
+            type="button"
             onClick={() => onSelectIndex(index)}
             className={`flex w-full items-center gap-2 rounded-full px-3 py-2 text-left text-white transition-colors ${
               snapshot.isDragging ? 'bg-[#d9d9d9]/50 shadow-lg' : isSelected ? 'bg-[#d9d9d9]/40' : 'bg-[#d9d9d9]/25 hover:bg-[#d9d9d9]/35'
@@ -116,13 +117,15 @@ export function GridRankPillsDnd({
             {!isPlaceholder && (
               <span
                 {...provided.dragHandleProps}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
                 className="flex-shrink-0 p-1 cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
                 aria-label="Drag to reorder"
               >
                 <Menu className="h-4 w-4" />
               </span>
             )}
-          </div>
+          </button>
         )}
       </Draggable>
     )
@@ -176,7 +179,12 @@ export function GridRankPillsDnd({
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="grid-ranked-pills" direction="vertical">
+      <Droppable
+        droppableId="grid-ranked-pills"
+        direction="vertical"
+        isDropDisabled={false}
+        isCombineEnabled={false}
+      >
         {(provided) => (
           <div
             ref={provided.innerRef}

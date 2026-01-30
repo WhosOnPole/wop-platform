@@ -53,14 +53,14 @@ export function getTeamLogoUrl(teamName: string, supabaseUrl: string): string {
 }
 
 /**
- * Gets the public URL for a team's background.png from storage
+ * Gets the public URL for a team's background.jpg from storage
  * @param teamName - The team name
  * @param supabaseUrl - The Supabase project URL
- * @returns The public URL for the background.png file
+ * @returns The public URL for the background.jpg file
  */
 export function getTeamBackgroundUrl(teamName: string, supabaseUrl: string): string {
   const slug = getTeamSlug(teamName)
-  const path = `${slug}/background.png`
+  const path = `${slug}/background.jpg`
   return `${supabaseUrl}/storage/v1/object/public/teams/${path}`
 }
 
