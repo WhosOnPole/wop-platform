@@ -138,8 +138,8 @@ export function TopNav() {
     router.push('/')
   }
   const unauthNavItems = [
-    { href: '/', label: 'About Us' },
-    { href: '/features', label: 'Features' },
+    { href: '/#who-we-are', label: 'About Us' },
+    { href: '/#features', label: 'Features' },
     { href: '/login', label: 'Login/Signup' },
   ]
 
@@ -154,7 +154,7 @@ export function TopNav() {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 text-[#838383] z-50 transition-colors ${
+      className={`fixed top-0 left-0 right-0 text-white z-50 transition-colors ${
         showNavBg ? 'bg-gradient-to-b from-black via-black/30 to-transparent' : 'bg-transparent'
       }`}
     >
@@ -172,8 +172,8 @@ export function TopNav() {
                   onClick={() => setIsCreateOpen((prev) => !prev)}
                   className={`text-sm font-semibold transition-colors ${
                     isCreateOpen
-                      ? 'text-[#3BEFEB]'
-                      : 'text-[#838383] hover:text-gray-900'
+                      ? 'text-sunset-start'
+                      : 'text-white hover:text-sunset-start'
                   }`}
                   aria-label="Create"
                 >
@@ -195,8 +195,8 @@ export function TopNav() {
                     href={item.href}
                     className={`text-sm font-semibold transition-colors ${
                       active
-                        ? 'text-[#3BEFEB]'
-                        : 'text-[#838383] hover:text-gray-900'
+                        ? 'text-sunset-start'
+                        : 'text-white hover:text-sunset-start'
                     }`}
                   >
                     {item.label}
@@ -211,8 +211,8 @@ export function TopNav() {
                 href={item.href}
                 className={`text-sm font-semibold transition-colors ${
                   pathname === item.href
-                    ? 'text-[#3BEFEB]'
-                    : 'text-[#6B6B6B] hover:text-gray-900'
+                    ? 'text-sunset-start'
+                    : 'text-white hover:text-sunset-start'
                 }`}
               >
                 {item.label}
@@ -229,17 +229,12 @@ export function TopNav() {
         {/* Right side: profile/menu (authenticated) or links (mobile unauth) */}
         <div className="flex items-center gap-3" data-top-nav-menu>
           {!isAuthed ? (
-            <div className="flex md:hidden items-center gap-4">
-              {unauthNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-xs font-semibold text-[#6B6B6B] hover:text-gray-900"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+            <Link
+              href="/login"
+              className="rounded-full bg-black px-4 py-2 text-xs text-white transition-opacity hover:opacity-90 md:hidden"
+            >
+              Login
+            </Link>
           ) : null}
 
           {isAuthed ? (
