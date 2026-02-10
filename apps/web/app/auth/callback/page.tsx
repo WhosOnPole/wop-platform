@@ -28,11 +28,12 @@ function AuthCallbackContent() {
       return
     }
 
+    const codeForExchange: string = code
     const supabase = createClientComponentClient()
     let isMounted = true
 
     async function runExchange() {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(codeForExchange)
       if (!isMounted) return
 
       if (exchangeError) {
