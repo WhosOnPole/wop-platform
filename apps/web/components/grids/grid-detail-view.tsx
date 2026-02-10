@@ -50,6 +50,8 @@ interface GridDetailViewProps {
     blurb?: string | null
     like_count?: number
     is_liked?: boolean
+    /** Per-slot blurbs (rank 1-10). When absent, treat as empty or legacy grid.blurb for rank 1. */
+    slotBlurbs?: Record<number, string>
   }
   owner: { id: string; username: string; profile_image_url: string | null }
   isOwnProfile: boolean
@@ -59,9 +61,11 @@ interface GridDetailViewProps {
   rankedList?: RankItem[]
   onRankedListChange?: (items: RankItem[]) => void
   onSave?: () => void
-  /** Edit mode: blurb and handlers for editing */
+  /** Edit mode: blurb and handlers for editing (legacy single blurb) */
   blurb?: string
   onBlurbChange?: (value: string) => void
+  /** Edit mode: per-slot blurb change; when set, grid.slotBlurbs is used for current slot value */
+  onSlotBlurbChange?: (rankIndex: number, value: string) => void
   /** Edit mode: full catalog for change-pick modal */
   availableItems?: RankItem[]
 }
@@ -75,9 +79,11 @@ const VERTICAL_LABEL_SRC: Record<GridType, string> = {
 function OwnProfileBlurbBlock({
   owner,
   gridId,
+  rankIndex,
   initialBlurb,
   ownBlurbDisplay,
   setOwnBlurbLocal,
+  onSlotBlurbSaved,
   isEditingOwnBlurb,
   setIsEditingOwnBlurb,
   ownBlurbSaving,
@@ -85,9 +91,11 @@ function OwnProfileBlurbBlock({
 }: {
   owner: { username: string; profile_image_url: string | null }
   gridId: string
+  rankIndex: number
   initialBlurb: string
   ownBlurbDisplay: string
   setOwnBlurbLocal: (v: string | null) => void
+  onSlotBlurbSaved?: (rankIndex: number, value: string) => void
   isEditingOwnBlurb: boolean
   setIsEditingOwnBlurb: (v: boolean) => void
   ownBlurbSaving: boolean
@@ -96,13 +104,23 @@ function OwnProfileBlurbBlock({
   const supabase = createClientComponentClient()
   const [draft, setDraft] = useState(ownBlurbDisplay)
 
+  useEffect(() => {
+    setDraft(ownBlurbDisplay)
+  }, [rankIndex, ownBlurbDisplay])
+
   async function handleSave() {
     const value = draft.trim().slice(0, 140)
     setOwnBlurbSaving(true)
-    const { error } = await supabase.from('grids').update({ blurb: value || null }).eq('id', gridId)
+    const { error } = await supabase
+      .from('grid_slot_blurbs')
+      .upsert(
+        { grid_id: gridId, rank_index: rankIndex, content: value },
+        { onConflict: 'grid_id,rank_index' }
+      )
     setOwnBlurbSaving(false)
     if (!error) {
       setOwnBlurbLocal(value || null)
+      onSlotBlurbSaved?.(rankIndex, value)
       setIsEditingOwnBlurb(false)
     }
   }
@@ -189,6 +207,7 @@ export function GridDetailView({
   onSave,
   blurb: blurbOverride,
   onBlurbChange,
+  onSlotBlurbChange,
   availableItems,
 }: GridDetailViewProps) {
   const items = mode === 'edit' && rankedList ? rankedList : grid.ranked_items
@@ -196,17 +215,27 @@ export function GridDetailView({
   const [pickerOpen, setPickerOpen] = useState(false)
   const selectedItem = items[selectedIndex]
   const type = grid.type
+  const rankIndex = selectedIndex + 1
+  const slotBlurbsFromProps = grid.slotBlurbs ?? {}
+  const [slotBlurbsLocal, setSlotBlurbsLocal] = useState<Record<number, string> | null>(null)
+  const currentSlotBlurbFromData =
+    (slotBlurbsLocal ?? slotBlurbsFromProps)[rankIndex] ??
+    (rankIndex === 1 ? (grid.blurb ?? '') : '')
   const isThirdPartyView = mode === 'view' && !isOwnProfile
   const isPlaceholderSelected = Boolean(selectedItem && selectedItem.is_placeholder)
-  const doesHaveBlurb = Boolean(grid.blurb && grid.blurb.trim().length > 0)
-  const isBlurbEditable = mode === 'edit' && Boolean(onBlurbChange)
-  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView)
+  const doesHaveBlurb = Boolean(currentSlotBlurbFromData.trim().length > 0)
+  const isBlurbEditable = mode === 'edit' && (Boolean(onBlurbChange) || Boolean(onSlotBlurbChange))
+  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView) || (isOwnProfile && mode === 'view')
   const isBlurbCollapsible = mode === 'view' && doesHaveBlurb && !isThirdPartyView
   const [isBlurbOpen, setIsBlurbOpen] = useState(true)
   const [ownBlurbLocal, setOwnBlurbLocal] = useState<string | null>(null)
   const [isEditingOwnBlurb, setIsEditingOwnBlurb] = useState(false)
   const [ownBlurbSaving, setOwnBlurbSaving] = useState(false)
-  const ownBlurbDisplay = ownBlurbLocal !== null ? ownBlurbLocal : (grid.blurb ?? '')
+  const ownBlurbDisplay = ownBlurbLocal !== null ? ownBlurbLocal : currentSlotBlurbFromData
+
+  useEffect(() => {
+    setOwnBlurbLocal(null)
+  }, [selectedIndex])
 
   const heroBackground =
     type === 'team' && selectedItem
@@ -262,7 +291,7 @@ export function GridDetailView({
 
   function renderHeroSlot(item: RankItem | undefined, ghost: boolean) {
     if (!item || item.is_placeholder) return <div className="flex-1" aria-hidden />
-    const opacity = ghost ? 'opacity-40 scale-90' : 'opacity-100'
+    const opacity = ghost ? 'opacity-40 ' : 'opacity-100'
     const size = ghost ? 'min(50vw,160px)' : 'min(85vw,320px)'
     if (type === 'driver') {
       return (
@@ -327,7 +356,7 @@ export function GridDetailView({
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Top half: hero */}
-      <div className="relative h-[55vh] flex flex-col">
+      <div className="relative h-[60vh] flex flex-col overflow-hidden">
         {/* Background: driver/track use gradient + dimmed image; team uses plain image */}
         {isDriverOrTrack ? (
           <div
@@ -359,13 +388,17 @@ export function GridDetailView({
             role="region"
             aria-label="Grid ranking carousel - swipe left or right to change"
           >
-            <div className="flex min-w-0 flex-1 items-end justify-end">
+            <div
+              className="flex min-w-0 flex-1 items-end z-[-1]"
+            >
               {renderHeroSlot(items[selectedIndex - 1], true)}
             </div>
             <div className="flex flex-shrink-0 items-end justify-center" aria-current="true">
               {renderHeroSlot(selectedItem ?? undefined, false)}
             </div>
-            <div className="flex min-w-0 flex-1 items-end justify-start">
+            <div
+              className="flex min-w-0 flex-1 items-end justify-end z-[-1]"
+            >
               {renderHeroSlot(items[selectedIndex + 1], true)}
             </div>
           </div>
@@ -434,53 +467,22 @@ export function GridDetailView({
         </div>
 
         <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-16 pb-0 overflow-x-hidden">
-          {/* Name + flag left; Edit button right (own profile view only) */}
-          {selectedItem && (
-            <div className="flex items-start justify-between gap-4 shrink-0 mb-4">
-              <div className="flex flex-col items-start text-left min-w-0">
-                <h1 className="text-4xl font-serif text-white font-normal font-display">
-                  {isPlaceholderSelected
-                    ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
-                    : selectedItem.name}
-                </h1>
-                {(type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality) ||
-                (type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country) ? (
-                  <div className="mt-1 flex items-center gap-2">
-                    {type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality && (
-                      <>
-                        <Image
-                          src={getNationalityFlagPath((selectedItem as DriverRankItem).nationality) ?? ''}
-                          alt=""
-                          width={24}
-                          height={24}
-                          className="rounded-full object-cover"
-                        />
-                        <span className="text-white/90 text-sm">
-                          {(selectedItem as DriverRankItem).nationality}
-                        </span>
-                      </>
-                    )}
-                    {type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country && (
-                      <span className="text-white/90 text-sm">
-                        {(selectedItem as TrackRankItem).location && `${(selectedItem as TrackRankItem).location}, `}
-                        {(selectedItem as TrackRankItem).country}
-                      </span>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-              {isOwnProfile && mode === 'view' && (
-                <Link
-                  href={`/profile/edit-grid/${type}`}
-                  className="flex-shrink-0 flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
-                  aria-label={`Edit ${type} grid`}
-                >
-                  <Pencil className="h-4 w-4" />
-                  <span>Edit</span>
-                </Link>
-              )}
-            </div>
-          )}
+          {/* Username's Grid; Edit button right (own profile view only) */}
+          <div className="flex items-start justify-between gap-4 shrink-0 mb-4">
+            <h1 className="text-3xl font-serif text-white font-normal font-display min-w-0 capitalize">
+              {owner.username}&apos;s <br/> Grid
+            </h1>
+            {isOwnProfile && mode === 'view' && (
+              <Link
+                href={`/profile/edit-grid/${type}`}
+                className="flex-shrink-0 flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                aria-label={`Edit ${type} grid`}
+              >
+                <Pencil className="h-4 w-4" />
+                <span>Edit</span>
+              </Link>
+            )}
+          </div>
 
           <div className="relative flex w-full gap-4 items-end min-h-0 flex-1">
             <div className="flex-1 min-w-0" />
@@ -504,7 +506,67 @@ export function GridDetailView({
 
       {/* Bottom half: black bg, owner/own blurb, hr, pills, comments */}
       <div className="bg-black px-4 py-6">
-        {/* 3rd-party: owner blurb at top of bottom half */}
+        {/* Entity name row with prev/next arrows (accessibility) */}
+        {items.length > 0 && selectedItem && (
+          <div className="mb-6 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSelectedIndex((i) => Math.max(0, i - 1))}
+              disabled={selectedIndex === 0}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              aria-label={`Previous ${type}`}
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
+              <h2
+                key={selectedIndex}
+                className="text-2xl font-serif text-white font-normal font-display transition-opacity duration-200"
+              >
+                {isPlaceholderSelected
+                  ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
+                  : selectedItem.name}
+              </h2>
+              {(type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality) ||
+              (type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country) ? (
+                <div className="mt-1 flex items-center justify-center gap-2">
+                  {type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality && (
+                    <>
+                      <Image
+                        src={getNationalityFlagPath((selectedItem as DriverRankItem).nationality) ?? ''}
+                        alt=""
+                        width={24}
+                        height={24}
+                        className="rounded-full object-cover"
+                      />
+                      <span className="text-white/90 text-sm">
+                        {(selectedItem as DriverRankItem).nationality}
+                      </span>
+                    </>
+                  )}
+                  {type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country && (
+                    <span className="text-white/90 text-sm">
+                      {(selectedItem as TrackRankItem).location &&
+                        `${(selectedItem as TrackRankItem).location}, `}
+                      {(selectedItem as TrackRankItem).country}
+                    </span>
+                  )}
+                </div>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedIndex((i) => Math.min(items.length - 1, i + 1))}
+              disabled={selectedIndex >= items.length - 1}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              aria-label={`Next ${type}`}
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          </div>
+        )}
+
+        {/* 3rd-party: owner blurb for current slot at top of bottom half */}
         {isThirdPartyView && doesHaveBlurb && (
           <div className="mb-6 flex items-start gap-3">
             <Link href={`/u/${owner.username}`} className="flex-shrink-0">
@@ -520,19 +582,23 @@ export function GridDetailView({
               <Link href={`/u/${owner.username}`} className="text-sm font-medium text-white hover:text-white/90">
                 {owner.username}
               </Link>
-              <p className="mt-1 text-sm text-white/80 leading-snug">{grid.blurb?.trim()}</p>
+              <p className="mt-1 text-sm text-white/80 leading-snug">{currentSlotBlurbFromData.trim()}</p>
             </div>
           </div>
         )}
 
-        {/* Own profile view: blurb section with edit / input at top of bottom half */}
+        {/* Own profile view: blurb section with edit / input at top of bottom half (per slot) */}
         {isOwnProfile && mode === 'view' && (
           <OwnProfileBlurbBlock
             owner={owner}
             gridId={grid.id}
-            initialBlurb={grid.blurb ?? ''}
+            rankIndex={rankIndex}
+            initialBlurb={currentSlotBlurbFromData}
             ownBlurbDisplay={ownBlurbDisplay}
             setOwnBlurbLocal={setOwnBlurbLocal}
+            onSlotBlurbSaved={(_, value) =>
+              setSlotBlurbsLocal((prev) => ({ ...prev ?? {}, [rankIndex]: value }))
+            }
             isEditingOwnBlurb={isEditingOwnBlurb}
             setIsEditingOwnBlurb={setIsEditingOwnBlurb}
             ownBlurbSaving={ownBlurbSaving}
@@ -540,8 +606,27 @@ export function GridDetailView({
           />
         )}
 
+        {/* Edit mode: per-slot blurb for currently selected rank */}
+        {mode === 'edit' && onSlotBlurbChange && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-white/90 mb-2">
+              Blurb for rank {rankIndex} (optional, max 140)
+            </label>
+            <textarea
+              value={(slotBlurbsFromProps ?? {})[rankIndex] ?? ''}
+              onChange={(e) => onSlotBlurbChange(rankIndex, e.target.value.slice(0, 140))}
+              placeholder="Add a blurb for this spot..."
+              rows={3}
+              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none"
+            />
+            <p className="mt-1 text-xs text-white/60">
+              {((slotBlurbsFromProps ?? {})[rankIndex] ?? '').length}/140
+            </p>
+          </div>
+        )}
+
         {/* Light hr between blurb section and pills/comments */}
-        {((isThirdPartyView && doesHaveBlurb) || (isOwnProfile && mode === 'view')) && (
+        {shouldShowBlurbPanel && (
           <hr className="mb-6 border-white/20" />
         )}
 

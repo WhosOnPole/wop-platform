@@ -154,7 +154,7 @@ export function TopNav() {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 text-white z-50 transition-[background] duration-300 ${
+      className={`fixed top-0 left-0 right-0 text-white z-50 transition-[background] ease-in-out duration-800 ${
         showNavBg
           ? 'bg-gradient-to-b from-black to-transparent'
           : 'bg-transparent'
