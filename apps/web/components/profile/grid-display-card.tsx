@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Heart, ChevronRight, Pencil } from 'lucide-react'
+import { Heart, ChevronRight, Pencil, Plus } from 'lucide-react'
 import { GridHeartButton } from './grid-heart-button'
 import { GridSnapshot } from './grid-snapshot'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
@@ -134,7 +134,51 @@ export function GridDisplayCard({
         <p className="mb-4 text-sm italic text-gray-600">&quot;{grid.blurb}&quot;</p>
       )}
 
-      {/* Grid Display: #1 (50%) + Items 2-10 (3x3 grid, 50%) */}
+      {/* Empty state: same layout, gray boxes with + , clickable to edit when own profile */}
+      {isPlaceholderGrid ? (
+        isOwnProfile ? (
+          <Link
+            href={`/profile/edit-grid/${grid.type}`}
+            className="block mb-4 cursor-pointer group"
+            aria-label={`Add your ${grid.type} grid`}
+          >
+            <div className="flex gap-2 items-start">
+              {/* #1 slot - large */}
+              <div className="w-1/2 min-w-0 flex-shrink-0 rounded-xl border border-white/30 bg-white/10 aspect-square flex items-center justify-center group-hover:bg-white/15 transition-colors">
+                <Plus className="h-12 w-12 text-white/50 md:h-16 md:w-16" strokeWidth={1.5} aria-hidden />
+              </div>
+              {/* Slots 2–10 - 3x3 */}
+              <div className="w-1/2 min-w-0 grid grid-cols-3 gap-1">
+                {Array.from({ length: 9 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square w-full min-w-0 rounded-lg border border-white/30 bg-white/10 flex items-center justify-center group-hover:bg-white/15 transition-colors"
+                  >
+                    <Plus className="h-6 w-6 text-white/50 md:h-8 md:w-8" strokeWidth={1.5} aria-hidden />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Link>
+        ) : (
+          <div className="mb-4 flex gap-2 items-start">
+            <div className="w-1/2 min-w-0 flex-shrink-0 rounded-xl border border-white/30 bg-white/10 aspect-square flex items-center justify-center">
+              <Plus className="h-12 w-12 text-white/50 md:h-16 md:w-16" strokeWidth={1.5} aria-hidden />
+            </div>
+            <div className="w-1/2 min-w-0 grid grid-cols-3 gap-1">
+              {Array.from({ length: 9 }, (_, i) => (
+                <div
+                  key={i}
+                  className="aspect-square w-full min-w-0 rounded-lg border border-white/30 bg-white/10 flex items-center justify-center"
+                >
+                  <Plus className="h-6 w-6 text-white/50 md:h-8 md:w-8" strokeWidth={1.5} aria-hidden />
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      ) : (
+      /* Grid Display: #1 (50%) + Items 2-10 (3x3 grid, 50%) */
       <div className="mb-4 flex gap-2 items-start">
         {/* #1 Item - 50% width, square aspect */}
         {firstItem && (
@@ -367,6 +411,7 @@ export function GridDisplayCard({
           })}
         </div>
       </div>
+      )}
 
       {/* Actions: Comment, Like, View More - Left aligned */}
       {!isPlaceholderGrid && (
