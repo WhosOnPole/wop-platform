@@ -291,21 +291,21 @@ export function GridDetailView({
 
   function renderHeroSlot(item: RankItem | undefined, ghost: boolean) {
     if (!item || item.is_placeholder) return <div className="flex-1" aria-hidden />
-    const opacity = ghost ? 'opacity-40 ' : 'opacity-100'
+    const opacity = ghost ? 'opacity-20 ' : 'opacity-100'
     const size = ghost ? 'min(50vw,160px)' : 'min(85vw,320px)'
     if (type === 'driver') {
       return (
         <div
           className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
-          style={{ minHeight: ghost ? 120 : 200 }}
+          style={{ minHeight: ghost ? 300 : 400 }}
         >
           <div
-            className="flex-shrink-0"
+            className="flex-shrink-0 transition-all duration-300"
             style={{
-              width: ghost ? 'min(50vw,160px)' : size,
-              height: ghost ? 'min(50vw,160px)' : size,
-              minWidth: ghost ? 80 : 200,
-              minHeight: ghost ? 80 : 200,
+              width: ghost ? 'min(120vw,300px)' : size,
+              height: ghost ? 'min(120vw,300px)' : size,
+              minWidth: ghost ? 80 : 400,
+              minHeight: ghost ? 80 : 400,
             }}
           >
             <DriverHeroBodyMedia
@@ -489,10 +489,10 @@ export function GridDetailView({
 
             {/* Position number on the right of center image (view mode only) */}
             {mode === 'view' && (
-              <div className="flex shrink-0 items-end justify-end self-stretch">
+              <div className="flex shrink-0 items-start self-stretch">
                 <span
-                  className="font-bold text-white"
-                  style={{ fontFamily: 'Inter, sans-serif', fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: 1 }}
+                  className="font-bold font-display text-white"
+                  style={{ fontSize: 'clamp(4rem, 13vw, 7rem)', lineHeight: 1 }}
                   aria-label={`Rank ${selectedIndex + 1} on this grid`}
                 >
                   {selectedIndex + 1}

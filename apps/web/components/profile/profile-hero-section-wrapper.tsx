@@ -33,10 +33,10 @@ export function ProfileHeroSectionWrapper({
   useEffect(() => {
     function handleScroll() {
       const scrollY = window.scrollY
-      const heroHeight = window.innerHeight * 0.4 // 40vh - matches page spacer
+      const heroHeight = window.innerHeight * 0.6 // 60vh - matches page hero + spacer
       const isMd = window.matchMedia('(min-width: 768px)').matches
-      const tabsStickyTop = (isMd ? 18.5 : 14.5) * 16
-      const scrollThreshold = Math.max(0, heroHeight - tabsStickyTop - 24)
+      const contentStickyTop = (isMd ? 20 : 18) * 16 // below tab bar with clearance
+      const scrollThreshold = Math.max(0, heroHeight - contentStickyTop - 8)
       const clampedScrollY = Math.min(scrollY, scrollThreshold)
       const progress = scrollThreshold > 0 ? Math.min(clampedScrollY / scrollThreshold, 1) : 0
       setScrollProgress(progress)

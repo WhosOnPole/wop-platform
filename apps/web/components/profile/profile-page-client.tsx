@@ -60,12 +60,12 @@ export function ProfilePageClient({
     function handleScroll() {
       if (isAdjustingScroll) return
 
-      const heroHeight = window.innerHeight * 0.4 // 40vh - matches page spacer
+      const heroHeight = window.innerHeight * 0.6 // 60vh - matches page hero + spacer
       const isMd = window.matchMedia('(min-width: 768px)').matches
-      // Match sticky content top: calc(10rem+4.5rem) / calc(14rem+4.5rem)
-      const tabsStickyTop = (isMd ? 18.5 : 14.5) * 16
-      // Stop window scroll when tabs hit sticky; reduce slightly so top section doesn't over-scroll
-      const scrollThreshold = Math.max(0, heroHeight - tabsStickyTop - 24)
+      // Content area starts below tab bar with extra clearance to avoid clipping
+      const contentStickyTop = (isMd ? 20 : 18) * 16
+      // Stop window scroll when content reaches this position; then scroll inner content
+      const scrollThreshold = Math.max(0, heroHeight - contentStickyTop - 8)
       if (scrollThreshold <= 0) return
 
       const scrollY = window.scrollY
@@ -230,13 +230,13 @@ export function ProfilePageClient({
         ref={contentRef} 
         className={`bg-black ${
           isSticky 
-            ? `fixed top-[calc(10rem+4.5rem)] left-0 right-0 bottom-20 z-20 md:top-[calc(14rem+4.5rem)] ${
+            ? `fixed left-0 right-0 bottom-0 z-20 top-[18rem] md:top-[20rem] ${
                 isActivityTab ? 'overflow-y-hidden' : 'overflow-y-auto'
               }` 
             : 'px-4 py-6 sm:px-6 lg:px-8'
         }`}
       >
-        <div className={isSticky ? 'px-4 py-6 sm:px-6 lg:px-8 h-full min-h-0' : ''}>
+        <div className={isSticky ? 'px-4 pt-4 py-6 sm:px-6 lg:px-8 h-full min-h-0' : ''}>
           {/* Drivers tab */}
         {activeTab === 'drivers' && driverGridDisplay && (
           <div className="mx-auto max-w-4xl">

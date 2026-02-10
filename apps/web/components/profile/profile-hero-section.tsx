@@ -50,8 +50,8 @@ export function ProfileHeroSection({
   if (showLocation && profile.state) locationParts.push(profile.state)
   const locationText = locationParts.length > 0 ? locationParts.join(', ') : null
 
-  // Calculate scroll transform - content scrolls up limitedly
-  const maxScroll = 130 // Maximum scroll distance in pixels
+  // Calculate scroll transform - content scrolls up with scroll (username/sub info move up more)
+  const maxScroll = 280 // Maximum scroll distance in pixels so hero content scrolls up further
   const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
 
   return (
