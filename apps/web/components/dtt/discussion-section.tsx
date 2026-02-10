@@ -7,6 +7,7 @@ import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { DiscussionReportButton } from '@/components/discussion/report-button'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface User {
   id: string
@@ -575,19 +576,11 @@ export function DiscussionSection({
             return (
               <div key={post.id} className={`${postBorderClasses} pb-6 last:border-0`}>
                 <div className="mb-3 flex items-center space-x-3">
-                  {post.user?.profile_image_url ? (
-                    <img
-                      src={post.user.profile_image_url}
-                      alt={post.user.username}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${avatarBgClasses}`}>
-                      <span className={`text-xs font-medium ${avatarTextClasses}`}>
-                        {post.user?.username?.charAt(0).toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
+                  <img
+                    src={getAvatarUrl(post.user?.profile_image_url)}
+                    alt={post.user?.username ?? ''}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
                   <div>
                     <Link
                       href={`/u/${post.user?.username || 'unknown'}`}
@@ -642,19 +635,11 @@ export function DiscussionSection({
                       return (
                         <div key={comment.id} className="py-2">
                           <div className="mb-2 flex items-center space-x-2">
-                            {comment.user?.profile_image_url ? (
-                              <img
-                                src={comment.user.profile_image_url}
-                                alt={comment.user.username}
-                                className="h-6 w-6 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className={`flex h-6 w-6 items-center justify-center rounded-full ${avatarBgClasses}`}>
-                                <span className={`text-xs font-medium ${avatarTextClasses}`}>
-                                  {comment.user?.username?.charAt(0).toUpperCase() || '?'}
-                                </span>
-                              </div>
-                            )}
+                            <img
+                              src={getAvatarUrl(comment.user?.profile_image_url)}
+                              alt={comment.user?.username ?? ''}
+                              className="h-6 w-6 rounded-full object-cover"
+                            />
                             <div>
                               <Link
                                 href={`/u/${comment.user?.username || 'unknown'}`}
@@ -727,19 +712,11 @@ export function DiscussionSection({
                               {commentReplies.map((reply) => (
                                 <div key={reply.id} className="py-1">
                                   <div className="mb-1 flex items-center space-x-2">
-                                    {reply.user?.profile_image_url ? (
-                                      <img
-                                        src={reply.user.profile_image_url}
-                                        alt={reply.user.username}
-                                        className="h-5 w-5 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className={`flex h-5 w-5 items-center justify-center rounded-full ${avatarBgClasses}`}>
-                                        <span className={`text-xs font-medium ${avatarTextClasses}`}>
-                                          {reply.user?.username?.charAt(0).toUpperCase() || '?'}
-                                        </span>
-                                      </div>
-                                    )}
+                                    <img
+                                      src={getAvatarUrl(reply.user?.profile_image_url)}
+                                      alt={reply.user?.username ?? ''}
+                                      className="h-5 w-5 rounded-full object-cover"
+                                    />
                                     <div>
                                       <Link
                                         href={`/u/${reply.user?.username || 'unknown'}`}

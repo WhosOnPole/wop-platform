@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Heart, MessageSquare, UserPlus, AtSign, Vote, Settings, Check } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
 import Link from 'next/link'
+import { getAvatarUrl } from '@/utils/avatar'
 
 type FilterType = 'all' | 'unread' | 'likes' | 'comments' | 'follows'
 
@@ -195,17 +196,11 @@ export default function NotificationsPage() {
                 <div className="flex items-start space-x-4">
                   {/* Actor Avatar */}
                   <div className="flex-shrink-0">
-                    {notification.actor?.profile_image_url ? (
-                      <img
-                        src={notification.actor.profile_image_url}
-                        alt={actor}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white">
-                        <span className="text-lg font-medium">{actor.charAt(0).toUpperCase()}</span>
-                      </div>
-                    )}
+                    <img
+                      src={getAvatarUrl(notification.actor?.profile_image_url)}
+                      alt={actor}
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
                   </div>
 
                   {/* Notification Content */}

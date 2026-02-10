@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Search, X, Loader2 } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { getAvatarUrl } from '@/utils/avatar'
 import { getTeamIconUrl } from '@/utils/storage-urls'
 
 interface ProfileResult {
@@ -303,7 +304,7 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
                       href={`/u/${p.username}`}
                       label={p.username}
                       sublabel="User"
-                      imageUrl={p.profile_image_url}
+                      imageUrl={getAvatarUrl(p.profile_image_url)}
                       fallback={p.username.charAt(0).toUpperCase()}
                       onSelect={onClose}
                     />

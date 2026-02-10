@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Grid, Edit2 } from 'lucide-react'
+import { Grid } from 'lucide-react'
 import { GridHeartButton } from './grid-heart-button'
 import { getTeamIconUrl } from '@/utils/storage-urls'
 
@@ -43,15 +43,6 @@ export function UserGridsSection({
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Top {typeLabel}</h3>
           <div className="flex items-center space-x-2">
-            {isOwnProfile && (
-              <Link
-                href={`/profile/edit-grid/${type}`}
-                className="flex items-center space-x-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                <Edit2 className="h-4 w-4" />
-                <span>Edit</span>
-              </Link>
-            )}
             {!isOwnProfile && (
               <GridHeartButton
                 gridId={grid.id}

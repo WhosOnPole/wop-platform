@@ -7,7 +7,7 @@ import { Heart } from 'lucide-react'
 
 interface LikeButtonProps {
   targetId: string
-  targetType: 'post' | 'comment'
+  targetType: 'post' | 'comment' | 'grid_slot_comment'
   initialLikeCount: number
   initialIsLiked: boolean
   onLikeChange?: (targetId: string, isLiked: boolean) => void
@@ -156,7 +156,12 @@ export function LikeButton({
   }
 
   async function refreshLikeCount() {
-    const tableName = targetType === 'post' ? 'posts' : 'comments'
+    const tableName =
+      targetType === 'post'
+        ? 'posts'
+        : targetType === 'comment'
+          ? 'comments'
+          : 'grid_slot_comments'
 
     // Try to read denormalized like_count
     const { data, error } = await supabase
@@ -198,7 +203,13 @@ export function LikeButton({
     }
   }
 
-  async function logVoteCount(runId: string, hypothesisId: string, targetId: string, targetType: 'post' | 'comment', userId: string) {
+  async function logVoteCount(
+    runId: string,
+    hypothesisId: string,
+    targetId: string,
+    targetType: 'post' | 'comment' | 'grid_slot_comment',
+    userId: string
+  ) {
     const { count, error } = await supabase
       .from('votes')
       .select('id', { head: true, count: 'exact' })

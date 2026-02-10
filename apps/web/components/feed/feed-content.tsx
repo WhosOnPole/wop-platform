@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
+import { getAvatarUrl } from '@/utils/avatar'
 import { FeedPostCommentSection } from './feed-post-comment-section'
 import { F1InstagramEmbed } from './f1-instagram-embed'
 
@@ -92,19 +93,11 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
               className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
               <div className="mb-4 flex items-center space-x-3">
-                {post.user?.profile_image_url ? (
-                  <img
-                    src={post.user.profile_image_url}
-                    alt={post.user.username}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-                    <span className="text-sm font-medium text-white/90">
-                      {post.user?.username?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(post.user?.profile_image_url)}
+                  alt={post.user?.username ?? ''}
+                  className="h-10 w-10 rounded-full object-cover"
+                />
                 <div>
                   <Link
                     href={`/u/${post.user?.username || 'unknown'}`}
@@ -143,19 +136,11 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
               className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
               <div className="mb-4 flex items-center space-x-3">
-                {grid.user?.profile_image_url ? (
-                  <img
-                    src={grid.user.profile_image_url}
-                    alt={grid.user.username}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-                    <span className="text-sm font-medium text-white/90">
-                      {grid.user?.username?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(grid.user?.profile_image_url)}
+                  alt={grid.user?.username ?? ''}
+                  className="h-10 w-10 rounded-full object-cover"
+                />
                 <div>
                   <Link
                     href={`/u/${grid.user?.username || 'unknown'}`}

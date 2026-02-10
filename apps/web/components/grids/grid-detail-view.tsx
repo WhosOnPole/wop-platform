@@ -1,17 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { getNationalityFlagPath } from '@/utils/flags'
 import { getTeamBackgroundUrl } from '@/utils/storage-urls'
-import { DriverHeroMedia } from './hero/driver-hero-media'
+import { DriverHeroBodyMedia } from './hero/driver-hero-body-media'
 import { TrackHeroMedia } from './hero/track-hero-media'
 import { TeamHeroMedia } from './hero/team-hero-media'
 import { GridBlurbCard } from './grid-blurb-card'
-import { GridRankPills } from './grid-rank-pills'
 import { GridRankPillsDnd } from './grid-rank-pills-dnd'
 import { GridItemPickerModal } from './grid-item-picker-modal'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { GridSlotCommentSection } from './grid-slot-comment-section'
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
+import { createClientComponentClient } from '@/utils/supabase-client'
+import { getAvatarUrl } from '@/utils/avatar'
 
 export type GridType = 'driver' | 'team' | 'track'
 
@@ -63,10 +66,98 @@ interface GridDetailViewProps {
   availableItems?: RankItem[]
 }
 
-const VERTICAL_LABEL: Record<GridType, string> = {
-  driver: 'DRIVERS',
-  track: 'TRACKS',
-  team: 'TEAMS',
+const VERTICAL_LABEL_SRC: Record<GridType, string> = {
+  driver: '/images/drivers.svg',
+  track: '/images/tracks.svg',
+  team: '/images/teams.svg',
+}
+
+function OwnProfileBlurbBlock({
+  owner,
+  gridId,
+  initialBlurb,
+  ownBlurbDisplay,
+  setOwnBlurbLocal,
+  isEditingOwnBlurb,
+  setIsEditingOwnBlurb,
+  ownBlurbSaving,
+  setOwnBlurbSaving,
+}: {
+  owner: { username: string; profile_image_url: string | null }
+  gridId: string
+  initialBlurb: string
+  ownBlurbDisplay: string
+  setOwnBlurbLocal: (v: string | null) => void
+  isEditingOwnBlurb: boolean
+  setIsEditingOwnBlurb: (v: boolean) => void
+  ownBlurbSaving: boolean
+  setOwnBlurbSaving: (v: boolean) => void
+}) {
+  const supabase = createClientComponentClient()
+  const [draft, setDraft] = useState(ownBlurbDisplay)
+
+  async function handleSave() {
+    const value = draft.trim().slice(0, 140)
+    setOwnBlurbSaving(true)
+    const { error } = await supabase.from('grids').update({ blurb: value || null }).eq('id', gridId)
+    setOwnBlurbSaving(false)
+    if (!error) {
+      setOwnBlurbLocal(value || null)
+      setIsEditingOwnBlurb(false)
+    }
+  }
+
+  const hasBlurb = ownBlurbDisplay.trim().length > 0
+  const showInput = !hasBlurb || isEditingOwnBlurb
+
+  return (
+    <div className="mb-6 flex items-start gap-3">
+      <Image
+        src={getAvatarUrl(owner.profile_image_url)}
+        alt={owner.username}
+        width={48}
+        height={48}
+        className="h-12 w-12 shrink-0 rounded-full object-cover"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-white">{owner.username}</p>
+        {showInput ? (
+          <div className="mt-2">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value.slice(0, 140))}
+              placeholder="Add a blurb about your ranking (max 140)..."
+              rows={3}
+              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none"
+            />
+            <p className="mt-1 text-xs text-white/60">{draft.length}/140</p>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={ownBlurbSaving}
+              className="mt-2 rounded-full bg-[#25B4B1] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {ownBlurbSaving ? 'Saving…' : 'Save blurb'}
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="mt-1 text-sm text-white/80 leading-snug">{ownBlurbDisplay}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(ownBlurbDisplay)
+                setIsEditingOwnBlurb(true)
+              }}
+              className="mt-1 text-xs text-[#25B4B1] hover:text-[#3BEFEB]"
+            >
+              Edit blurb
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function DragHint() {
@@ -105,12 +196,17 @@ export function GridDetailView({
   const [pickerOpen, setPickerOpen] = useState(false)
   const selectedItem = items[selectedIndex]
   const type = grid.type
+  const isThirdPartyView = mode === 'view' && !isOwnProfile
   const isPlaceholderSelected = Boolean(selectedItem && selectedItem.is_placeholder)
   const doesHaveBlurb = Boolean(grid.blurb && grid.blurb.trim().length > 0)
   const isBlurbEditable = mode === 'edit' && Boolean(onBlurbChange)
-  const shouldShowBlurbPanel = isBlurbEditable || doesHaveBlurb
-  const isBlurbCollapsible = mode === 'view' && doesHaveBlurb
+  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView)
+  const isBlurbCollapsible = mode === 'view' && doesHaveBlurb && !isThirdPartyView
   const [isBlurbOpen, setIsBlurbOpen] = useState(true)
+  const [ownBlurbLocal, setOwnBlurbLocal] = useState<string | null>(null)
+  const [isEditingOwnBlurb, setIsEditingOwnBlurb] = useState(false)
+  const [ownBlurbSaving, setOwnBlurbSaving] = useState(false)
+  const ownBlurbDisplay = ownBlurbLocal !== null ? ownBlurbLocal : (grid.blurb ?? '')
 
   const heroBackground =
     type === 'team' && selectedItem
@@ -133,6 +229,99 @@ export function GridDetailView({
 
     const selected = next[index]
     if (selected?.is_placeholder) setPickerOpen(true)
+  }
+
+  // 3rd-party carousel: touch swipe
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef<number>(0)
+
+  useEffect(() => {
+    if (mode !== 'view' || !carouselRef.current) return
+    const el = carouselRef.current
+    const SWIPE_THRESHOLD = 50
+    function onTouchStart(e: TouchEvent) {
+      touchStartX.current = e.touches[0].clientX
+    }
+    function onTouchEnd(e: TouchEvent) {
+      const endX = e.changedTouches[0].clientX
+      const deltaX = endX - touchStartX.current
+      if (Math.abs(deltaX) < SWIPE_THRESHOLD) return
+      if (deltaX < 0) {
+        setSelectedIndex((i) => Math.min(9, i + 1))
+      } else {
+        setSelectedIndex((i) => Math.max(0, i - 1))
+      }
+    }
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [mode])
+
+  function renderHeroSlot(item: RankItem | undefined, ghost: boolean) {
+    if (!item || item.is_placeholder) return <div className="flex-1" aria-hidden />
+    const opacity = ghost ? 'opacity-40 scale-90' : 'opacity-100'
+    const size = ghost ? 'min(50vw,160px)' : 'min(85vw,320px)'
+    if (type === 'driver') {
+      return (
+        <div
+          className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
+          style={{ minHeight: ghost ? 120 : 200 }}
+        >
+          <div
+            className="flex-shrink-0"
+            style={{
+              width: ghost ? 'min(50vw,160px)' : size,
+              height: ghost ? 'min(50vw,160px)' : size,
+              minWidth: ghost ? 80 : 200,
+              minHeight: ghost ? 80 : 200,
+            }}
+          >
+            <DriverHeroBodyMedia
+              driverName={item.name}
+              supabaseUrl={supabaseUrl}
+              fallbackSrc={
+                (item as DriverRankItem).headshot_url || (item as DriverRankItem).image_url
+              }
+              className="h-full w-full"
+            />
+          </div>
+        </div>
+      )
+    }
+    if (type === 'track') {
+      return (
+        <div
+          className={`flex items-center justify-center transition-all duration-300 ${opacity}`}
+          style={{ height: ghost ? 120 : 'min(60vh,420px)' }}
+        >
+          <TrackHeroMedia
+            trackSlug={(item as TrackRankItem).track_slug ?? ''}
+            trackName={item.name}
+            supabaseUrl={supabaseUrl}
+            className={ghost ? 'h-24 w-24 object-cover' : 'h-full w-full max-h-full'}
+          />
+        </div>
+      )
+    }
+    if (type === 'team') {
+      return (
+        <div
+          className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
+          style={{ height: ghost ? 120 : 'min(58vh,380px)' }}
+        >
+          <TeamHeroMedia
+            teamId={item.id}
+            teamName={item.name}
+            supabaseUrl={supabaseUrl}
+            className={ghost ? 'h-20 w-20 object-cover' : 'w-full h-[min(58vh,380px)] min-h-[220px]'}
+          />
+        </div>
+      )
+    }
+    return null
   }
 
   return (
@@ -161,190 +350,205 @@ export function GridDetailView({
             <div className="absolute inset-0 z-0 bg-black/30" />
           </>
         )}
-        {/* Hero image: full-bleed layer, centered horizontally (x), aligned to bottom of section (y), responsive */}
-        <div className="absolute inset-0 z-[1] flex items-end justify-center pointer-events-none">
-          {selectedItem && !isPlaceholderSelected && type === 'driver' && (
-            <div
-              key={selectedIndex}
-              className="transition-all duration-300 h-[min(85vw,320px)] w-[min(85vw,320px)] min-h-[200px] min-w-[200px] mb-2"
-            >
-              <DriverHeroMedia
-                driverName={selectedItem.name}
-                supabaseUrl={supabaseUrl}
-                fallbackSrc={
-                  (selectedItem as DriverRankItem).headshot_url ||
-                  (selectedItem as DriverRankItem).image_url
-                }
-                className="h-full w-full"
-              />
+        {/* Hero: view mode = 3-slot carousel with swipe; edit mode = single centered */}
+        {mode === 'view' ? (
+          <div
+            ref={carouselRef}
+            className="absolute inset-0 z-[1] flex items-end justify-center gap-2 touch-pan-y"
+            style={{ touchAction: 'pan-y' }}
+            role="region"
+            aria-label="Grid ranking carousel - swipe left or right to change"
+          >
+            <div className="flex min-w-0 flex-1 items-end justify-end">
+              {renderHeroSlot(items[selectedIndex - 1], true)}
             </div>
-          )}
-          {selectedItem && !isPlaceholderSelected && type === 'track' && (
-            <div
-              key={selectedIndex}
-              className="transition-all duration-300 flex items-center justify-center h-[min(60vh,420px)] w-full max-w-[min(100vw,420px)]"
-            >
-              <TrackHeroMedia
-                trackSlug={(selectedItem as TrackRankItem).track_slug ?? ''}
-                trackName={selectedItem.name}
-                supabaseUrl={supabaseUrl}
-                className="h-full w-full max-h-full"
-              />
+            <div className="flex flex-shrink-0 items-end justify-center" aria-current="true">
+              {renderHeroSlot(selectedItem ?? undefined, false)}
             </div>
-          )}
-          {selectedItem && !isPlaceholderSelected && type === 'team' && (
-            <div
-              key={selectedIndex}
-              className="transition-all duration-300 absolute inset-0 flex items-end justify-center min-h-0"
-            >
-              <TeamHeroMedia
-                teamId={selectedItem.id}
-                teamName={selectedItem.name}
-                supabaseUrl={supabaseUrl}
-                className="w-full h-[min(58vh,380px)] min-h-[220px]"
-              />
+            <div className="flex min-w-0 flex-1 items-end justify-start">
+              {renderHeroSlot(items[selectedIndex + 1], true)}
             </div>
-          )}
+          </div>
+        ) : (
+          <div className="absolute inset-0 z-[1] flex items-end justify-center pointer-events-none">
+            {selectedItem && !isPlaceholderSelected && type === 'driver' && (
+              <div
+                key={selectedIndex}
+                className="transition-all duration-300 h-[min(85vw,320px)] w-[min(85vw,320px)] min-h-[200px] min-w-[200px] mb-2"
+              >
+                <DriverHeroBodyMedia
+                  driverName={selectedItem.name}
+                  supabaseUrl={supabaseUrl}
+                  fallbackSrc={
+                    (selectedItem as DriverRankItem).headshot_url ||
+                    (selectedItem as DriverRankItem).image_url
+                  }
+                  className="h-full w-full"
+                />
+              </div>
+            )}
+            {selectedItem && !isPlaceholderSelected && type === 'track' && (
+              <div
+                key={selectedIndex}
+                className="transition-all duration-300 flex items-center justify-center h-[min(60vh,420px)] w-full max-w-[min(100vw,420px)]"
+              >
+                <TrackHeroMedia
+                  trackSlug={(selectedItem as TrackRankItem).track_slug ?? ''}
+                  trackName={selectedItem.name}
+                  supabaseUrl={supabaseUrl}
+                  className="h-full w-full max-h-full"
+                />
+              </div>
+            )}
+            {selectedItem && !isPlaceholderSelected && type === 'team' && (
+              <div
+                key={selectedIndex}
+                className="transition-all duration-300 absolute inset-0 flex items-end justify-center min-h-0"
+              >
+                <TeamHeroMedia
+                  teamId={selectedItem.id}
+                  teamName={selectedItem.name}
+                  supabaseUrl={supabaseUrl}
+                  className="w-full h-[min(58vh,380px)] min-h-[220px]"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Section title SVG: left of screen, bottom of top section */}
+        <div
+          className="absolute left-0 bottom-4 z-20 flex items-end pl-2 w-12"
+          aria-hidden
+        >
+          <span className="block">
+            <Image
+              src={VERTICAL_LABEL_SRC[type]}
+              alt=""
+              width={30}
+              height={120}
+              className="object-contain"
+              style={{ width: 120, height: 350 }}
+            />
+          </span>
         </div>
 
-        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-14 pb-0 overflow-x-hidden">
-          {/* Name + flag above, top left */}
+        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-16 pb-0 overflow-x-hidden">
+          {/* Name + flag left; Edit button right (own profile view only) */}
           {selectedItem && (
-            <div className="flex flex-col items-start text-left shrink-0 mb-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-4xl font-serif text-white font-normal font-display w-full">
+            <div className="flex items-start justify-between gap-4 shrink-0 mb-4">
+              <div className="flex flex-col items-start text-left min-w-0">
+                <h1 className="text-4xl font-serif text-white font-normal font-display">
                   {isPlaceholderSelected
                     ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
                     : selectedItem.name}
                 </h1>
-                {type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality && (
-                  <>
-                    <Image
-                      src={getNationalityFlagPath((selectedItem as DriverRankItem).nationality) ?? ''}
-                      alt=""
-                      width={24}
-                      height={24}
-                      className="rounded-full object-cover"
-                    />
-                    <span className="text-white/90 text-sm">
-                      {(selectedItem as DriverRankItem).nationality}
-                    </span>
-                  </>
-                )}
-                {type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country && (
-                  <span className="text-white/90 text-sm">
-                    {(selectedItem as TrackRankItem).location && `${(selectedItem as TrackRankItem).location}, `}
-                    {(selectedItem as TrackRankItem).country}
-                  </span>
-                )}
+                {(type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality) ||
+                (type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country) ? (
+                  <div className="mt-1 flex items-center gap-2">
+                    {type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality && (
+                      <>
+                        <Image
+                          src={getNationalityFlagPath((selectedItem as DriverRankItem).nationality) ?? ''}
+                          alt=""
+                          width={24}
+                          height={24}
+                          className="rounded-full object-cover"
+                        />
+                        <span className="text-white/90 text-sm">
+                          {(selectedItem as DriverRankItem).nationality}
+                        </span>
+                      </>
+                    )}
+                    {type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country && (
+                      <span className="text-white/90 text-sm">
+                        {(selectedItem as TrackRankItem).location && `${(selectedItem as TrackRankItem).location}, `}
+                        {(selectedItem as TrackRankItem).country}
+                      </span>
+                    )}
+                  </div>
+                ) : null}
               </div>
+              {isOwnProfile && mode === 'view' && (
+                <Link
+                  href={`/profile/edit-grid/${type}`}
+                  className="flex-shrink-0 flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+                  aria-label={`Edit ${type} grid`}
+                >
+                  <Pencil className="h-4 w-4" />
+                  <span>Edit</span>
+                </Link>
+              )}
             </div>
           )}
 
           <div className="relative flex w-full gap-4 items-end min-h-0 flex-1">
-            {/* Left: vertical label */}
-            <div className="flex min-h-0 w-[25px] shrink-0 items-end justify-center overflow-hidden self-stretch">
-              <span
-                className="block shrink-0 text-[30px] font-extrabold uppercase leading-none text-transparent"
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  width: 0,
-                  height: 30,
-                  transform: 'rotate(-90deg)',
-                  transformOrigin: 'center center',
-                  WebkitTextStroke: '1px #25B4B1',
-                  color: 'rgba(255,255,255,0)',
-                }}
-              >
-                {VERTICAL_LABEL[type]}
-              </span>
-            </div>
-
-            {/* Spacer so blurb can sit on the right */}
             <div className="flex-1 min-w-0" />
 
-            {/* Blurb on the right, bottom of top section */}
-            {shouldShowBlurbPanel ? (
-              <div
-                className={`transition-transform duration-300 ease-out ${
-                  isBlurbCollapsible
-                    ? `absolute -right-4 bottom-2 ${isBlurbOpen ? 'translate-x-0' : 'translate-x-[calc(100%-44px)]'}`
-                    : 'shrink-0 self-end mb-2 translate-x-0'
-                }`}
-              >
-                <div
-                  className={`relative bg-black/80 text-white overflow-hidden ${
-                    isBlurbCollapsible
-                      ? isBlurbOpen
-                        ? 'w-[280px] rounded-lg p-2'
-                        : 'w-[280px] h-20 rounded-l-xl rounded-r-none p-0'
-                      : 'w-full max-w-[280px] rounded-lg p-2'
-                  }`}
+            {/* Position number on the right of center image (view mode only) */}
+            {mode === 'view' && (
+              <div className="flex shrink-0 items-end justify-end self-stretch">
+                <span
+                  className="font-bold text-white"
+                  style={{ fontFamily: 'Inter, sans-serif', fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: 1 }}
+                  aria-label={`Rank ${selectedIndex + 1} on this grid`}
                 >
-                  {isBlurbCollapsible ? (
-                    <button
-                      type="button"
-                      onClick={() => setIsBlurbOpen((prev) => !prev)}
-                      className={`absolute left-0 top-0 flex h-full w-[44px] items-center justify-center rounded-l-xl ${
-                        isBlurbOpen ? 'hover:bg-white/5' : 'hover:bg-black/70'
-                      }`}
-                      aria-label={isBlurbOpen ? 'Hide blurb panel' : 'Show blurb panel'}
-                      aria-expanded={isBlurbOpen}
-                    >
-                      {isBlurbOpen ? (
-                        <ChevronRight className="h-5 w-5 text-white/80" />
-                      ) : (
-                        <ChevronLeft className="h-5 w-5 text-white/80" />
-                      )}
-                    </button>
-                  ) : null}
-
-                  {mode === 'edit' && onBlurbChange ? (
-                  <div className="w-full">
-                    <label className="block text-sm font-medium mb-2">Blurb (optional, max 140)</label>
-                    <textarea
-                      value={blurbOverride ?? grid.blurb ?? ''}
-                      onChange={(e) => {
-                        if (e.target.value.length <= 140) onBlurbChange(e.target.value)
-                      }}
-                      rows={3}
-                      placeholder="Add a blurb about your ranking..."
-                      className="w-full rounded bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 border border-white/20 focus:border-[#25B4B1] focus:outline-none"
-                    />
-                    <p className="mt-1 text-xs text-white/60">{(blurbOverride ?? grid.blurb ?? '').length}/140</p>
-                  </div>
-                ) : (
-                    <>
-                      {isBlurbCollapsible && !isBlurbOpen ? null : (
-                        <div className={isBlurbCollapsible ? 'pl-[44px]' : ''}>
-                          <GridBlurbCard
-                            gridId={grid.id}
-                            blurb={grid.blurb ?? null}
-                            likeCount={grid.like_count ?? 0}
-                            isLiked={grid.is_liked ?? false}
-                            owner={owner}
-                            isOwnProfile={isOwnProfile}
-                          />
-                        </div>
-                      )}
-                    </>
-                )}
-                </div>
+                  {selectedIndex + 1}
+                </span>
               </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
+            )}
 
-      {/* Bottom half: black bg, pills */}
+            </div>
+            </div>
+            </div>
+
+      {/* Bottom half: black bg, owner/own blurb, hr, pills, comments */}
       <div className="bg-black px-4 py-6">
+        {/* 3rd-party: owner blurb at top of bottom half */}
+        {isThirdPartyView && doesHaveBlurb && (
+          <div className="mb-6 flex items-start gap-3">
+            <Link href={`/u/${owner.username}`} className="flex-shrink-0">
+              <Image
+                src={getAvatarUrl(owner.profile_image_url)}
+                alt={owner.username}
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-full object-cover"
+              />
+            </Link>
+            <div className="min-w-0 flex-1">
+              <Link href={`/u/${owner.username}`} className="text-sm font-medium text-white hover:text-white/90">
+                {owner.username}
+              </Link>
+              <p className="mt-1 text-sm text-white/80 leading-snug">{grid.blurb?.trim()}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Own profile view: blurb section with edit / input at top of bottom half */}
+        {isOwnProfile && mode === 'view' && (
+          <OwnProfileBlurbBlock
+            owner={owner}
+            gridId={grid.id}
+            initialBlurb={grid.blurb ?? ''}
+            ownBlurbDisplay={ownBlurbDisplay}
+            setOwnBlurbLocal={setOwnBlurbLocal}
+            isEditingOwnBlurb={isEditingOwnBlurb}
+            setIsEditingOwnBlurb={setIsEditingOwnBlurb}
+            ownBlurbSaving={ownBlurbSaving}
+            setOwnBlurbSaving={setOwnBlurbSaving}
+          />
+        )}
+
+        {/* Light hr between blurb section and pills/comments */}
+        {((isThirdPartyView && doesHaveBlurb) || (isOwnProfile && mode === 'view')) && (
+          <hr className="mb-6 border-white/20" />
+        )}
+
         {mode === 'view' && (
-          <GridRankPills
-            rankedItems={grid.ranked_items}
-            type={type}
-            selectedIndex={selectedIndex}
-            onSelectIndex={handleSelectRankIndex}
-            supabaseUrl={supabaseUrl}
+          <GridSlotCommentSection
+            gridId={grid.id}
+            rankIndex={selectedIndex + 1}
           />
         )}
         {mode === 'edit' && onRankedListChange && (

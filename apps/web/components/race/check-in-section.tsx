@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { getAvatarUrl } from '@/utils/avatar'
 import { useRouter } from 'next/navigation'
 import { MapPin, Users, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -118,19 +119,11 @@ export function CheckInSection({
                 href={`/u/${checkIn.user?.username || 'unknown'}`}
                 className="flex items-center space-x-2 rounded-full bg-gray-100 px-3 py-1 hover:bg-gray-200 transition-colors"
               >
-                {checkIn.user?.profile_image_url ? (
-                  <img
-                    src={checkIn.user.profile_image_url}
-                    alt={checkIn.user.username}
-                    className="h-6 w-6 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-300">
-                    <span className="text-xs font-medium text-gray-600">
-                      {checkIn.user?.username?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(checkIn.user?.profile_image_url)}
+                  alt={checkIn.user?.username ?? ''}
+                  className="h-6 w-6 rounded-full object-cover"
+                />
                 <span className="text-sm text-gray-700">{checkIn.user?.username || 'Unknown'}</span>
               </Link>
             ))}

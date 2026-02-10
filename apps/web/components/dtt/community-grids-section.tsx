@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Grid } from 'lucide-react'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface User {
   id: string
@@ -44,19 +45,11 @@ export function CommunityGridsSection({
               className="min-w-[280px] rounded-lg border border-gray-200 bg-white p-4 shadow hover:shadow-md transition-shadow"
             >
               <div className="mb-3 flex items-center space-x-2">
-                {grid.user?.profile_image_url ? (
-                  <img
-                    src={grid.user.profile_image_url}
-                    alt={grid.user.username}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                    <span className="text-xs font-medium text-gray-600">
-                      {grid.user?.username?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(grid.user?.profile_image_url)}
+                  alt={grid.user?.username ?? ''}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
                 <Link
                   href={`/u/${grid.user?.username || 'unknown'}`}
                   className="text-sm font-medium text-gray-900 hover:text-blue-600"

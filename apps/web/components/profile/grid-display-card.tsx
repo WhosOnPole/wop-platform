@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Heart, ChevronRight, Pencil, Plus } from 'lucide-react'
+import { Heart, ChevronRight, Plus } from 'lucide-react'
 import { GridHeartButton } from './grid-heart-button'
 import { GridSnapshot } from './grid-snapshot'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
@@ -116,19 +116,6 @@ export function GridDisplayCard({
 
   return (
     <div className="mb-8 shadow-sm">
-      {/* Edit button: own line, top right of grid */}
-      {isOwnProfile && (
-        <div className="mb-2 flex justify-end">
-          <Link
-            href={`/profile/edit-grid/${grid.type}`}
-            className="text-white hover:text-sunset-end transition-colors"
-            aria-label={`Edit ${grid.type} grid`}
-          >
-            <Pencil className="h-6 w-6" />
-          </Link>
-        </div>
-      )}
-
       {/* Grid Blurb */}
       {grid.blurb && (
         <p className="mb-4 text-sm italic text-gray-600">&quot;{grid.blurb}&quot;</p>

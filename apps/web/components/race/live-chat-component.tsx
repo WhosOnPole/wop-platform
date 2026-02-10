@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { getAvatarUrl } from '@/utils/avatar'
 import { useRouter } from 'next/navigation'
 import { Send, MessageSquare, AlertCircle } from 'lucide-react'
 
@@ -166,19 +167,11 @@ export function LiveChatComponent({ trackId, raceTime }: LiveChatComponentProps)
           <div className="space-y-4">
             {messages.map((message) => (
               <div key={message.id} className="flex items-start space-x-3">
-                {message.user?.profile_image_url ? (
-                  <img
-                    src={message.user.profile_image_url}
-                    alt={message.user.username}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                    <span className="text-xs font-medium text-gray-600">
-                      {message.user?.username?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(message.user?.profile_image_url)}
+                  alt={message.user?.username ?? ''}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-900">

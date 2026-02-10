@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { getAvatarUrl } from '@/utils/avatar'
 import { Logo } from '@/components/ui/logo'
 import { CreateMenu } from '@/components/create/create-menu'
 import { StoryModal } from '@/components/create/modals/story-modal'
@@ -149,13 +150,14 @@ export function TopNav() {
     return pathname.startsWith(href)
   }
 
-  const isGridPage = pathname.startsWith('/grid/') || pathname.startsWith('/profile/edit-grid/')
-  const showNavBg = !isGridPage && hasScrolled
+  const showNavBg = hasScrolled
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 text-white z-50 transition-colors ${
-        showNavBg ? 'bg-gradient-to-b from-black via-black/30 to-transparent' : 'bg-transparent'
+      className={`fixed top-0 left-0 right-0 text-white z-50 transition-[background] duration-300 ${
+        showNavBg
+          ? 'bg-gradient-to-b from-black to-transparent'
+          : 'bg-transparent'
       }`}
     >
       <div className="flex items-center justify-between px-4 py-2.5">
@@ -245,17 +247,11 @@ export function TopNav() {
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
                 aria-label="Open profile menu"
               >
-              {profile?.profile_image_url ? (
-                <img
-                  src={profile.profile_image_url}
-                  alt={profile.username}
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-sm font-semibold text-gray-600">
-                  {profile?.username?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              )}
+              <img
+                src={getAvatarUrl(profile?.profile_image_url)}
+                alt={profile?.username ?? 'User'}
+                className="h-full w-full rounded-full object-cover"
+              />
               </button>
             </>
           ) : null}

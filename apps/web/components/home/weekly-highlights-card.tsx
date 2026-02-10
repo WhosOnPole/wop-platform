@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Trophy, TrendingUp, Award } from 'lucide-react'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface WeeklyHighlightsCardProps {
   weekStart: string
@@ -57,23 +58,15 @@ export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardPr
         {/* Profile Section */}
         <div className="flex items-center space-x-4">
           <Link href={`/u/${fan.username}`} className="group">
-            {fan.profile_image_url ? (
-              <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-racing-orange ring-2 ring-yellow-300 transition-transform group-hover:scale-105">
-                <Image
-                  src={fan.profile_image_url}
-                  alt={fan.username}
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-racing-orange bg-gray-200 ring-2 ring-yellow-300">
-                <span className="text-2xl font-bold text-gray-600">
-                  {fan.username.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            <div className="relative h-20 w-20 overflow-hidden rounded-full border-4 border-racing-orange ring-2 ring-yellow-300 transition-transform group-hover:scale-105">
+              <Image
+                src={getAvatarUrl(fan.profile_image_url)}
+                alt={fan.username}
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+            </div>
           </Link>
           <div>
             <Link
