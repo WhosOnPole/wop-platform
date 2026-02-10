@@ -141,3 +141,16 @@ html:-ms-fullscreen {
     opacity: 1;
   }
 }
+
+/* Hero word cycle: one word visible at a time, 3s each */
+@keyframes hero-word-cycle {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  38% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.hero-cycle-item-1 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: 0s; }
+.hero-cycle-item-2 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: -3s; }
+.hero-cycle-item-3 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: -6s; }

@@ -1,3 +1,5 @@
+import { getAvatarUrl } from '@/utils/avatar'
+
 interface TrackTip {
   id: string
   tip_content: string
@@ -29,19 +31,11 @@ export function TrackSubmissionsTab({ submissions, typeLabel }: TrackSubmissions
             className="rounded-lg border border-white/20 bg-white/5 p-6"
           >
             <div className="mb-3 flex items-center space-x-3">
-              {submission.user?.profile_image_url ? (
-                <img
-                  src={submission.user.profile_image_url}
-                  alt={submission.user.username}
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                  <span className="text-xs font-medium text-white">
-                    {submission.user?.username?.charAt(0).toUpperCase() || '?'}
-                  </span>
-                </div>
-              )}
+              <img
+                src={getAvatarUrl(submission.user?.profile_image_url)}
+                alt={submission.user?.username ?? ''}
+                className="h-8 w-8 rounded-full object-cover"
+              />
               <div>
                 <p className="text-sm font-medium text-white">
                   {submission.user?.username || 'Unknown'}

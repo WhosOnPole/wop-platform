@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { getAvatarUrl } from '@/utils/avatar'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -89,19 +90,11 @@ export default async function FollowersPage({ params }: PageProps) {
                 href={`/u/${follower.username}`}
                 className="flex items-center space-x-4 p-4 transition-colors hover:bg-gray-50"
               >
-                {follower.profile_image_url ? (
-                  <img
-                    src={follower.profile_image_url}
-                    alt={follower.username}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-gray-600">
-                    <span className="text-lg font-semibold">
-                      {follower.username?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(follower.profile_image_url)}
+                  alt={follower.username}
+                  className="h-12 w-12 rounded-full object-cover"
+                />
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">{follower.username}</p>
                 </div>

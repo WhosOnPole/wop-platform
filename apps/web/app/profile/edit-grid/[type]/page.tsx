@@ -27,7 +27,11 @@ export default function EditGridPage() {
   const [loading, setLoading] = useState(true)
   const [rankedList, setRankedList] = useState<RankItem[]>([])
   const [availableItems, setAvailableItems] = useState<RankItem[]>([])
-  const [blurb, setBlurb] = useState('')
+  const [slotBlurbs, setSlotBlurbs] = useState<Record<number, string>>(() => {
+    const init: Record<number, string> = {}
+    for (let r = 1; r <= 10; r++) init[r] = ''
+    return init
+  })
   const [existingGridId, setExistingGridId] = useState<string | null>(null)
   const [profile, setProfile] = useState<{ id: string; username: string; profile_image_url: string | null } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -92,14 +96,28 @@ export default function EditGridPage() {
       if (profileData) setProfile(profileData)
       if (existingGrid) {
         setExistingGridId(existingGrid.id)
-        setBlurb(existingGrid.blurb || '')
         const rankedIds = (existingGrid.ranked_items || []) as Array<{ id: string; name: string }>
         const ordered = rankedIds
           .map((r) => catalog.find((c) => c.id === r.id))
           .filter((c): c is RankItem => !!c)
         setRankedList(padToTen(ordered))
+        const { data: slotBlurbsRows } = await supabase
+          .from('grid_slot_blurbs')
+          .select('rank_index, content')
+          .eq('grid_id', existingGrid.id)
+        const next: Record<number, string> = {}
+        for (let r = 1; r <= 10; r++) next[r] = ''
+        ;(slotBlurbsRows ?? []).forEach((row: { rank_index: number; content: string }) => {
+          next[row.rank_index] = row.content ?? ''
+        })
+        setSlotBlurbs(next)
       } else {
         setRankedList(padToTen([]))
+        setSlotBlurbs(() => {
+          const init: Record<number, string> = {}
+          for (let r = 1; r <= 10; r++) init[r] = ''
+          return init
+        })
       }
     } catch (error) {
       console.error('Error loading edit grid:', error)
@@ -158,6 +176,9 @@ export default function EditGridPage() {
       .eq('id', session.user.id)
       .single()
 
+    const gridTypeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'
+    let gridId: string
+
     if (existingGridId) {
       const { data: currentGrid } = await supabase
         .from('grids')
@@ -169,7 +190,7 @@ export default function EditGridPage() {
         .from('grids')
         .update({
           ranked_items: rankedItemIds,
-          blurb: blurb.trim() || null,
+          blurb: (slotBlurbs[1] ?? '').trim() || null,
           previous_state: previousState,
           updated_at: new Date().toISOString(),
         })
@@ -181,27 +202,41 @@ export default function EditGridPage() {
         setIsSubmitting(false)
         return
       }
-      const gridTypeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'
+      gridId = existingGridId
       await supabase.from('posts').insert({
         user_id: session.user.id,
-        content: blurb.trim() || `Updated their Top ${gridTypeLabel} grid`,
+        content: (slotBlurbs[1] ?? '').trim() || `Updated their Top ${gridTypeLabel} grid`,
         parent_page_type: 'profile',
         parent_page_id: session.user.id,
       })
     } else {
-      const { error } = await supabase.from('grids').insert({
-        user_id: session.user.id,
-        type,
-        ranked_items: rankedItemIds,
-        blurb: blurb.trim() || null,
-      })
+      const { data: inserted, error } = await supabase
+        .from('grids')
+        .insert({
+          user_id: session.user.id,
+          type,
+          ranked_items: rankedItemIds,
+          blurb: (slotBlurbs[1] ?? '').trim() || null,
+        })
+        .select('id')
+        .single()
       if (error) {
         console.error('Error saving grid:', error)
         alert('Failed to save grid')
         setIsSubmitting(false)
         return
       }
+      gridId = inserted.id
     }
+
+    const slotBlurbsRows = Array.from({ length: 10 }, (_, i) => ({
+      grid_id: gridId,
+      rank_index: i + 1,
+      content: (slotBlurbs[i + 1] ?? '').trim().slice(0, 140),
+    }))
+    await supabase.from('grid_slot_blurbs').upsert(slotBlurbsRows, {
+      onConflict: 'grid_id,rank_index',
+    })
     router.push(`/u/${profileData?.username || session.user.id}`)
     setIsSubmitting(false)
   }
@@ -218,9 +253,10 @@ export default function EditGridPage() {
     id: existingGridId || '',
     type,
     ranked_items: rankedList,
-    blurb: blurb || null,
+    blurb: (slotBlurbs[1] ?? '') || null,
     like_count: 0,
     is_liked: false,
+    slotBlurbs,
   }
 
   return (
@@ -232,8 +268,9 @@ export default function EditGridPage() {
       mode="edit"
       rankedList={rankedList}
       onRankedListChange={setRankedList}
-      blurb={blurb}
-      onBlurbChange={setBlurb}
+      onSlotBlurbChange={(rankIndex, value) =>
+        setSlotBlurbs((prev) => ({ ...prev, [rankIndex]: value }))
+      }
       onSave={handleSave}
       availableItems={availableItems}
     />

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface CommentUser {
   id: string
@@ -178,19 +179,11 @@ export function FeedPostCommentSection({
                     return (
                       <div key={comment.id} className="py-1">
                         <div className="mb-1 flex items-center gap-2">
-                          {comment.user?.profile_image_url ? (
-                            <img
-                              src={comment.user.profile_image_url}
-                              alt={comment.user.username}
-                              className="h-6 w-6 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10">
-                              <span className="text-xs font-medium text-white/90">
-                                {comment.user?.username?.charAt(0).toUpperCase() || '?'}
-                              </span>
-                            </div>
-                          )}
+                          <img
+                            src={getAvatarUrl(comment.user?.profile_image_url)}
+                            alt={comment.user?.username ?? ''}
+                            className="h-6 w-6 rounded-full object-cover"
+                          />
                           <Link
                             href={`/u/${comment.user?.username || 'unknown'}`}
                             className="text-sm font-medium text-white/90 hover:text-white"
@@ -218,19 +211,11 @@ export function FeedPostCommentSection({
                             {commentReplies.map((reply) => (
                               <div key={reply.id}>
                                 <div className="mb-0.5 flex items-center gap-2">
-                                  {reply.user?.profile_image_url ? (
-                                    <img
-                                      src={reply.user.profile_image_url}
-                                      alt={reply.user.username}
-                                      className="h-5 w-5 rounded-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10">
-                                      <span className="text-xs text-white/90">
-                                        {reply.user?.username?.charAt(0).toUpperCase() || '?'}
-                                      </span>
-                                    </div>
-                                  )}
+                                  <img
+                                    src={getAvatarUrl(reply.user?.profile_image_url)}
+                                    alt={reply.user?.username ?? ''}
+                                    className="h-5 w-5 rounded-full object-cover"
+                                  />
                                   <Link
                                     href={`/u/${reply.user?.username || 'unknown'}`}
                                     className="text-xs font-medium text-white/90 hover:text-white"

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Heart } from 'lucide-react'
 import { GridHeartButton } from '@/components/profile/grid-heart-button'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface GridBlurbCardProps {
   gridId: string
@@ -27,19 +28,13 @@ export function GridBlurbCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex gap-2 min-w-0">
           <Link href={`/u/${owner.username}`} className="flex-shrink-0">
-            {owner.profile_image_url ? (
-              <Image
-                src={owner.profile_image_url}
-                alt={owner.username}
-                width={20}
-                height={20}
-                className="h-6 w-6 rounded-full object-cover"
-              />
-            ) : (
-              <div className="h-6 w-6 shrink-0 rounded-full bg-[#d9d9d9]/25 flex items-center justify-center text-xs font-normal">
-                {owner.username.charAt(0).toUpperCase()}
-              </div>
-            )}
+            <Image
+              src={getAvatarUrl(owner.profile_image_url)}
+              alt={owner.username}
+              width={20}
+              height={20}
+              className="h-6 w-6 rounded-full object-cover"
+            />
           </Link>
           <span className="text-white truncate font-normal text-xs">{owner.username}</span>
         </div>

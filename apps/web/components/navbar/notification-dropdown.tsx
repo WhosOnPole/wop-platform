@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Heart, MessageSquare, UserPlus, AtSign, Vote, X } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
+import { getAvatarUrl } from '@/utils/avatar'
 import Link from 'next/link'
 
 interface NotificationDropdownProps {
@@ -170,19 +171,11 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
                   <div className="flex items-start space-x-3">
                     {/* Actor Avatar */}
                     <div className="flex-shrink-0">
-                      {notification.actor?.profile_image_url ? (
-                        <img
-                          src={notification.actor.profile_image_url}
-                          alt={actor}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">
-                          <span className="text-sm font-medium">
-                            {actor.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                      <img
+                        src={getAvatarUrl(notification.actor?.profile_image_url)}
+                        alt={actor}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
                     </div>
 
                     {/* Notification Content */}

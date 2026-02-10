@@ -6,10 +6,6 @@ export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'A',location:'middleware.ts:entry',message:'middleware entry',data:{pathname,host:req.headers.get('host')},timestamp:Date.now()})}).catch(()=>{})
-  // #endregion
-
   // Redirect authenticated users from home to feed/onboarding
   if (pathname === '/') {
     try {
@@ -110,9 +106,6 @@ export async function proxy(req: NextRequest) {
         console.error('Error checking session in middleware:', error)
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'C',location:'middleware.ts:public-path',message:'public path allowed',data:{pathname},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
       return res
     }
 
@@ -168,9 +161,6 @@ export async function proxy(req: NextRequest) {
     console.error('Middleware error:', error)
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'cf-404',hypothesisId:'D',location:'middleware.ts:return',message:'middleware fallthrough',data:{pathname},timestamp:Date.now()})}).catch(()=>{})
-  // #endregion
   return res
 }
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Trophy, Medal, Award } from 'lucide-react'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface LeaderboardViewProps {
   weeklyLeaderboard: Array<{
@@ -89,21 +90,13 @@ export function LeaderboardView({
                 )}
               </div>
 
-              {user.profile_image_url ? (
-                <Image
-                  src={user.profile_image_url}
-                  alt={user.username}
-                  width={48}
-                  height={48}
-                  className="rounded-full"
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                  <span className="text-lg font-bold text-gray-600">
-                    {user.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+              <Image
+                src={getAvatarUrl(user.profile_image_url)}
+                alt={user.username}
+                width={48}
+                height={48}
+                className="rounded-full"
+              />
 
               <div className="flex-1">
                 <p className="font-semibold text-gray-900">{user.username}</p>

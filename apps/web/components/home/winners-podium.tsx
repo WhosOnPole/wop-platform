@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Trophy } from 'lucide-react'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface User {
   id: string
@@ -29,19 +30,11 @@ export function WinnersPodium({ users }: WinnersPodiumProps) {
             className="group flex flex-col items-center space-y-2"
           >
             <div className="relative">
-              {second.profile_image_url ? (
-                <img
-                  src={second.profile_image_url}
-                  alt={second.username}
-                  className="h-20 w-20 rounded-full object-cover ring-4 ring-bright-teal group-hover:ring-bright-teal/80 transition-all"
-                />
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-bright-teal ring-4 ring-bright-teal group-hover:ring-bright-teal/80 transition-all">
-                  <span className="text-2xl font-bold text-white">
-                    {second.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+              <img
+                src={getAvatarUrl(second.profile_image_url)}
+                alt={second.username}
+                className="h-20 w-20 rounded-full object-cover ring-4 ring-bright-teal group-hover:ring-bright-teal/80 transition-all"
+              />
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-bright-teal p-1">
                 <Trophy className="h-4 w-4 text-white" />
               </div>
@@ -62,19 +55,11 @@ export function WinnersPodium({ users }: WinnersPodiumProps) {
             className="group flex flex-col items-center space-y-2"
           >
             <div className="relative">
-              {first.profile_image_url ? (
-                <img
-                  src={first.profile_image_url}
-                  alt={first.username}
-                  className="h-32 w-32 rounded-full object-cover ring-4 ring-racing-orange group-hover:ring-racing-orange/80 transition-all"
-                />
-              ) : (
-                <div className="flex h-32 w-32 items-center justify-center rounded-full bg-racing-orange ring-4 ring-racing-orange group-hover:ring-racing-orange/80 transition-all">
-                  <span className="text-4xl font-bold text-white">
-                    {first.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+              <img
+                src={getAvatarUrl(first.profile_image_url)}
+                alt={first.username}
+                className="h-32 w-32 rounded-full object-cover ring-4 ring-racing-orange group-hover:ring-racing-orange/80 transition-all"
+              />
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-racing-orange p-1">
                 <Trophy className="h-5 w-5 text-white" />
               </div>
@@ -95,19 +80,11 @@ export function WinnersPodium({ users }: WinnersPodiumProps) {
             className="group flex flex-col items-center space-y-2"
           >
             <div className="relative">
-              {third.profile_image_url ? (
-                <img
-                  src={third.profile_image_url}
-                  alt={third.username}
-                  className="h-16 w-16 rounded-full object-cover ring-4 ring-bright-teal group-hover:ring-bright-teal/80 transition-all"
-                />
-              ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-bright-teal ring-4 ring-bright-teal group-hover:ring-bright-teal/80 transition-all">
-                  <span className="text-xl font-bold text-white">
-                    {third.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+              <img
+                src={getAvatarUrl(third.profile_image_url)}
+                alt={third.username}
+                className="h-16 w-16 rounded-full object-cover ring-4 ring-bright-teal group-hover:ring-bright-teal/80 transition-all"
+              />
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-bright-teal p-1">
                 <Trophy className="h-3 w-3 text-white" />
               </div>

@@ -108,11 +108,23 @@ export default async function GridPage({ params }: PageProps) {
     }))
   }
 
+  const { data: slotBlurbsRows } = await supabase
+    .from('grid_slot_blurbs')
+    .select('rank_index, content')
+    .eq('grid_id', grid.id)
+
+  const slotBlurbs: Record<number, string> = {}
+  for (let r = 1; r <= 10; r++) slotBlurbs[r] = ''
+  ;(slotBlurbsRows ?? []).forEach((row: { rank_index: number; content: string }) => {
+    slotBlurbs[row.rank_index] = row.content ?? ''
+  })
+
   const gridWithLikes = {
     ...grid,
     ranked_items: enrichedItems,
     like_count: likeCount ?? 0,
     is_liked: isLiked,
+    slotBlurbs,
   }
 
   return (
