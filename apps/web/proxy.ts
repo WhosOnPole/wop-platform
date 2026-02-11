@@ -2,163 +2,135 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+const PUBLIC_PATHS = [
+  '/onboarding',
+  '/login',
+  '/signup',
+  '/auth/callback',
+  '/auth/reset-password',
+  '/banned',
+  '/coming-soon',
+  '/privacy',
+  '/terms',
+  '/api/auth/tiktok',
+  '/api/auth/tiktok/callback',
+  '/tiktokUltdht23ChFllaZO9MnLlgSt7HMHnZzl.txt',
+]
+
+/**
+ * Proxy runs on every matched request. We must:
+ * 1. Exclude /api from matcher so API routes don't each trigger getSession.
+ * 2. Skip session logic entirely for _next/* (e.g. _next/data RSC payloads) so 500+ requests/min don't each hit /token.
+ * 3. Create one Supabase client and call getSession() once per request when we do need auth.
+ */
 export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
-  // Redirect authenticated users from home to feed/onboarding
-  if (pathname === '/') {
-    try {
-      const supabase = createMiddlewareClient(
-        {
-          req: req as any,
-          res: res as any,
-        },
+  if (pathname.startsWith('/_next/')) return res
+
+  let supabase: ReturnType<typeof createMiddlewareClient> | null = null
+  let session: Awaited<ReturnType<ReturnType<typeof createMiddlewareClient>['auth']['getSession']>>['data']['session'] | undefined = undefined
+
+  async function getSessionOnce() {
+    if (session !== undefined) return session
+    if (!supabase) {
+      supabase = createMiddlewareClient(
+        { req: req as any, res: res as any },
         {
           supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
           supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
         }
       )
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username, date_of_birth, age')
-          .eq('id', session.user.id)
-          .maybeSingle()
-
-        const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth || profile?.age))
-        const redirectUrl = req.nextUrl.clone()
-        redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
-        return NextResponse.redirect(redirectUrl)
-      }
-    } catch (error) {
-      console.error('Error checking session for home page:', error)
     }
-
-    return res
+    try {
+      const { data } = await supabase.auth.getSession()
+      session = data.session
+    } catch (e) {
+      console.error('Error checking session in proxy:', e)
+    }
+    return session
   }
 
   try {
-    const supabase = createMiddlewareClient(
-      {
-        req: req as any,
-        res: res as any,
-      },
-      {
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-      }
-    )
-
-    // Allow access to onboarding, auth, and public routes (for unauthenticated users)
-    const publicPaths = [
-      '/onboarding',
-      '/login',
-      '/signup',
-      '/auth/callback',
-      '/auth/reset-password',
-      '/banned',
-      '/coming-soon',
-      '/privacy',
-      '/terms',
-      '/api/auth/tiktok',
-      '/api/auth/tiktok/callback',
-      '/tiktokUltdht23ChFllaZO9MnLlgSt7HMHnZzl.txt', // TikTok domain verification file
-    ]
-    if (publicPaths.some((path) => pathname.startsWith(path))) {
-      // Still check session for authenticated users on public paths
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        // If authenticated, redirect based on path
-        if (session) {
-          try {
-                const { data: profile } = await supabase
-              .from('profiles')
-                  .select('username, date_of_birth, age')
-              .eq('id', session.user.id)
-              .maybeSingle()
-
-                const isProfileComplete = Boolean(
-                  profile?.username && (profile?.date_of_birth || profile?.age)
-                )
-
-            // If on login/signup, redirect to feed or onboarding
-            if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
-              const redirectUrl = req.nextUrl.clone()
-                  redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
-              return NextResponse.redirect(redirectUrl)
-            }
-          } catch (error) {
-            // If profile query fails, continue without redirect
-            console.error('Error fetching profile in middleware:', error)
-          }
+    // Home: redirect authenticated users to feed/onboarding
+    if (pathname === '/') {
+      const sess = await getSessionOnce()
+      if (sess) {
+        try {
+          if (!supabase) throw new Error('no client')
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, date_of_birth, age')
+            .eq('id', sess.user.id)
+            .maybeSingle()
+          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+          const redirectUrl = req.nextUrl.clone()
+          redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
+          return NextResponse.redirect(redirectUrl)
+        } catch (error) {
+          console.error('Error checking session for home page:', error)
         }
-      } catch (error) {
-        // If session check fails, continue without redirect
-        console.error('Error checking session in middleware:', error)
       }
-
       return res
     }
 
-    // For protected routes, check authentication and onboarding
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+    const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 
-      if (!session) {
-        // Not authenticated, allow through (they'll be redirected by page-level checks)
-        return res
-      }
-
-      // Check ban status
-      try {
+    if (isPublic) {
+      const sess = await getSessionOnce()
+      if (sess && (pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
+        try {
+          if (!supabase) throw new Error('no client')
           const { data: profile } = await supabase
-          .from('profiles')
-            .select('banned_until, username, date_of_birth, age')
-          .eq('id', session.user.id)
-          .maybeSingle()
-
-        // Check if user is banned
-        if (profile?.banned_until) {
-          const bannedUntil = new Date(profile.banned_until)
-          if (bannedUntil > new Date()) {
-            await supabase.auth.signOut()
-            const redirectUrl = req.nextUrl.clone()
-            redirectUrl.pathname = '/banned'
-            return NextResponse.redirect(redirectUrl)
-          }
-        }
-
-          // Check if user needs to complete onboarding
-          // Profile is considered complete when it has a username AND dob/age.
-          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth || profile?.age))
-          if (!isProfileComplete) {
+            .from('profiles')
+            .select('username, date_of_birth, age')
+            .eq('id', sess.user.id)
+            .maybeSingle()
+          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
           const redirectUrl = req.nextUrl.clone()
-          redirectUrl.pathname = '/onboarding'
+          redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
+          return NextResponse.redirect(redirectUrl)
+        } catch (error) {
+          console.error('Error fetching profile in proxy:', error)
+        }
+      }
+      return res
+    }
+
+    // Protected routes: optional redirect for onboarding/banned
+    const sess = await getSessionOnce()
+    if (!sess) return res
+
+    try {
+      if (!supabase) throw new Error('no client')
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('banned_until, username, date_of_birth, age')
+        .eq('id', sess.user.id)
+        .maybeSingle()
+
+      if (profile?.banned_until) {
+        const bannedUntil = new Date(profile.banned_until)
+        if (bannedUntil > new Date()) {
+          await supabase.auth.signOut()
+          const redirectUrl = req.nextUrl.clone()
+          redirectUrl.pathname = '/banned'
           return NextResponse.redirect(redirectUrl)
         }
-      } catch (error) {
-        // If profile query fails, allow through (page will handle auth)
-        console.error('Error fetching profile in middleware:', error)
+      }
+
+      const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+      if (!isProfileComplete) {
+        const redirectUrl = req.nextUrl.clone()
+        redirectUrl.pathname = '/onboarding'
+        return NextResponse.redirect(redirectUrl)
       }
     } catch (error) {
-      // If session check fails, allow through (page will handle auth)
-      console.error('Error checking session in middleware:', error)
+      console.error('Error fetching profile in proxy:', error)
     }
   } catch (error) {
-    // If middleware completely fails, allow request through
-    // Better to show the page with potential auth issues than a 500 error
-    console.error('Middleware error:', error)
+    console.error('Proxy error:', error)
   }
 
   return res
@@ -167,12 +139,9 @@ export async function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * Exclude /api, all of _next/*, favicon, and static assets so we only run session logic for real page navigations.
+     * _next/data/* (RSC payloads) alone can be 500+ requests/min and each was calling getSession() → /token.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

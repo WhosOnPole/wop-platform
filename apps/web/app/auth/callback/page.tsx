@@ -33,7 +33,7 @@ function AuthCallbackContent() {
     let isMounted = true
 
     async function runExchange() {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(codeForExchange)
+      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(codeForExchange)
       if (!isMounted) return
 
       if (exchangeError) {
@@ -42,7 +42,7 @@ function AuthCallbackContent() {
         return
       }
 
-      const { data: { session } } = await supabase.auth.getSession()
+      const session = data?.session
       if (!session) {
         router.replace('/login')
         return

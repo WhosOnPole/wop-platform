@@ -97,8 +97,8 @@ export function SpotlightCarousel({
 
   if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors && !hasFeaturedNews) return null
 
-  // Match live-chat banner (UpcomingRaceCard) height
-  const bannerCardHeight = 120
+  // Full-height banner cards (desktop scroll / mobile carousel)
+  const bannerCardHeight = 200
 
   const cards = useMemo(() => {
     const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor' | 'news'; data: any }> = []
@@ -185,7 +185,11 @@ export function SpotlightCarousel({
                 style={{ height: bannerCardHeight, marginBottom: '24px' }}
               >
                 {card.type === 'hot_take' && (
-                  <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
+                  <button
+                    type="button"
+                    onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
+                    className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow text-left hover:bg-white/5 transition-colors cursor-pointer"
+                  >
                     <div className=" flex items-center space-x-2">
                       <Radio className="h-5 w-5 text-white/90" />
                       <h2 className="text-lg font-bold text-white">Hot Take</h2>
@@ -196,17 +200,11 @@ export function SpotlightCarousel({
                       </p>
                     </div>
                     {card.data.hot_take?.id && (
-                      <div className="mt-4">
-                        <button
-                          type="button"
-                          onClick={() => setIsDiscussionOpen(true)}
-                          className="rounded-md border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
-                        >
-                          Join the discussion
-                        </button>
-                      </div>
+                      <p className="mt-4 text-sm text-white/70">
+                        Tap to join the discussion
+                      </p>
                     )}
-                  </div>
+                  </button>
                 )}
 
                 {card.type === 'grid' && (
@@ -286,7 +284,11 @@ export function SpotlightCarousel({
                   className="w-full min-w-full h-full flex-shrink-0 snap-start"
                 >
                   {card.type === 'hot_take' && (
-                    <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
+                    <button
+                      type="button"
+                      onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
+                      className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow text-left hover:bg-white/5 transition-colors cursor-pointer"
+                    >
                       <div className="mb-4 flex items-center space-x-2">
                         <Radio className="h-5 w-5 text-white/90" />
                         <h2 className="text-lg font-bold text-white">Hot Take</h2>
@@ -297,17 +299,11 @@ export function SpotlightCarousel({
                         </p>
                       </div>
                       {card.data.hot_take?.id && (
-                        <div className="mt-4">
-                          <button
-                            type="button"
-                            onClick={() => setIsDiscussionOpen(true)}
-                            className="rounded-md border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
-                          >
-                            Join the discussion
-                          </button>
-                        </div>
+                        <p className="mt-4 text-sm text-white/70">
+                          Tap to join the discussion
+                        </p>
                       )}
-                    </div>
+                    </button>
                   )}
 
                   {card.type === 'grid' && (

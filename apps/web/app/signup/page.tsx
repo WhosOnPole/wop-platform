@@ -20,20 +20,6 @@ export default function SignupPage() {
     }
   }, [])
 
-  useEffect(() => {
-    // If already logged in, send to feed or onboarding (not landing) so we don't bounce via /
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, date_of_birth, age')
-        .eq('id', session.user.id)
-        .maybeSingle()
-      const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
-      router.replace(isProfileComplete ? '/feed' : '/onboarding')
-    })
-  }, [router, supabase])
-
   // Route "Sign in" link in Auth UI to /login
   useEffect(() => {
     if (!authContainerRef.current) return
@@ -65,6 +51,9 @@ export default function SignupPage() {
             {error}
           </div>
         )}
+        <p className="text-center text-xs text-gray-500">
+          If you see &quot;too many requests&quot;, wait a minute and try again.
+        </p>
         <button
           type="button"
           onClick={async () => {
