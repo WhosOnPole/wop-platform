@@ -53,10 +53,6 @@ export function UserGridsSection({
           </div>
         </div>
 
-        {grid.blurb && (
-          <p className="mb-4 text-sm italic text-gray-600">&quot;{grid.blurb}&quot;</p>
-        )}
-
         <div className="space-y-2">
           {rankedItems.slice(0, maxItems).map((item: any, index: number) => (
             <div
