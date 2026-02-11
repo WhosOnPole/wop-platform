@@ -80,20 +80,6 @@ export function GridDisplayCard({
     return null
   }
 
-  // Generate slug for item
-  function getItemSlug(item: { id: string; name: string }): string {
-    return item.name.toLowerCase().replace(/\s+/g, '-')
-  }
-
-  // Get item href
-  function getItemHref(item: { id: string; name: string }): string {
-    const slug = getItemSlug(item)
-    if (grid.type === 'driver') return `/drivers/${slug}`
-    if (grid.type === 'team') return `/teams/${slug}`
-    if (grid.type === 'track') return `/tracks/${slug}`
-    return '#'
-  }
-
   // Format vertical text for left edge
   function getVerticalText(item: GridItem): string {
     if (grid.type === 'driver') {
@@ -116,10 +102,7 @@ export function GridDisplayCard({
 
   return (
     <div className="mb-8 shadow-sm">
-      {/* Grid Blurb */}
-      {grid.blurb && (
-        <p className="mb-4 text-sm italic text-gray-600">&quot;{grid.blurb}&quot;</p>
-      )}
+
 
       {/* Empty state: same layout, gray boxes with + , clickable to edit when own profile */}
       {isPlaceholderGrid ? (
@@ -171,14 +154,27 @@ export function GridDisplayCard({
         {firstItem && (
           <div className="w-1/2 min-w-0 flex-shrink-0">
             {firstItem.is_placeholder ? (
-              <div className="relative block aspect-square w-full rounded-xl overflow-hidden border border-dashed border-white/20 bg-white/5">
-                <div className="absolute top-2 right-2 z-30">
-                  <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
+              isOwnProfile ? (
+                <Link
+                  href={`/profile/edit-grid/${grid.type}`}
+                  className="relative block aspect-square w-full rounded-xl overflow-hidden border border-dashed border-white/20 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                  aria-label="Add pick for rank 1"
+                >
+                  <div className="absolute top-2 right-2 z-30">
+                    <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
+                  </div>
+                  <Plus className="h-12 w-12 text-white/50 md:h-16 md:w-16" strokeWidth={1.5} aria-hidden />
+                </Link>
+              ) : (
+                <div className="relative block aspect-square w-full rounded-xl overflow-hidden border border-dashed border-white/20 bg-white/5">
+                  <div className="absolute top-2 right-2 z-30">
+                    <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
+                  </div>
                 </div>
-              </div>
+              )
             ) : (
               <Link
-                href={getItemHref(firstItem)}
+                href={`/grid/${grid.id}`}
                 className="relative block aspect-square w-full rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
                 style={
                   grid.type === 'driver'
@@ -289,7 +285,19 @@ export function GridDisplayCard({
           {otherItems.map((item, index) => {
             const rank = index + 2
             if (item.is_placeholder)
-              return (
+              return isOwnProfile ? (
+                <Link
+                  key={item.id}
+                  href={`/profile/edit-grid/${grid.type}`}
+                  className="relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden border border-dashed border-white/20 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                  aria-label={`Add pick for rank ${rank}`}
+                >
+                  <div className="absolute top-0.5 right-0.5 z-30">
+                    <div className="text-[clamp(8px,2vw,10px)] font-bold text-white/30 leading-none">{rank}</div>
+                  </div>
+                  <Plus className="h-6 w-6 text-white/50 md:h-8 md:w-8" strokeWidth={1.5} aria-hidden />
+                </Link>
+              ) : (
                 <div
                   key={item.id}
                   className="relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden border border-dashed border-white/20 bg-white/5"
@@ -303,7 +311,7 @@ export function GridDisplayCard({
             return (
               <Link
                 key={item.id}
-                href={getItemHref(item)}
+                href={`/grid/${grid.id}`}
                 className="relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
                 style={
                   grid.type === 'driver'

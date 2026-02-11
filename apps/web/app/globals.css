@@ -154,3 +154,12 @@ html:-ms-fullscreen {
 .hero-cycle-item-1 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: 0s; }
 .hero-cycle-item-2 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: -3s; }
 .hero-cycle-item-3 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: -6s; }
+
+/* Active slot border: rotating gradient layer (fluid moving border) */
+@keyframes slot-border-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+.animate-slot-border-rotate {
+  animation: slot-border-rotate 8s linear infinite;
+}
