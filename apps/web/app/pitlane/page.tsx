@@ -28,7 +28,7 @@ export default async function PitlanePage() {
       .order('start_date', { ascending: true }),
     supabase
       .from('drivers')
-      .select('id, name, headshot_url, image_url, nationality')
+      .select('id, name, headshot_url, image_url, nationality, racing_number')
       .eq('active', true)
       .order('name', { ascending: true }),
     supabase
@@ -115,7 +115,7 @@ export default async function PitlanePage() {
 
   return (
     <PitlaneSearchProvider>
-      <div className="mx-auto max-w- pt-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl pt-4 px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-semibold text-white font-display">Pitlane</h1>
         <h3 className="text-sm text-white/70 font-sans mb-6">Tap into the Grid. Stay ahead of the pack.</h3>
       </div>

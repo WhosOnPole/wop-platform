@@ -1,4 +1,7 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
+import { PageBackButton } from '@/components/page-back-button'
 
 // Helper function to convert markdown text to JSX
 function formatMarkdownText(text: string) {
@@ -80,12 +83,12 @@ export default function BeginnersGuidePage() {
   const topSection = {
     title: 'The Complete Beginner\'s Guide to Formula 1',
     welcome: 'Welcome! Formula 1 (F1) is the highest level of open-wheel motorsport: fast cars, elite drivers, and lots of strategy. Here\'s everything you need to follow along without feeling overwhelmed. At least– that\'s the goal.',
-    f1In60Seconds: `* **Season length:** roughly **March → early December**  
-* **Two championships:**  
+    f1In60Seconds: ` **Season length:** roughly **March → early December**  
+**Two championships:**  
   * **Drivers' Championship (WDC):** individual points  
   * **Constructors' Championship (WCC):** team points (both drivers combined)  
-* **Teams:** each team (or constructor) has **2 drivers**  
-* **Goal on race day:** finish as high as possible (and score points)`,
+**Teams:** each team (or constructor) has **2 drivers**  
+**Goal on race day:** finish as high as possible (and score points)`,
     howSeasonWorks: 'F1 races around the world, and the calendar changes each year. Sometimes races happen on back-to-back weekends (a **double-header** or **triple-header**), and sometimes there\'s a weekend or two off. Boo. But we suppose they need a break. There\'s usually a **summer break** and a **fall break**, often around **3-4 weeks** each, where we all have to go back to our normal lives.\n\nIn **2026**, there are **11 teams (constructors)** totaling **22 drivers**, and **24 race weekends**.',
   }
 
@@ -327,17 +330,22 @@ Our advice is to watch races, watch interviews, and see who you naturally gravit
     },
   ]
 
+  const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(null)
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <PageBackButton variant="dark" />
+      </div>
       {/* Top Section */}
       <div className="mb-8">
-        <h1 className="mb-4 text-4xl font-display">{topSection.title}</h1>
-        <p className="mb-6 text-lg text-white">{topSection.welcome}</p>
+        <h1 className="mb-4 text-3xl font-display">{topSection.title}</h1>
+        <p className="mb-6 text-md text-white">{topSection.welcome}</p>
 
         {/* F1 in 60 seconds */}
-        <div className="mb-6">
-          <h2 className="mb-3 text-2xl font-semibold text-white">F1 in 60 seconds</h2>
-          <div className="text-white">
+        <div className="mb-6 bg-sunset-gradient rounded-lg p-4">
+          <h2 className="mb-3 text-2xl text-white text-center font-display">F1 in 60 seconds</h2>
+          <div className="text-white text-md">
             {formatMarkdownText(topSection.f1In60Seconds)}
           </div>
         </div>
@@ -345,21 +353,40 @@ Our advice is to watch races, watch interviews, and see who you naturally gravit
         {/* How the season works */}
         <div className="mb-8">
           <h2 className="mb-3 text-2xl font-semibold text-white">How the season works</h2>
-          <div className="text-white">
+          <div className="text-white text-md">
             {formatMarkdownText(topSection.howSeasonWorks)}
           </div>
         </div>
       </div>
 
-      {/* Accordion Sections */}
+      {/* Accordion Sections - only one open at a time */}
       <div className="space-y-3">
         {accordionSections.map((section, index) => (
-          <details key={index} className="rounded-lg border border-gray-200 px-4 py-3 bg-white">
-            <summary className="cursor-pointer text-sm font-semibold text-gray-900 hover:text-gray-700">
+          <details
+            key={index}
+            open={openAccordionIndex === index}
+            className="rounded-lg border border-gray-200 px-4 py-3 bg-white"
+          >
+            <summary
+              className="cursor-pointer text-sm font-semibold text-black hover:text-gray-700"
+              onClick={(e) => {
+                e.preventDefault()
+                setOpenAccordionIndex((prev) => (prev === index ? null : index))
+              }}
+            >
               {section.title}
             </summary>
-            <div className="mt-3 text-sm text-gray-700 space-y-3">
-              {formatMarkdownText(section.content)}
+            <div
+              className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out ${
+                openAccordionIndex === index ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+              }`}
+              style={{ transitionProperty: 'grid-template-rows' }}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div className="mt-3 text-xs text-black space-y-3">
+                  {formatMarkdownText(section.content)}
+                </div>
+              </div>
             </div>
           </details>
         ))}

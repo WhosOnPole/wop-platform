@@ -14,6 +14,7 @@ export interface GridTileItem {
   team_name?: string | null
   location?: string | null
   country?: string | null
+  circuit_ref?: string | null
   track_slug?: string
   [key: string]: unknown
 }
@@ -50,7 +51,7 @@ function getVerticalText(type: 'driver' | 'team' | 'track', item: GridTileItem):
     return lastName.substring(0, 3).toUpperCase()
   }
   if (type === 'team') return ''
-  return (item.location || '').toUpperCase()
+  return (item.circuit_ref || item.location || '').toUpperCase()
 }
 
 export function GridTileContent({

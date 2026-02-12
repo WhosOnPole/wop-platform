@@ -314,7 +314,7 @@ export default async function UserProfilePage({ params }: PageProps) {
           } else if (grid.type === 'track') {
             const { data: track } = await supabase
               .from('tracks')
-              .select('id, name, image_url, location, country')
+              .select('id, name, image_url, location, country, circuit_ref')
               .eq('id', item.id)
               .maybeSingle()
             return {
@@ -322,6 +322,7 @@ export default async function UserProfilePage({ params }: PageProps) {
               image_url: track?.image_url || null,
               location: track?.location || null,
               country: track?.country || null,
+              circuit_ref: track?.circuit_ref || null,
             }
           } else if (grid.type === 'team') {
             // Teams already have name, and we'll use getTeamIconUrl in the component

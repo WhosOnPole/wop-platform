@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { EntityHeroBackground } from '@/components/entity/entity-hero-background'
 import { EntityHeaderWrapper } from '@/components/entity/entity-header-wrapper'
+import { PageBackButton } from '@/components/page-back-button'
 import { EntityOverview } from '@/components/entity/entity-overview'
 import { EntityImageGallery } from '@/components/entity/entity-image-gallery'
 import { EntityTabs } from '@/components/entity/entity-tabs'
@@ -392,6 +393,9 @@ export default async function DynamicPage({ params }: PageProps) {
         
         {/* Content over background */}
         <div className="relative z-10 h-full flex flex-col">
+          <div className="shrink-0 pt-4 px-4">
+            <PageBackButton variant="dark" />
+          </div>
           {/* Overview (Tracks only) */}
           {type === 'tracks' && <EntityOverview overviewText={entity.overview_text} />}
 

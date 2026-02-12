@@ -12,6 +12,7 @@ import { GridEditCanvas } from './grid-edit-canvas'
 import { GridSlotCommentSection } from './grid-slot-comment-section'
 import { GridHeartButton } from '@/components/profile/grid-heart-button'
 import { StepperBar } from '@/components/stepper-bar'
+import { PageBackButton } from '@/components/page-back-button'
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { getAvatarUrl } from '@/utils/avatar'
@@ -35,6 +36,7 @@ interface DriverRankItem extends RankItemBase {
 interface TrackRankItem extends RankItemBase {
   location?: string | null
   country?: string | null
+  circuit_ref?: string | null
   track_slug?: string
 }
 
@@ -562,7 +564,7 @@ export function GridDetailView({
     if (type === 'driver') {
       return (
         <div
-          className={`flex items-end justify-center transition-all duration-300 ${opacity} bg-black/85 rounded-t-full pt-6 h-full`}
+          className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
           style={{ minHeight: ghost ? 300 : 'min(35vh, 280px)' }}
         >
           <div
@@ -589,7 +591,7 @@ export function GridDetailView({
     if (type === 'track') {
       return (
         <div
-          className={`flex items-center justify-center transition-all duration-300 ${opacity} bg-black/85 rounded-t-lg p-2 h-full`}
+          className={`flex items-center justify-center transition-all duration-300 ${opacity}`}
         >
           <TrackHeroMedia
             trackSlug={(item as TrackRankItem).track_slug ?? ''}
@@ -671,8 +673,9 @@ export function GridDetailView({
       )}
       {showUnifiedHero && (
         <div className="flex flex-col min-h-screen relative">
-          {/* Header: fixed above hero on mobile, in-hero on desktop */}
-          <div className="px-4 pt-16 shrink-0 relative z-10">
+          {/* Back button + Header: fixed above hero on mobile, in-hero on desktop */}
+          <div className="px-4 pt-16 shrink-0 relative z-10 flex flex-col gap-3">
+            <PageBackButton variant="dark" />
             <GridHeroHeader
               username={owner.username}
               type={type}

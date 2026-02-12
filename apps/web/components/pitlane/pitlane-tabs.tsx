@@ -12,6 +12,7 @@ interface Driver {
   headshot_url?: string | null
   image_url?: string | null
   nationality?: string | null
+  racing_number?: number | null
 }
 
 interface Team {
@@ -240,16 +241,26 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                           darkenBackgroundOnly
                         />
                         <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
-                        {driverCode && (
-                          <div className="absolute left-2 top-0 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
+                        {driver.racing_number != null && (
+                          <div className="absolute right-1 top-1 z-19">
                             <span
-                              className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                              className="font-bold leading-none tabular-nums font-display text-white opacity-50"
+                              style={{ fontSize: 'clamp(34px, 4vw, 38px)' }}
+                            >
+                              {driver.racing_number}
+                            </span>
+                          </div>
+                        )}
+                        {driverCode && (
+                          <div className="absolute top-2/3 left-1 z-30 flex  w-3 items-center justify-center overflow-visible">
+                            <span
+                              className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none tracking-widest"
                               style={{
-                                fontSize: '12px',
+                                fontSize: '15px',
                                 fontFamily: 'Inter, sans-serif',
                                 letterSpacing: '0',
                                 transform: 'rotate(-90deg)',
-                                transformOrigin: '20% 0',
+                                transformOrigin: 'center center',
                               }}
                             >
                               {driverCode}

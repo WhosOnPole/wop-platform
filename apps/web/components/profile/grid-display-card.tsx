@@ -15,6 +15,7 @@ interface GridItem {
   headshot_url?: string | null
   country?: string | null
   location?: string | null
+  circuit_ref?: string | null
   is_placeholder?: boolean
 }
 
@@ -90,8 +91,8 @@ export function GridDisplayCard({
       // Teams: no text
       return ''
     } else if (grid.type === 'track') {
-      // Location, all caps
-      return (item.location || '').toUpperCase()
+      // Circuit ref (e.g. BAH, MON), fallback to location, all caps
+      return (item.circuit_ref || item.location || '').toUpperCase()
     }
     return ''
   }

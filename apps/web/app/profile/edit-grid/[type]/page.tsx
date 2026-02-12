@@ -203,12 +203,28 @@ export default function EditGridPage() {
         return
       }
       gridId = existingGridId
-      await supabase.from('posts').insert({
-        user_id: session.user.id,
-        content: (slotBlurbs[1] ?? '').trim() || `Updated their Top ${gridTypeLabel} grid`,
-        parent_page_type: 'profile',
-        parent_page_id: session.user.id,
-      })
+      const postContent = (slotBlurbs[1] ?? '').trim() || `Updated their Top ${gridTypeLabel} grid`
+      const defaultContent = `Updated their Top ${gridTypeLabel} grid`
+      const { data: newPost } = await supabase
+        .from('posts')
+        .insert({
+          user_id: session.user.id,
+          content: postContent,
+          parent_page_type: 'profile',
+          parent_page_id: session.user.id,
+        })
+        .select('id')
+        .single()
+      if (newPost?.id && postContent === defaultContent) {
+        await supabase
+          .from('posts')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('parent_page_type', 'profile')
+          .eq('parent_page_id', session.user.id)
+          .neq('id', newPost.id)
+          .ilike('content', `%Top ${gridTypeLabel} grid%`)
+      }
     } else {
       const nowIso = new Date().toISOString()
       const { data: inserted, error } = await supabase

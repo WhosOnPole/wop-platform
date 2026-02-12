@@ -414,7 +414,7 @@ export default async function FeedPage() {
           if (grid.type === 'track') {
             const { data: track } = await supabase
               .from('tracks')
-              .select('id, name, image_url, location, country')
+              .select('id, name, image_url, location, country, circuit_ref')
               .eq('id', item.id)
               .maybeSingle()
             return {
@@ -422,6 +422,7 @@ export default async function FeedPage() {
               image_url: track?.image_url || null,
               location: track?.location || null,
               country: track?.country || null,
+              circuit_ref: track?.circuit_ref || null,
             }
           }
           return item

@@ -13,6 +13,7 @@ interface Driver {
   headshot_url?: string | null
   image_url?: string | null
   nationality?: string | null
+  racing_number?: number | null
 }
 
 interface Team {
@@ -170,6 +171,16 @@ export function PitlaneSearchResults({
                             darkenBackgroundOnly
                           />
                           <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
+                          {driver.racing_number != null && (
+                            <div className="absolute right-2 top-2 z-30">
+                              <span
+                                className="font-bold leading-none tabular-nums font-display"
+                                style={{ color: '#25B4B1', fontSize: 'clamp(14px, 4vw, 18px)' }}
+                              >
+                                {driver.racing_number}
+                              </span>
+                            </div>
+                          )}
                           {driverCode && (
                             <div className="absolute left-1 top-4 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
                               <span
