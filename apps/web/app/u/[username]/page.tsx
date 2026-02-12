@@ -335,8 +335,8 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-black -mt-14">
-      {/* Hero Section - Fixed background, 60vh height */}
-      <div className="fixed top-0 left-0 right-0 h-[60vh] z-0">
+      {/* Hero Section - in flow, 60vh height */}
+      <div className="relative w-full h-[40vh] z-0">
         <ProfileHeroSectionWrapper
           profile={profile}
           isOwnProfile={isOwnProfile}
@@ -347,10 +347,7 @@ export default async function UserProfilePage({ params }: PageProps) {
         />
       </div>
 
-      {/* Spacer for fixed hero section */}
-      <div className="h-[60vh]" />
-
-      {/* Client component for tabs and content - scrolls over hero */}
+      {/* Client component for tabs and content */}
       <ProfilePageClient
         profile={profile}
         isOwnProfile={isOwnProfile}

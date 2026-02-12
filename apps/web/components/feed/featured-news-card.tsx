@@ -30,7 +30,7 @@ export function FeaturedNewsCard({ newsStory }: FeaturedNewsCardProps) {
           />
         </div>
       )}
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col p-4">
         <h3 className="mb-2 text-lg font-bold text-white line-clamp-2">{newsStory.title}</h3>
         <p className="mb-4 flex-1 text-sm text-white/90 line-clamp-3">
           {newsStory.content}

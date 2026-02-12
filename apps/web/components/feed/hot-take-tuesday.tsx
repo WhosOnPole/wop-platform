@@ -26,7 +26,7 @@ interface HotTakeTuesdayProps {
 
 export function HotTakeTuesday({ hotTake }: HotTakeTuesdayProps) {
   return (
-    <div className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm">
+    <div className="rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm">
       <div className="mb-4 flex items-center space-x-2">
         <Radio className="h-5 w-5 text-white/90" />
         <h2 className="text-lg font-bold text-white">Hot Take Tuesday</h2>

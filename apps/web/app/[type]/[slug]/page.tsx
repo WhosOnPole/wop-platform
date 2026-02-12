@@ -376,8 +376,8 @@ export default async function DynamicPage({ params }: PageProps) {
 
   return (
     <div className="relative min-h-screen">
-      {/* Top Section with Background Image - Fixed */}
-      <div className="fixed inset-x-0 top-0 z-10 h-[40vh]">
+      {/* Top Section with Background Image - in flow */}
+      <div className="relative z-10 h-[40vh] min-h-[40vh]">
         {/* Hero Background */}
         <EntityHeroBackground
           imageUrl={backgroundImage}
@@ -408,10 +408,7 @@ export default async function DynamicPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Spacer to push tabs section down */}
-      <div className="h-[40vh]" />
-
-      {/* Tabs Section - Slides up over fixed top section */}
+      {/* Tabs Section */}
       <div className="relative z-20 bg-[#000000] min-h-[30vh]">
         <div className="mx-auto max-w-7xl px-6">
           {/* Race check-in: track page when race weekend has started */}

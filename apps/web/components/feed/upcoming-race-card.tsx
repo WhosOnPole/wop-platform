@@ -76,7 +76,7 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
   const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
 
   return (
-    <div className="flex h-[120px] min-h-[120px] w-full max-h-[120px] overflow-hidden rounded-lg relative" style={{
+    <div className="flex h-full min-h-[120px] w-full overflow-hidden rounded-lg relative" style={{
       boxShadow: isLive ? '0 0 20px rgba(255, 0, 110, 0.6), 0 0 5px rgba(253, 53, 50, 0.5), 0 0 15px rgba(253, 99, 0, 0.4), 0 0 0 .5px rgba(255, 0, 110, 0.4)' : '0 0 15px rgba(255, 0, 110, 0.6), 0 0 25px rgba(253, 53, 50, 0.5), 0 0 35px rgba(253, 99, 0, 0.4), 0 0 0 2px rgba(255, 0, 110, 0.4)',
     }}>
       <Link

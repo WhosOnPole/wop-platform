@@ -22,20 +22,6 @@ export default function LoginPage() {
   }, [])
 
   useEffect(() => {
-    // If already logged in, send to feed or onboarding (not landing) so we don't bounce via /
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, date_of_birth, age')
-        .eq('id', session.user.id)
-        .maybeSingle()
-      const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
-      router.replace(isProfileComplete ? '/feed' : '/onboarding')
-    })
-  }, [router, supabase])
-
-  useEffect(() => {
     // Avoid useSearchParams to prevent Next.js prerender bailout in builds
     const params = new URLSearchParams(window.location.search)
     const err = params.get('error')
@@ -77,6 +63,8 @@ export default function LoginPage() {
         setError(`Failed to create/sign in account. Please try again.${refSuffix}`)
       } else if (err === 'auth_callback_failed') {
         setError('Sign-in could not be completed. Please try again.')
+      } else if (err === 'rate_limit' || err === 'over_request_rate_limit') {
+        setError('Too many sign-in attempts. Please wait a minute and try again.')
       } else {
         setError('Login failed. Please try another method or try again.')
       }
@@ -124,6 +112,9 @@ export default function LoginPage() {
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
+        <p className="text-center text-xs text-gray-500">
+          If you see &quot;too many requests&quot;, wait a minute and try again.
+        </p>
         <button
           onClick={() => (window.location.href = '/api/auth/tiktok')}
           className="flex w-full items-center justify-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition hover:bg-gray-50"

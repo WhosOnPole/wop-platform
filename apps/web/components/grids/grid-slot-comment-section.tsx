@@ -145,7 +145,7 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
   })
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className="mt-6 space-y-4 px-4 bg-black">
       <h3 className="text-sm font-medium text-white/90">Comments</h3>
 
       <form onSubmit={handleAddComment} className="flex flex-col gap-2">

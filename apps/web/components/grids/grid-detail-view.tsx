@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getNationalityFlagPath } from '@/utils/flags'
 import { getTeamBackgroundUrl } from '@/utils/storage-urls'
 import { DriverHeroBodyMedia } from './hero/driver-hero-body-media'
 import { TrackHeroMedia } from './hero/track-hero-media'
@@ -75,6 +74,176 @@ const VERTICAL_LABEL_SRC: Record<GridType, string> = {
   team: '/images/teams.svg',
 }
 
+function GridStepperBar({
+  currentIndex,
+  total,
+  onSelectIndex,
+  ariaLabel = 'Grid position',
+}: {
+  currentIndex: number
+  total: number
+  onSelectIndex: (index: number, options?: { isDragging?: boolean }) => void
+  ariaLabel?: string
+}) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragPosition, setDragPosition] = useState(0)
+  const didDragRef = useRef(false)
+
+  if (total <= 0) return null
+  const segmentWidth = 100 / total
+  const leftPercent = currentIndex * segmentWidth
+
+  function positionToIndex(clientX: number): number {
+    const el = trackRef.current
+    if (!el) return currentIndex
+    const rect = el.getBoundingClientRect()
+    const x = clientX - rect.left
+    const percent = (x / rect.width) * 100
+    return Math.min(total - 1, Math.max(0, Math.floor((percent / 100) * total)))
+  }
+
+  function positionToBarLeft(clientX: number): number {
+    const el = trackRef.current
+    if (!el) return leftPercent
+    const rect = el.getBoundingClientRect()
+    const x = clientX - rect.left
+    const percent = (x / rect.width) * 100
+    const centered = percent - segmentWidth / 2
+    return Math.min(100 - segmentWidth, Math.max(0, centered))
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      onSelectIndex(Math.max(0, currentIndex - 1))
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      onSelectIndex(Math.min(total - 1, currentIndex + 1))
+    }
+  }
+
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (didDragRef.current) {
+      didDragRef.current = false
+      return
+    }
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const index = Math.min(total - 1, Math.max(0, Math.floor((x / rect.width) * total)))
+    onSelectIndex(index)
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    setIsDragging(true)
+    didDragRef.current = false
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (rect) {
+      const x = e.touches[0].clientX - rect.left
+      const percent = (x / rect.width) * 100
+      setDragPosition(Math.min(100 - segmentWidth, Math.max(0, percent - segmentWidth / 2)))
+    }
+    e.stopPropagation()
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!isDragging) return
+    didDragRef.current = true
+    e.preventDefault()
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const clientX = e.touches[0].clientX
+    const index = positionToIndex(clientX)
+    const barLeft = positionToBarLeft(clientX)
+    setDragPosition(barLeft)
+    onSelectIndex(index, { isDragging: true })
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (!isDragging) return
+    const clientX = e.changedTouches[0].clientX
+    const index = positionToIndex(clientX)
+    setIsDragging(false)
+    onSelectIndex(index)
+    e.stopPropagation()
+  }
+
+  function handleTouchCancel() {
+    if (isDragging) {
+      setIsDragging(false)
+      onSelectIndex(currentIndex)
+    }
+  }
+
+  function handleMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.button !== 0) return
+    setIsDragging(true)
+    didDragRef.current = false
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (rect) {
+      const x = e.clientX - rect.left
+      const percent = (x / rect.width) * 100
+      setDragPosition(Math.min(100 - segmentWidth, Math.max(0, percent - segmentWidth / 2)))
+    }
+
+    function onMouseMove(ev: MouseEvent) {
+      didDragRef.current = true
+      const index = positionToIndex(ev.clientX)
+      const barLeft = positionToBarLeft(ev.clientX)
+      setDragPosition(barLeft)
+      onSelectIndex(index, { isDragging: true })
+    }
+
+    function onMouseUp(ev: MouseEvent) {
+      if (ev.button !== 0) return
+      const index = positionToIndex(ev.clientX)
+      setIsDragging(false)
+      onSelectIndex(index)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+
+  const barLeft = isDragging ? dragPosition : leftPercent
+  const barTransition = isDragging ? 'none' : 'left 200ms ease-out'
+
+  return (
+    <div
+      ref={trackRef}
+      role="slider"
+      aria-valuemin={0}
+      aria-valuemax={total - 1}
+      aria-valuenow={currentIndex}
+      aria-label={ariaLabel}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      className="w-full relative h-2 flex items-center cursor-pointer select-none"
+      style={{ touchAction: 'none' }}
+    >
+      <div className="w-full h-0.5 rounded-full bg-white/30 pointer-events-none" aria-hidden />
+      <div
+        className="absolute top-1/2 -translate-y-1/2 h-2 rounded-sm bg-white/80 pointer-events-none"
+        style={{
+          width: `${segmentWidth}%`,
+          left: `${barLeft}%`,
+          transition: barTransition,
+        }}
+        aria-hidden
+      />
+    </div>
+  )
+}
+
 function OwnProfileBlurbBlock({
   owner,
   gridId,
@@ -87,6 +256,7 @@ function OwnProfileBlurbBlock({
   setIsEditingOwnBlurb,
   ownBlurbSaving,
   setOwnBlurbSaving,
+  readOnly = false,
 }: {
   owner: { username: string; profile_image_url: string | null }
   gridId: string
@@ -99,6 +269,7 @@ function OwnProfileBlurbBlock({
   setIsEditingOwnBlurb: (v: boolean) => void
   ownBlurbSaving: boolean
   setOwnBlurbSaving: (v: boolean) => void
+  readOnly?: boolean
 }) {
   const supabase = createClientComponentClient()
   const [draft, setDraft] = useState(ownBlurbDisplay)
@@ -126,6 +297,24 @@ function OwnProfileBlurbBlock({
 
   const hasBlurb = ownBlurbDisplay.trim().length > 0
   const showInput = !hasBlurb || isEditingOwnBlurb
+
+  if (readOnly) {
+    return (
+      <div className="mb-6 flex items-start gap-3">
+        <Image
+          src={getAvatarUrl(owner.profile_image_url)}
+          alt={owner.username}
+          width={48}
+          height={48}
+          className="h-12 w-12 shrink-0 rounded-full object-cover"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-white">{owner.username}</p>
+          <p className="mt-1 text-sm text-white/80 leading-snug">{ownBlurbDisplay}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mb-6 flex items-start gap-3">
@@ -177,6 +366,224 @@ function OwnProfileBlurbBlock({
   )
 }
 
+function GridHeroBackground({
+  heroBackground,
+  isDriverOrTrack,
+}: {
+  heroBackground: string
+  isDriverOrTrack: boolean
+}) {
+  if (isDriverOrTrack) {
+    return (
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          opacity: 0.5,
+          backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%), url(${heroBackground})`,
+          backgroundColor: 'lightgray',
+          backgroundPosition: '-0.213px 0px',
+          backgroundSize: '100.092% 106.904%',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+    )
+  }
+  return (
+    <>
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${heroBackground})` }}
+      />
+      <div className="absolute inset-0 z-0 bg-black/30" />
+    </>
+  )
+}
+
+function GridVerticalLabel({ type }: { type: GridType }) {
+  return (
+    <Image
+      src={VERTICAL_LABEL_SRC[type]}
+      alt=""
+      width={30}
+      height={120}
+      className="object-contain"
+      style={{ width: 'clamp(92px, 28vw, 120px)', height: 'clamp(260px, 78vw, 350px)' }}
+    />
+  )
+}
+
+function GridHeroHeader({
+  username,
+  type,
+  showEditLink,
+}: {
+  username: string
+  type: GridType
+  showEditLink: boolean
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <h1
+        className="font-serif text-white font-normal font-display min-w-0 capitalize"
+        style={{ fontSize: 'clamp(1.375rem, 6vw, 1.875rem)' }}
+      >
+        {username}&apos;s <br /> Grid
+      </h1>
+      {showEditLink && (
+        <Link
+          href={`/profile/edit-grid/${type}`}
+          className="flex-shrink-0 flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-2 py-2 lg:px-3 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+          aria-label={`Edit ${type} grid`}
+        >
+          <Pencil className="h-4 w-4" />
+          <span className="hidden lg:inline">Edit</span>
+        </Link>
+      )}
+    </div>
+  )
+}
+
+function GridNameNationality({
+  selectedItem,
+  type,
+  isPlaceholderSelected,
+  selectedIndex,
+  variant = 'view',
+}: {
+  selectedItem: RankItem | undefined
+  type: GridType
+  isPlaceholderSelected: boolean
+  selectedIndex: number
+  variant?: 'view' | 'edit'
+}) {
+  const typeLabel = type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'
+  const titleClass =
+    variant === 'edit'
+      ? 'text-xl font-serif text-white font-normal font-display transition-opacity duration-200'
+      : 'font-serif text-white font-normal font-display transition-opacity duration-200'
+  const titleStyle = variant === 'view' ? { fontSize: 'clamp(1.125rem, 5.5vw, 1.5rem)' } : undefined
+
+  return (
+    <div
+      className={
+        variant === 'edit'
+          ? 'flex flex-col items-center justify-center text-center'
+          : 'mb-6 flex flex-col items-center justify-center text-center'
+      }
+    >
+      <h2
+        key={selectedIndex}
+        className={titleClass}
+        style={variant === 'view' ? titleStyle : undefined}
+      >
+        {isPlaceholderSelected ? `Select a ${typeLabel}` : selectedItem?.name ?? ''}
+      </h2>
+      {(type === 'driver' &&
+        !isPlaceholderSelected &&
+        selectedItem &&
+        (selectedItem as DriverRankItem).team_name) ||
+      (type === 'track' &&
+        !isPlaceholderSelected &&
+        selectedItem &&
+        (selectedItem as TrackRankItem).country) ? (
+        <div className="flex items-center justify-center gap-1">
+          {type === 'driver' &&
+            !isPlaceholderSelected &&
+            selectedItem &&
+            (selectedItem as DriverRankItem).team_name && (
+              <span className="text-white/90 text-sm tracking-wider [font-variant:all-small-caps;]">
+                {(selectedItem as DriverRankItem).team_name}
+              </span>
+            )}
+          {type === 'track' &&
+            !isPlaceholderSelected &&
+            selectedItem &&
+            (selectedItem as TrackRankItem).country && (
+              <span className="text-white/90 text-sm">
+                {(selectedItem as TrackRankItem).location &&
+                  `${(selectedItem as TrackRankItem).location}, `}
+                {(selectedItem as TrackRankItem).country}
+              </span>
+            )}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function GridBlurbDisplay({
+  isThirdPartyView,
+  doesHaveBlurb,
+  currentSlotBlurbFromData,
+  owner,
+  gridId,
+  rankIndex,
+  ownBlurbDisplay,
+  setOwnBlurbLocal,
+  onSlotBlurbSaved,
+  isEditingOwnBlurb,
+  setIsEditingOwnBlurb,
+  ownBlurbSaving,
+  setOwnBlurbSaving,
+  readOnly,
+}: {
+  isThirdPartyView: boolean
+  doesHaveBlurb: boolean
+  currentSlotBlurbFromData: string
+  owner: { username: string; profile_image_url: string | null }
+  gridId: string
+  rankIndex: number
+  ownBlurbDisplay: string
+  setOwnBlurbLocal: (v: string | null) => void
+  onSlotBlurbSaved?: (rankIndex: number, value: string) => void
+  isEditingOwnBlurb: boolean
+  setIsEditingOwnBlurb: (v: boolean) => void
+  ownBlurbSaving: boolean
+  setOwnBlurbSaving: (v: boolean) => void
+  readOnly: boolean
+}) {
+  if (isThirdPartyView && doesHaveBlurb) {
+    return (
+      <div className="mb-6 flex items-start gap-3">
+        <Link href={`/u/${owner.username}`} className="flex-shrink-0">
+          <Image
+            src={getAvatarUrl(owner.profile_image_url)}
+            alt={owner.username}
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-full object-cover"
+          />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <Link href={`/u/${owner.username}`} className="text-sm font-medium text-white hover:text-white/90">
+            {owner.username}
+          </Link>
+          <p className="mt-1 text-sm text-white/80 leading-snug">{currentSlotBlurbFromData.trim()}</p>
+        </div>
+      </div>
+    )
+  }
+  if (readOnly && doesHaveBlurb) {
+    return (
+      <OwnProfileBlurbBlock
+        owner={owner}
+        gridId={gridId}
+        rankIndex={rankIndex}
+        initialBlurb={currentSlotBlurbFromData}
+        ownBlurbDisplay={ownBlurbDisplay}
+        setOwnBlurbLocal={setOwnBlurbLocal}
+        onSlotBlurbSaved={onSlotBlurbSaved}
+        isEditingOwnBlurb={isEditingOwnBlurb}
+        setIsEditingOwnBlurb={setIsEditingOwnBlurb}
+        ownBlurbSaving={ownBlurbSaving}
+        setOwnBlurbSaving={setOwnBlurbSaving}
+        readOnly
+      />
+    )
+  }
+  return null
+}
+
 export function GridDetailView({
   grid,
   owner,
@@ -205,7 +612,7 @@ export function GridDetailView({
   const isPlaceholderSelected = Boolean(selectedItem && selectedItem.is_placeholder)
   const doesHaveBlurb = Boolean(currentSlotBlurbFromData.trim().length > 0)
   const isBlurbEditable = mode === 'edit' && (Boolean(onBlurbChange) || Boolean(onSlotBlurbChange))
-  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView) || (isOwnProfile && mode === 'view')
+  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView)
   const isBlurbCollapsible = mode === 'view' && doesHaveBlurb && !isThirdPartyView
   const [isBlurbOpen, setIsBlurbOpen] = useState(true)
   const [ownBlurbLocal, setOwnBlurbLocal] = useState<string | null>(null)
@@ -249,69 +656,45 @@ export function GridDetailView({
     if (selected?.is_placeholder) { /* Edit mode uses grid canvas; no modal */ }
   }
 
-  // Desktop hero carousel (touch swipe for desktop view mode)
-  const carouselRef = useRef<HTMLDivElement>(null)
-  const touchStartX = useRef<number>(0)
-
-  // Mobile horizontal slideshow: scroll container and slide refs
+  // Single scroll container for hero (view mode: mobile swipe + desktop chevrons)
   const mobileScrollRef = useRef<HTMLDivElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  useEffect(() => {
-    if (mode !== 'view' || !carouselRef.current) return
-    const el = carouselRef.current
-    const SWIPE_THRESHOLD = 50
-    function onTouchStart(e: TouchEvent) {
-      touchStartX.current = e.touches[0].clientX
-    }
-    function onTouchEnd(e: TouchEvent) {
-      const endX = e.changedTouches[0].clientX
-      const deltaX = endX - touchStartX.current
-      if (Math.abs(deltaX) < SWIPE_THRESHOLD) return
-      if (deltaX < 0) {
-        setSelectedIndex((i) => Math.min(9, i + 1))
-      } else {
-        setSelectedIndex((i) => Math.max(0, i - 1))
-      }
-    }
-    el.addEventListener('touchstart', onTouchStart, { passive: true })
-    el.addEventListener('touchend', onTouchEnd, { passive: true })
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart)
-      el.removeEventListener('touchend', onTouchEnd)
-    }
-  }, [mode])
-
-  // Mobile: sync selectedIndex from scroll position
+  // Sync selectedIndex from scroll position (view mode)
   useEffect(() => {
     const el = mobileScrollRef.current
     if (!el || mode !== 'view') return
-    function onScroll() {
+    function syncIndexFromScroll() {
       const node = mobileScrollRef.current
       if (!node) return
       const width = node.clientWidth
       if (!width) return
       const idx = Math.round(node.scrollLeft / width)
-      setSelectedIndex((i) => {
-        const next = Math.min(Math.max(idx, 0), Math.max(0, items.length - 1))
-        return next
-      })
+      const next = Math.min(Math.max(idx, 0), Math.max(0, items.length - 1))
+      setSelectedIndex((i) => (i === next ? i : next))
     }
-    el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
+    el.addEventListener('scroll', syncIndexFromScroll, { passive: true })
+    el.addEventListener('scrollend', syncIndexFromScroll)
+    // Sync once after layout so the number matches initial scroll position
+    const raf = requestAnimationFrame(() => syncIndexFromScroll())
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('scroll', syncIndexFromScroll)
+      el.removeEventListener('scrollend', syncIndexFromScroll)
+    }
   }, [mode, items.length])
 
-  function scrollToIndex(idx: number) {
-    const target = slideRefs.current[idx]
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
-      setSelectedIndex(idx)
-      return
-    }
+  function scrollToIndex(
+    idx: number,
+    options?: { isDragging?: boolean }
+  ) {
+    setSelectedIndex(idx)
     const el = mobileScrollRef.current
     if (el) {
-      el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-      setSelectedIndex(idx)
+      el.scrollTo({
+        left: idx * el.clientWidth,
+        behavior: options?.isDragging ? 'auto' : 'smooth',
+      })
     }
   }
 
@@ -325,20 +708,23 @@ export function GridDetailView({
   function renderHeroSlot(item: RankItem | undefined, ghost: boolean) {
     if (!item || item.is_placeholder) return <div className="flex-1" aria-hidden />
     const opacity = ghost ? 'opacity-20 ' : 'opacity-100'
-    const size = ghost ? 'min(50vw,160px)' : 'min(85vw,320px)'
+    // Scales for 320px: 90vw=288, max 320; min 220 on small mobile
+    const size = ghost ? 'min(50vw,160px)' : 'min(90vw,320px)'
+    const minDim = ghost ? 80 : 220
+    const maxDim = ghost ? 300 : 320
     if (type === 'driver') {
       return (
         <div
           className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
-          style={{ minHeight: ghost ? 300 : 400 }}
+          style={{ minHeight: ghost ? 300 : 'min(35vh, 280px)' }}
         >
           <div
             className="flex-shrink-0 transition-all duration-300"
             style={{
-              width: ghost ? 'min(120vw,300px)' : size,
-              height: ghost ? 'min(120vw,300px)' : size,
-              minWidth: ghost ? 80 : 400,
-              minHeight: ghost ? 80 : 400,
+              width: ghost ? 'min(120vw,300px)' : `clamp(${minDim}px, 90vw, ${maxDim}px)`,
+              height: ghost ? 'min(120vw,300px)' : `clamp(${minDim}px, 90vw, ${maxDim}px)`,
+              minWidth: ghost ? 80 : minDim,
+              minHeight: ghost ? 80 : minDim,
             }}
           >
             <DriverHeroBodyMedia
@@ -386,184 +772,174 @@ export function GridDetailView({
     return null
   }
 
+  const showUnifiedHero = mode === 'view' || (mode === 'edit' && !onRankedListChange)
+
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Top: edit mode = compact header + grid; view mode = hero */}
-      {mode === 'edit' && onRankedListChange ? (
+      {mode === 'edit' && onRankedListChange && (
         <div className="px-4 pl-8 pt-20">
           <h1 className="text-3xl font-serif text-white font-normal font-display capitalize">
             Editing your grid
           </h1>
         </div>
-      ) : mode === 'view' ? (
-      <>
-        {/* Desktop view: current layout (hero + bottom section) */}
-        <div className="hidden lg:block">
-          <div className="relative h-[60vh] flex flex-col overflow-hidden">
-            {isDriverOrTrack ? (
-              <div
-                className="absolute inset-0 z-0"
-                style={{
-                  opacity: 0.5,
-                  backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%), url(${heroBackground})`,
-                  backgroundColor: 'lightgray',
-                  backgroundPosition: '-0.213px 0px',
-                  backgroundSize: '100.092% 106.904%',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-            ) : (
-              <>
-                <div
-                  className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url(${heroBackground})` }}
-                />
-                <div className="absolute inset-0 z-0 bg-black/30" />
-              </>
-            )}
-            <div
-              ref={carouselRef}
-              className="absolute inset-0 z-[1] flex items-end justify-center gap-2 touch-pan-y"
-              style={{ touchAction: 'pan-y' }}
-              role="region"
-              aria-label="Grid ranking carousel - swipe left or right to change"
-            >
-              <div className="flex min-w-0 flex-1 items-end z-[-1]">
-                {renderHeroSlot(items[selectedIndex - 1], true)}
-              </div>
-              <div className="flex flex-shrink-0 items-end justify-center" aria-current="true">
-                {renderHeroSlot(selectedItem ?? undefined, false)}
-              </div>
-              <div className="flex min-w-0 flex-1 items-end justify-end z-[-1]">
-                {renderHeroSlot(items[selectedIndex + 1], true)}
-              </div>
+        
+      )}
+  {mode === 'edit' && items.length > 0 && selectedItem && (
+        <div className="px-4 pl-8 mt-8 mb-6 flex flex-row items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              setSelectedIndex(Math.max(0, selectedIndex - 1))
+              ;(e.currentTarget as HTMLButtonElement).blur()
+            }}
+            disabled={selectedIndex === 0}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            aria-label={`Previous ${type}`}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
+            <GridNameNationality
+              selectedItem={selectedItem}
+              type={type}
+              isPlaceholderSelected={isPlaceholderSelected}
+              selectedIndex={selectedIndex}
+              variant="edit"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              setSelectedIndex(Math.min(items.length - 1, selectedIndex + 1))
+              ;(e.currentTarget as HTMLButtonElement).blur()
+            }}
+            disabled={selectedIndex >= items.length - 1}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            aria-label={`Next ${type}`}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </div>
+      )}
+      {showUnifiedHero && (
+        <div className="flex flex-col min-h-screen relative">
+          {/* Header: fixed above hero on mobile, in-hero on desktop */}
+          <div className="px-4 pt-14 lg:pt-16 shrink-0 relative z-10">
+            <GridHeroHeader
+              username={owner.username}
+              type={type}
+              showEditLink={isOwnProfile}
+            />
+          </div>
+          {/* Background + vertical label: behind hero */}
+          <div className="absolute inset-0 top-0 left-0 right-0 z-0 pointer-events-none" aria-hidden>
+            <GridHeroBackground heroBackground={heroBackground} isDriverOrTrack={isDriverOrTrack} />
+            <div className="absolute left-0 top-[10vh] lg:top-auto lg:bottom-4 flex items-end pl-2 w-12">
+              <GridVerticalLabel type={type} />
             </div>
-            <div className="absolute left-0 bottom-4 z-20 flex items-end pl-2 w-12" aria-hidden>
-              <span className="block">
-                <Image
-                  src={VERTICAL_LABEL_SRC[type]}
-                  alt=""
-                  width={30}
-                  height={120}
-                  className="object-contain"
-                  style={{ width: 120, height: 350 }}
-                />
+            <div className="absolute left-0 right-0 bottom-0 top-[65vh] lg:top-[60vh] bg-black z-0" />
+          </div>
+          {/* Hero wrapper: relative so rank number can sit bottom-right on desktop */}
+          <div className="relative h-[35vh] lg:h-[60vh] shrink-0 z-10">
+            {/* Rank number: fixed on mobile, absolute in hero on desktop */}
+            <div
+              className="fixed right-4 top-44 z-10 pointer-events-none flex items-end justify-end px-2 sm:right-8 sm:top-52 sm:px-4 opacity-65 lg:absolute lg:right-4 lg:top-auto lg:bottom-4 lg:opacity-100"
+              style={{ fontSize: 'clamp(5rem, 25vw, 10rem)', lineHeight: 1 }}
+              aria-label={`Rank ${selectedIndex + 1} on this grid`}
+            >
+              <span
+                key={selectedIndex}
+                className="font-bold font-display text-white animate-rank-number-fade"
+              >
+                {selectedIndex + 1}
               </span>
             </div>
-            <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-16 pb-0 overflow-x-hidden">
-              <div className="flex items-start justify-between gap-4 shrink-0 mb-4">
-                <h1 className="text-3xl font-serif text-white font-normal font-display min-w-0 capitalize">
-                  {owner.username}&apos;s <br /> Grid
-                </h1>
-                {isOwnProfile && (
-                  <Link
-                    href={`/profile/edit-grid/${type}`}
-                    className="flex-shrink-0 flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
-                    aria-label={`Edit ${type} grid`}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span>Edit</span>
-                  </Link>
-                )}
-              </div>
-              <div className="relative flex w-full gap-4 items-end min-h-0 flex-1">
-                <div className="flex-1 min-w-0" />
-                <div className="flex shrink-0 items-start self-stretch">
-                  <span
-                    className="font-bold font-display text-white"
-                    style={{ fontSize: 'clamp(4rem, 13vw, 7rem)', lineHeight: 1 }}
-                    aria-label={`Rank ${selectedIndex + 1} on this grid`}
-                  >
-                    {selectedIndex + 1}
-                  </span>
+            {/* Single hero scroll container: swipe on mobile, programmatic on desktop */}
+            <div
+              ref={mobileScrollRef}
+              className="h-[35vh] lg:h-[60vh] w-full overflow-x-auto lg:overflow-x-hidden overflow-y-hidden snap-x snap-mandatory relative"
+            style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+            role="region"
+            aria-label="Grid ranking - swipe left or right"
+          >
+            <div className="flex h-full min-h-0">
+              {items.map((item, idx) => (
+                <div
+                  key={idx}
+                  ref={(el) => {
+                    slideRefs.current[idx] = el
+                  }}
+                  className="w-full min-w-full flex-shrink-0 snap-start flex items-end justify-center h-full"
+                >
+                  {renderHeroSlot(item ?? undefined, false)}
                 </div>
-              </div>
+              ))}
+            </div>
             </div>
           </div>
-          <div className="bg-black px-4 py-6">
-            {items.length > 0 && selectedItem && (
-              <div className="mb-6 flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedIndex((i) => Math.max(0, i - 1))}
-                  disabled={selectedIndex === 0}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  aria-label={`Previous ${type}`}
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
-                  <h2
-                    key={selectedIndex}
-                    className="text-2xl font-serif text-white font-normal font-display transition-opacity duration-200"
+          {/* Stepper: mobile only */}
+          {items.length > 0 && (
+            <div className="shrink-0 bg-black px-4 py-3 relative z-10 lg:hidden">
+              <GridStepperBar
+                currentIndex={selectedIndex}
+                total={items.length}
+                onSelectIndex={(i, opts) => scrollToIndex(i, opts)}
+                ariaLabel={`Grid position ${selectedIndex + 1} of ${items.length}`}
+              />
+            </div>
+          )}
+          {/* Content: name, blurb, comments — only when view mode */}
+          {mode === 'view' && (
+            <div className="flex-1 min-h-0 overflow-y-auto bg-black relative z-10 px-4 pt-4 pb-6">
+              {/* Chevrons (desktop only) + name/nationality (both) */}
+              {items.length > 0 && selectedItem && (
+                <div className="mb-6 flex flex-col lg:flex-row items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      scrollToIndex(Math.max(0, selectedIndex - 1))
+                      ;(e.currentTarget as HTMLButtonElement).blur()
+                    }}
+                    disabled={selectedIndex === 0}
+                    className="hidden lg:flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    aria-label={`Previous ${type}`}
                   >
-                    {isPlaceholderSelected
-                      ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
-                      : selectedItem.name}
-                  </h2>
-                  {(type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality) ||
-                  (type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country) ? (
-                    <div className="mt-1 flex items-center justify-center gap-2">
-                      {type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality && (
-                        <>
-                          <Image
-                            src={getNationalityFlagPath((selectedItem as DriverRankItem).nationality) ?? ''}
-                            alt=""
-                            width={24}
-                            height={24}
-                            className="rounded-full object-cover"
-                          />
-                          <span className="text-white/90 text-sm">
-                            {(selectedItem as DriverRankItem).nationality}
-                          </span>
-                        </>
-                      )}
-                      {type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country && (
-                        <span className="text-white/90 text-sm">
-                          {(selectedItem as TrackRankItem).location &&
-                            `${(selectedItem as TrackRankItem).location}, `}
-                          {(selectedItem as TrackRankItem).country}
-                        </span>
-                      )}
-                    </div>
-                  ) : null}
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
+                    <GridNameNationality
+                      selectedItem={selectedItem}
+                      type={type}
+                      isPlaceholderSelected={isPlaceholderSelected}
+                      selectedIndex={selectedIndex}
+                      variant="view"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      scrollToIndex(Math.min(items.length - 1, selectedIndex + 1))
+                      ;(e.currentTarget as HTMLButtonElement).blur()
+                    }}
+                    disabled={selectedIndex >= items.length - 1}
+                    className="hidden lg:flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                    aria-label={`Next ${type}`}
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedIndex((i) => Math.min(items.length - 1, i + 1))}
-                  disabled={selectedIndex >= items.length - 1}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  aria-label={`Next ${type}`}
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </div>
-            )}
-            {isThirdPartyView && doesHaveBlurb && (
-              <div className="mb-6 flex items-start gap-3">
-                <Link href={`/u/${owner.username}`} className="flex-shrink-0">
-                  <Image
-                    src={getAvatarUrl(owner.profile_image_url)}
-                    alt={owner.username}
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                </Link>
-                <div className="min-w-0 flex-1">
-                  <Link href={`/u/${owner.username}`} className="text-sm font-medium text-white hover:text-white/90">
-                    {owner.username}
-                  </Link>
-                  <p className="mt-1 text-sm text-white/80 leading-snug">{currentSlotBlurbFromData.trim()}</p>
-                </div>
-              </div>
-            )}
-            {isOwnProfile && (
-              <OwnProfileBlurbBlock
+              )}
+              <GridBlurbDisplay
+                isThirdPartyView={isThirdPartyView}
+                doesHaveBlurb={doesHaveBlurb}
+                currentSlotBlurbFromData={currentSlotBlurbFromData}
                 owner={owner}
                 gridId={grid.id}
                 rankIndex={rankIndex}
-                initialBlurb={currentSlotBlurbFromData}
                 ownBlurbDisplay={ownBlurbDisplay}
                 setOwnBlurbLocal={setOwnBlurbLocal}
                 onSlotBlurbSaved={(_, value) =>
@@ -573,317 +949,18 @@ export function GridDetailView({
                 setIsEditingOwnBlurb={setIsEditingOwnBlurb}
                 ownBlurbSaving={ownBlurbSaving}
                 setOwnBlurbSaving={setOwnBlurbSaving}
+                readOnly
               />
-            )}
-            {shouldShowBlurbPanel && <hr className="mb-6 border-white/20" />}
-            <GridSlotCommentSection gridId={grid.id} rankIndex={selectedIndex + 1} />
-          </div>
-        </div>
-
-        {/* Mobile view: swipable horizontal slideshow; static background + SVG; arrows with name in each slide */}
-        <div className="lg:hidden flex flex-col min-h-screen relative">
-          <div className="px-4 pt-16 pb-2 shrink-0 relative z-10">
-            <div className="flex items-start justify-between gap-4">
-              <h1 className="text-3xl font-serif text-white font-normal font-display min-w-0 capitalize">
-                {owner.username}&apos;s <br /> Grid
-              </h1>
-              {isOwnProfile && (
-                <Link
-                  href={`/profile/edit-grid/${type}`}
-                  className="flex-shrink-0 flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
-                  aria-label={`Edit ${type} grid`}
-                >
-                  <Pencil className="h-4 w-4" />
-                  <span>Edit</span>
-                </Link>
-              )}
+              {shouldShowBlurbPanel && <hr className="mb-6 border-white/20" />}
+              <GridSlotCommentSection gridId={grid.id} rankIndex={rankIndex} />
             </div>
-          </div>
-          {/* Static background and vertical label (drivers/teams/tracks) behind scroll */}
-          <div className="absolute inset-0 top-0 left-0 right-0 z-0 pointer-events-none" aria-hidden>
-            {isDriverOrTrack ? (
-              <div
-                className="absolute inset-0"
-                style={{
-                  opacity: 0.5,
-                  backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%), url(${heroBackground})`,
-                  backgroundColor: 'lightgray',
-                  backgroundPosition: '-0.213px 0px',
-                  backgroundSize: '100.092% 106.904%',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
-            ) : (
-              <>
-                <div
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url(${heroBackground})` }}
-                />
-                <div className="absolute inset-0 bg-black/30" />
-              </>
-            )}
-            <div className="absolute left-0 bottom-4 flex items-end pl-2 w-12">
-              <Image
-                src={VERTICAL_LABEL_SRC[type]}
-                alt=""
-                width={30}
-                height={120}
-                className="object-contain"
-                style={{ width: 120, height: 350 }}
-              />
-            </div>
-          </div>
-          <div
-            ref={mobileScrollRef}
-            className="flex-1 w-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory relative z-10"
-            style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
-            role="region"
-            aria-label="Grid ranking - swipe left or right"
-          >
-            <div className="flex w-full h-full min-h-0">
-              {items.map((item, idx) => {
-                const slideRankIndex = idx + 1
-                const slideItem = item
-                const slideBlurb =
-                  (slotBlurbsLocal ?? slotBlurbsFromProps)[slideRankIndex] ??
-                  (slideRankIndex === 1 ? (grid.blurb ?? '') : '')
-                const slideHasBlurb = Boolean(slideBlurb.trim().length > 0)
-                const isPlaceholder = Boolean(slideItem?.is_placeholder)
-                return (
-                  <div
-                    key={idx}
-                    ref={(el) => {
-                      slideRefs.current[idx] = el
-                    }}
-                    className="w-full min-w-full flex-shrink-0 snap-start flex flex-col overflow-y-auto"
-                  >
-                    <div className="relative flex flex-col min-h-[45vh] flex-shrink-0 bg-transparent">
-                      <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-4 pb-2">
-                        <div className="relative flex w-full gap-4 items-end min-h-0 flex-1">
-                          <div className="flex-1 min-w-0" />
-                          <div className="flex shrink-0 items-start self-stretch">
-                            <span
-                              className="font-bold font-display text-white"
-                              style={{ fontSize: 'clamp(4rem, 13vw, 7rem)', lineHeight: 1 }}
-                              aria-label={`Rank ${slideRankIndex} on this grid`}
-                            >
-                              {slideRankIndex}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="relative z-10 flex items-end justify-center pb-2">
-                        {renderHeroSlot(slideItem ?? undefined, false)}
-                      </div>
-                    </div>
-                    <div className="px-4 py-4 bg-black flex-1">
-                      <div className="mb-6 flex items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => scrollToIndex(Math.max(0, idx - 1))}
-                          disabled={idx === 0}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          aria-label={`Previous ${type}`}
-                        >
-                          <ChevronLeft className="h-6 w-6" />
-                        </button>
-                        <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
-                          <h2 className="text-2xl font-serif text-white font-normal font-display">
-                            {isPlaceholder
-                              ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
-                              : (slideItem?.name ?? '')}
-                          </h2>
-                          {(type === 'driver' && !isPlaceholder && (slideItem as DriverRankItem)?.nationality) ||
-                          (type === 'track' && !isPlaceholder && (slideItem as TrackRankItem)?.country) ? (
-                            <div className="mt-1 flex items-center justify-center gap-2">
-                              {type === 'driver' && !isPlaceholder && (slideItem as DriverRankItem)?.nationality && (
-                                <>
-                                  <Image
-                                    src={getNationalityFlagPath((slideItem as DriverRankItem).nationality) ?? ''}
-                                    alt=""
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full object-cover"
-                                  />
-                                  <span className="text-white/90 text-sm">
-                                    {(slideItem as DriverRankItem).nationality}
-                                  </span>
-                                </>
-                              )}
-                              {type === 'track' && !isPlaceholder && (slideItem as TrackRankItem)?.country && (
-                                <span className="text-white/90 text-sm">
-                                  {(slideItem as TrackRankItem).location &&
-                                    `${(slideItem as TrackRankItem).location}, `}
-                                  {(slideItem as TrackRankItem).country}
-                                </span>
-                              )}
-                            </div>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => scrollToIndex(Math.min(items.length - 1, idx + 1))}
-                          disabled={idx >= items.length - 1}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          aria-label={`Next ${type}`}
-                        >
-                          <ChevronRight className="h-6 w-6" />
-                        </button>
-                      </div>
-                      {isThirdPartyView && slideHasBlurb && (
-                        <div className="mb-6 flex items-start gap-3">
-                          <Link href={`/u/${owner.username}`} className="flex-shrink-0">
-                            <Image
-                              src={getAvatarUrl(owner.profile_image_url)}
-                              alt={owner.username}
-                              width={48}
-                              height={48}
-                              className="h-12 w-12 rounded-full object-cover"
-                            />
-                          </Link>
-                          <div className="min-w-0 flex-1">
-                            <Link href={`/u/${owner.username}`} className="text-sm font-medium text-white hover:text-white/90">
-                              {owner.username}
-                            </Link>
-                            <p className="mt-1 text-sm text-white/80 leading-snug">{slideBlurb.trim()}</p>
-                          </div>
-                        </div>
-                      )}
-                      {isOwnProfile && (
-                        <OwnProfileBlurbBlock
-                          owner={owner}
-                          gridId={grid.id}
-                          rankIndex={slideRankIndex}
-                          initialBlurb={slideBlurb}
-                          ownBlurbDisplay={
-                            selectedIndex === idx && ownBlurbLocal !== null ? ownBlurbLocal : slideBlurb
-                          }
-                          setOwnBlurbLocal={setOwnBlurbLocal}
-                          onSlotBlurbSaved={(_, value) =>
-                            setSlotBlurbsLocal((prev) => ({ ...(prev ?? {}), [slideRankIndex]: value }))
-                          }
-                          isEditingOwnBlurb={selectedIndex === idx && isEditingOwnBlurb}
-                          setIsEditingOwnBlurb={setIsEditingOwnBlurb}
-                          ownBlurbSaving={ownBlurbSaving}
-                          setOwnBlurbSaving={setOwnBlurbSaving}
-                        />
-                      )}
-                      {(slideHasBlurb || isOwnProfile) && <hr className="mb-6 border-white/20" />}
-                      <GridSlotCommentSection gridId={grid.id} rankIndex={slideRankIndex} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </>
-      ) : (
-      <>
-        <div className="relative h-[60vh] flex flex-col overflow-hidden">
-          {isDriverOrTrack ? (
-            <div
-              className="absolute inset-0 z-0"
-              style={{
-                opacity: 0.5,
-                backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%), url(${heroBackground})`,
-                backgroundColor: 'lightgray',
-                backgroundPosition: '-0.213px 0px',
-                backgroundSize: '100.092% 106.904%',
-                backgroundRepeat: 'no-repeat',
-              }}
-            />
-          ) : (
-            <>
-              <div
-                className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: `url(${heroBackground})` }}
-              />
-              <div className="absolute inset-0 z-0 bg-black/30" />
-            </>
           )}
-          <div className="absolute inset-0 z-[1] flex items-end justify-center pointer-events-none">
-            {selectedItem && !isPlaceholderSelected && type === 'driver' && (
-              <div
-                key={selectedIndex}
-                className="transition-all duration-300 h-[min(85vw,320px)] w-[min(85vw,320px)] min-h-[200px] min-w-[200px] mb-2"
-              >
-                <DriverHeroBodyMedia
-                  driverName={selectedItem.name}
-                  supabaseUrl={supabaseUrl}
-                  fallbackSrc={
-                    (selectedItem as DriverRankItem).headshot_url ||
-                    (selectedItem as DriverRankItem).image_url
-                  }
-                  className="h-full w-full"
-                />
-              </div>
-            )}
-            {selectedItem && !isPlaceholderSelected && type === 'track' && (
-              <div
-                key={selectedIndex}
-                className="transition-all duration-300 flex items-center justify-center h-[min(60vh,420px)] w-full max-w-[min(100vw,420px)]"
-              >
-                <TrackHeroMedia
-                  trackSlug={(selectedItem as TrackRankItem).track_slug ?? ''}
-                  trackName={selectedItem.name}
-                  supabaseUrl={supabaseUrl}
-                  className="h-full w-full max-h-full"
-                />
-              </div>
-            )}
-            {selectedItem && !isPlaceholderSelected && type === 'team' && (
-              <div
-                key={selectedIndex}
-                className="transition-all duration-300 absolute inset-0 flex items-end justify-center min-h-0"
-              >
-                <TeamHeroMedia
-                  teamId={selectedItem.id}
-                  teamName={selectedItem.name}
-                  supabaseUrl={supabaseUrl}
-                  className="w-full h-[min(58vh,380px)] min-h-[220px]"
-                />
-              </div>
-            )}
-          </div>
-          <div className="absolute left-0 bottom-4 z-20 flex items-end pl-2 w-12" aria-hidden>
-            <span className="block">
-              <Image
-                src={VERTICAL_LABEL_SRC[type]}
-                alt=""
-                width={30}
-                height={120}
-                className="object-contain"
-                style={{ width: 120, height: 350 }}
-              />
-            </span>
-          </div>
-          <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-16 pb-0 overflow-x-hidden">
-            <div className="flex items-start justify-between gap-4 shrink-0 mb-4">
-              <h1 className="text-3xl font-serif text-white font-normal font-display min-w-0 capitalize">
-                {owner.username}&apos;s <br /> Grid
-              </h1>
-            </div>
-            <div className="relative flex w-full gap-4 items-end min-h-0 flex-1">
-              <div className="flex-1 min-w-0" />
-              <div className="flex shrink-0 items-start self-stretch">
-                <span
-                  className="font-bold font-display text-white"
-                  style={{ fontSize: 'clamp(4rem, 13vw, 7rem)', lineHeight: 1 }}
-                  aria-label={`Rank ${selectedIndex + 1} on this grid`}
-                >
-                  {selectedIndex + 1}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
-      </>
       )}
 
-      {/* Bottom half: edit mode only — grid + tray first, then name/arrows, comments, blurb, save */}
+      {/* Edit mode: canvas + name, stepper, blurb, save */}
       {mode === 'edit' && (
-      <div className="bg-black px-4 pl-8 py-6">
+      <div className="bg-black px-3 py-6">
         {onRankedListChange && rankedList && availableItems && (
           <>
             <GridEditCanvas
@@ -893,70 +970,13 @@ export function GridDetailView({
               availableItems={availableItems}
               supabaseUrl={supabaseUrl}
               activeSlotIndex={selectedIndex}
+              onActiveSlotChange={setSelectedIndex}
             />
-            {items.length > 0 && selectedItem && (
-              <div className="mt-8 mb-6 flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedIndex((i) => Math.max(0, i - 1))}
-                  disabled={selectedIndex === 0}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  aria-label={`Previous ${type}`}
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
-                  <h2
-                    key={selectedIndex}
-                    className="text-2xl font-serif text-white font-normal font-display transition-opacity duration-200"
-                  >
-                    {isPlaceholderSelected
-                      ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
-                      : selectedItem.name}
-                  </h2>
-                  {(type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality) ||
-                  (type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country) ? (
-                    <div className="mt-1 flex items-center justify-center gap-2">
-                      {type === 'driver' && !isPlaceholderSelected && (selectedItem as DriverRankItem).nationality && (
-                        <>
-                          <Image
-                            src={getNationalityFlagPath((selectedItem as DriverRankItem).nationality) ?? ''}
-                            alt=""
-                            width={24}
-                            height={24}
-                            className="rounded-full object-cover"
-                          />
-                          <span className="text-white/90 text-sm">
-                            {(selectedItem as DriverRankItem).nationality}
-                          </span>
-                        </>
-                      )}
-                      {type === 'track' && !isPlaceholderSelected && (selectedItem as TrackRankItem).country && (
-                        <span className="text-white/90 text-sm">
-                          {(selectedItem as TrackRankItem).location &&
-                            `${(selectedItem as TrackRankItem).location}, `}
-                          {(selectedItem as TrackRankItem).country}
-                        </span>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedIndex((i) => Math.min(items.length - 1, i + 1))}
-                  disabled={selectedIndex >= items.length - 1}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  aria-label={`Next ${type}`}
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </div>
-            )}
 
             {onSlotBlurbChange && (
               <div className="mb-6 mt-12">
                 <label className="block text-sm font-medium text-white/90 mb-2">
-                  Blurb for rank {rankIndex} (optional, max 140)
+                  Your comment for: <span className="font-bold pl-2 font-display"> {rankIndex} - {selectedItem?.name}</span>
                 </label>
                 {isEditingEditBlurb ? (
                   <div>

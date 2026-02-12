@@ -400,20 +400,15 @@ export default async function FeedPage() {
     <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-semibold text-white font-display">Feed</h1>
       <h3 className="text-md text-white/80 font-sans mb-6">Post. React. Express Yourself.</h3>
-      {/* Desktop: Grid layout with main feed on left and banner cards on right */}
-      <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6">
-        {/* Main Feed - Desktop (larger left column) */}
-        <div className="lg:col-span-8 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="order-2 lg:order-none lg:col-span-8 space-y-6">
           <FeedContent
             posts={enrichedFeedPosts}
             grids={followingGrids.data || []}
             featuredNews={[]}
           />
         </div>
-
-        {/* Right Column - Banner Cards and Trending */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Banner Cards Sidebar - Desktop */}
+        <div className="order-1 lg:order-none lg:col-span-4 space-y-4 mb-8 lg:mb-0">
           <SpotlightCarousel
             spotlight={{
               hot_take: activeHotTake.data || null,
@@ -424,33 +419,6 @@ export default async function FeedPage() {
             upcomingRace={upcomingRaceForCarousel}
             sponsors={(sponsors.data || []) as Array<{ id: string; name: string; logo_url: string | null; website_url: string | null; description: string | null }>}
             featuredNews={(featuredNews.data || []) as Array<{ id: string; title: string; image_url: string | null; content: string; created_at: string }>}
-          />
-        </div>
-      </div>
-
-      {/* Mobile: Stacked layout */}
-      <div className="lg:hidden">
-        {/* Spotlight Carousel: hot take, featured grid, polls, upcoming race, sponsors, news */}
-        <div className="mb-8">
-          <SpotlightCarousel
-            spotlight={{
-              hot_take: activeHotTake.data || null,
-              featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
-            }}
-            polls={adminPolls.data || []}
-            discussionPosts={hotTakePosts}
-            upcomingRace={upcomingRaceForCarousel}
-            sponsors={(sponsors.data || []) as Array<{ id: string; name: string; logo_url: string | null; website_url: string | null; description: string | null }>}
-            featuredNews={(featuredNews.data || []) as Array<{ id: string; title: string; image_url: string | null; content: string; created_at: string }>}
-          />
-        </div>
-
-        {/* Main Feed */}
-        <div className="space-y-6">
-          <FeedContent
-            posts={enrichedFeedPosts}
-            grids={followingGrids.data || []}
-            featuredNews={[]}
           />
         </div>
       </div>

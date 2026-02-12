@@ -1,41 +1,56 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { TopNav } from '@/components/navbar/top-nav'
 import { Footer } from '@/components/footer'
 import { LiveRaceBanner } from '@/components/live-race-banner'
 import { FullscreenHandler } from '@/components/fullscreen-handler'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { useAuthSession } from '@/components/providers/auth-session-provider'
+
+const AUTH_PATHS = ['/login', '/signup', '/auth/', '/auth/callback', '/auth/reset-password']
+
+function isAuthPath(path: string | null) {
+  if (!path) return false
+  return AUTH_PATHS.some((p) => path === p || path.startsWith(p))
+}
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const isComingSoon = pathname === '/coming-soon'
+  const { session, isLoading } = useAuthSession()
   const supabase = createClientComponentClient()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+  const isAuthenticated = !!session
 
   useEffect(() => {
     let isMounted = true
 
-    async function loadSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (isMounted) setIsAuthenticated(!!session)
+    if (session && (pathname === '/login' || pathname === '/signup')) {
+      supabase
+        .from('profiles')
+        .select('username, date_of_birth, age')
+        .eq('id', session.user.id)
+        .maybeSingle()
+        .then(({ data: profile }) => {
+          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+          if (isMounted) router.replace(isProfileComplete ? '/feed' : '/onboarding')
+        })
     }
+    return () => { isMounted = false }
+  }, [session, pathname, router, supabase])
 
-    loadSession()
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) setIsAuthenticated(!!session)
-    })
-
-    return () => {
-      isMounted = false
-      data.subscription.unsubscribe()
+  useEffect(() => {
+    // Only redirect to login on sign-out, not on initial load (public pages allowed)
+    if (!session && !isLoading && !isAuthPath(pathname)) {
+      const publicPaths = ['/', '/privacy', '/terms', '/coming-soon', '/banned']
+      if (!publicPaths.includes(pathname ?? '')) {
+        router.replace('/login')
+      }
     }
-  }, [supabase])
+  }, [session, isLoading, pathname, router])
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)')

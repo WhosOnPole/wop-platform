@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { BotIDProviderWrapper } from '@/components/providers/botid-provider'
+import { AuthSessionProvider } from '@/components/providers/auth-session-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 
 export const viewport: Viewport = {
@@ -40,7 +41,9 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <QueryProvider>
           <BotIDProviderWrapper>
-            <LayoutWrapper>{children}</LayoutWrapper>
+            <AuthSessionProvider>
+              <LayoutWrapper>{children}</LayoutWrapper>
+            </AuthSessionProvider>
           </BotIDProviderWrapper>
         </QueryProvider>
       </body>

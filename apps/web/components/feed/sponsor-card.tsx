@@ -14,7 +14,7 @@ interface SponsorCardProps {
 
 export function SponsorCard({ sponsor }: SponsorCardProps) {
   const content = (
-    <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm">
+    <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm">
       <div className="flex h-full gap-4">
         {/* Logo - Full height on left */}
         {sponsor.logo_url && (

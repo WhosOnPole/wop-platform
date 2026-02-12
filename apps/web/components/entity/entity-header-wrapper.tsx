@@ -54,11 +54,8 @@ export function EntityHeaderWrapper({
   useEffect(() => {
     function handleScroll() {
       const scrollY = window.scrollY
-      const topNavHeight = 56 // pt-14 = 3.5rem = 56px
-      const heroHeight = window.innerHeight * 0.4 // 40vh - matches page spacer
-      // Cap scroll range so top section doesn't over-scroll (align with 40vh section height)
-      const scrollThreshold = Math.max(1, heroHeight - topNavHeight - 120)
-      const progress = Math.min(scrollY / scrollThreshold, 1)
+      const heroHeight = window.innerHeight * 0.4 // 40vh - full top section height
+      const progress = heroHeight > 0 ? Math.min(scrollY / heroHeight, 1) : 0
       setScrollProgress(progress)
     }
 

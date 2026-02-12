@@ -110,3 +110,5 @@ apps/web/.env.local
 /docs
 /apps/web/.open-next
 /migrations
+.cursor/mcp.json
+/.cursor

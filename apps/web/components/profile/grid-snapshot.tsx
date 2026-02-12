@@ -46,14 +46,14 @@ export function GridSnapshot({
   const displayItems = isExpanded ? previousState : previousState.slice(0, 4)
 
   return (
-    <div className="rounded-lg border border-gray-400 border-opacity-20 bg-white/[19%] mt-20">
+    <div className="rounded-lg border border-gray-400 border-opacity-20 bg-white/[19%] mt-10">
       {/* Header - Collapsible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex w-full items-center justify-between p-3 text-left hover:bg-white/[30%] hover:rounded-t-lg transition-colors"
       >
         <span className="text-sm">
-          Updated {daysAgo === 0 ? 'today' : daysAgo === 1 ? '1 day' : `${daysAgo} days`} ago
+          Updated {daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago`}
         </span>
         {isExpanded ? (
           <ChevronUp className="h-4 w-4 text-gray-500" />

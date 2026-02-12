@@ -45,7 +45,7 @@ export function CreateMenu({ onClose, onSelect, variant = 'dropdown' }: CreateMe
   }
 
   return (
-    <div className="absolute bottom-full left-1/2 z-50 w-48 px-4 py-4 -translate-x-1/2 mb-0 rounded-3xl bg-[#1D1D1D] animate-slide-up overflow-hidden">
+    <div className="absolute top-full left-1/2 z-50 w-48 px-4 py-4 -translate-x-1/2 mt-2 rounded-3xl bg-[#1D1D1D] animate-slide-down overflow-hidden">
       <div className="divide-y divide-[#6B6B6B]">
         {menuItems.map((item) => (
           <button
@@ -68,18 +68,18 @@ export function CreateMenu({ onClose, onSelect, variant = 'dropdown' }: CreateMe
         ))}
       </div>
       <style jsx>{`
-        @keyframes slide-up {
+        @keyframes slide-down {
           from {
             opacity: 0;
-            transform: translateX(-50%) translateY(10px);
+            transform: translateX(-50%) translateY(-10px);
           }
           to {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
           }
         }
-        .animate-slide-up {
-          animation: slide-up 0.2s ease-out;
+        .animate-slide-down {
+          animation: slide-down 0.2s ease-out;
         }
       `}</style>
     </div>

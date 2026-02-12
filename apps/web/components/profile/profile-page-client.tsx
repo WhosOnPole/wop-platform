@@ -46,88 +46,10 @@ export function ProfilePageClient({
   supabaseUrl,
 }: ProfilePageClientProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('drivers')
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const [isSticky, setIsSticky] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const isSwipe = useRef(false)
-
-  // Scroll tracking with clamp-to-threshold behavior
-  useEffect(() => {
-    let isAdjustingScroll = false
-
-    function handleScroll() {
-      if (isAdjustingScroll) return
-
-      const heroHeight = window.innerHeight * 0.6 // 60vh - matches page hero + spacer
-      const isMd = window.matchMedia('(min-width: 768px)').matches
-      // Content area starts below tab bar with extra clearance to avoid clipping
-      const contentStickyTop = (isMd ? 20 : 18) * 16
-      // Stop window scroll when content reaches this position; then scroll inner content
-      const scrollThreshold = Math.max(0, heroHeight - contentStickyTop - 8)
-      if (scrollThreshold <= 0) return
-
-      const scrollY = window.scrollY
-      const contentEl = contentRef.current
-
-      // Clamp window scroll to the sticky threshold and transfer extra scroll
-      // into the tab content container once sticky begins.
-      if (contentEl) {
-        // Scrolling down past the threshold: keep window pinned and scroll inner content instead.
-        if (scrollY > scrollThreshold) {
-          const overflow = scrollY - scrollThreshold
-          isAdjustingScroll = true
-          window.scrollTo({ top: scrollThreshold, behavior: 'auto' })
-          contentEl.scrollTop = contentEl.scrollTop + overflow
-          requestAnimationFrame(() => {
-            isAdjustingScroll = false
-          })
-          return
-        }
-
-        // Scrolling up while inner content still has scroll: consume the scroll by
-        // moving inner content back to top before letting the window scroll up.
-        if (scrollY < scrollThreshold && contentEl.scrollTop > 0) {
-          const needed = scrollThreshold - scrollY
-          const prevTop = contentEl.scrollTop
-          const nextTop = Math.max(0, prevTop - needed)
-          const consumed = prevTop - nextTop
-          contentEl.scrollTop = nextTop
-
-          if (consumed > 0) {
-            const remaining = needed - consumed
-            isAdjustingScroll = true
-            window.scrollTo({ top: scrollThreshold - remaining, behavior: 'auto' })
-            requestAnimationFrame(() => {
-              isAdjustingScroll = false
-            })
-          }
-        }
-      } else if (scrollY > scrollThreshold) {
-        isAdjustingScroll = true
-        window.scrollTo({ top: scrollThreshold, behavior: 'auto' })
-        requestAnimationFrame(() => {
-          isAdjustingScroll = false
-        })
-        return
-      }
-
-      const clampedScrollY = Math.min(window.scrollY, scrollThreshold)
-      const progress = Math.min(clampedScrollY / scrollThreshold, 1)
-      const sticky = clampedScrollY >= scrollThreshold || (contentRef.current?.scrollTop ?? 0) > 0
-
-      setScrollProgress(progress)
-      setIsSticky(sticky)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // Initial check
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
 
   // Mobile swipe gesture detection
   useEffect(() => {
@@ -211,13 +133,12 @@ export function ProfilePageClient({
     }
   }
 
-  const isActivityTab = activeTab === 'activity'
   const driverGridDisplay = driverGrid ?? buildPlaceholderGrid('driver')
   const trackGridDisplay = trackGrid ?? buildPlaceholderGrid('track')
   const teamGridDisplay = teamGrid ?? buildPlaceholderGrid('team')
 
   return (
-    <div className="relative min-h-screen z-10">
+    <div className="relative z-10">
       {/* Tabs */}
       <ProfileTabs
         activeTab={activeTab}
@@ -225,18 +146,9 @@ export function ProfilePageClient({
         teamBackground={teamBackground}
       />
 
-      {/* Tab Content - Scrollable container when sticky */}
-      <div 
-        ref={contentRef} 
-        className={`bg-black ${
-          isSticky 
-            ? `fixed left-0 right-0 bottom-0 z-20 top-[18rem] md:top-[20rem] ${
-                isActivityTab ? 'overflow-y-hidden' : 'overflow-y-auto'
-              }` 
-            : 'px-4 py-6 sm:px-6 lg:px-8'
-        }`}
-      >
-        <div className={isSticky ? 'px-4 pt-4 py-6 sm:px-6 lg:px-8 h-full min-h-0' : ''}>
+      {/* Tab Content - in flow under tabs */}
+      <div ref={contentRef} className="bg-black px-4 py-6 sm:px-6 lg:px-8">
+        <div>
           {/* Drivers tab */}
         {activeTab === 'drivers' && driverGridDisplay && (
           <div className="mx-auto max-w-4xl">
@@ -276,7 +188,7 @@ export function ProfilePageClient({
 
         {/* Activity tab */}
         {activeTab === 'activity' && (
-          <div className="mx-auto max-w-4xl h-full min-h-0">
+          <div className="mx-auto max-w-4xl">
             <ActivityTab
               activities={activities}
               profileUsername={profile.username}

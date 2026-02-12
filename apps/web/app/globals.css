@@ -89,10 +89,54 @@ html:-ms-fullscreen {
   }
 }
 
-/* Hide scrollbars (WebKit) */
-*::-webkit-scrollbar {
+/* Hide scrollbars (WebKit) — exclude palette so its scrollbar can be styled */
+*:not(.palette-horizontal-scroll)::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* Edit grid palette: ever-present, big pill-shaped horizontal scrollbar for touch */
+.palette-horizontal-scroll {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  touch-action: pan-x;
+  padding-bottom: 12px;
+  scrollbar-gutter: stable;
+}
+.palette-horizontal-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  pointer-events: auto;
+  margin: 0 6px;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 9999px;
+  pointer-events: auto;
+  cursor: grab;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-thumb:active {
+  cursor: grabbing;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7);
+  background-clip: padding-box;
+}
+@supports (scrollbar-width: auto) {
+  .palette-horizontal-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.15);
+  }
 }
 
 @layer utilities {
@@ -161,5 +205,14 @@ html:-ms-fullscreen {
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 .animate-slot-border-rotate {
-  animation: slot-border-rotate 8s linear infinite;
+  animation: slot-border-rotate 4s linear infinite;
+}
+
+/* Grid rank number: fade in place when changing slot */
+@keyframes rankNumberFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-rank-number-fade {
+  animation: rankNumberFade 0.2s ease-out forwards;
 }
