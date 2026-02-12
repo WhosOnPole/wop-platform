@@ -87,7 +87,7 @@ export default async function GridPage({ params }: PageProps) {
     const ids = rankedItems.map((r: { id: string }) => r.id)
     const { data: tracks } = await supabase
       .from('tracks')
-      .select('id, name, location, country')
+      .select('id, name, location, country, circuit_ref')
       .in('id', ids)
     const trackMap = new Map((tracks || []).map((t: any) => [t.id, t]))
     enrichedItems = rankedItems.map((r: { id: string; name: string }) => {
@@ -98,6 +98,7 @@ export default async function GridPage({ params }: PageProps) {
         name,
         location: t?.location ?? null,
         country: t?.country ?? null,
+        circuit_ref: t?.circuit_ref ?? null,
         track_slug: getTrackSlug(name),
       }
     })

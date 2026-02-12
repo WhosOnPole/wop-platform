@@ -12,6 +12,7 @@ interface Driver {
   headshot_url?: string | null
   image_url?: string | null
   nationality?: string | null
+  racing_number?: number | null
 }
 
 interface Team {
@@ -213,7 +214,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
             )}
           </div>
         ) : (
-          <div className="grid gap-x-7 gap-y-6 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid gap-x-5 gap-y-4 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {items.length === 0 ? (
               <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-white/50">
                 {searchQuery ? 'No results found matching your search.' : 'Nothing to show yet. Check back soon.'}
@@ -223,13 +224,15 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                 if (activeTab === 'drivers') {
                   const driver = item as Driver
                   const slug = driver.name.toLowerCase().replace(/\s+/g, '-')
+                  const parts = driver.name.split(' ')
+                  const driverCode = (parts[parts.length - 1] || driver.name).substring(0, 3).toUpperCase()
                   return (
                     <Link
                       key={driver.id}
                       href={`/drivers/${slug}`}
                       className="group flex flex-col"
                     >
-                      <div className="relative w-25 h-28 overflow-hidden rounded-2xl">
+                      <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
                         <DriverCardMedia
                           driverName={driver.name}
                           supabaseUrl={supabaseUrl}
@@ -237,6 +240,33 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                           sizes="100px"
                           darkenBackgroundOnly
                         />
+                        <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
+                        {driver.racing_number != null && (
+                          <div className="absolute right-1 top-1 z-19">
+                            <span
+                              className="font-bold leading-none tabular-nums font-display text-white opacity-50"
+                              style={{ fontSize: 'clamp(34px, 4vw, 38px)' }}
+                            >
+                              {driver.racing_number}
+                            </span>
+                          </div>
+                        )}
+                        {driverCode && (
+                          <div className="absolute top-2/3 left-1 z-30 flex  w-3 items-center justify-center overflow-visible">
+                            <span
+                              className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none tracking-widest"
+                              style={{
+                                fontSize: '15px',
+                                fontFamily: 'Inter, sans-serif',
+                                letterSpacing: '0',
+                                transform: 'rotate(-90deg)',
+                                transformOrigin: 'center center',
+                              }}
+                            >
+                              {driverCode}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </Link>
                   )
@@ -468,12 +498,16 @@ function getCountryFlagPath(country?: string | null): string | null {
   
   // Map country to flag file name
   const flagMap: Record<string, string> = {
+    argentina: 'argentina',
+    argentine: 'argentina',
     australia: 'australia',
     austria: 'austria',
     belgium: 'belgium',
     brazil: 'brazil',
     canada: 'canada',
     china: 'china',
+    france: 'france',
+    germany: 'germany',
     hungary: 'hungary',
     italy: 'italy',
     japan: 'japan',

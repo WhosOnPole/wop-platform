@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
+import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl } from '@/utils/avatar'
 
 interface CommentUser {
@@ -42,6 +43,13 @@ export function FeedPostCommentSection({
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({})
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUserId(session?.user?.id ?? null)
+    })
+  }, [supabase.auth])
 
   useEffect(() => {
     setCommentCount(initialCommentCount)
@@ -195,7 +203,7 @@ export function FeedPostCommentSection({
                           </span>
                         </div>
                         <p className="text-sm text-white/90">{comment.content}</p>
-                        <div className="mt-1">
+                        <div className="mt-1 flex items-center gap-2">
                           <LikeButton
                             targetId={comment.id}
                             targetType="comment"
@@ -203,6 +211,32 @@ export function FeedPostCommentSection({
                             initialIsLiked={userLikes[comment.id] || false}
                             onLikeChange={(targetId, isLiked) => {
                               setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
+                            }}
+                            variant="dark"
+                          />
+                          <CommentActionsMenu
+                            commentId={comment.id}
+                            commentAuthorId={comment.user?.id ?? null}
+                            currentUserId={currentUserId}
+                            targetType="comment"
+                            variant="dark"
+                            initialContent={comment.content}
+                            onDeleted={(deletedId) => {
+                              setComments((prev) => {
+                                const next = prev.filter(
+                                  (c) =>
+                                    c.id !== deletedId && c.parent_comment_id !== deletedId
+                                )
+                                setCommentCount(next.length)
+                                return next
+                              })
+                            }}
+                            onEdited={(editedId, newContent) => {
+                              setComments((prev) =>
+                                prev.map((c) =>
+                                  c.id === editedId ? { ...c, content: newContent } : c
+                                )
+                              )
                             }}
                           />
                         </div>
@@ -227,15 +261,46 @@ export function FeedPostCommentSection({
                                   </span>
                                 </div>
                                 <p className="text-sm text-white/90">{reply.content}</p>
-                                <LikeButton
-                                  targetId={reply.id}
-                                  targetType="comment"
-                                  initialLikeCount={reply.like_count || 0}
-                                  initialIsLiked={userLikes[reply.id] || false}
-                                  onLikeChange={(targetId, isLiked) => {
-                                    setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
-                                  }}
-                                />
+                                <div className="flex items-center gap-2">
+                                  <LikeButton
+                                    targetId={reply.id}
+                                    targetType="comment"
+                                    initialLikeCount={reply.like_count || 0}
+                                    initialIsLiked={userLikes[reply.id] || false}
+                                    onLikeChange={(targetId, isLiked) => {
+                                      setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
+                                    }}
+                                    variant="dark"
+                                  />
+                                  <CommentActionsMenu
+                                    commentId={reply.id}
+                                    commentAuthorId={reply.user?.id ?? null}
+                                    currentUserId={currentUserId}
+                                    targetType="comment"
+                                    variant="dark"
+                                    initialContent={reply.content}
+                                    onDeleted={(deletedId) => {
+                                      setComments((prev) => {
+                                        const next = prev.filter(
+                                          (c) =>
+                                            c.id !== deletedId &&
+                                            c.parent_comment_id !== deletedId
+                                        )
+                                        setCommentCount(next.length)
+                                        return next
+                                      })
+                                    }}
+                                    onEdited={(editedId, newContent) => {
+                                      setComments((prev) =>
+                                        prev.map((c) =>
+                                          c.id === editedId
+                                            ? { ...c, content: newContent }
+                                            : c
+                                        )
+                                      )
+                                    }}
+                                  />
+                                </div>
                               </div>
                             ))}
                           </div>

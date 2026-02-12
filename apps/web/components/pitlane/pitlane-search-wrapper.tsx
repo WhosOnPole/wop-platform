@@ -11,6 +11,7 @@ interface Driver {
   headshot_url?: string | null
   image_url?: string | null
   nationality?: string | null
+  racing_number?: number | null
 }
 
 interface Team {

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Send } from 'lucide-react'
 import { LikeButton } from '@/components/discussion/like-button'
+import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl } from '@/utils/avatar'
 
 interface CommentUser {
@@ -38,6 +39,13 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({})
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUserId(session?.user?.id ?? null)
+    })
+  }, [supabase.auth])
 
   const loadComments = useCallback(async () => {
     setIsLoading(true)
@@ -190,8 +198,8 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
                     {new Date(comment.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p className="text-sm text-white/90">{comment.content}</p>
-                <div className="mt-1">
+                <p className="text-sm text-white/90 pl-8">{comment.content}</p>
+                <div className="mt-1 flex items-center justify-end gap-2">
                   <LikeButton
                     targetId={comment.id}
                     targetType="grid_slot_comment"
@@ -201,6 +209,28 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
                       setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
                     }}
                     variant="dark"
+                  />
+                  <CommentActionsMenu
+                    commentId={comment.id}
+                    commentAuthorId={comment.user?.id ?? null}
+                    currentUserId={currentUserId}
+                    targetType="grid_slot_comment"
+                    variant="dark"
+                    initialContent={comment.content}
+                    onDeleted={(deletedId) => {
+                      setComments((prev) =>
+                        prev.filter(
+                          (c) => c.id !== deletedId && c.parent_comment_id !== deletedId
+                        )
+                      )
+                    }}
+                    onEdited={(editedId, newContent) => {
+                      setComments((prev) =>
+                        prev.map((c) =>
+                          c.id === editedId ? { ...c, content: newContent } : c
+                        )
+                      )
+                    }}
                   />
                 </div>
                 {commentReplies.length > 0 && (
@@ -224,16 +254,41 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
                           </span>
                         </div>
                         <p className="text-sm text-white/90">{reply.content}</p>
-                        <LikeButton
-                          targetId={reply.id}
-                          targetType="grid_slot_comment"
-                          initialLikeCount={reply.like_count ?? 0}
-                          initialIsLiked={userLikes[reply.id] ?? false}
-                          onLikeChange={(targetId, isLiked) => {
-                            setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
-                          }}
-                          variant="dark"
-                        />
+                        <div className="flex items-center justify-end gap-2">
+                          <LikeButton
+                            targetId={reply.id}
+                            targetType="grid_slot_comment"
+                            initialLikeCount={reply.like_count ?? 0}
+                            initialIsLiked={userLikes[reply.id] ?? false}
+                            onLikeChange={(targetId, isLiked) => {
+                              setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
+                            }}
+                            variant="dark"
+                          />
+                          <CommentActionsMenu
+                            commentId={reply.id}
+                            commentAuthorId={reply.user?.id ?? null}
+                            currentUserId={currentUserId}
+                            targetType="grid_slot_comment"
+                            variant="dark"
+                            initialContent={reply.content}
+                            onDeleted={(deletedId) => {
+                              setComments((prev) =>
+                                prev.filter(
+                                  (c) =>
+                                    c.id !== deletedId && c.parent_comment_id !== deletedId
+                                )
+                              )
+                            }}
+                            onEdited={(editedId, newContent) => {
+                              setComments((prev) =>
+                                prev.map((c) =>
+                                  c.id === editedId ? { ...c, content: newContent } : c
+                                )
+                              )
+                            }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

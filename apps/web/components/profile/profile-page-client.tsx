@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ProfileTabs } from './profile-tabs'
 import { GridDisplayCard } from './grid-display-card'
 import { ActivityTab } from './activity-tab'
@@ -45,11 +46,20 @@ export function ProfilePageClient({
   followingCount = 0,
   supabaseUrl,
 }: ProfilePageClientProps) {
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<TabKey>('drivers')
   const contentRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const isSwipe = useRef(false)
+
+  // Open tab from URL (e.g. ?tab=drivers from activity grid update link)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam && TAB_ORDER.includes(tabParam as TabKey)) {
+      setActiveTab(tabParam as TabKey)
+    }
+  }, [searchParams])
 
   // Mobile swipe gesture detection
   useEffect(() => {
@@ -126,13 +136,6 @@ export function ProfilePageClient({
     }
   }, [activeTab])
 
-  function scrollToComments() {
-    const commentsSection = document.getElementById('profile-comments')
-    if (commentsSection) {
-      commentsSection.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
   const driverGridDisplay = driverGrid ?? buildPlaceholderGrid('driver')
   const trackGridDisplay = trackGrid ?? buildPlaceholderGrid('track')
   const teamGridDisplay = teamGrid ?? buildPlaceholderGrid('team')
@@ -156,7 +159,6 @@ export function ProfilePageClient({
               grid={driverGridDisplay}
               isOwnProfile={isOwnProfile}
               supabaseUrl={supabaseUrl}
-              onCommentClick={scrollToComments}
             />
           </div>
         )}
@@ -168,7 +170,6 @@ export function ProfilePageClient({
               grid={trackGridDisplay}
               isOwnProfile={isOwnProfile}
               supabaseUrl={supabaseUrl}
-              onCommentClick={scrollToComments}
             />
 
           </div>
@@ -181,7 +182,6 @@ export function ProfilePageClient({
               grid={teamGridDisplay}
               isOwnProfile={isOwnProfile}
               supabaseUrl={supabaseUrl}
-              onCommentClick={scrollToComments}
             />
           </div>
         )}

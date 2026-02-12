@@ -8,6 +8,7 @@ import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { UpcomingRaceCard } from './upcoming-race-card'
 import { SponsorCard } from './sponsor-card'
 import { FeaturedNewsCard } from './featured-news-card'
+import { StepperBar } from '@/components/stepper-bar'
 
 interface SpotlightProfile {
   id: string
@@ -158,18 +159,19 @@ export function SpotlightCarousel({
     return () => el.removeEventListener('scroll', onScroll)
   }, [cards.length])
 
-  function scrollToIndex(idx: number) {
+  function scrollToIndex(idx: number, instant?: boolean) {
     const el = scrollContainerRef.current
     const target = cardRefs.current[idx]
+    const behavior = instant ? 'auto' : 'smooth'
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+      target.scrollIntoView({ behavior, inline: 'start', block: 'nearest' })
       setActiveIndex(idx)
       return
     }
 
     if (!el) return
 
-    el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
+    el.scrollTo({ left: idx * el.clientWidth, behavior })
     setActiveIndex(idx)
   }
 
@@ -228,7 +230,7 @@ export function SpotlightCarousel({
     }
     if (card.type === 'poll') {
       return (
-        <div className="flex h-full w-full min-w-0">
+        <div className="flex h-full w-full min-w-0 flex-col overflow-hidden rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm">
           <PollCard
             poll={card.data}
             userResponse={undefined}
@@ -236,6 +238,7 @@ export function SpotlightCarousel({
             onVote={() => {}}
             showDiscussion={false}
             variant="dark"
+            className="min-h-0 flex-1 overflow-auto border-0 bg-transparent p-0 shadow-none backdrop-blur-none"
           />
         </div>
       )
@@ -280,25 +283,14 @@ export function SpotlightCarousel({
           </div>
         </div>
 
-        {/* Dots: mobile only */}
-        <div className="flex justify-center items-center gap-1.5 mt-3 lg:hidden">
-          {cards.map((_, idx) => (
-            <button
-              key={idx}
-              aria-label={`Go to card ${idx + 1}`}
-              className="rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1"
-              onClick={() => scrollToIndex(idx)}
-            >
-              <span
-                className={`block rounded-full transition-colors ${
-                  idx === activeIndex
-                    ? 'h-1.5 w-1.5 bg-gray-600'
-                    : 'h-1 w-1 bg-gray-400/60 hover:bg-gray-400/80'
-                }`}
-                aria-hidden
-              />
-            </button>
-          ))}
+        {/* Slider: mobile only (same as grid detail view stepper) */}
+        <div className="mt-3 w-full px-1 lg:hidden">
+          <StepperBar
+            currentIndex={activeIndex}
+            total={cards.length}
+            onSelectIndex={(index, options) => scrollToIndex(index, options?.isDragging)}
+            ariaLabel="Featured banner position"
+          />
         </div>
       </div>
 

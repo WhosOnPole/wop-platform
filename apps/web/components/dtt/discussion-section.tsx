@@ -7,6 +7,7 @@ import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { DiscussionReportButton } from '@/components/discussion/report-button'
+import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl } from '@/utils/avatar'
 
 interface User {
@@ -59,6 +60,13 @@ export function DiscussionSection({
   const [showReplyToComment, setShowReplyToComment] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState<Record<string, string>>({})
   const [loadingComments, setLoadingComments] = useState<Record<string, boolean>>({})
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUserId(session?.user?.id ?? null)
+    })
+  }, [supabase.auth])
 
   // Sync posts state and fetch comments when initialPosts changes
   useEffect(() => {
@@ -675,10 +683,29 @@ export function DiscussionSection({
                             >
                               Reply
                             </button>
-                            <DiscussionReportButton
-                              targetId={comment.id}
+                            <CommentActionsMenu
+                              commentId={comment.id}
+                              commentAuthorId={comment.user?.id ?? null}
+                              currentUserId={currentUserId}
                               targetType="comment"
-                              initialIsReported={userReports[comment.id] || false}
+                              variant={variant}
+                              initialContent={comment.content}
+                              onDeleted={(deletedId) => {
+                                setComments((prev) => ({
+                                  ...prev,
+                                  [post.id]: (prev[post.id] || []).filter(
+                                    (c) => c.id !== deletedId && c.parent_comment_id !== deletedId
+                                  ),
+                                }))
+                              }}
+                              onEdited={(editedId, newContent) => {
+                                setComments((prev) => ({
+                                  ...prev,
+                                  [post.id]: (prev[post.id] || []).map((c) =>
+                                    c.id === editedId ? { ...c, content: newContent } : c
+                                  ),
+                                }))
+                              }}
                             />
                           </div>
 
@@ -740,10 +767,31 @@ export function DiscussionSection({
                                         setUserLikes({ ...userLikes, [targetId]: isLiked })
                                       }}
                                     />
-                                    <DiscussionReportButton
-                                      targetId={reply.id}
+                                    <CommentActionsMenu
+                                      commentId={reply.id}
+                                      commentAuthorId={reply.user?.id ?? null}
+                                      currentUserId={currentUserId}
                                       targetType="comment"
-                                      initialIsReported={userReports[reply.id] || false}
+                                      variant={variant}
+                                      initialContent={reply.content}
+                                      onDeleted={(deletedId) => {
+                                        setComments((prev) => ({
+                                          ...prev,
+                                          [post.id]: (prev[post.id] || []).filter(
+                                            (c) =>
+                                              c.id !== deletedId &&
+                                              c.parent_comment_id !== deletedId
+                                          ),
+                                        }))
+                                      }}
+                                      onEdited={(editedId, newContent) => {
+                                        setComments((prev) => ({
+                                          ...prev,
+                                          [post.id]: (prev[post.id] || []).map((c) =>
+                                            c.id === editedId ? { ...c, content: newContent } : c
+                                          ),
+                                        }))
+                                      }}
                                     />
                                   </div>
                                 </div>

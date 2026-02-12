@@ -28,7 +28,7 @@ export default async function PitlanePage() {
       .order('start_date', { ascending: true }),
     supabase
       .from('drivers')
-      .select('id, name, headshot_url, image_url, nationality')
+      .select('id, name, headshot_url, image_url, nationality, racing_number')
       .eq('active', true)
       .order('name', { ascending: true }),
     supabase
@@ -61,21 +61,15 @@ export default async function PitlanePage() {
   
   const raceDayDateFormatted = formatShortDate(nextRace?.race_day_date || null)
   
-  // Build date display string: "Mar. 6 - City, Country"
+  // Build date display string: "Mar. 6 - Track Name"
   let dateDisplay = 'Date TBA'
-  if (raceDayDateFormatted) {
-    const locationParts = []
-    if (nextRace?.location) locationParts.push(nextRace.location)
-    if (nextRace?.country) locationParts.push(nextRace.country)
-    const locationStr = locationParts.length > 0 ? ` - ${locationParts.join(', ')}` : ''
-    dateDisplay = `${raceDayDateFormatted}${locationStr}`
-  } else if (nextRace?.start_date) {
-    const startDateFormatted = formatShortDate(nextRace.start_date)
-    const locationParts = []
-    if (nextRace?.location) locationParts.push(nextRace.location)
-    if (nextRace?.country) locationParts.push(nextRace.country)
-    const locationStr = locationParts.length > 0 ? ` - ${locationParts.join(', ')}` : ''
-    dateDisplay = `${startDateFormatted}${locationStr}`
+  const trackName = nextRace?.name || nextRace?.location || nextRace?.country
+  const startDateFormatted =
+    raceDayDateFormatted || (nextRace?.start_date ? formatShortDate(nextRace.start_date) : null)
+  if (startDateFormatted && trackName) {
+    dateDisplay = `${startDateFormatted} - ${trackName}`
+  } else if (startDateFormatted) {
+    dateDisplay = startDateFormatted
   }
   
   // Calculate counter - countdown to race day
@@ -121,8 +115,12 @@ export default async function PitlanePage() {
 
   return (
     <PitlaneSearchProvider>
+      <div className="mx-auto max-w-6xl pt-4 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-semibold text-white font-display">Pitlane</h1>
+        <h3 className="text-sm text-white/70 font-sans mb-6">Tap into the Grid. Stay ahead of the pack.</h3>
+      </div>
       <div className="mx-auto max-w-6xl mt-6">
-        {/* Upcoming race banner */}
+      {/* Upcoming race banner */}
       {nextRace ? (
         <div className="mb-5 relative mx-4 mb-8 sm:mx-6 lg:mx-8">
           <sup className="w-full text-left block text-xs text-[#838383]">Upcoming</sup>
@@ -295,12 +293,16 @@ function getCountryFlagPath(country?: string | null): string | null {
   
   // Map country to flag file name
   const flagMap: Record<string, string> = {
+    argentina: 'argentina',
+    argentine: 'argentina',
     australia: 'australia',
     austria: 'austria',
     belgium: 'belgium',
     brazil: 'brazil',
     canada: 'canada',
     china: 'china',
+    france: 'france',
+    germany: 'germany',
     hungary: 'hungary',
     italy: 'italy',
     japan: 'japan',

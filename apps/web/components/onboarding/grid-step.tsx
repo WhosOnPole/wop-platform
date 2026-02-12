@@ -3,11 +3,80 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { Save } from 'lucide-react'
+import { getTrackSlug } from '@/utils/storage-urls'
 import { GridEditCanvas, type GridEditCanvasRankItem } from '@/components/grids/grid-edit-canvas'
+import type { GridType } from '@/components/grids/grid-edit-canvas'
 
-interface OnboardingTeamsStepProps {
-  onComplete: () => void
-  onSkip: () => void
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MapRowFn = (row: any) => GridEditCanvasRankItem
+
+interface GridStepConfig {
+  type: GridType
+  table: string
+  select: string
+  hasActiveFilter?: boolean
+  mapRow: MapRowFn
+  title: string
+  description: string
+  blurbPlaceholder: string
+  emptyAlert: string
+  buttonLabel: string
+}
+
+const GRID_STEP_CONFIG: Record<GridType, GridStepConfig> = {
+  driver: {
+    type: 'driver',
+    table: 'drivers',
+    select: 'id, name, image_url, headshot_url',
+    hasActiveFilter: true,
+    mapRow: (d) => ({
+      id: d.id,
+      name: d.name,
+      image_url: d.image_url,
+      headshot_url: d.headshot_url ?? null,
+    }),
+    title: 'Select Your Top 10 Drivers',
+    description:
+      'Drag cards onto the grid to rank your favorites. Drag back to the row to remove. Your top pick is the large slot on the left.',
+    blurbPlaceholder: 'Say something about your driver picks...',
+    emptyAlert: 'Please add at least one driver to your grid',
+    buttonLabel: 'Continue',
+  },
+  team: {
+    type: 'team',
+    table: 'teams',
+    select: 'id, name, image_url',
+    hasActiveFilter: true,
+    mapRow: (t) => ({
+      id: t.id,
+      name: t.name,
+      image_url: t.image_url,
+    }),
+    title: 'Select Your Top 10 Teams',
+    description: 'Drag cards onto the grid to rank your favorites. Drag back to the row to remove.',
+    blurbPlaceholder: 'Say something about your team picks...',
+    emptyAlert: 'Please add at least one team to your grid',
+    buttonLabel: 'Continue',
+  },
+  track: {
+    type: 'track',
+    table: 'tracks',
+    select: 'id, name, image_url, location, country',
+    hasActiveFilter: false,
+    mapRow: (t) => ({
+      id: t.id,
+      name: t.name,
+      image_url: t.image_url,
+      location: t.location ?? null,
+      country: t.country ?? null,
+      track_slug: getTrackSlug(t.name),
+    }),
+    title: 'Select Your Top 10 Tracks',
+    description: 'Drag cards onto the grid to rank your favorites. Drag back to the row to remove.',
+    blurbPlaceholder: 'Say something about your track picks...',
+    emptyAlert: 'Please add at least one track to your grid',
+    buttonLabel: 'Complete Onboarding',
+  },
 }
 
 function placeholderItem(index: number): GridEditCanvasRankItem {
@@ -22,8 +91,15 @@ function padToTen(items: GridEditCanvasRankItem[]): GridEditCanvasRankItem[] {
   return out
 }
 
-export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepProps) {
+interface OnboardingGridStepProps {
+  type: GridType
+  onComplete: () => void
+  onSkip: () => void
+}
+
+export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridStepProps) {
   const supabase = createClientComponentClient()
+  const config = GRID_STEP_CONFIG[type]
   const [rankedList, setRankedList] = useState<GridEditCanvasRankItem[]>(() => padToTen([]))
   const [availableItems, setAvailableItems] = useState<GridEditCanvasRankItem[]>([])
   const [blurb, setBlurb] = useState('')
@@ -32,32 +108,29 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined
 
   useEffect(() => {
-    loadTeams()
-  }, [])
-
-  async function loadTeams() {
+    const cfg = GRID_STEP_CONFIG[type]
+    let cancelled = false
     setLoading(true)
-    try {
-      const { data: teams } = await supabase
-        .from('teams')
-        .select('id, name, image_url')
-        .eq('active', true)
-        .order('name')
-
-      if (teams) {
-        const catalog: GridEditCanvasRankItem[] = teams.map((t) => ({
-          id: t.id,
-          name: t.name,
-          image_url: t.image_url,
-        }))
-        setAvailableItems(catalog)
+    ;(async () => {
+      try {
+        let query = supabase.from(cfg.table).select(cfg.select).order('name')
+        if (cfg.hasActiveFilter) {
+          query = query.eq('active', true)
+        }
+        const { data: rows } = await query
+        if (!cancelled && rows) {
+          setAvailableItems(rows.map(cfg.mapRow))
+        }
+      } catch (error) {
+        if (!cancelled) console.error(`Error loading ${cfg.table}:`, error)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-    } catch (error) {
-      console.error('Error loading teams:', error)
-    } finally {
-      setLoading(false)
+    })()
+    return () => {
+      cancelled = true
     }
-  }
+  }, [type, supabase])
 
   const handleRankedListChange = useCallback((items: GridEditCanvasRankItem[]) => {
     setRankedList(items)
@@ -66,7 +139,7 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
   async function handleSave() {
     const realItems = rankedList.filter((i) => !i.is_placeholder)
     if (realItems.length === 0) {
-      alert('Please add at least one team to your grid')
+      alert(config.emptyAlert)
       return
     }
 
@@ -75,7 +148,10 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
       data: { session },
     } = await supabase.auth.getSession()
 
-    if (!session) return
+    if (!session) {
+      setIsSubmitting(false)
+      return
+    }
 
     const rankedItemIds = realItems.map((item) => ({ id: item.id, name: item.name }))
 
@@ -83,7 +159,7 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
       .from('grids')
       .select('id')
       .eq('user_id', session.user.id)
-      .eq('type', 'team')
+      .eq('type', config.type)
       .maybeSingle()
 
     let error
@@ -99,7 +175,7 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
     } else {
       const { error: insertError } = await supabase.from('grids').insert({
         user_id: session.user.id,
-        type: 'team',
+        type: config.type,
         ranked_items: rankedItemIds,
         blurb: blurb.trim() || null,
       })
@@ -128,15 +204,13 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Select Your Top 10 Teams</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Drag cards onto the grid to rank your favorites. Drag back to the row to remove.
-        </p>
+        <h2 className="text-2xl font-bold text-gray-900">{config.title}</h2>
+        <p className="mt-1 text-sm text-gray-600">{config.description}</p>
       </div>
 
       <div className="rounded-xl border border-gray-300 bg-gray-900 p-4 text-white">
         <GridEditCanvas
-          type="team"
+          type={config.type}
           rankedList={rankedList}
           onRankedListChange={handleRankedListChange}
           availableItems={availableItems}
@@ -149,16 +223,22 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
           Blurb (optional, max 140 characters)
         </label>
         <textarea
-          id="team-blurb"
-          name="team-blurb"
+          id={`${config.type}-blurb`}
+          name={`${config.type}-blurb`}
           value={blurb}
           onChange={(e) => {
             if (e.target.value.length <= 140) setBlurb(e.target.value)
           }}
           rows={2}
-          placeholder="Say something about your team picks..."
+          placeholder={config.blurbPlaceholder}
           autoComplete="off"
           data-form-type="other"
+          data-lpignore="true"
+          data-1p-ignore="true"
+          data-bwignore="true"
+          spellCheck={false}
+          role="textbox"
+          aria-label={`${config.type} grid blurb`}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-black shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
         />
         <p className="mt-1 text-xs text-gray-500">{blurb.length}/140 characters</p>
@@ -179,7 +259,7 @@ export function OnboardingTeamsStep({ onComplete, onSkip }: OnboardingTeamsStepP
           className="flex items-center space-x-2 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
-          <span>Continue</span>
+          <span>{config.buttonLabel}</span>
         </button>
       </div>
     </div>

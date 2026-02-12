@@ -4,6 +4,7 @@ import { QueryProvider } from '@/components/providers/query-provider'
 import { BotIDProviderWrapper } from '@/components/providers/botid-provider'
 import { AuthSessionProvider } from '@/components/providers/auth-session-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
+import { LoadingScreen } from '@/components/loading-screen'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -42,6 +43,7 @@ export default function RootLayout({
         <QueryProvider>
           <BotIDProviderWrapper>
             <AuthSessionProvider>
+              <LoadingScreen />
               <LayoutWrapper>{children}</LayoutWrapper>
             </AuthSessionProvider>
           </BotIDProviderWrapper>

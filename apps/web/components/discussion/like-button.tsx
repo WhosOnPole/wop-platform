@@ -102,7 +102,7 @@ export function LikeButton({
           setLikeCount(previousCount)
         }
         // Refresh count from database after trigger updates it
-        await refreshLikeCount()
+        await refreshLikeCount({ allowDecrease: true })
         const userIsLiked = await refreshUserLikeState(session.user.id)
         // Notify parent of state change based on refreshed state
         onLikeChange?.(targetId, !!userIsLiked)
@@ -129,7 +129,7 @@ export function LikeButton({
           // Unique constraint violation - already liked (shouldn't happen, but handle it)
           console.warn('Already liked (duplicate)', error)
           // Don't revert - user already liked it
-          await refreshLikeCount()
+          await refreshLikeCount({ allowDecrease: false })
           const userIsLiked = await refreshUserLikeState(session.user.id)
           onLikeChange?.(targetId, !!userIsLiked)
         } else {
@@ -138,8 +138,8 @@ export function LikeButton({
           setLikeCount(previousCount)
         }
       } else {
-        // Refresh count from database after trigger updates it
-        await refreshLikeCount()
+        // Refresh count from database after trigger updates it (don't allow decrease so we don't flicker to 0 if DB is briefly stale)
+        await refreshLikeCount({ allowDecrease: false })
         const userIsLiked = await refreshUserLikeState(session.user.id)
         // Notify parent of state change based on refreshed state
         onLikeChange?.(targetId, !!userIsLiked)
@@ -155,7 +155,8 @@ export function LikeButton({
     setIsLoading(false)
   }
 
-  async function refreshLikeCount() {
+  async function refreshLikeCount(options?: { allowDecrease?: boolean }) {
+    const allowDecrease = options?.allowDecrease !== false
     const tableName =
       targetType === 'post'
         ? 'posts'
@@ -171,7 +172,8 @@ export function LikeButton({
       .single()
 
     if (!error && data && data.like_count !== null && data.like_count !== undefined) {
-      setLikeCount(data.like_count || 0)
+      const dbCount = data.like_count || 0
+      setLikeCount((prev) => (allowDecrease ? dbCount : Math.max(prev, dbCount)))
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'like-button.tsx:refreshLikeCount:like_count',message:'refreshed like_count',data:{targetId,targetType,like_count:data.like_count},timestamp:Date.now()})}).catch(()=>{})
       // #endregion
@@ -188,7 +190,7 @@ export function LikeButton({
       .eq('target_type', targetType)
 
     if (!countError && typeof count === 'number') {
-      setLikeCount(count)
+      setLikeCount((prev) => (allowDecrease ? count : Math.max(prev, count)))
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'like-button.tsx:refreshLikeCount:fallback',message:'fallback votes count used',data:{targetId,targetType,count},timestamp:Date.now()})}).catch(()=>{})
       // #endregion

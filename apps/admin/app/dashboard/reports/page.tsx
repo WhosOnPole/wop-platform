@@ -32,10 +32,13 @@ export default async function ReportsPage() {
   // Collect target IDs by type to fetch previews
   const postIds = pending.filter((r) => r.target_type === 'post').map((r) => r.target_id)
   const commentIds = pending.filter((r) => r.target_type === 'comment').map((r) => r.target_id)
+  const gridSlotCommentIds = pending
+    .filter((r) => r.target_type === 'grid_slot_comment')
+    .map((r) => r.target_id)
   const gridIds = pending.filter((r) => r.target_type === 'grid').map((r) => r.target_id)
   const profileIds = pending.filter((r) => r.target_type === 'profile').map((r) => r.target_id)
 
-  const [postsRes, commentsRes, gridsRes, profilesRes] = await Promise.all([
+  const [postsRes, commentsRes, gridSlotCommentsRes, gridsRes, profilesRes] = await Promise.all([
     postIds.length
       ? supabase
           .from('posts')
@@ -67,6 +70,20 @@ export default async function ReportsPage() {
           )
           .in('id', commentIds)
       : { data: [] },
+    gridSlotCommentIds.length
+      ? supabase
+          .from('grid_slot_comments')
+          .select(
+            `
+            id,
+            content,
+            user:profiles!user_id (
+              username
+            )
+          `
+          )
+          .in('id', gridSlotCommentIds)
+      : { data: [] },
     gridIds.length
       ? supabase
           .from('grids')
@@ -91,6 +108,9 @@ export default async function ReportsPage() {
 
   const postMap = Object.fromEntries((postsRes.data || []).map((p) => [p.id, p]))
   const commentMap = Object.fromEntries((commentsRes.data || []).map((c) => [c.id, c]))
+  const gridSlotCommentMap = Object.fromEntries(
+    (gridSlotCommentsRes.data || []).map((c) => [c.id, c])
+  )
   const gridMap = Object.fromEntries((gridsRes.data || []).map((g) => [g.id, g]))
   const profileMap = Object.fromEntries((profilesRes.data || []).map((p) => [p.id, p]))
 
@@ -186,6 +206,14 @@ export default async function ReportsPage() {
                 : null,
           }
         }
+      } else if (report.target_type === 'grid_slot_comment') {
+        const c = gridSlotCommentMap[report.target_id]
+        if (c)
+          targetPreview = {
+            type: 'grid_slot_comment',
+            content: c.content,
+            username: (c as any).user?.username,
+          }
       } else if (report.target_type === 'grid') {
         const g = gridMap[report.target_id]
         if (g) targetPreview = { type: 'grid', content: g.blurb, username: g.user?.username }

@@ -8,7 +8,7 @@ interface Report {
   id: number
   reporter_id: string
   target_id: string
-  target_type: 'post' | 'grid' | 'profile' | 'comment'
+  target_type: 'post' | 'grid' | 'profile' | 'comment' | 'grid_slot_comment'
   reason: string
   status: string
   created_at: string
@@ -86,6 +86,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
   }
 
   function getTargetTypeLabel(type: string) {
+    if (type === 'grid_slot_comment') return 'Grid slot comment'
     return type.charAt(0).toUpperCase() + type.slice(1)
   }
 
@@ -130,7 +131,11 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                 <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">
-                      Reported {report.targetPreview.type === 'comment' ? 'Comment' : 'Content'}
+                      Reported{' '}
+                      {report.targetPreview.type === 'comment' ||
+                      report.targetPreview.type === 'grid_slot_comment'
+                        ? 'Comment'
+                        : 'Content'}
                     </span>
                     {report.targetPreview.username && (
                       <span className="text-xs text-gray-500">by {report.targetPreview.username}</span>

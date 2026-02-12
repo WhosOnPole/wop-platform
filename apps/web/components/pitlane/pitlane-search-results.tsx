@@ -13,6 +13,7 @@ interface Driver {
   headshot_url?: string | null
   image_url?: string | null
   nationality?: string | null
+  racing_number?: number | null
 }
 
 interface Team {
@@ -152,6 +153,8 @@ export function PitlaneSearchResults({
                   {filteredDrivers.map((driver) => {
                     const slug = driver.name.toLowerCase().replace(/\s+/g, '-')
                     const flag = getNationalityFlag(driver.nationality)
+                    const parts = driver.name.split(' ')
+                    const driverCode = (parts[parts.length - 1] || driver.name).substring(0, 3).toUpperCase()
                     return (
                       <Link
                         key={driver.id}
@@ -167,6 +170,33 @@ export function PitlaneSearchResults({
                             sizes="240px"
                             darkenBackgroundOnly
                           />
+                          <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
+                          {driver.racing_number != null && (
+                            <div className="absolute right-2 top-2 z-30">
+                              <span
+                                className="font-bold leading-none tabular-nums font-display"
+                                style={{ color: '#25B4B1', fontSize: 'clamp(14px, 4vw, 18px)' }}
+                              >
+                                {driver.racing_number}
+                              </span>
+                            </div>
+                          )}
+                          {driverCode && (
+                            <div className="absolute left-1 top-4 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
+                              <span
+                                className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                                style={{
+                                  fontSize: '12px',
+                                  fontFamily: 'Inter, sans-serif',
+                                  letterSpacing: '0',
+                                  transform: 'rotate(-90deg)',
+                                  transformOrigin: 'center center',
+                                }}
+                              >
+                                {driverCode}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="mt-2 flex items-start gap-2">
                           {flag ? (
@@ -466,6 +496,7 @@ function getNationalityFlag(nationality?: string | null) {
     italian: '🇮🇹',
     american: '🇺🇸',
     argentine: '🇦🇷',
+    argentinian: '🇦🇷',
     brazilian: '🇧🇷',
     thai: '🇹🇭',
     danish: '🇩🇰',
@@ -485,12 +516,16 @@ function getCountryFlagPath(country?: string | null): string | null {
   
   // Map country to flag file name
   const flagMap: Record<string, string> = {
+    argentina: 'argentina',
+    argentine: 'argentina',
     australia: 'australia',
     austria: 'austria',
     belgium: 'belgium',
     brazil: 'brazil',
     canada: 'canada',
     china: 'china',
+    france: 'france',
+    germany: 'germany',
     hungary: 'hungary',
     italy: 'italy',
     japan: 'japan',

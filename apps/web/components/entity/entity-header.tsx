@@ -49,12 +49,16 @@ function getCountryFlagPath(country?: string | null): string | null {
   
   // Map country to flag file name
   const flagMap: Record<string, string> = {
+    argentina: 'argentina',
+    argentine: 'argentina',
     australia: 'australia',
     austria: 'austria',
     belgium: 'belgium',
     brazil: 'brazil',
     canada: 'canada',
     china: 'china',
+    france: 'france',
+    germany: 'germany',
     hungary: 'hungary',
     italy: 'italy',
     japan: 'japan',
@@ -106,11 +110,16 @@ function getNationalityFlagPath(nationality?: string | null): string | null {
     canadian: 'canada',
     japanese: 'japan',
     chinese: 'china',
-    german: 'uk', // No German flag, fallback to UK
-    french: 'uk', // No French flag, fallback to UK
+    german: 'germany',
+    germany: 'germany',
+    french: 'france',
+    france: 'france',
     italian: 'italy',
     american: 'usa',
-    argentine: 'uk', // No Argentine flag, fallback to UK
+    argentine: 'argentina',
+    argentinian: 'argentina',
+    argentina: 'argentina',
+    argentine: 'argentina',
     brazilian: 'brazil',
     thai: 'uk', // No Thai flag, fallback to UK
     danish: 'uk', // No Danish flag, fallback to UK

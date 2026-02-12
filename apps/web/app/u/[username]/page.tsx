@@ -90,13 +90,19 @@ export default async function UserProfilePage({ params }: PageProps) {
     .eq('user_id', profile.id)
     .order('created_at', { ascending: false })
 
-  // Fetch like counts and user's like status for each grid
+  // Fetch like counts, comment counts, and user's like status for each grid
   const gridsWithLikes = await Promise.all(
     (grids || []).map(async (grid) => {
-      const { count: likeCount } = await supabase
-        .from('grid_likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('grid_id', grid.id)
+      const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
+        supabase
+          .from('grid_likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('grid_id', grid.id),
+        supabase
+          .from('grid_slot_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('grid_id', grid.id),
+      ])
 
       let isLiked = false
       if (session && !isOwnProfile) {
@@ -113,6 +119,7 @@ export default async function UserProfilePage({ params }: PageProps) {
       return {
         ...grid,
         like_count: likeCount || 0,
+        comment_count: commentCount ?? 0,
         is_liked: isLiked,
       }
     })
@@ -154,6 +161,7 @@ export default async function UserProfilePage({ params }: PageProps) {
         target_id: post.parent_page_id,
         target_type: post.parent_page_type,
         target_name: targetName,
+        post_id: post.id,
       })
     }
   }
@@ -187,6 +195,7 @@ export default async function UserProfilePage({ params }: PageProps) {
         targetName = data?.username
       }
 
+      const parentPost = comment.post as { id?: string } | null
       activities.push({
         id: comment.id,
         type: 'comment',
@@ -195,6 +204,7 @@ export default async function UserProfilePage({ params }: PageProps) {
         target_id: parentPageId,
         target_type: parentPageType,
         target_name: targetName,
+        post_id: parentPost?.id ?? undefined,
       })
     }
   }
@@ -304,7 +314,7 @@ export default async function UserProfilePage({ params }: PageProps) {
           } else if (grid.type === 'track') {
             const { data: track } = await supabase
               .from('tracks')
-              .select('id, name, image_url, location, country')
+              .select('id, name, image_url, location, country, circuit_ref')
               .eq('id', item.id)
               .maybeSingle()
             return {
@@ -312,6 +322,7 @@ export default async function UserProfilePage({ params }: PageProps) {
               image_url: track?.image_url || null,
               location: track?.location || null,
               country: track?.country || null,
+              circuit_ref: track?.circuit_ref || null,
             }
           } else if (grid.type === 'team') {
             // Teams already have name, and we'll use getTeamIconUrl in the component

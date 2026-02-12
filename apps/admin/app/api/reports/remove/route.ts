@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-type TargetType = 'post' | 'comment' | 'grid' | 'profile'
+type TargetType = 'post' | 'comment' | 'grid' | 'profile' | 'grid_slot_comment'
 
 interface RemovePayload {
   reportId: number
@@ -37,6 +37,12 @@ export async function POST(request: Request) {
       if (error) throw error
     } else if (targetType === 'comment') {
       const { error } = await supabase.from('comments').delete().eq('id', targetId)
+      if (error) throw error
+    } else if (targetType === 'grid_slot_comment') {
+      const { error } = await supabase
+        .from('grid_slot_comments')
+        .delete()
+        .eq('id', targetId)
       if (error) throw error
     } else if (targetType === 'grid') {
       const { error } = await supabase.from('grids').delete().eq('id', targetId)
