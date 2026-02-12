@@ -24,29 +24,58 @@ function isInvalidRefreshError(err: unknown): boolean {
   )
 }
 
+function isRateLimitError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const status = (err as { status?: number }).status
+  const msg = (err as { message?: string }).message ?? ''
+  return status === 429 || msg.includes('rate limit') || msg.includes('over_request_rate_limit')
+}
+
+const CIRCUIT_BREAKER_MS = 5 * 60 * 1000 // 5 min - stop hitting /token after invalid refresh
+const RATE_LIMIT_BACKOFF_MS = 30_000 // 30s minimum wait after 429 before retry
+let circuitBreakerUntil = 0
+let last429At = 0
+
 /**
- * Dedupes getSession() and adds a circuit breaker: after the first 400/429,
- * all getSession() calls return null immediately without hitting /token.
+ * Dedupes getSession(), adds circuit breaker for 400/429, and exponential backoff for 429.
+ * - After 400 (invalid refresh): block all /token for 5 min, clear storage.
+ * - After 429: block for 30s minimum, then allow one retry with backoff.
  */
 function dedupeAndCircuitBreakGetSession(client: SupabaseClient): void {
   const auth = client.auth as { getSession: () => Promise<{ data: { session: unknown }; error: unknown }> }
   let inFlight: Promise<{ data: { session: unknown }; error: unknown }> | null = null
   const original = auth.getSession.bind(auth)
+
   auth.getSession = function getSession() {
-    if (sessionInvalidated) {
+    const now = Date.now()
+    if (sessionInvalidated || now < circuitBreakerUntil) {
       return Promise.resolve({
         data: { session: null },
         error: { message: 'Session invalidated (refresh failed)', status: 400 },
       })
     }
+    if (now < last429At + RATE_LIMIT_BACKOFF_MS) {
+      return Promise.resolve({
+        data: { session: null },
+        error: { message: 'Rate limited - backing off', status: 429 },
+      })
+    }
     if (inFlight) return inFlight
+
     inFlight = original()
-      .then((result) => {
+      .then(async (result) => {
         if (result.error && isInvalidRefreshError(result.error)) {
-          sessionInvalidated = true
+          if (isRateLimitError(result.error)) {
+            last429At = Date.now()
+            circuitBreakerUntil = Date.now() + RATE_LIMIT_BACKOFF_MS
+          } else {
+            sessionInvalidated = true
+            circuitBreakerUntil = Date.now() + CIRCUIT_BREAKER_MS
+          }
           clearSupabaseAuthStorage()
         } else if (result.data?.session) {
           sessionInvalidated = false
+          circuitBreakerUntil = 0
         }
         return result
       })
@@ -71,11 +100,12 @@ export function createClientComponentClient() {
     })
   }
   if (!clientInstance) {
-    clientInstance = createSupabaseClient({
+    const client = createSupabaseClient({
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
       supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     })
-    dedupeAndCircuitBreakGetSession(clientInstance)
+    clientInstance = client
+    dedupeAndCircuitBreakGetSession(client)
   }
-  return clientInstance
+  return clientInstance as SupabaseClient
 }

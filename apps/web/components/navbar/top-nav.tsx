@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { useAuthSession } from '@/components/providers/auth-session-provider'
 import { getAvatarUrl } from '@/utils/avatar'
 import { Logo } from '@/components/ui/logo'
 import { CreateMenu } from '@/components/create/create-menu'
@@ -14,7 +15,6 @@ import { PostModal } from '@/components/create/modals/post-modal'
 import { NotificationBell } from '@/components/navbar/notification-bell'
 import { GlobalSearchModal } from '@/components/search/global-search-modal'
 import { PlusCircle, Settings, LogOut, Search } from 'lucide-react'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface Profile {
   id: string
@@ -24,9 +24,9 @@ interface Profile {
 
 export function TopNav() {
   const supabase = createClientComponentClient()
+  const { user } = useAuthSession()
   const router = useRouter()
   const pathname = usePathname()
-  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -35,52 +35,21 @@ export function TopNav() {
   const [hasScrolled, setHasScrolled] = useState(false)
 
   useEffect(() => {
+    if (!user) {
+      setProfile(null)
+      return
+    }
     let isMounted = true
-
-    async function loadUser() {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        if (!session) {
-          if (isMounted) {
-            setUser(null)
-            setProfile(null)
-          }
-          return
-        }
-
-        if (isMounted) setUser(session.user)
-
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('id, username, profile_image_url')
-          .eq('id', session.user.id)
-          .single()
-
+    supabase
+      .from('profiles')
+      .select('id, username, profile_image_url')
+      .eq('id', user.id)
+      .single()
+      .then(({ data: profileData }) => {
         if (isMounted && profileData) setProfile(profileData)
-      } catch (error) {
-        console.error('Error loading user in top nav:', error)
-      }
-    }
-
-    loadUser()
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setUser(null)
-        setProfile(null)
-        return
-      }
-      setUser(session.user)
-    })
-
-    return () => {
-      isMounted = false
-      data.subscription.unsubscribe()
-    }
-  }, [supabase])
+      })
+    return () => { isMounted = false }
+  }, [user, supabase])
 
   useEffect(() => {
     if (!isMenuOpen) return

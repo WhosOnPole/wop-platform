@@ -17,7 +17,7 @@ export function ProfileTabs({ activeTab, onTabChange, teamBackground }: ProfileT
   ]
 
   return (
-    <div className="sticky top-[14rem] z-30 bg-black transition-colors duration-300 md:top-[16rem] px-4 pt-4">
+    <div className="z-30 bg-black transition-colors duration-300 px-4 pt-4">
       <div className="flex items-center justify-between w-full rounded-full overflow-hidden">
         <div className="flex w-full">
           {tabs.map((tab, index) => (

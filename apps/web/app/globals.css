@@ -163,3 +163,12 @@ html:-ms-fullscreen {
 .animate-slot-border-rotate {
   animation: slot-border-rotate 8s linear infinite;
 }
+
+/* Grid rank number: fade in place when changing slot */
+@keyframes rankNumberFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-rank-number-fade {
+  animation: rankNumberFade 0.2s ease-out forwards;
+}

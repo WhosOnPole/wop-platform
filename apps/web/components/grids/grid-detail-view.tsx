@@ -75,6 +75,87 @@ const VERTICAL_LABEL_SRC: Record<GridType, string> = {
   team: '/images/teams.svg',
 }
 
+function GridStepperBar({
+  currentIndex,
+  total,
+  onSelectIndex,
+  ariaLabel = 'Grid position',
+}: {
+  currentIndex: number
+  total: number
+  onSelectIndex: (index: number) => void
+  ariaLabel?: string
+}) {
+  const touchStartX = useRef<number>(0)
+  const SWIPE_THRESHOLD = 40
+
+  if (total <= 0) return null
+  const segmentWidth = 100 / total
+  const leftPercent = currentIndex * segmentWidth
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      onSelectIndex(Math.max(0, currentIndex - 1))
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      onSelectIndex(Math.min(total - 1, currentIndex + 1))
+    }
+  }
+
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const index = Math.min(total - 1, Math.max(0, Math.floor((x / rect.width) * total)))
+    onSelectIndex(index)
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+    e.stopPropagation()
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const endX = e.changedTouches[0].clientX
+    const deltaX = endX - touchStartX.current
+    if (deltaX > SWIPE_THRESHOLD) {
+      e.stopPropagation()
+      onSelectIndex(Math.max(0, currentIndex - 1))
+    } else if (deltaX < -SWIPE_THRESHOLD) {
+      e.stopPropagation()
+      onSelectIndex(Math.min(total - 1, currentIndex + 1))
+    }
+  }
+
+  return (
+    <div
+      role="slider"
+      aria-valuemin={0}
+      aria-valuemax={total - 1}
+      aria-valuenow={currentIndex}
+      aria-label={ariaLabel}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="w-full relative h-2 flex items-center cursor-pointer touch-pan-y"
+      style={{ touchAction: 'pan-y' }}
+    >
+      <div className="w-full h-0.5 rounded-full bg-white/30 pointer-events-none" aria-hidden />
+      <div
+        className="absolute top-1/2 -translate-y-1/2 h-2 rounded-sm bg-white/80 transition-[left] duration-200 ease-out pointer-events-none"
+        style={{
+          width: `${segmentWidth}%`,
+          left: `${leftPercent}%`,
+        }}
+        aria-hidden
+      />
+    </div>
+  )
+}
+
 function OwnProfileBlurbBlock({
   owner,
   gridId,
@@ -87,6 +168,7 @@ function OwnProfileBlurbBlock({
   setIsEditingOwnBlurb,
   ownBlurbSaving,
   setOwnBlurbSaving,
+  readOnly = false,
 }: {
   owner: { username: string; profile_image_url: string | null }
   gridId: string
@@ -99,6 +181,7 @@ function OwnProfileBlurbBlock({
   setIsEditingOwnBlurb: (v: boolean) => void
   ownBlurbSaving: boolean
   setOwnBlurbSaving: (v: boolean) => void
+  readOnly?: boolean
 }) {
   const supabase = createClientComponentClient()
   const [draft, setDraft] = useState(ownBlurbDisplay)
@@ -126,6 +209,24 @@ function OwnProfileBlurbBlock({
 
   const hasBlurb = ownBlurbDisplay.trim().length > 0
   const showInput = !hasBlurb || isEditingOwnBlurb
+
+  if (readOnly) {
+    return (
+      <div className="mb-6 flex items-start gap-3">
+        <Image
+          src={getAvatarUrl(owner.profile_image_url)}
+          alt={owner.username}
+          width={48}
+          height={48}
+          className="h-12 w-12 shrink-0 rounded-full object-cover"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-white">{owner.username}</p>
+          <p className="mt-1 text-sm text-white/80 leading-snug">{ownBlurbDisplay}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mb-6 flex items-start gap-3">
@@ -205,7 +306,7 @@ export function GridDetailView({
   const isPlaceholderSelected = Boolean(selectedItem && selectedItem.is_placeholder)
   const doesHaveBlurb = Boolean(currentSlotBlurbFromData.trim().length > 0)
   const isBlurbEditable = mode === 'edit' && (Boolean(onBlurbChange) || Boolean(onSlotBlurbChange))
-  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView) || (isOwnProfile && mode === 'view')
+  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView)
   const isBlurbCollapsible = mode === 'view' && doesHaveBlurb && !isThirdPartyView
   const [isBlurbOpen, setIsBlurbOpen] = useState(true)
   const [ownBlurbLocal, setOwnBlurbLocal] = useState<string | null>(null)
@@ -282,36 +383,35 @@ export function GridDetailView({
     }
   }, [mode])
 
-  // Mobile: sync selectedIndex from scroll position
+  // Mobile: sync selectedIndex from scroll position so the rank number stays accurate on swipe
   useEffect(() => {
     const el = mobileScrollRef.current
     if (!el || mode !== 'view') return
-    function onScroll() {
+    function syncIndexFromScroll() {
       const node = mobileScrollRef.current
       if (!node) return
       const width = node.clientWidth
       if (!width) return
       const idx = Math.round(node.scrollLeft / width)
-      setSelectedIndex((i) => {
-        const next = Math.min(Math.max(idx, 0), Math.max(0, items.length - 1))
-        return next
-      })
+      const next = Math.min(Math.max(idx, 0), Math.max(0, items.length - 1))
+      setSelectedIndex((i) => (i === next ? i : next))
     }
-    el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
+    el.addEventListener('scroll', syncIndexFromScroll, { passive: true })
+    el.addEventListener('scrollend', syncIndexFromScroll)
+    // Sync once after layout so the number matches initial scroll position
+    const raf = requestAnimationFrame(() => syncIndexFromScroll())
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('scroll', syncIndexFromScroll)
+      el.removeEventListener('scrollend', syncIndexFromScroll)
+    }
   }, [mode, items.length])
 
   function scrollToIndex(idx: number) {
-    const target = slideRefs.current[idx]
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
-      setSelectedIndex(idx)
-      return
-    }
+    setSelectedIndex(idx)
     const el = mobileScrollRef.current
     if (el) {
       el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-      setSelectedIndex(idx)
     }
   }
 
@@ -330,15 +430,15 @@ export function GridDetailView({
       return (
         <div
           className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
-          style={{ minHeight: ghost ? 300 : 400 }}
+          style={{ minHeight: ghost ? 300 :352 }}
         >
           <div
             className="flex-shrink-0 transition-all duration-300"
             style={{
               width: ghost ? 'min(120vw,300px)' : size,
               height: ghost ? 'min(120vw,300px)' : size,
-              minWidth: ghost ? 80 : 400,
-              minHeight: ghost ? 80 : 400,
+              minWidth: ghost ? 80 :352,
+              minHeight: ghost ? 80 :352,
             }}
           >
             <DriverHeroBodyMedia
@@ -470,7 +570,8 @@ export function GridDetailView({
                 <div className="flex-1 min-w-0" />
                 <div className="flex shrink-0 items-start self-stretch">
                   <span
-                    className="font-bold font-display text-white"
+                    key={selectedIndex}
+                    className="font-bold font-display text-white animate-rank-number-fade"
                     style={{ fontSize: 'clamp(4rem, 13vw, 7rem)', lineHeight: 1 }}
                     aria-label={`Rank ${selectedIndex + 1} on this grid`}
                   >
@@ -485,7 +586,11 @@ export function GridDetailView({
               <div className="mb-6 flex items-center justify-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setSelectedIndex((i) => Math.max(0, i - 1))}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setSelectedIndex((i) => Math.max(0, i - 1))
+                    ;(e.currentTarget as HTMLButtonElement).blur()
+                  }}
                   disabled={selectedIndex === 0}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                   aria-label={`Previous ${type}`}
@@ -530,7 +635,11 @@ export function GridDetailView({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedIndex((i) => Math.min(items.length - 1, i + 1))}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setSelectedIndex((i) => Math.min(items.length - 1, i + 1))
+                    ;(e.currentTarget as HTMLButtonElement).blur()
+                  }}
                   disabled={selectedIndex >= items.length - 1}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                   aria-label={`Next ${type}`}
@@ -558,7 +667,7 @@ export function GridDetailView({
                 </div>
               </div>
             )}
-            {isOwnProfile && (
+            {isOwnProfile && doesHaveBlurb && (
               <OwnProfileBlurbBlock
                 owner={owner}
                 gridId={grid.id}
@@ -573,6 +682,7 @@ export function GridDetailView({
                 setIsEditingOwnBlurb={setIsEditingOwnBlurb}
                 ownBlurbSaving={ownBlurbSaving}
                 setOwnBlurbSaving={setOwnBlurbSaving}
+                readOnly
               />
             )}
             {shouldShowBlurbPanel && <hr className="mb-6 border-white/20" />}
@@ -582,7 +692,7 @@ export function GridDetailView({
 
         {/* Mobile view: swipable horizontal slideshow; static background + SVG; arrows with name in each slide */}
         <div className="lg:hidden flex flex-col min-h-screen relative">
-          <div className="px-4 pt-16 pb-2 shrink-0 relative z-10">
+          <div className="px-4 pt-20 shrink-0 relative z-10">
             <div className="flex items-start justify-between gap-4">
               <h1 className="text-3xl font-serif text-white font-normal font-display min-w-0 capitalize">
                 {owner.username}&apos;s <br /> Grid
@@ -622,7 +732,7 @@ export function GridDetailView({
                 <div className="absolute inset-0 bg-black/30" />
               </>
             )}
-            <div className="absolute left-0 bottom-4 flex items-end pl-2 w-12">
+            <div className="absolute left-0 top-[16vh] flex items-end pl-2 w-12">
               <Image
                 src={VERTICAL_LABEL_SRC[type]}
                 alt=""
@@ -632,6 +742,21 @@ export function GridDetailView({
                 style={{ width: 120, height: 350 }}
               />
             </div>
+            {/* Static black for bottom half of card - does not move with scroll */}
+            <div className="absolute left-0 right-0 bottom-0 top-[60vh] bg-black z-0" />
+          </div>
+          {/* Rank number: fixed in place, fades to next value (does not slide) */}
+          <div
+            className="fixed right-8 top-52 z-10 pointer-events-none flex items-end justify-end px-4 opacity-65"
+            style={{ fontSize: '10rem', lineHeight: 1 }}
+            aria-label={`Rank ${selectedIndex + 1} on this grid`}
+          >
+            <span
+              key={selectedIndex}
+              className="font-bold font-display text-white animate-rank-number-fade"
+            >
+              {selectedIndex + 1}
+            </span>
           </div>
           <div
             ref={mobileScrollRef}
@@ -657,78 +782,53 @@ export function GridDetailView({
                     }}
                     className="w-full min-w-full flex-shrink-0 snap-start flex flex-col overflow-y-auto"
                   >
-                    <div className="relative flex flex-col min-h-[45vh] flex-shrink-0 bg-transparent">
-                      <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 pt-4 pb-2">
-                        <div className="relative flex w-full gap-4 items-end min-h-0 flex-1">
-                          <div className="flex-1 min-w-0" />
-                          <div className="flex shrink-0 items-start self-stretch">
-                            <span
-                              className="font-bold font-display text-white"
-                              style={{ fontSize: 'clamp(4rem, 13vw, 7rem)', lineHeight: 1 }}
-                              aria-label={`Rank ${slideRankIndex} on this grid`}
-                            >
-                              {slideRankIndex}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="relative z-10 flex items-end justify-center pb-2">
+                    <div className="relative flex flex-col h-[35vh] flex-shrink-0 bg-transparent">
+                      
+                      <div className="relative z-10 flex items-end justify-center">
                         {renderHeroSlot(slideItem ?? undefined, false)}
                       </div>
                     </div>
-                    <div className="px-4 py-4 bg-black flex-1">
-                      <div className="mb-6 flex items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => scrollToIndex(Math.max(0, idx - 1))}
-                          disabled={idx === 0}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          aria-label={`Previous ${type}`}
-                        >
-                          <ChevronLeft className="h-6 w-6" />
-                        </button>
-                        <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
-                          <h2 className="text-2xl font-serif text-white font-normal font-display">
-                            {isPlaceholder
-                              ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
-                              : (slideItem?.name ?? '')}
-                          </h2>
-                          {(type === 'driver' && !isPlaceholder && (slideItem as DriverRankItem)?.nationality) ||
-                          (type === 'track' && !isPlaceholder && (slideItem as TrackRankItem)?.country) ? (
-                            <div className="mt-1 flex items-center justify-center gap-2">
-                              {type === 'driver' && !isPlaceholder && (slideItem as DriverRankItem)?.nationality && (
-                                <>
-                                  <Image
-                                    src={getNationalityFlagPath((slideItem as DriverRankItem).nationality) ?? ''}
-                                    alt=""
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full object-cover"
-                                  />
-                                  <span className="text-white/90 text-sm">
-                                    {(slideItem as DriverRankItem).nationality}
-                                  </span>
-                                </>
-                              )}
-                              {type === 'track' && !isPlaceholder && (slideItem as TrackRankItem)?.country && (
+                    <div className="mt-16 bg-transparent flex-1">
+                      <div className="mb-6 flex flex-col items-center justify-center text-center">
+                        <h2 className="text-2xl font-serif text-white font-normal font-display">
+                          {isPlaceholder
+                            ? `Select a ${type === 'driver' ? 'driver' : type === 'team' ? 'team' : 'track'}`
+                            : (slideItem?.name ?? '')}
+                        </h2>
+                        {(type === 'driver' && !isPlaceholder && (slideItem as DriverRankItem)?.nationality) ||
+                        (type === 'track' && !isPlaceholder && (slideItem as TrackRankItem)?.country) ? (
+                          <div className="mt-1 flex items-center justify-center gap-2">
+                            {type === 'driver' && !isPlaceholder && (slideItem as DriverRankItem)?.nationality && (
+                              <>
+                                <Image
+                                  src={getNationalityFlagPath((slideItem as DriverRankItem).nationality) ?? ''}
+                                  alt=""
+                                  width={24}
+                                  height={24}
+                                  className="rounded-full object-cover"
+                                />
                                 <span className="text-white/90 text-sm">
-                                  {(slideItem as TrackRankItem).location &&
-                                    `${(slideItem as TrackRankItem).location}, `}
-                                  {(slideItem as TrackRankItem).country}
+                                  {(slideItem as DriverRankItem).nationality}
                                 </span>
-                              )}
-                            </div>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => scrollToIndex(Math.min(items.length - 1, idx + 1))}
-                          disabled={idx >= items.length - 1}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          aria-label={`Next ${type}`}
-                        >
-                          <ChevronRight className="h-6 w-6" />
-                        </button>
+                              </>
+                            )}
+                            {type === 'track' && !isPlaceholder && (slideItem as TrackRankItem)?.country && (
+                              <span className="text-white/90 text-sm">
+                                {(slideItem as TrackRankItem).location &&
+                                  `${(slideItem as TrackRankItem).location}, `}
+                                {(slideItem as TrackRankItem).country}
+                              </span>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="px-4 py-3">
+                        <GridStepperBar
+                          currentIndex={selectedIndex}
+                          total={items.length}
+                          onSelectIndex={(i) => scrollToIndex(i)}
+                          ariaLabel={`Grid position ${selectedIndex + 1} of ${items.length}`}
+                        />
                       </div>
                       {isThirdPartyView && slideHasBlurb && (
                         <div className="mb-6 flex items-start gap-3">
@@ -749,7 +849,7 @@ export function GridDetailView({
                           </div>
                         </div>
                       )}
-                      {isOwnProfile && (
+                      {isOwnProfile && slideHasBlurb && (
                         <OwnProfileBlurbBlock
                           owner={owner}
                           gridId={grid.id}
@@ -766,9 +866,10 @@ export function GridDetailView({
                           setIsEditingOwnBlurb={setIsEditingOwnBlurb}
                           ownBlurbSaving={ownBlurbSaving}
                           setOwnBlurbSaving={setOwnBlurbSaving}
+                          readOnly
                         />
                       )}
-                      {(slideHasBlurb || isOwnProfile) && <hr className="mb-6 border-white/20" />}
+                      {slideHasBlurb && <hr className="mb-6 border-white/20" />}
                       <GridSlotCommentSection gridId={grid.id} rankIndex={slideRankIndex} />
                     </div>
                   </div>
@@ -868,7 +969,8 @@ export function GridDetailView({
               <div className="flex-1 min-w-0" />
               <div className="flex shrink-0 items-start self-stretch">
                 <span
-                  className="font-bold font-display text-white"
+                  key={selectedIndex}
+                  className="font-bold font-display text-white animate-rank-number-fade"
                   style={{ fontSize: 'clamp(4rem, 13vw, 7rem)', lineHeight: 1 }}
                   aria-label={`Rank ${selectedIndex + 1} on this grid`}
                 >
@@ -895,17 +997,8 @@ export function GridDetailView({
               activeSlotIndex={selectedIndex}
             />
             {items.length > 0 && selectedItem && (
-              <div className="mt-8 mb-6 flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedIndex((i) => Math.max(0, i - 1))}
-                  disabled={selectedIndex === 0}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  aria-label={`Previous ${type}`}
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
+              <div className="mt-8 mb-6">
+                <div className="flex flex-col items-center justify-center text-center mb-4">
                   <h2
                     key={selectedIndex}
                     className="text-2xl font-serif text-white font-normal font-display transition-opacity duration-200"
@@ -941,15 +1034,12 @@ export function GridDetailView({
                     </div>
                   ) : null}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedIndex((i) => Math.min(items.length - 1, i + 1))}
-                  disabled={selectedIndex >= items.length - 1}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                  aria-label={`Next ${type}`}
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
+                <GridStepperBar
+                  currentIndex={selectedIndex}
+                  total={items.length}
+                  onSelectIndex={setSelectedIndex}
+                  ariaLabel={`Grid position ${selectedIndex + 1} of ${items.length}`}
+                />
               </div>
             )}
 

@@ -50,10 +50,6 @@ export function ProfileHeroSection({
   if (showLocation && profile.state) locationParts.push(profile.state)
   const locationText = locationParts.length > 0 ? locationParts.join(', ') : null
 
-  // Calculate scroll transform - content scrolls up with scroll (username/sub info move up more)
-  const maxScroll = 280 // Maximum scroll distance in pixels so hero content scrolls up further
-  const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
-
   return (
     <div className="relative w-full h-full">
       {/* Background: top team's background.jpg when available, else gradient */}
@@ -84,21 +80,10 @@ export function ProfileHeroSection({
         </Link>
       )}
 
-      {/* Scrollable content container */}
-      <div
-        className="relative z-10 h-full flex flex-col justify-end px-6 pt-8 pb-6"
-        style={{
-          transform: `translateY(-${scrollOffset}px)`,
-          transition: 'transform 0.3s ease',
-        }}
-      >
-        {/* Profile Photo - fades out as scroll increases */}
-        <div
-          style={{
-            opacity: Math.max(0, 1 - scrollProgress),
-            transition: 'opacity 0.3s ease',
-          }}
-        >
+      {/* Hero content - static, no extra scroll/parallax */}
+      <div className="relative z-10 h-full flex flex-col justify-end px-6 pt-8 pb-6">
+        {/* Profile Photo */}
+        <div>
           <ProfilePhotoUpload
             profileImageUrl={profile.profile_image_url}
             isOwnProfile={isOwnProfile}
@@ -106,7 +91,7 @@ export function ProfileHeroSection({
           />
         </div>
 
-        {/* Username - scrolls with content */}
+        {/* Username */}
         <h1 className="mt-4 text-4xl font-display tracking-wider text-white md:text-5xl lg:text-6xl">
           {profile.username}
         </h1>

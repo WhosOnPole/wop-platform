@@ -4,8 +4,10 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { getDriverBodyImageUrl } from '@/utils/storage-urls'
 
-/** Same object-position as grid squares: enlarged so only the top half of body.png is shown */
+/** Show head and upper body; avoid cutting off top */
 const BODY_OBJECT_POSITION = '50% 0%'
+/** Light zoom; keep top visible */
+const BODY_SCALE = 1.08
 
 interface DriverHeroBodyMediaProps {
   driverName: string
@@ -30,15 +32,15 @@ export function DriverHeroBodyMedia({
   const showFallback = (useFallback && fallbackSrc) || (!bodyUrl && fallbackSrc)
 
   return (
-    <div className={`relative h-full w-full ${className}`}>
+    <div className={`relative overflow-hidden ${className}`}>
       {showBody && bodyUrl && (
         <Image
           src={bodyUrl}
           alt=""
           fill
-          sizes="320px"
+          sizes="360px"
           className="object-cover"
-          style={{ objectPosition: BODY_OBJECT_POSITION }}
+          style={{ objectPosition: BODY_OBJECT_POSITION, transform: `scale(${BODY_SCALE})` }}
           onError={() => setUseFallback(true)}
           aria-hidden
         />
@@ -48,8 +50,9 @@ export function DriverHeroBodyMedia({
           src={fallbackSrc}
           alt=""
           fill
-          sizes="320px"
+          sizes="360px"
           className="object-cover object-top"
+          style={{ transform: `scale(${BODY_SCALE})` }}
           aria-hidden
           unoptimized={typeof fallbackSrc === 'string' && fallbackSrc.startsWith('http')}
         />
