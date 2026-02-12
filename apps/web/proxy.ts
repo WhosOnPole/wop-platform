@@ -1,4 +1,5 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -59,7 +60,8 @@ export async function proxy(req: NextRequest) {
       if (sess) {
         try {
           if (!supabase) throw new Error('no client')
-          const { data: profile } = await supabase
+          const client = supabase as SupabaseClient
+          const { data: profile } = await client
             .from('profiles')
             .select('username, date_of_birth, age')
             .eq('id', sess.user.id)
@@ -82,7 +84,8 @@ export async function proxy(req: NextRequest) {
       if (sess && (pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
         try {
           if (!supabase) throw new Error('no client')
-          const { data: profile } = await supabase
+          const client = supabase as SupabaseClient
+          const { data: profile } = await client
             .from('profiles')
             .select('username, date_of_birth, age')
             .eq('id', sess.user.id)
@@ -104,7 +107,8 @@ export async function proxy(req: NextRequest) {
 
     try {
       if (!supabase) throw new Error('no client')
-      const { data: profile } = await supabase
+      const client = supabase as SupabaseClient
+      const { data: profile } = await client
         .from('profiles')
         .select('banned_until, username, date_of_birth, age')
         .eq('id', sess.user.id)
@@ -113,7 +117,7 @@ export async function proxy(req: NextRequest) {
       if (profile?.banned_until) {
         const bannedUntil = new Date(profile.banned_until)
         if (bannedUntil > new Date()) {
-          await supabase.auth.signOut()
+          await client.auth.signOut()
           const redirectUrl = req.nextUrl.clone()
           redirectUrl.pathname = '/banned'
           return NextResponse.redirect(redirectUrl)
