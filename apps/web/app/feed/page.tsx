@@ -399,7 +399,7 @@ export default async function FeedPage() {
   return (
     <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-semibold text-white font-display">Feed</h1>
-      <h3 className="text-md text-white/80 font-sans mb-6">Post. React. Express Yourself.</h3>
+      <h3 className="text-sm text-white/80 font-sans mb-6">Post. React. Express Yourself.</h3>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="order-2 lg:order-none lg:col-span-8 space-y-6">
           <FeedContent

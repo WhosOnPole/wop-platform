@@ -121,8 +121,12 @@ export default async function PitlanePage() {
 
   return (
     <PitlaneSearchProvider>
+      <div className="mx-auto max-w- pt-4 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-semibold text-white font-display">Pitlane</h1>
+        <h3 className="text-sm text-white/70 font-sans mb-6">Tap into the Grid. Stay ahead of the pack.</h3>
+      </div>
       <div className="mx-auto max-w-6xl mt-6">
-        {/* Upcoming race banner */}
+      {/* Upcoming race banner */}
       {nextRace ? (
         <div className="mb-5 relative mx-4 mb-8 sm:mx-6 lg:mx-8">
           <sup className="w-full text-left block text-xs text-[#838383]">Upcoming</sup>

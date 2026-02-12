@@ -10,6 +10,7 @@ import { TeamHeroMedia } from './hero/team-hero-media'
 import { GridBlurbCard } from './grid-blurb-card'
 import { GridEditCanvas } from './grid-edit-canvas'
 import { GridSlotCommentSection } from './grid-slot-comment-section'
+import { GridHeartButton } from '@/components/profile/grid-heart-button'
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { getAvatarUrl } from '@/utils/avatar'
@@ -407,7 +408,7 @@ function GridVerticalLabel({ type }: { type: GridType }) {
       width={30}
       height={120}
       className="object-contain"
-      style={{ width: 'clamp(92px, 28vw, 120px)', height: 'clamp(260px, 78vw, 350px)' }}
+      style={{ width: 'clamp(202px, 28vw, 120px)', height: 'clamp(460px, 78vw, 350px)' }}
     />
   )
 }
@@ -416,10 +417,16 @@ function GridHeroHeader({
   username,
   type,
   showEditLink,
+  gridId,
+  likeCount,
+  isLiked,
 }: {
   username: string
   type: GridType
   showEditLink: boolean
+  gridId?: string
+  likeCount?: number
+  isLiked?: boolean
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -429,16 +436,25 @@ function GridHeroHeader({
       >
         {username}&apos;s <br /> Grid
       </h1>
-      {showEditLink && (
+      {showEditLink ? (
         <Link
           href={`/profile/edit-grid/${type}`}
-          className="flex-shrink-0 flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-2 py-2 lg:px-3 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+          className="flex-shrink-0 flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-2 py-2 lg:px-3 text-sm font-medium text-white hover:bg-white/30 transition-colors"
           aria-label={`Edit ${type} grid`}
         >
           <Pencil className="h-4 w-4" />
           <span className="hidden lg:inline">Edit</span>
         </Link>
-      )}
+      ) : gridId != null ? (
+        <div className="flex-shrink-0">
+          <GridHeartButton
+            gridId={gridId}
+            initialLikeCount={likeCount ?? 0}
+            initialIsLiked={isLiked ?? false}
+            variant="dark"
+          />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -826,17 +842,20 @@ export function GridDetailView({
       {showUnifiedHero && (
         <div className="flex flex-col min-h-screen relative">
           {/* Header: fixed above hero on mobile, in-hero on desktop */}
-          <div className="px-4 pt-14 lg:pt-16 shrink-0 relative z-10">
+          <div className="px-4 pt-16 shrink-0 relative z-10">
             <GridHeroHeader
               username={owner.username}
               type={type}
               showEditLink={isOwnProfile}
+              gridId={mode === 'view' ? grid.id : undefined}
+              likeCount={mode === 'view' ? (grid.like_count ?? 0) : undefined}
+              isLiked={mode === 'view' ? (grid.is_liked ?? false) : undefined}
             />
           </div>
           {/* Background + vertical label: behind hero */}
           <div className="absolute inset-0 top-0 left-0 right-0 z-0 pointer-events-none" aria-hidden>
             <GridHeroBackground heroBackground={heroBackground} isDriverOrTrack={isDriverOrTrack} />
-            <div className="absolute left-0 top-[10vh] lg:top-auto lg:bottom-4 flex items-end pl-2 w-12">
+            <div className="absolute left-0 top-0 lg:top-auto lg:bottom-4 flex items-end pl-2 w-12">
               <GridVerticalLabel type={type} />
             </div>
             <div className="absolute left-0 right-0 bottom-0 top-[65vh] lg:top-[60vh] bg-black z-0" />

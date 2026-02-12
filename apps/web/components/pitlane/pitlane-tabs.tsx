@@ -213,7 +213,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
             )}
           </div>
         ) : (
-          <div className="grid gap-x-7 gap-y-6 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid gap-x-5 gap-y-4 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {items.length === 0 ? (
               <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-white/50">
                 {searchQuery ? 'No results found matching your search.' : 'Nothing to show yet. Check back soon.'}
@@ -229,7 +229,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       href={`/drivers/${slug}`}
                       className="group flex flex-col"
                     >
-                      <div className="relative w-25 h-28 overflow-hidden rounded-2xl">
+                      <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
                         <DriverCardMedia
                           driverName={driver.name}
                           supabaseUrl={supabaseUrl}

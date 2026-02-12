@@ -8,12 +8,15 @@ interface GridHeartButtonProps {
   gridId: string
   initialLikeCount?: number
   initialIsLiked?: boolean
+  /** 'dark' = hero/pill style (white on dark bg); default = light card style */
+  variant?: 'default' | 'dark'
 }
 
 export function GridHeartButton({
   gridId,
   initialLikeCount = 0,
   initialIsLiked = false,
+  variant = 'default',
 }: GridHeartButtonProps) {
   const supabase = createClientComponentClient()
   const [isLiked, setIsLiked] = useState(initialIsLiked)
@@ -59,16 +62,20 @@ export function GridHeartButton({
     setIsLoading(false)
   }
 
+  const isDark = variant === 'dark'
+  const buttonClass = isDark
+    ? `inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-2 py-2 lg:px-3 text-sm font-medium text-white hover:bg-white/30 transition-colors disabled:opacity-50 ${isLiked ? 'text-white' : ''}`
+    : `inline-flex items-center gap-1 align-middle rounded-full px-3 py-1.5 text-sm leading-none transition-colors ${
+        isLiked ? 'text-sunset-start hover:opacity-90' : 'text-gray-600 hover:bg-gray-200'
+      } disabled:opacity-50`
+
   return (
     <button
       onClick={toggleLike}
       disabled={isLoading}
-      className={`inline-flex items-center gap-1 align-middle rounded-full px-3 py-1.5 text-sm leading-none transition-colors ${
-        isLiked
-          ? 'text-sunset-start hover:opacity-90'
-          : 'text-gray-600 hover:bg-gray-200'
-      } disabled:opacity-50`}
+      className={buttonClass}
       title={isLiked ? 'Unlike this grid' : 'Like this grid'}
+      aria-label={isLiked ? 'Unlike this grid' : 'Like this grid'}
     >
       <Heart className={`h-4 w-4 shrink-0 ${isLiked ? 'fill-current' : ''}`} />
       <span className="leading-none">{likeCount}</span>

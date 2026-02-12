@@ -190,8 +190,8 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
                     {new Date(comment.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p className="text-sm text-white/90">{comment.content}</p>
-                <div className="mt-1">
+                <p className="text-sm text-white/90 pl-8">{comment.content}</p>
+                <div className="mt-1 flex justify-end">
                   <LikeButton
                     targetId={comment.id}
                     targetType="grid_slot_comment"
@@ -224,16 +224,18 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
                           </span>
                         </div>
                         <p className="text-sm text-white/90">{reply.content}</p>
-                        <LikeButton
-                          targetId={reply.id}
-                          targetType="grid_slot_comment"
-                          initialLikeCount={reply.like_count ?? 0}
-                          initialIsLiked={userLikes[reply.id] ?? false}
-                          onLikeChange={(targetId, isLiked) => {
-                            setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
-                          }}
-                          variant="dark"
-                        />
+                        <div className="flex justify-end">
+                          <LikeButton
+                            targetId={reply.id}
+                            targetType="grid_slot_comment"
+                            initialLikeCount={reply.like_count ?? 0}
+                            initialIsLiked={userLikes[reply.id] ?? false}
+                            onLikeChange={(targetId, isLiked) => {
+                              setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
+                            }}
+                            variant="dark"
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
