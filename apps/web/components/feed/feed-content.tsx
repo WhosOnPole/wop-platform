@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { getAvatarUrl } from '@/utils/avatar'
 import { FeedPostCommentSection } from './feed-post-comment-section'
+import { FeedPostActionsMenu } from './feed-post-actions-menu'
 import { F1InstagramEmbed } from './f1-instagram-embed'
 
 interface User {
@@ -122,6 +123,10 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
                 <FeedPostCommentSection
                   postId={post.id}
                   initialCommentCount={post.comment_count ?? 0}
+                />
+                <FeedPostActionsMenu
+                  postId={post.id}
+                  postAuthorId={post.user?.id ?? null}
                 />
               </div>
             </div>

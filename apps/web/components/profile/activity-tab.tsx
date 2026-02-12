@@ -9,6 +9,8 @@ interface ActivityItem {
   target_id?: string
   target_type?: string
   target_name?: string
+  /** Post ID for post/comment items; used to deep-link to discussion */
+  post_id?: string
   user?: {
     id: string
     username: string
@@ -33,14 +35,13 @@ export function ActivityTab({
     switch (item.type) {
       case 'post':
       case 'comment':
-        return <MessageSquare className="h-4 w-4 text-blue-500" />
+        return <MessageSquare className="h-4 w-4 text-[#25B4B1]" />
       case 'like':
-        return <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+        return <Heart className="h-4 w-4 text-sunset-start fill-sunset-start" />
       case 'checkin':
-        // TODO: Implement check-in system to track user check-ins on race starts (not race day start, the race's general start) on track pages when button is enabled
-        return <MapPin className="h-4 w-4 text-green-500" />
+        return <MapPin className="h-4 w-4 text-emerald-400" />
       case 'grid_update':
-        return <Grid3x3 className="h-4 w-4 text-purple-500" />
+        return <Grid3x3 className="h-4 w-4 text-white/80" />
       default:
         return null
     }
@@ -64,12 +65,32 @@ export function ActivityTab({
   }
 
   function getActivityLink(item: ActivityItem): string | null {
+    if (item.type === 'grid_update') {
+      const tab =
+        item.target_type === 'driver'
+          ? 'drivers'
+          : item.target_type === 'team'
+            ? 'teams'
+            : item.target_type === 'track'
+              ? 'tracks'
+              : 'drivers'
+      return `/u/${profileUsername}?tab=${tab}`
+    }
     if (item.target_id && item.target_type) {
-      const slug = item.target_name?.toLowerCase().replace(/\s+/g, '-') || ''
-      if (item.target_type === 'driver') return `/drivers/${slug}`
-      if (item.target_type === 'team') return `/teams/${slug}`
-      if (item.target_type === 'track') return `/tracks/${slug}`
-      if (item.target_type === 'profile') return `/u/${slug}`
+      const slug =
+        item.target_type === 'profile'
+          ? (item.target_name ?? '').replace(/^@/, '')
+          : (item.target_name ?? '').toLowerCase().trim().replace(/\s+/g, '-')
+      if (!slug) return null
+      let path: string | null = null
+      if (item.target_type === 'driver') path = `/drivers/${slug}`
+      else if (item.target_type === 'team') path = `/teams/${slug}`
+      else if (item.target_type === 'track') path = `/tracks/${slug}`
+      else if (item.target_type === 'profile') path = `/u/${slug}`
+      if (path && (item.type === 'post' || item.type === 'comment') && item.post_id) {
+        return `${path}?post=${encodeURIComponent(item.post_id)}`
+      }
+      return path
     }
     return null
   }
@@ -77,47 +98,45 @@ export function ActivityTab({
   return (
     <div className="flex min-h-0 flex-col gap-4">
       {/* Followers / Following at top */}
-      <div className="flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-4">
+      <div className="flex items-center gap-6 rounded-lg border border-white/10 bg-white/5 p-4">
         <Link
           href={`/u/${profileUsername}/followers`}
-          className="flex flex-col items-center gap-0.5 text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex flex-col items-center gap-0.5 text-white/90 hover:text-white transition-colors"
         >
           <span className="text-lg font-semibold tabular-nums">{followerCount}</span>
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Followers</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-white/60">Followers</span>
         </Link>
         <Link
           href={`/u/${profileUsername}/following`}
-          className="flex flex-col items-center gap-0.5 text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex flex-col items-center gap-0.5 text-white/90 hover:text-white transition-colors"
         >
           <span className="text-lg font-semibold tabular-nums">{followingCount}</span>
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Following</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-white/60">Following</span>
         </Link>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto pr-1">
         {activities.length === 0 ? (
-          <div className="py-12 text-center rounded-lg border border-gray-200 bg-white">
-            <p className="text-gray-500">No activity yet</p>
+          <div className="py-12 text-center rounded-lg border border-white/10 bg-white/5">
+            <p className="text-white/60">No activity yet</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {activities.map((item) => {
               const link = getActivityLink(item)
-              const className = `flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-4 ${
-                link ? 'hover:shadow-md transition-shadow cursor-pointer' : ''
+              const className = `flex items-start gap-4 rounded-lg border border-white/10 bg-white/5 p-4 ${
+                link ? 'hover:bg-white/10 transition-colors cursor-pointer active:bg-white/15' : ''
               }`
 
               const content = (
                 <>
-                  {/* Icon */}
                   <div className="flex-shrink-0">{getActivityIcon(item)}</div>
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium text-gray-900">{getActivityLabel(item)}</span>
+                      <span className="font-medium text-white">{getActivityLabel(item)}</span>
                       {item.target_name && (
-                        <span className="text-gray-600">
+                        <span className="text-white/80">
                           {item.target_type === 'profile' ? '@' : ''}
                           {item.target_name}
                         </span>
@@ -125,16 +144,16 @@ export function ActivityTab({
                     </div>
 
                     {item.content && (
-                      <p className="mt-1 text-sm text-gray-700 line-clamp-2">{item.content}</p>
+                      <p className="mt-1 text-sm text-white/80 line-clamp-2">{item.content}</p>
                     )}
 
-                    {item.type === 'grid_update' && (
-                      <p className="mt-1 text-xs text-gray-500">
+                    {item.type === 'grid_update' && item.target_type && (
+                      <p className="mt-1 text-xs text-white/60">
                         Updated their {item.target_type} grid
                       </p>
                     )}
 
-                    <p className="mt-2 text-xs text-gray-500">
+                    <p className="mt-2 text-xs text-white/50">
                       {new Date(item.created_at).toLocaleString()}
                     </p>
                   </div>

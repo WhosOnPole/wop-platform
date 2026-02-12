@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { OnboardingProfileStep } from '@/components/onboarding/profile-step'
-import { OnboardingDriversStep } from '@/components/onboarding/drivers-step'
-import { OnboardingTeamsStep } from '@/components/onboarding/teams-step'
-import { OnboardingTracksStep } from '@/components/onboarding/tracks-step'
+import { OnboardingGridStep } from '@/components/onboarding/grid-step'
 import { CheckCircle2, Circle, ChevronLeft } from 'lucide-react'
 
 type OnboardingStep = 'profile' | 'drivers' | 'teams' | 'tracks' | 'complete'
@@ -210,19 +208,22 @@ export default function OnboardingPage() {
             <OnboardingProfileStep onComplete={handleProfileComplete} />
           )}
           {currentStep === 'drivers' && (
-            <OnboardingDriversStep
+            <OnboardingGridStep
+              type="driver"
               onComplete={() => handleStepComplete('drivers')}
               onSkip={() => handleSkip('drivers')}
             />
           )}
           {currentStep === 'teams' && (
-            <OnboardingTeamsStep
+            <OnboardingGridStep
+              type="team"
               onComplete={() => handleStepComplete('teams')}
               onSkip={() => handleSkip('teams')}
             />
           )}
           {currentStep === 'tracks' && (
-            <OnboardingTracksStep
+            <OnboardingGridStep
+              type="track"
               onComplete={() => handleStepComplete('tracks')}
               onSkip={() => handleSkip('tracks')}
             />
