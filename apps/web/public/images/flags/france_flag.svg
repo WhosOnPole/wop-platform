@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .st0 { fill: none; }
+      .st1 { fill: #002395; }
+      .st2 { fill: #fff; }
+      .st3 { fill: #ED2939; }
+      .st4 { clip-path: url(#clippath); }
+    </style>
+    <clipPath id="clippath">
+      <circle class="st0" cx="250" cy="250" r="250"/>
+    </clipPath>
+  </defs>
+  <g class="st4">
+    <rect class="st1" x="-125" width="250" height="750"/>
+    <rect class="st2" x="125" width="250" height="750"/>
+    <rect class="st3" x="375" width="250" height="750"/>
+  </g>
+</svg>

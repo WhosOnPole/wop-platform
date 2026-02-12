@@ -223,6 +223,8 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                 if (activeTab === 'drivers') {
                   const driver = item as Driver
                   const slug = driver.name.toLowerCase().replace(/\s+/g, '-')
+                  const parts = driver.name.split(' ')
+                  const driverCode = (parts[parts.length - 1] || driver.name).substring(0, 3).toUpperCase()
                   return (
                     <Link
                       key={driver.id}
@@ -237,6 +239,23 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                           sizes="100px"
                           darkenBackgroundOnly
                         />
+                        <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
+                        {driverCode && (
+                          <div className="absolute left-2 top-0 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
+                            <span
+                              className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                              style={{
+                                fontSize: '12px',
+                                fontFamily: 'Inter, sans-serif',
+                                letterSpacing: '0',
+                                transform: 'rotate(-90deg)',
+                                transformOrigin: '20% 0',
+                              }}
+                            >
+                              {driverCode}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </Link>
                   )
@@ -468,12 +487,16 @@ function getCountryFlagPath(country?: string | null): string | null {
   
   // Map country to flag file name
   const flagMap: Record<string, string> = {
+    argentina: 'argentina',
+    argentine: 'argentina',
     australia: 'australia',
     austria: 'austria',
     belgium: 'belgium',
     brazil: 'brazil',
     canada: 'canada',
     china: 'china',
+    france: 'france',
+    germany: 'germany',
     hungary: 'hungary',
     italy: 'italy',
     japan: 'japan',

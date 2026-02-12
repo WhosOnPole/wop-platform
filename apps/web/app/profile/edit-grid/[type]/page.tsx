@@ -210,6 +210,7 @@ export default function EditGridPage() {
         parent_page_id: session.user.id,
       })
     } else {
+      const nowIso = new Date().toISOString()
       const { data: inserted, error } = await supabase
         .from('grids')
         .insert({
@@ -217,6 +218,7 @@ export default function EditGridPage() {
           type,
           ranked_items: rankedItemIds,
           blurb: (slotBlurbs[1] ?? '').trim() || null,
+          updated_at: nowIso,
         })
         .select('id')
         .single()

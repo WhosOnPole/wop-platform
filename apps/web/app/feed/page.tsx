@@ -2,7 +2,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Calendar, Star } from 'lucide-react'
-import { FeedContent, type Post } from '@/components/feed/feed-content'
+import { FeedContent, type Post, type Grid } from '@/components/feed/feed-content'
 import { UpcomingRace } from '@/components/feed/upcoming-race'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 
@@ -147,60 +147,56 @@ export default async function FeedPage() {
     raceTracks,
     activeHotTake,
   ] = await Promise.all([
-    // Posts from users you follow
+    // Posts from current user + users you follow
     supabase
       .from('follows')
       .select('following_id')
       .eq('follower_id', session.user.id)
       .then(async (result) => {
-        if (result.data && result.data.length > 0) {
-          const followingIds = result.data.map((f) => f.following_id)
-          const { data: posts } = await supabase
-            .from('posts')
-            .select(
-              `
-              *,
-              like_count,
-              user:profiles!user_id (
-                id,
-                username,
-                profile_image_url
-              )
+        const followingIds = result.data?.map((f) => f.following_id) || []
+        const userIds = [session.user.id, ...followingIds]
+        const { data: posts } = await supabase
+          .from('posts')
+          .select(
             `
+            *,
+            like_count,
+            user:profiles!user_id (
+              id,
+              username,
+              profile_image_url
             )
-            .in('user_id', followingIds)
-            .order('created_at', { ascending: false })
-            .limit(10)
-          return { data: posts }
-        }
-        return { data: [] }
+          `
+          )
+          .in('user_id', userIds)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        return { data: posts || [] }
       }),
-    // Grids from users you follow
+    // Grids from current user + users they follow (ordered by updated_at so updates appear chronologically)
     supabase
       .from('follows')
       .select('following_id')
       .eq('follower_id', session.user.id)
       .then(async (result) => {
-        if (result.data && result.data.length > 0) {
-          const followingIds = result.data.map((f) => f.following_id)
-          const { data: grids } = await supabase
-            .from('grids')
-            .select(
-              `
-              *,
-              user:profiles!user_id (
-                id,
-                username,
-                profile_image_url
-              )
+        const followingIds = result.data?.map((f) => f.following_id) || []
+        const userIds = [session.user.id, ...followingIds]
+        const { data: grids } = await supabase
+          .from('grids')
+          .select(
             `
+            *,
+            user:profiles!user_id (
+              id,
+              username,
+              profile_image_url
             )
-            .in('user_id', followingIds)
-            .order('created_at', { ascending: false })
-            .limit(5)
-          return { data: grids }
-        }
-        return { data: [] }
+          `
+          )
+          .in('user_id', userIds)
+          .order('updated_at', { ascending: false, nullsFirst: false })
+          .limit(20)
+        return { data: grids || [] }
       }),
     // Recent active polls (ends_at is null or in the future) - regular polls only
     supabase
@@ -396,6 +392,71 @@ export default async function FeedPage() {
     comment_count: commentCountByPostId[p.id] ?? 0,
   })) as Post[]
 
+  // Enrich feed grids: ranked_items with images/location, like/comment counts
+  const feedGridsRaw = followingGrids.data || []
+  const enrichedFeedGrids = await Promise.all(
+    feedGridsRaw.map(async (grid: Record<string, unknown> & { id: string; type: string; ranked_items: any[]; user_id: string }) => {
+      const rankedItems = Array.isArray(grid.ranked_items) ? grid.ranked_items : []
+      const enrichedItems = await Promise.all(
+        rankedItems.map(async (item: { id: string; name: string }) => {
+          if (grid.type === 'driver') {
+            const { data: driver } = await supabase
+              .from('drivers')
+              .select('id, name, headshot_url, image_url')
+              .eq('id', item.id)
+              .maybeSingle()
+            return {
+              ...item,
+              headshot_url: driver?.headshot_url || null,
+              image_url: driver?.headshot_url || driver?.image_url || null,
+            }
+          }
+          if (grid.type === 'track') {
+            const { data: track } = await supabase
+              .from('tracks')
+              .select('id, name, image_url, location, country')
+              .eq('id', item.id)
+              .maybeSingle()
+            return {
+              ...item,
+              image_url: track?.image_url || null,
+              location: track?.location || null,
+              country: track?.country || null,
+            }
+          }
+          return item
+        })
+      )
+      const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
+        supabase.from('grid_likes').select('*', { count: 'exact', head: true }).eq('grid_id', grid.id),
+        supabase.from('grid_slot_comments').select('*', { count: 'exact', head: true }).eq('grid_id', grid.id),
+      ])
+      const { data: userLike } = await supabase
+        .from('grid_likes')
+        .select('id')
+        .eq('grid_id', grid.id)
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+      const user = grid.user as Record<string, unknown> | null
+      return {
+        ...grid,
+        ranked_items: enrichedItems,
+        blurb: grid.blurb ?? null,
+        like_count: likeCount ?? 0,
+        comment_count: commentCount ?? 0,
+        is_liked: !!userLike,
+        created_at: grid.updated_at || grid.created_at,
+        user: user
+          ? {
+              id: user.id,
+              username: user.username,
+              profile_image_url: user.profile_image_url ?? null,
+            }
+          : null,
+      }
+    })
+  )
+
   return (
     <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-semibold text-white font-display">Feed</h1>
@@ -404,7 +465,9 @@ export default async function FeedPage() {
         <div className="order-2 lg:order-none lg:col-span-8 space-y-6">
           <FeedContent
             posts={enrichedFeedPosts}
-            grids={followingGrids.data || []}
+            grids={enrichedFeedGrids as Grid[]}
+            supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
+            currentUserId={session.user.id}
             featuredNews={[]}
           />
         </div>

@@ -3,7 +3,7 @@ import { LikeButton } from '@/components/discussion/like-button'
 import { getAvatarUrl } from '@/utils/avatar'
 import { FeedPostCommentSection } from './feed-post-comment-section'
 import { FeedPostActionsMenu } from './feed-post-actions-menu'
-import { F1InstagramEmbed } from './f1-instagram-embed'
+import { GridDisplayCard } from '@/components/profile/grid-display-card'
 
 interface User {
   id: string
@@ -21,13 +21,19 @@ export interface Post {
   comment_count?: number
 }
 
-interface Grid {
+export interface Grid {
   id: string
-  type: 'driver' | 'team' | 'track'
-  comment: string | null
+  user_id?: string
+  type: string
+  comment?: string | null
+  blurb?: string | null
   ranked_items: any[]
   created_at: string
+  updated_at?: string | null
   user: User | null
+  like_count?: number
+  comment_count?: number
+  is_liked?: boolean
 }
 
 interface Poll {
@@ -49,6 +55,8 @@ interface FeedContentProps {
   posts: Post[]
   grids: Grid[]
   featuredNews: NewsStory[]
+  supabaseUrl?: string
+  currentUserId?: string
 }
 
 type FeedItem =
@@ -56,7 +64,7 @@ type FeedItem =
   | (Grid & { contentType: 'grid' })
   | (NewsStory & { contentType: 'news' })
 
-export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
+export function FeedContent({ posts, grids, featuredNews, supabaseUrl, currentUserId }: FeedContentProps) {
   // Combine and sort all non-poll content by created_at
   const allContent: FeedItem[] = [
     ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
@@ -135,6 +143,19 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
 
         if (item.contentType === 'grid') {
           const grid = item
+          const typeLabel = grid.type === 'driver' ? 'Drivers' : grid.type === 'team' ? 'Teams' : 'Tracks'
+          const gridType = grid.type as 'driver' | 'team' | 'track'
+          const gridForDisplay = {
+            id: grid.id,
+            type: gridType,
+            ranked_items: grid.ranked_items ?? [],
+            blurb: grid.blurb ?? grid.comment ?? null,
+            like_count: grid.like_count ?? 0,
+            comment_count: grid.comment_count ?? 0,
+            is_liked: grid.is_liked ?? false,
+            previous_state: null,
+            updated_at: grid.updated_at ?? grid.created_at,
+          }
           return (
             <div
               key={`grid-${grid.id}`}
@@ -154,27 +175,15 @@ export function FeedContent({ posts, grids, featuredNews }: FeedContentProps) {
                     {grid.user?.username || 'Unknown'}
                   </Link>
                   <p className="text-xs text-white/70">
-                    Top {grid.type === 'driver' ? 'Drivers' : grid.type === 'team' ? 'Teams' : 'Tracks'}
+                    Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
-              {grid.comment && (
-                <p className="mb-4 italic text-white/90">&quot;{grid.comment}&quot;</p>
-              )}
-              <div className="space-y-2">
-                {Array.isArray(grid.ranked_items) &&
-                  grid.ranked_items.slice(0, 3).map((item: any, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 rounded-md bg-white/10 p-2"
-                    >
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#25B4B1] text-xs font-bold text-white">
-                        {index + 1}
-                      </span>
-                      <span className="text-sm text-white/90">{item.name || 'Unknown'}</span>
-                    </div>
-                  ))}
-              </div>
+              <GridDisplayCard
+                grid={gridForDisplay}
+                isOwnProfile={currentUserId ? grid.user_id === currentUserId : false}
+                supabaseUrl={supabaseUrl}
+              />
             </div>
           )
         }
