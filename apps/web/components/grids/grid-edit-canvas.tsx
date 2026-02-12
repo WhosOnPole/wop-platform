@@ -7,6 +7,7 @@ import {
   DragStartEvent,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -43,6 +44,8 @@ interface GridEditCanvasProps {
   supabaseUrl?: string
   /** When set, the slot at this index (0-9) shows an active sunset-gradient border animation */
   activeSlotIndex?: number
+  /** Called when a slot is clicked (without drag); press+drag activates drag-and-drop */
+  onActiveSlotChange?: (index: number) => void
 }
 
 function SlotDroppable({
@@ -95,19 +98,19 @@ function SlotDroppable({
   return (
     <div
       ref={refCb}
-      className={`${className ?? ''} ${sizeClass} rounded-xl ${isOver ? 'ring-2 ring-[#25B4B1] ring-offset-2 ring-offset-black' : ''} ${isActive ? 'relative overflow-hidden' : ''}`}
+      className={`${className ?? ''} ${sizeClass} rounded-lg ${isOver ? 'ring-2 ring-[#25B4B1] ring-offset-2 ring-offset-black' : ''} ${isActive ? 'relative overflow-hidden' : ''}`}
       aria-label={`Slot ${id.replace('slot-', '')}`}
     >
       {isActive && (
         <div
           className="absolute left-1/2 top-1/2 z-0 h-[200%] w-[170%] min-h-[170%] min-w-[170%] -translate-x-1/2 -translate-y-1/2 animate-slot-border-rotate"
           style={{
-            background: 'linear-gradient(90deg, #fb923c 0%, #f59e0b 50%, #f43f5e 100%, #fb923c 100%)',
+            background: 'linear-gradient(90deg, #EC6D00 0%, #FF006F 60%, #25B4B1 70%, #FF006F 80%, #EC6D00 100%)',
           }}
         />
       )}
       {isActive ? (
-        <div className="absolute inset-[1.3px] z-10 min-h-0 rounded-[10px] overflow-hidden bg-black">
+        <div className="absolute inset-[1.3px] z-10 min-h-0 rounded-[12px] overflow-hidden bg-black">
           {children}
         </div>
       ) : (
@@ -124,6 +127,7 @@ function SlotDraggable({
   type,
   size,
   supabaseUrl,
+  onSlotClick,
 }: {
   id: string
   slotIndex: number
@@ -131,6 +135,7 @@ function SlotDraggable({
   type: GridType
   size: 'large' | 'small'
   supabaseUrl?: string
+  onSlotClick?: (index: number) => void
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id,
@@ -138,10 +143,14 @@ function SlotDraggable({
     disabled: Boolean(item.is_placeholder),
   })
   const rank = slotIndex + 1
+  function handleClick(e: React.MouseEvent) {
+    if (onSlotClick && !isDragging) onSlotClick(slotIndex)
+  }
   return (
     <div
       ref={setNodeRef}
       {...(item.is_placeholder ? {} : { ...listeners, ...attributes })}
+      onClick={onSlotClick ? handleClick : undefined}
       className={`${item.is_placeholder ? '' : 'cursor-grab active:cursor-grabbing touch-none'} ${isDragging ? 'opacity-50' : ''}`}
       aria-label={`Slot ${rank}${item.is_placeholder ? ', empty' : `, ${item.name}`}`}
     >
@@ -176,7 +185,7 @@ function PaletteDraggable({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`flex-shrink-0 w-20 h-20 md:w-24 md:h-24 cursor-grab active:cursor-grabbing touch-none ${isDragging ? 'opacity-50' : ''}`}
+      className={`flex-shrink-0 w-20 h-20 md:w-24 md:h-24 cursor-grab active:cursor-grabbing touch-pan-x ${isDragging ? 'opacity-50' : ''}`}
       aria-label={`Drag ${item.name} to a grid slot`}
     >
       <GridTileContent
@@ -196,19 +205,23 @@ export function GridEditCanvas({
   availableItems,
   supabaseUrl,
   activeSlotIndex,
+  onActiveSlotChange,
 }: GridEditCanvasProps) {
   const ranked = padToTen(rankedList)
   const rankedIds = new Set(ranked.filter((i) => !i.is_placeholder).map((i) => i.id))
   const paletteItems = availableItems.filter((i) => !rankedIds.has(i.id))
   const [activeId, setActiveId] = useState<string | null>(null)
+  const didDragRef = useRef(false)
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    didDragRef.current = true
     setActiveId(String(event.active.id))
   }, [])
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveId(null)
+      setTimeout(() => { didDragRef.current = false }, 0)
       const { active, over } = event
       if (!over) return
 
@@ -264,10 +277,22 @@ export function GridEditCanvas({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor)
   )
 
-  const handleDragCancel = useCallback(() => setActiveId(null), [])
+  const handleDragCancel = useCallback(() => {
+    setActiveId(null)
+    setTimeout(() => { didDragRef.current = false }, 0)
+  }, [])
+
+  const handleSlotClick = useCallback(
+    (index: number) => {
+      if (didDragRef.current) return
+      onActiveSlotChange?.(index)
+    },
+    [onActiveSlotChange]
+  )
 
   const overlayItem: GridEditCanvasRankItem | null = activeId
     ? (() => {
@@ -307,6 +332,7 @@ export function GridEditCanvas({
               type={type}
               size="large"
               supabaseUrl={supabaseUrl}
+              onSlotClick={handleSlotClick}
             />
           </SlotDroppable>
         </div>
@@ -320,17 +346,18 @@ export function GridEditCanvas({
                 type={type}
                 size="small"
                 supabaseUrl={supabaseUrl}
+                onSlotClick={handleSlotClick}
               />
             </SlotDroppable>
           ))}
         </div>
       </div>
 
-      {/* Bottom: horizontal scrolling palette */}
-      <div className="mt-4">
-        <p className="text-sm text-white/80 mb-2">Drag cards to grid slots or back here to remove</p>
+      {/* Bottom: horizontal scrolling palette — always-visible thick scrollbar for touch */}
+      <div className="mt-4 min-w-0">
+        <p className="text-xs text-center text-white/80 mb-0">Drag cards to grid slots or back here to remove</p>
         <PaletteDroppable id="palette">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+          <div className="palette-horizontal-scroll flex w-full min-w-0 gap-2 flex-nowrap pt-0.5">
             {paletteItems.map((item) => (
               <PaletteDraggable
                 key={item.id}
@@ -376,7 +403,7 @@ function PaletteDroppable({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[6rem] rounded-lg border border-dashed border-white/20 bg-white/5 p-2 ${isOver ? 'ring-2 ring-[#25B4B1] ring-offset-2 ring-offset-black' : ''}`}
+      className={`min-h-[6rem] min-w-0 rounded-lg border border-dashed border-white/20 bg-white/5 p-2 pb-0 ${isOver ? 'ring-2 ring-[#25B4B1] ring-offset-2 ring-offset-black' : ''}`}
       aria-label="Available items - drop here to remove from grid"
     >
       {children}

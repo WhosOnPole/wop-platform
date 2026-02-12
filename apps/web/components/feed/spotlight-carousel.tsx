@@ -173,197 +173,115 @@ export function SpotlightCarousel({
     setActiveIndex(idx)
   }
 
+  type CardItem = (typeof cards)[number]
+
+  function renderCard(card: CardItem) {
+    if (card.type === 'hot_take') {
+      return (
+        <button
+          type="button"
+          onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
+          className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow text-left hover:bg-white/5 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center space-x-2">
+            <Radio className="h-5 w-5 text-white/90" />
+            <h2 className="text-lg font-bold text-white">Hot Take</h2>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-white/90 text-base leading-relaxed line-clamp-5">
+              {card.data.hot_take?.content_text || 'Hot take unavailable'}
+            </p>
+          </div>
+          {card.data.hot_take?.id && (
+            <p className="mt-4 text-sm text-white/70">Tap to join the discussion</p>
+          )}
+        </button>
+      )
+    }
+    if (card.type === 'grid') {
+      return (
+        <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
+          <div className="text-sm font-medium text-white/90">Featured Fan Grid</div>
+          {card.data.user && (
+            <Link
+              href={`/u/${card.data.user.username}`}
+              className="text-white/90 hover:text-white text-sm"
+            >
+              {card.data.user.username}
+            </Link>
+          )}
+          <div className="mt-4 flex-1 space-y-2 overflow-auto">
+            {Array.isArray(card.data.ranked_items) &&
+              card.data.ranked_items.slice(0, 3).map((item: any, i: number) => (
+                <div key={i} className="flex items-center space-x-3 rounded-md bg-white/10 p-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm text-white/90 truncate">
+                    {item?.name || item?.title || 'Unknown'}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )
+    }
+    if (card.type === 'poll') {
+      return (
+        <div className="flex h-full w-full min-w-0">
+          <PollCard
+            poll={card.data}
+            userResponse={undefined}
+            voteCounts={{}}
+            onVote={() => {}}
+            showDiscussion={false}
+            variant="dark"
+          />
+        </div>
+      )
+    }
+    if (card.type === 'upcoming_race') {
+      return <UpcomingRaceCard race={card.data} />
+    }
+    if (card.type === 'sponsor') {
+      return <SponsorCard sponsor={card.data} />
+    }
+    if (card.type === 'news') {
+      return <FeaturedNewsCard newsStory={card.data} />
+    }
+    return null
+  }
+
   return (
     <>
-      {/* Desktop: Vertical scrollable layout */}
-      <div className="hidden lg:block">
-        <div className=" max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-          {cards.map((card, idx) => (
-              <div
-                key={`${card.type}-${idx}`}
-                className="w-full overflow-hidden"
-                style={{ height: bannerCardHeight, marginBottom: '24px' }}
-              >
-                {card.type === 'hot_take' && (
-                  <button
-                    type="button"
-                    onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
-                    className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow text-left hover:bg-white/5 transition-colors cursor-pointer"
-                  >
-                    <div className=" flex items-center space-x-2">
-                      <Radio className="h-5 w-5 text-white/90" />
-                      <h2 className="text-lg font-bold text-white">Hot Take</h2>
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-white/90 text-base leading-relaxed line-clamp-5">
-                        {card.data.hot_take?.content_text || 'Hot take unavailable'}
-                      </p>
-                    </div>
-                    {card.data.hot_take?.id && (
-                      <p className="mt-4 text-sm text-white/70">
-                        Tap to join the discussion
-                      </p>
-                    )}
-                  </button>
-                )}
-
-                {card.type === 'grid' && (
-                  <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
-                    <div className="text-sm font-medium text-white/90">Featured Fan Grid</div>
-                    {card.data.user && (
-                      <Link
-                        href={`/u/${card.data.user.username}`}
-                        className="text-white/90 hover:text-white text-sm"
-                      >
-                        {card.data.user.username}
-                      </Link>
-                    )}
-                    <div className="mt-4 flex-1 space-y-2 overflow-auto">
-                      {Array.isArray(card.data.ranked_items) &&
-                        card.data.ranked_items.slice(0, 3).map((item: any, i: number) => (
-                          <div key={i} className="flex items-center space-x-3 rounded-md bg-white/10 p-3">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
-                              {i + 1}
-                            </span>
-                            <span className="text-sm text-white/90 truncate">
-                              {item?.name || item?.title || 'Unknown'}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                {card.type === 'poll' && (
-                  <div className="flex h-full w-full">
-                    <PollCard
-                      poll={card.data}
-                      userResponse={undefined}
-                      voteCounts={{}}
-                      onVote={() => {}}
-                      showDiscussion={false}
-                      variant="dark"
-                    />
-                  </div>
-                )}
-
-                {card.type === 'upcoming_race' && (
-                  <UpcomingRaceCard race={card.data} />
-                )}
-
-                {card.type === 'sponsor' && (
-                  <SponsorCard sponsor={card.data} />
-                )}
-
-                {card.type === 'news' && (
-                  <FeaturedNewsCard newsStory={card.data} />
-                )}
-              </div>
-            ))}
-        </div>
-      </div>
-
-      {/* Mobile: Horizontal scrolling carousel */}
-      <div
-        className="lg:hidden mb-6 space-y-3"
-        style={{ height: bannerCardHeight, minHeight: bannerCardHeight, maxHeight: bannerCardHeight }}
-      >
+      {/* Single container: horizontal carousel on mobile, vertical scroll on desktop */}
+      <div className="mb-6 lg:mb-0 h-[200px] min-h-[200px] max-h-[200px] lg:h-auto lg:min-h-0 lg:max-h-none">
         <div
           ref={scrollContainerRef}
-          className="w-full h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory pb-2"
+          className="flex flex-row lg:flex-col w-full h-full lg:max-h-[calc(100vh-8rem)] overflow-x-auto overflow-y-hidden lg:overflow-x-hidden lg:overflow-y-auto snap-x snap-mandatory lg:snap-none pb-2 lg:pr-2"
           style={{ scrollSnapType: 'x mandatory' }}
         >
-          <div className="flex w-full h-full gap-4">
-            {cards.map((card, idx) => {
-              return (
-                <div
-                  key={`${card.type}-${idx}`}
-                  ref={(el) => {
-                    if (el) cardRefs.current[idx] = el
-                  }}
-                  className="w-full min-w-full h-full flex-shrink-0 snap-start"
-                >
-                  {card.type === 'hot_take' && (
-                    <button
-                      type="button"
-                      onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
-                      className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow text-left hover:bg-white/5 transition-colors cursor-pointer"
-                    >
-                      <div className="mb-4 flex items-center space-x-2">
-                        <Radio className="h-5 w-5 text-white/90" />
-                        <h2 className="text-lg font-bold text-white">Hot Take</h2>
-                      </div>
-                      <div className="flex-1 overflow-hidden">
-                        <p className="text-white/90 text-base leading-relaxed line-clamp-5">
-                          {card.data.hot_take?.content_text || 'Hot take unavailable'}
-                        </p>
-                      </div>
-                      {card.data.hot_take?.id && (
-                        <p className="mt-4 text-sm text-white/70">
-                          Tap to join the discussion
-                        </p>
-                      )}
-                    </button>
-                  )}
-
-                  {card.type === 'grid' && (
-                    <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
-                      <div className="mb-2 text-sm font-medium text-white/90">Featured Fan Grid</div>
-                      {card.data.user && (
-                        <Link
-                          href={`/u/${card.data.user.username}`}
-                          className="text-white/90 hover:text-white text-sm"
-                        >
-                          {card.data.user.username}
-                        </Link>
-                      )}
-                      <div className="mt-4 flex-1 space-y-2 overflow-auto">
-                        {Array.isArray(card.data.ranked_items) &&
-                          card.data.ranked_items.slice(0, 3).map((item: any, i: number) => (
-                            <div key={i} className="flex items-center space-x-3 rounded-md bg-white/10 p-3">
-                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
-                                {i + 1}
-                              </span>
-                              <span className="text-sm text-white/90 truncate">
-                                {item?.name || item?.title || 'Unknown'}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {card.type === 'poll' && (
-                    <div className="flex h-full w-full min-w-full">
-                      <PollCard
-                        poll={card.data}
-                        userResponse={undefined}
-                        voteCounts={{}}
-                        onVote={() => {}}
-                        showDiscussion={false}
-                        variant="dark"
-                      />
-                    </div>
-                  )}
-
-                  {card.type === 'upcoming_race' && (
-                    <UpcomingRaceCard race={card.data} />
-                  )}
-
-                  {card.type === 'sponsor' && (
-                    <SponsorCard sponsor={card.data} />
-                  )}
-
-                  {card.type === 'news' && (
-                    <FeaturedNewsCard newsStory={card.data} />
-                  )}
-                </div>
-              )
-            })}
+          <div className="flex w-full h-full gap-4 lg:flex-col lg:gap-0">
+            {cards.map((card, idx) => (
+              <div
+                key={`${card.type}-${idx}`}
+                ref={(el) => {
+                  if (el) cardRefs.current[idx] = el
+                }}
+                className="w-full min-w-full lg:min-w-0 flex-shrink-0 snap-start lg:snap-align-none overflow-hidden flex-none"
+                style={{
+                  height: bannerCardHeight,
+                  marginBottom: idx < cards.length - 1 ? 24 : 0,
+                }}
+              >
+                {renderCard(card)}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="flex justify-center items-center gap-1.5">
+        {/* Dots: mobile only */}
+        <div className="flex justify-center items-center gap-1.5 mt-3 lg:hidden">
           {cards.map((_, idx) => (
             <button
               key={idx}

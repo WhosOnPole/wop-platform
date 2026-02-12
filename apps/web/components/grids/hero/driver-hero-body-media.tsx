@@ -4,10 +4,10 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { getDriverBodyImageUrl } from '@/utils/storage-urls'
 
-/** Show head and upper body; avoid cutting off top */
-const BODY_OBJECT_POSITION = '50% 0%'
+/** Pull image down to avoid top clipping; ~15% from top anchors to center */
+const BODY_OBJECT_POSITION = '50% -5.5%'
 /** Light zoom; keep top visible */
-const BODY_SCALE = 1.08
+const BODY_SCALE = 1.2
 
 interface DriverHeroBodyMediaProps {
   driverName: string
