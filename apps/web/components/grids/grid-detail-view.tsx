@@ -711,7 +711,7 @@ export function GridDetailView({
             {/* Single hero scroll container: swipe on mobile, programmatic on desktop; track: no overflow-y so track image is not clipped */}
             <div
               ref={mobileScrollRef}
-              className={`h-[35vh] lg:h-[60vh] w-full overflow-x-auto lg:overflow-x-hidden snap-x snap-mandatory relative ${type === 'track' ? 'overflow-y-visible' : 'overflow-y-hidden'}`}
+              className={`h-[35vh] lg:h-[60vh] w-full overflow-x-auto lg:overflow-x-hidden snap-x snap-mandatory relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${type === 'track' ? 'overflow-y-visible' : 'overflow-y-hidden'}`}
             style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
             role="region"
             aria-label="Grid ranking - swipe left or right"
