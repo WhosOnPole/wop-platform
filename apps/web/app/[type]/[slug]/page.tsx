@@ -315,23 +315,23 @@ export default async function DynamicPage({ params }: PageProps) {
   if (type === 'tracks') {
     tabs.push({
       id: 'tips',
-      label: 'Tips',
-      content: <TrackSubmissionsTab submissions={trackTips} typeLabel="Tips" />,
+      label: 'General tips',
+      content: <TrackSubmissionsTab submissions={trackTips} typeLabel="General tips" />,
     })
     tabs.push({
       id: 'stays',
-      label: 'Stays',
-      content: <TrackSubmissionsTab submissions={trackStays} typeLabel="Stays" />,
+      label: 'Stay tips',
+      content: <TrackSubmissionsTab submissions={trackStays} typeLabel="Stay tips" />,
+    })
+    tabs.push({
+      id: 'transit',
+      label: 'Transit tips',
+      content: <TrackSubmissionsTab submissions={trackTransit} typeLabel="Transit tips" />,
     })
     tabs.push({
       id: 'meetups',
       label: 'Meetups',
       content: <TrackSubmissionsTab submissions={trackMeetups} typeLabel="Meetups" />,
-    })
-    tabs.push({
-      id: 'transit',
-      label: 'Transit',
-      content: <TrackSubmissionsTab submissions={trackTransit} typeLabel="Transit" />,
     })
   } else if (type === 'teams') {
     tabs.push({

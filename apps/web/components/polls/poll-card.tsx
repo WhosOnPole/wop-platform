@@ -12,6 +12,7 @@ interface Poll {
   options: any[]
   is_featured_podium: boolean
   created_at: string
+  ends_at?: string | null
 }
 
 interface PollCardProps {
@@ -21,6 +22,10 @@ interface PollCardProps {
   onVote: (pollId: string, optionId: string) => void
   className?: string
   variant?: 'light' | 'dark'
+  /** Smaller padding and text for embedded (e.g. repost) context */
+  compact?: boolean
+  /** Show Repost button; set false when embedded in a feed post */
+  showRepost?: boolean
 }
 
 export function PollCard({
@@ -30,6 +35,8 @@ export function PollCard({
   onVote,
   className,
   variant = 'light',
+  compact = false,
+  showRepost = true,
 }: PollCardProps) {
   const isDark = variant === 'dark'
   const supabase = createClientComponentClient()
@@ -66,6 +73,7 @@ export function PollCard({
 
   async function handleVote(optionIndex: number) {
     if (localResponse) return // Already voted
+    if (poll.ends_at && new Date(poll.ends_at) < new Date()) return // Poll ended
 
     setIsSubmitting(true)
     const {
@@ -108,6 +116,8 @@ export function PollCard({
   }
 
   const hasVoted = !!localResponse
+  const isExpired = !!poll.ends_at && new Date(poll.ends_at) < new Date()
+  const showResults = hasVoted || isExpired
 
   return (
     <div
@@ -117,27 +127,31 @@ export function PollCard({
           : 'border-gray-200 bg-white text-black'
       } ${className || ''}`}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      <div className={compact ? 'mb-2 flex items-center justify-between gap-2' : 'mb-4 flex items-center justify-between gap-2'}>
+        <h2 className={`min-w-0 flex-1 ${compact ? 'text-base font-medium' : 'text-xl font-semibold'} ${isDark ? 'text-white' : 'text-gray-900'}`}>
           {poll.question}
         </h2>
-        {poll.is_featured_podium && (
-          <div
-            className="flex items-center space-x-1 rounded-full px-3 py-1 bg-sunset-gradient"
-          >
-            <Trophy className="h-4 w-4 " />
-            <span className="text-xs font-medium">
-              Featured
-            </span>
-          </div>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {showResults && (
+            <p className={`text-sm ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
+              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
+            </p>
+          )}
+          {poll.is_featured_podium && !compact && (
+            <div
+              className="flex items-center space-x-1 rounded-full px-3 py-1 bg-sunset-gradient"
+            >
+              <Trophy className="h-4 w-4 " />
+              <span className="text-xs font-medium">
+                Featured
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {hasVoted ? (
-        <div className="space-y-3">
-          <p className={`mb-4 text-sm ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
-            {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
-          </p>
+      {showResults ? (
+        <div className={compact ? 'space-y-2' : 'space-y-3'}>
           {optionsWithStats.map((option) => {
             const isSelected = localResponse === option.id
             return (
@@ -147,8 +161,8 @@ export function PollCard({
                     className={`font-medium ${
                       isDark
                         ? isSelected
-                          ? 'text-[#25B4B1]'
-                          : 'text-white/90'
+                          ? 'text-[#EF771B]'
+                          : 'text-white/20'
                         : isSelected
                           ? 'text-blue-600'
                           : 'text-gray-700'
@@ -170,7 +184,7 @@ export function PollCard({
                     className={`h-full transition-all ${
                       isDark
                         ? isSelected
-                          ? 'bg-[#25B4B1]'
+                          ? 'bg-sunset-gradient'
                           : 'bg-white/40'
                         : isSelected
                           ? 'bg-blue-600'
@@ -184,7 +198,7 @@ export function PollCard({
           })}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className={compact ? 'space-y-1.5' : 'space-y-2'}>
           {optionsWithStats.map((option) => (
             <button
               key={option.id}
@@ -192,8 +206,8 @@ export function PollCard({
               disabled={isSubmitting}
               className={
                 isDark
-                  ? 'w-full rounded-md border border-white/20 bg-white/10 px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-white/20 disabled:opacity-50'
-                  : 'w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:border-blue-500 disabled:opacity-50'
+                  ? `w-full rounded-md border border-white/20 bg-white/10 text-left text-sm font-medium text-white transition-colors hover:bg-white/20 disabled:opacity-50 ${compact ? 'px-3 py-2' : 'px-4 py-3'}`
+                  : `w-full rounded-md border border-gray-300 bg-white text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:border-blue-500 disabled:opacity-50 ${compact ? 'px-3 py-2' : 'px-4 py-3'}`
               }
             >
               {option.text}
@@ -202,9 +216,9 @@ export function PollCard({
         </div>
       )}
 
-      {createModal && (
+      {createModal && showRepost && (
         <div
-          className={`mt-4 border-t pt-4 ${isDark ? 'border-white/10' : 'border-gray-200'}`}
+          className={`border-t ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} ${isDark ? 'border-white/10' : 'border-gray-200'}`}
         >
           <button
             type="button"

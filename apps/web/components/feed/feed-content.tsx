@@ -1,9 +1,13 @@
+'use client'
+
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { LikeButton } from '@/components/discussion/like-button'
 import { getAvatarUrl } from '@/utils/avatar'
 import { FeedPostCommentSection } from './feed-post-comment-section'
 import { FeedPostActionsMenu } from './feed-post-actions-menu'
 import { GridDisplayCard } from '@/components/profile/grid-display-card'
+import { PollCard } from '@/components/polls/poll-card'
 
 interface User {
   id: string
@@ -19,6 +23,8 @@ export interface Post {
   like_count?: number
   is_liked?: boolean
   comment_count?: number
+  parent_page_type?: string | null
+  parent_page_id?: string | null
 }
 
 export interface Grid {
@@ -51,9 +57,23 @@ interface NewsStory {
   created_at: string
 }
 
+export interface EmbeddedPollData {
+  poll: {
+    id: string
+    question: string
+    options?: unknown[]
+    is_featured_podium?: boolean
+    created_at: string
+    ends_at?: string | null
+  }
+  userResponse: string | undefined
+  voteCounts: Record<string, number>
+}
+
 interface FeedContentProps {
   posts: Post[]
   grids: Grid[]
+  embeddedPollsByPollId?: Record<string, EmbeddedPollData>
   featuredNews: NewsStory[]
   supabaseUrl?: string
   currentUserId?: string
@@ -64,7 +84,15 @@ type FeedItem =
   | (Grid & { contentType: 'grid' })
   | (NewsStory & { contentType: 'news' })
 
-export function FeedContent({ posts, grids, featuredNews, supabaseUrl, currentUserId }: FeedContentProps) {
+export function FeedContent({
+  posts,
+  grids,
+  embeddedPollsByPollId = {},
+  featuredNews,
+  supabaseUrl,
+  currentUserId,
+}: FeedContentProps) {
+  const router = useRouter()
   // Combine and sort all non-poll content by created_at
   const allContent: FeedItem[] = [
     ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
@@ -126,6 +154,30 @@ export function FeedContent({ posts, grids, featuredNews, supabaseUrl, currentUs
                 />
               </div>
               <p className="text-white/90">{post.content}</p>
+              {post.parent_page_type === 'poll' &&
+                post.parent_page_id &&
+                embeddedPollsByPollId[post.parent_page_id] && (() => {
+                  const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
+                  return (
+                    <div className="mt-4">
+                      <PollCard
+                        poll={{
+                          ...poll,
+                          options: Array.isArray(poll.options) ? poll.options : [],
+                          is_featured_podium: !!poll.is_featured_podium,
+                          ends_at: poll.ends_at ?? undefined,
+                        }}
+                        userResponse={userResponse}
+                        voteCounts={voteCounts}
+                        onVote={() => router.refresh()}
+                        variant="dark"
+                        className="rounded-md border border-white/10 bg-black/30 p-3"
+                        compact
+                        showRepost={false}
+                      />
+                    </div>
+                  )
+                })()}
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
                 <LikeButton
                   targetId={post.id}

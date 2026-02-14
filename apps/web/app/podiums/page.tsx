@@ -89,7 +89,12 @@ export default async function PodiumsPage() {
       .single(),
   ])
 
-  const polls = pollsResult.data || []
+  const allPolls = pollsResult.data || []
+  const now = new Date()
+  const activePolls = allPolls.filter(
+    (p) => p.ends_at == null || (p.ends_at && new Date(p.ends_at) > now)
+  )
+  const polls = activePolls
   const pollIds = polls.map((p) => p.id)
   let userResponses: Record<string, string> = {}
   let voteCounts: Record<string, Record<string, number>> = {}

@@ -61,8 +61,25 @@ export function PollsTab() {
     )
   }
 
+  const featuredPollExpired =
+    polls.some(
+      (p) =>
+        p.is_featured_podium &&
+        p.ends_at != null &&
+        p.ends_at !== '' &&
+        new Date(p.ends_at) < new Date()
+    )
+
   return (
     <>
+      {featuredPollExpired && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <p className="text-sm font-medium">
+            Your featured poll has expired. Create a new featured poll to keep it visible on Spotlight.
+          </p>
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setIsCreating(true)}

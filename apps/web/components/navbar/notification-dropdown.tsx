@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Heart, MessageSquare, UserPlus, AtSign, Vote, X } from 'lucide-react'
+import { Heart, MessageSquare, UserPlus, AtSign, Vote, X, AlertCircle } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
 import { getAvatarUrl } from '@/utils/avatar'
 import Link from 'next/link'
@@ -17,15 +17,23 @@ const notificationIcons = {
   follow: UserPlus,
   mention: AtSign,
   poll_vote: Vote,
+  tip_denied: AlertCircle,
 }
 
-const notificationMessages = {
-  like_grid: (actor: string) => `${actor} liked your grid`,
-  like_post: (actor: string) => `${actor} liked your post`,
-  comment: (actor: string) => `${actor} commented on your post`,
-  follow: (actor: string) => `${actor} started following you`,
-  mention: (actor: string) => `${actor} mentioned you`,
-  poll_vote: (actor: string) => `${actor} voted on a poll you're following`,
+type NotificationMetadata = { message?: string; preview?: string; grid_owner_username?: string }
+
+const notificationMessages: Record<
+  string,
+  (actor: string, metadata?: NotificationMetadata) => string
+> = {
+  like_grid: (actor) => `${actor} liked your grid`,
+  like_post: (actor) => `${actor} liked your post`,
+  comment: (actor) => `${actor} commented on your post`,
+  follow: (actor) => `${actor} started following you`,
+  mention: (actor) => `${actor} mentioned you`,
+  poll_vote: (actor) => `${actor} voted on a poll you're following`,
+  tip_denied: (_actor, metadata) =>
+    metadata?.message ?? 'Your track tip was not approved. You can try again or reach out to us for appeal.',
 }
 
 function formatTimeAgo(dateString: string): string {
@@ -81,6 +89,8 @@ function getNotificationUrl(notification: any): string {
       return '/feed'
     case 'poll_vote':
       return `/podiums`
+    case 'tip_denied':
+      return '/feed'
     default:
       return '/'
   }
@@ -155,9 +165,12 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
         ) : (
           <div className="divide-y divide-white/10">
             {notifications.map((notification) => {
-              const Icon = notificationIcons[notification.type]
+              const Icon = notificationIcons[notification.type] ?? AlertCircle
               const actor = notification.actor?.username || 'Someone'
-              const message = notificationMessages[notification.type](actor)
+              const messageFn = notificationMessages[notification.type]
+              const message = messageFn
+                ? messageFn(actor, notification.metadata as NotificationMetadata | undefined)
+                : ((notification.metadata as NotificationMetadata)?.message ?? 'Notification')
               const isUnread = !notification.read_at
 
               return (

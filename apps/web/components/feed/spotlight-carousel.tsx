@@ -304,7 +304,7 @@ export function SpotlightCarousel({
                 onClick={() => scrollToIndex(idx)}
                 className={`flex-1 min-w-0 border-b-2 py-3 transition-colors ${
                   activeIndex === idx
-                    ? 'border-[#25B4B1]'
+                    ? 'border-bright-teal'
                     : 'border-transparent hover:border-white/30'
                 }`}
               />

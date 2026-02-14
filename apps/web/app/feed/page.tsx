@@ -218,11 +218,12 @@ export default async function FeedPage() {
       .not('admin_id', 'is', null)
       .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
       .order('created_at', { ascending: false }),
-    // Admin polls for banner only: same as spotlight (no ends_at filter) so featured admin poll always shows
+    // Admin polls for banner: only active (not expired) so featured poll hides when expired
     supabase
       .from('polls')
       .select('*')
       .not('admin_id', 'is', null)
+      .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(20),
     // Featured news
@@ -404,6 +405,76 @@ export default async function FeedPage() {
     comment_count: commentCountByPostId[p.id] ?? 0,
   })) as Post[]
 
+  // Repost poll IDs: posts with parent_page_type='poll' for embedded poll cards
+  const repostPollIds = [
+    ...new Set(
+      followingPostsList
+        .filter(
+          (p: Record<string, unknown>) =>
+            p.parent_page_type === 'poll' && p.parent_page_id && typeof p.parent_page_id === 'string'
+        )
+        .map((p: Record<string, unknown>) => p.parent_page_id as string)
+    ),
+  ]
+  type EmbeddedPollData = {
+    poll: { id: string; question: string; options?: unknown[]; is_featured_podium?: boolean; created_at: string }
+    userResponse: string | undefined
+    voteCounts: Record<string, number>
+  }
+  let embeddedPollsByPollId: Record<string, EmbeddedPollData> = {}
+  if (repostPollIds.length > 0) {
+    const { data: repostPolls } = await supabase
+      .from('polls')
+      .select('id, question, options, is_featured_podium, created_at, ends_at')
+      .in('id', repostPollIds)
+    const pollsMap = new Map((repostPolls || []).map((p) => [p.id, p]))
+    let repostUserResponses: Record<string, string> = {}
+    let repostVoteCounts: Record<string, Record<string, number>> = {}
+    if (session) {
+      const { data: resp } = await supabase
+        .from('poll_responses')
+        .select('poll_id, selected_option_id')
+        .eq('user_id', session.user.id)
+        .in('poll_id', repostPollIds)
+      if (resp) {
+        repostUserResponses = resp.reduce((acc, r) => {
+          acc[r.poll_id] = r.selected_option_id
+          return acc
+        }, {} as Record<string, string>)
+      }
+    }
+    const { data: allResp } = await supabase
+      .from('poll_responses')
+      .select('poll_id, selected_option_id')
+      .in('poll_id', repostPollIds)
+    if (allResp) {
+      repostVoteCounts = allResp.reduce(
+        (acc, r) => {
+          if (!acc[r.poll_id]) acc[r.poll_id] = {}
+          acc[r.poll_id][r.selected_option_id] = (acc[r.poll_id][r.selected_option_id] || 0) + 1
+          return acc
+        },
+        {} as Record<string, Record<string, number>>
+      )
+    }
+    repostPollIds.forEach((pollId) => {
+      const poll = pollsMap.get(pollId)
+      if (poll) {
+        embeddedPollsByPollId[pollId] = {
+          poll: {
+            id: poll.id,
+            question: poll.question,
+            options: poll.options,
+            is_featured_podium: poll.is_featured_podium ?? false,
+            created_at: poll.created_at,
+          },
+          userResponse: repostUserResponses[pollId],
+          voteCounts: repostVoteCounts[pollId] ?? {},
+        }
+      }
+    })
+  }
+
   // Enrich feed grids: ranked_items with images/location, like/comment counts
   const feedGridsRaw = followingGrids.data || []
   const enrichedFeedGrids = await Promise.all(
@@ -507,7 +578,7 @@ export default async function FeedPage() {
     admin_id?: string | null
   }>
   const allActivePolls = [...adminPollsList, ...communityPollsList]
-  // Banner uses same source as spotlight: admin polls without ends_at filter, featured first
+  // Banner uses active admin polls only (expired hidden), featured first
   const featuredAdminPoll =
     adminPollsForBannerList.find((p) => p.is_featured_podium) ??
     adminPollsForBannerList[0] ??
@@ -591,6 +662,11 @@ export default async function FeedPage() {
   if (featuredGrid) bannerItems.push({ type: 'featured_grid', data: featuredGrid })
   if (highlightedFan) bannerItems.push({ type: 'featured_user', data: highlightedFan })
 
+  // Desktop banner: sponsors + featured grid + highlighted fan only (no news, no featured poll — those live in the left sidebar)
+  const desktopBannerItems = bannerItems.filter(
+    (item) => item.type !== 'featured_story' && item.type !== 'featured_poll'
+  )
+
   return (
     <div className="w-full">
       <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
@@ -598,35 +674,22 @@ export default async function FeedPage() {
         <h3 className="text-sm text-white/80 font-sans mb-4">Post. React. Express Yourself.</h3>
       </div>
 
-      {bannerItems.length > 0 && (
+      {desktopBannerItems.length > 0 && (
         <div className="relative z-10 hidden w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:block lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-auto lg:gap-8">
-            {bannerItems.map((item) => (
+            {desktopBannerItems.map((item) => (
               <div
                 key={
                   item.type === 'sponsor'
                     ? `sponsor-${item.data.id}`
-                    : item.type === 'featured_poll'
-                      ? `poll-${item.data.id}`
-                      : item.type === 'featured_story'
-                        ? `story-${item.data.id}`
-                        : item.type === 'featured_grid'
-                          ? `grid-${item.data.id}`
-                          : `fan-${item.data.id}`
+                    : item.type === 'featured_grid'
+                      ? `grid-${item.data.id}`
+                      : `fan-${item.data.id}`
                 }
                 className="min-h-[140px] min-w-[200px] max-w-[240px] flex-shrink-0"
               >
                 {item.type === 'sponsor' && (
                   <SponsorCard sponsor={item.data} variant="banner" />
-                )}
-                {item.type === 'featured_poll' && (
-                  <BannerPollCard
-                    poll={item.data}
-                    userResponse={bannerPollUserResponse}
-                  />
-                )}
-                {item.type === 'featured_story' && (
-                  <FeaturedNewsCard newsStory={item.data} />
                 )}
                 {item.type === 'featured_grid' && (
                   <BannerFeaturedGridCard grid={item.data} />
@@ -685,6 +748,7 @@ export default async function FeedPage() {
           <FeedContent
             posts={enrichedFeedPosts}
             grids={enrichedFeedGrids as Grid[]}
+            embeddedPollsByPollId={embeddedPollsByPollId}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}
             featuredNews={[]}

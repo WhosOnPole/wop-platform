@@ -62,6 +62,10 @@ export default async function HighlightsPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
+  const missingFan = !currentHighlights?.highlighted_fan_id
+  const missingGrid = !currentHighlights?.highlighted_fan_grid_id
+  const needsHighlights = !currentHighlights || missingFan || missingGrid
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -73,6 +77,14 @@ export default async function HighlightsPage() {
         </div>
         <AutoCalculateButton weekStart={weekStart} />
       </div>
+
+      {needsHighlights && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <p className="text-sm font-medium">
+            Set the featured fan and grid for this week to keep Spotlight Our Picks active.
+          </p>
+        </div>
+      )}
 
       {currentHighlights?.highlighted_fan && (
         <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
