@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { getTeamPrimaryColor } from '@/utils/team-colors'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface Driver {
@@ -252,7 +253,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                           </div>
                         )}
                         {driverCode && (
-                          <div className="absolute top-2/3 left-1 z-30 flex  w-3 items-center justify-center overflow-visible">
+                          <div className="absolute bottom-4 left-1 z-30 flex  w-3 items-center justify-center overflow-visible">
                             <span
                               className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none tracking-widest"
                               style={{
@@ -292,10 +293,13 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                         />
                         <div className="absolute inset-0 z-10 bg-black/30" aria-hidden />
                         <span
-                          className="absolute inset-0 z-20 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                          className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none tracking-[-5%] opacity-90 line-clamp-2"
                           style={{
                             fontFamily: 'Inter, sans-serif',
-                            fontSize: 'clamp(10px, 2.5vw, 14px)',
+                            fontWeight: 900,
+                            fontSize: 'clamp(1.22em, 2.5vw, 1.22em)',
+                            color: 'white',
+                            textShadow: '0 1px 2px rgba(0, 0, 0, 0.8), 0 2.3px 1.6px rgba(51, 13, 73, 0.5)',
                           }}
                         >
                           {team.name}

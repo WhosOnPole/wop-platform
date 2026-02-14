@@ -4,10 +4,10 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { getDriverBodyImageUrl } from '@/utils/storage-urls'
 
-/** Pull image down to avoid top clipping; ~15% from top anchors to center */
-const BODY_OBJECT_POSITION = '50% -5.5%'
-/** Light zoom; keep top visible */
-const BODY_SCALE = 1.2
+/** Position so shoulders and up stay in frame when zoomed */
+const BODY_OBJECT_POSITION = '50% -8%'
+/** Zoom in to show shoulders and up only */
+const BODY_SCALE = 1.4
 
 interface DriverHeroBodyMediaProps {
   driverName: string
@@ -32,7 +32,7 @@ export function DriverHeroBodyMedia({
   const showFallback = (useFallback && fallbackSrc) || (!bodyUrl && fallbackSrc)
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`relative overflow-y-hidden overflow-x-visible ${className}`}>
       {showBody && bodyUrl && (
         <Image
           src={bodyUrl}

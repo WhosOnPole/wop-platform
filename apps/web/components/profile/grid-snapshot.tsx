@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { getTeamIconUrl } from '@/utils/storage-urls'
+import { getTeamPrimaryColor } from '@/utils/team-colors'
 import Image from 'next/image'
 
 function entityHref(gridType: 'driver' | 'team' | 'track', name: string): string {
@@ -11,8 +12,14 @@ function entityHref(gridType: 'driver' | 'team' | 'track', name: string): string
   return `/${gridType}s/${slug}`
 }
 
+interface SnapshotItem {
+  id: string
+  name: string
+  team_name?: string | null
+}
+
 interface GridSnapshotProps {
-  previousState: Array<{ id: string; name: string }>
+  previousState: Array<SnapshotItem>
   updatedAt: string
   gridType: 'driver' | 'team' | 'track'
   supabaseUrl?: string
@@ -37,11 +44,17 @@ export function GridSnapshot({
   }
 
   // Get team icon URL if available
-  function getTeamIcon(item: { id: string; name: string }): string | null {
+  function getTeamIcon(item: SnapshotItem): string | null {
     if (gridType === 'team' && supabaseUrl) {
       return getTeamIconUrl(item.name, supabaseUrl)
     }
     return null
+  }
+
+  // Driver link hover uses team primary color when available
+  function getDriverLinkStyle(item: SnapshotItem): React.CSSProperties | undefined {
+    if (gridType !== 'driver' || !item.team_name) return undefined
+    return { ['--team-primary']: getTeamPrimaryColor(item.team_name) } as React.CSSProperties
   }
 
   // Show first 4 items in collapsed state, all in expanded
@@ -71,11 +84,16 @@ export function GridSnapshot({
             const rank = index + 1
             const teamIconUrl = getTeamIcon(item)
 
+            const isDriver = gridType === 'driver'
+            const hoverClass = isDriver && item.team_name
+              ? 'hover:border-[var(--team-primary)] hover:text-[var(--team-primary)]'
+              : 'hover:bg-white/10'
             return (
               <Link
                 key={item.id}
                 href={entityHref(gridType, item.name)}
-                className="flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-2 py-1 hover:bg-white/10 transition-colors"
+                style={getDriverLinkStyle(item)}
+                className={`flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-2 py-1 transition-colors ${hoverClass}`}
               >
                 <span className="text-xs font-semibold text-white/70 shrink-0">{rank}</span>
                 <span className="min-w-0 flex-1 truncate text-xs text-white">

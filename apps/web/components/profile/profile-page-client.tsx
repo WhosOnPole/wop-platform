@@ -20,8 +20,6 @@ interface ProfilePageClientProps {
   teamGrid?: any
   activities: any[]
   profilePosts: any[]
-  followerCount?: number
-  followingCount?: number
   supabaseUrl?: string
 }
 
@@ -42,8 +40,6 @@ export function ProfilePageClient({
   teamGrid,
   activities,
   profilePosts,
-  followerCount = 0,
-  followingCount = 0,
   supabaseUrl,
 }: ProfilePageClientProps) {
   const searchParams = useSearchParams()
@@ -192,8 +188,6 @@ export function ProfilePageClient({
             <ActivityTab
               activities={activities}
               profileUsername={profile.username}
-              followerCount={followerCount}
-              followingCount={followingCount}
             />
           </div>
         )}

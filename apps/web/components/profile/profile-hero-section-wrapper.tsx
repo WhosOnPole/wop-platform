@@ -18,6 +18,9 @@ interface ProfileHeroSectionWrapperProps {
   supabaseUrl?: string
   isFollowing?: boolean
   currentUserId?: string | null
+  followerCount?: number
+  followingCount?: number
+  profileUsername?: string
 }
 
 export function ProfileHeroSectionWrapper({
@@ -27,6 +30,9 @@ export function ProfileHeroSectionWrapper({
   supabaseUrl,
   isFollowing = false,
   currentUserId = null,
+  followerCount = 0,
+  followingCount = 0,
+  profileUsername,
 }: ProfileHeroSectionWrapperProps) {
   const [scrollProgress, setScrollProgress] = useState(0)
 
@@ -53,6 +59,9 @@ export function ProfileHeroSectionWrapper({
       scrollProgress={scrollProgress}
       isFollowing={isFollowing}
       currentUserId={currentUserId}
+      followerCount={followerCount}
+      followingCount={followingCount}
+      profileUsername={profileUsername ?? profile.username}
     />
   )
 }

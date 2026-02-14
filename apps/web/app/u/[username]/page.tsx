@@ -303,13 +303,17 @@ export default async function UserProfilePage({ params }: PageProps) {
           if (grid.type === 'driver') {
             const { data: driver } = await supabase
               .from('drivers')
-              .select('id, name, headshot_url, image_url')
+              .select('id, name, headshot_url, image_url, team_id, teams:team_id(name)')
               .eq('id', item.id)
               .maybeSingle()
+            const teamName = driver?.teams
+              ? (Array.isArray((driver as any).teams) ? (driver as any).teams[0]?.name : (driver as any).teams?.name)
+              : null
             return {
               ...item,
               headshot_url: driver?.headshot_url || null,
               image_url: driver?.headshot_url || driver?.image_url || null,
+              team_name: teamName ?? null,
             }
           } else if (grid.type === 'track') {
             const { data: track } = await supabase
@@ -332,9 +336,30 @@ export default async function UserProfilePage({ params }: PageProps) {
         })
       )
 
+      // Enrich previous_state for driver grids with team_name (for snapshot link hover)
+      let enrichedPreviousState = grid.previous_state ?? null
+      if (grid.type === 'driver' && Array.isArray(grid.previous_state) && grid.previous_state.length > 0) {
+        const driverIds = grid.previous_state.map((p: { id: string }) => p.id)
+        const { data: drivers } = await supabase
+          .from('drivers')
+          .select('id, team_id, teams:team_id(name)')
+          .in('id', driverIds)
+        const driverTeamMap = new Map(
+          (drivers || []).map((d: any) => [
+            d.id,
+            d.teams ? (Array.isArray(d.teams) ? d.teams[0]?.name : d.teams?.name) : null,
+          ])
+        )
+        enrichedPreviousState = grid.previous_state.map((p: { id: string; name: string }) => ({
+          ...p,
+          team_name: driverTeamMap.get(p.id) ?? null,
+        }))
+      }
+
       return {
         ...grid,
         ranked_items: enrichedItems,
+        previous_state: enrichedPreviousState,
       }
     })
   )
@@ -347,7 +372,7 @@ export default async function UserProfilePage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-black -mt-14">
       {/* Hero Section - in flow, 60vh height */}
-      <div className="relative w-full h-[40vh] z-0">
+      <div className="relative w-full h-[50vh] z-0">
         <ProfileHeroSectionWrapper
           profile={profile}
           isOwnProfile={isOwnProfile}
@@ -355,6 +380,9 @@ export default async function UserProfilePage({ params }: PageProps) {
           supabaseUrl={supabaseUrl ?? undefined}
           isFollowing={isFollowing}
           currentUserId={session?.user.id || null}
+          followerCount={followerCount ?? 0}
+          followingCount={followingCount ?? 0}
+          profileUsername={profile.username}
         />
       </div>
 
@@ -368,8 +396,6 @@ export default async function UserProfilePage({ params }: PageProps) {
         teamGrid={teamGrid}
         activities={activities}
         profilePosts={profilePosts || []}
-        followerCount={followerCount ?? 0}
-        followingCount={followingCount ?? 0}
         supabaseUrl={supabaseUrl}
       />
     </div>

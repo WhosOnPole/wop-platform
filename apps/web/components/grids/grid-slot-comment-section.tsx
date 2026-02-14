@@ -156,29 +156,32 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
     <div className="mt-6 space-y-4 px-4 bg-black">
       <h3 className="text-sm font-medium text-white/90">Comments</h3>
 
-      <form onSubmit={handleAddComment} className="flex flex-col gap-2">
+      <form onSubmit={handleAddComment} className="flex w-full items-stretch">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Add a comment..."
           rows={2}
-          className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+          className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
         />
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="inline-flex items-center gap-1.5 self-end rounded-md border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10 disabled:opacity-50"
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           Post
         </button>
       </form>
 
-      {isLoading ? (
-        <p className="text-sm text-white/70">Loading comments...</p>
-      ) : (
-        <div className="space-y-3 border-l-2 border-white/10 pl-3">
-          {topLevel.map((comment) => {
+      <div
+        className={`rounded-md border border-white/20 bg-transparent p-4 min-h-[120px] flex flex-col ${isLoading || topLevel.length === 0 ? 'items-center justify-center' : ''}`}
+      >
+        {isLoading ? (
+          <p className="text-sm text-white/70">Loading comments...</p>
+        ) : topLevel.length > 0 ? (
+          <div className="w-full space-y-3 border-l-2 border-white/10 pl-3">
+            {topLevel.map((comment) => {
             const commentReplies = repliesByParent[comment.id] || []
             return (
               <div key={comment.id} className="py-1">
@@ -296,12 +299,11 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
               </div>
             )
           })}
-        </div>
-      )}
-
-      {!isLoading && topLevel.length === 0 && (
-        <p className="text-sm text-white/60">No comments yet. Be the first to comment.</p>
-      )}
+          </div>
+        ) : (
+          <p className="text-sm text-white/60 text-center">No comments yet. Be the first to comment.</p>
+        )}
+      </div>
     </div>
   )
 }

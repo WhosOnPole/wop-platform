@@ -16,6 +16,7 @@ interface GridItem {
   country?: string | null
   location?: string | null
   circuit_ref?: string | null
+  team_name?: string | null
   is_placeholder?: boolean
 }
 
@@ -80,21 +81,18 @@ export function GridDisplayCard({
     return null
   }
 
-  // Format vertical text for left edge
-  function getVerticalText(item: GridItem): string {
-    if (grid.type === 'driver') {
-      // First 3 letters of LAST name, all caps
-      const parts = item.name.split(' ')
-      const lastName = parts[parts.length - 1] || item.name
-      return lastName.substring(0, 3).toUpperCase()
-    } else if (grid.type === 'team') {
-      // Teams: no text
-      return ''
-    } else if (grid.type === 'track') {
-      // Circuit ref (e.g. BAH, MON), fallback to location, all caps
-      return (item.circuit_ref || item.location || '').toUpperCase()
-    }
-    return ''
+  // Driver short code for vertical text near top left (drivers only)
+  function getDriverCode(item: GridItem): string {
+    if (grid.type !== 'driver') return ''
+    const parts = item.name.split(' ')
+    const lastName = parts[parts.length - 1] || item.name
+    return lastName.substring(0, 3).toUpperCase()
+  }
+
+  // Track display name (tracks only) - full text, no truncation
+  function getTrackDisplayText(item: GridItem): string {
+    if (grid.type !== 'track') return ''
+    return (item.location || item.circuit_ref || item.name || '').toUpperCase()
   }
 
   const commentCount = grid.comment_count ?? 0
@@ -226,38 +224,49 @@ export function GridDisplayCard({
                 {/* Team: centered uppercase Inter text overlay */}
                 {grid.type === 'team' && (
                   <span
-                    className="absolute inset-0 z-10 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                    className="absolute inset-0 z-10 flex items-center justify-center px-3 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
                     style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: 'clamp(12px, 2vw, 18px)',
+                      fontSize: 'clamp(16px, 2.5vw, 24px)',
                     }}
                   >
                     {firstItem.name}
                   </span>
                 )}
+                {/* Track: vertical text on left edge, centered at half height */}
+                {grid.type === 'track' && getTrackDisplayText(firstItem) && (
+                  <div className="absolute left-1 top-1/2 z-10 flex h-[70%] w-5 md:w-6 -translate-y-1/2 items-center justify-center overflow-hidden">
+                    <span
+                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: 'clamp(14px, 1.5vw, 22px)',
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: 'center center',
+                      }}
+                    >
+                      {getTrackDisplayText(firstItem)}
+                    </span>
+                  </div>
+                )}
                 {/* Overlay gradient for text readability (drivers/tracks) */}
                 {grid.type !== 'team' && (
                   <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 )}
-                {/* Vertical text on left edge (rotate -90deg like grid titles) */}
-                {getVerticalText(firstItem) && (
-                  <div
-                    className={`absolute z-30 flex h-[70%] w-5 md:w-6 items-start mt-4 justify-center overflow-visible ${grid.type === 'track' ? 'left-1 ' : 'left-2 top-2'}`}
-                  >
+                {/* Driver short code: vertical text near top left */}
+                {getDriverCode(firstItem) && (
+                  <div className="absolute left-2 top-6 z-30 flex h-[100%] w-5 md:w-6 items-start justify-center">
                     <span
                       className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                       style={{
-                        fontSize:
-                          grid.type === 'driver'
-                            ? 'clamp(30px, 2.5vw, 20px)'
-                            : 'clamp(25px, 1.6vw, 16px)',
+                        fontSize: 'clamp(30px, 2.5vw, 20px)',
                         fontFamily: 'Inter, sans-serif',
-                        letterSpacing: grid.type === 'track' ? '0' : '0.05em',
+                        letterSpacing: '0.05em',
                         transform: 'rotate(-90deg)',
-                        transformOrigin: grid.type === 'driver' ? 'center center' : '70% 170%',
+                        transformOrigin: 'center center',
                       }}
                     >
-                      {getVerticalText(firstItem)}
+                      {getDriverCode(firstItem)}
                     </span>
                   </div>
                 )}
@@ -372,26 +381,40 @@ export function GridDisplayCard({
                     {item.name}
                   </span>
                 )}
+                {/* Track: vertical text on left edge, centered at half height (small tiles) */}
+                {grid.type === 'track' && getTrackDisplayText(item) && (
+                  <div className="absolute left-0.5 top-1/2 z-10 flex h-[100%] w-[12px] -translate-y-1/2 items-center justify-center">
+                    <span
+                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '9px',
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: 'center center',
+                      }}
+                    >
+                      {getTrackDisplayText(item)}
+                    </span>
+                  </div>
+                )}
                 {/* Overlay gradient for text readability (drivers/tracks) */}
                 {grid.type !== 'team' && (
                   <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 )}
-                {/* Vertical text on left edge (rotate -90deg like grid titles) */}
-                {getVerticalText(item) && (
-                  <div
-                    className={`absolute z-30 flex h-[44px] w-3 items-center justify-center overflow-visible ${grid.type === 'track' ? 'left-0.5 top-1' : 'left-0.5 top-0.5'}`}
-                  >
+                {/* Driver short code: vertical text near top left (small tiles) */}
+                {getDriverCode(item) && (
+                  <div className="absolute left-0.5 top-0 z-30 flex h-[100%] w-[12px] items-center justify-center">
                     <span
                       className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                       style={{
-                        fontSize: grid.type === 'driver' ? '9px' : '15px',
+                        fontSize: '9px',
                         fontFamily: 'Inter, sans-serif',
                         letterSpacing: '0',
                         transform: 'rotate(-90deg)',
                         transformOrigin: '20% 0%',
                       }}
                     >
-                      {getVerticalText(item)}
+                      {getDriverCode(item)}
                     </span>
                   </div>
                 )}
@@ -437,7 +460,7 @@ export function GridDisplayCard({
 
         <Link
           href={`/grid/${grid.id}`}
-          className="flex items-center gap-1 text-sm hover:text-gray-900 float-right justify-end ml-auto self-end"
+          className="flex items-center gap-1 text-sm hover:text-sunset-start float-right justify-end ml-auto self-end"
         >
           View Grid <ChevronRight className="h-4 w-4" />
         </Link>

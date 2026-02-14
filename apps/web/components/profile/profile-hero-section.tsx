@@ -21,6 +21,9 @@ interface ProfileHeroSectionProps {
   scrollProgress?: number // 0 to 1, for fade animations
   isFollowing?: boolean
   currentUserId?: string | null
+  followerCount?: number
+  followingCount?: number
+  profileUsername?: string
 }
 
 const DEFAULT_GRADIENT = 'linear-gradient(135deg, #667EEA, #764BA2)'
@@ -33,6 +36,9 @@ export function ProfileHeroSection({
   scrollProgress = 0,
   isFollowing = false,
   currentUserId = null,
+  followerCount = 0,
+  followingCount = 0,
+  profileUsername,
 }: ProfileHeroSectionProps) {
   // Use top team's background.jpg when available; otherwise gradient
   const useTeamBackgroundImage = Boolean(teamBackground && supabaseUrl)
@@ -96,14 +102,33 @@ export function ProfileHeroSection({
           {profile.username}
         </h1>
 
+        {/* Followers / Following - own line */}
+        {profileUsername && (
+          <div className="mt-2 flex items-center gap-3 text-sm text-white/90 md:text-base">
+            <Link
+              href={`/u/${profileUsername}/followers`}
+              className="hover:text-white transition-colors"
+            >
+              <span className="font-semibold tabular-nums">{followerCount}</span>{' '}
+              <span className="text-white/70">followers</span>
+            </Link>
+            <Link
+              href={`/u/${profileUsername}/following`}
+              className="hover:text-white transition-colors"
+            >
+              <span className="font-semibold tabular-nums">{followingCount}</span>{' '}
+              <span className="text-white/70">following</span>
+            </Link>
+          </div>
+        )}
+
         {/* Age + Location + Follow Button Row */}
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-white/90 md:text-base">
+        <div className="mt-1 flex items-center justify-between gap-4">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 text-sm text-white/90 md:text-base">
             {profile.age && showLocation && (
               <>
                 <span>{profile.age}</span>
-                <span>
-                  •</span>
+                <span>•</span>
               </>
             )}
             {profile.age && !showLocation && <span>{profile.age} •</span>}

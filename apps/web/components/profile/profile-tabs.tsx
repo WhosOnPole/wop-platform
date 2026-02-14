@@ -1,5 +1,7 @@
 'use client'
 
+import { getTeamBackgroundGradient } from '@/utils/team-colors'
+
 type TabKey = 'activity' | 'drivers' | 'tracks' | 'teams'
 
 interface ProfileTabsProps {
@@ -36,9 +38,7 @@ export function ProfileTabs({ activeTab, onTabChange, teamBackground }: ProfileT
       {activeTab === 'teams' && teamBackground && (
         <div
           className="absolute inset-0 -z-10 opacity-10"
-          style={{
-            background: `linear-gradient(135deg, var(--team-color-1), var(--team-color-2))`,
-          }}
+          style={{ background: getTeamBackgroundGradient(teamBackground) }}
         />
       )}
     </div>
