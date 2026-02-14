@@ -1,14 +1,55 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Logo } from '@/components/ui/logo'
-import { Clock, Mail, Sparkles, CheckCircle } from 'lucide-react'
+
+const RIGHT_SIDE_SLIDES = [
+  'F1 fandom, redefined',
+  'Connection fueled by shared obsession.',
+  'Built for the love of it',
+  "Hot takes welcome — hate isn't",
+]
+
+// Clone first slide at end for seamless loop
+const SLIDES_LOOP = [...RIGHT_SIDE_SLIDES, RIGHT_SIDE_SLIDES[0]]
+const SLIDE_COUNT = SLIDES_LOOP.length
 
 export function ComingSoonContent() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [slideIndex, setSlideIndex] = useState(0)
+  const [transitionEnabled, setTransitionEnabled] = useState(true)
+  const slideIndexRef = useRef(0)
+
+  useEffect(() => {
+    slideIndexRef.current = slideIndex
+  }, [slideIndex])
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      const i = slideIndexRef.current
+      const next = i + 1
+      if (next === SLIDE_COUNT) {
+        setTransitionEnabled(false)
+        setSlideIndex(0)
+      } else {
+        setSlideIndex(next)
+      }
+    }, 3000)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    if (slideIndex === 0 && !transitionEnabled) {
+      const id = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setTransitionEnabled(true))
+      })
+      return () => cancelAnimationFrame(id)
+    }
+  }, [slideIndex, transitionEnabled])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -59,7 +100,7 @@ export function ComingSoonContent() {
               </div>
             </div>
 
-            <h1 className="text-4xl font-secondary">
+            <h1 className="text-5xl font-display">
               Coming Soon
             </h1>
             <p className="text-base text-white px-16">
@@ -138,19 +179,51 @@ export function ComingSoonContent() {
       </div>
 
       {/* Right Side - Coming Soon Panel */}
-      <div className="hidden lg:flex w-full lg:w-2/3 flex items-center justify-end p-8 relative bg-[url('/images/bggradient.png')] bg-cover bg-center bg-no-repeat">
-      
-        
-        {/* Logo overlay */}
-        <div className="relative z-10 text-center space-y-6">
-          {/* <Logo variant="white" size="xl" href="/" className="mx-auto" /> */}
-          <img src="/images/fans.png" alt="Background Gradient" className="w-2/3 float-right h-full object-cover block mb-0" />
-          <p className="text-white text-start text-2xl w-2/3 float-right pl-10">
-          Real fans building community where the love for <br></br> Formula 1 doesn’t have a price.<br></br>
-          <b>Built slowly. Built ethically. Built together.</b>
-          </p>
+      <div className="hidden lg:flex w-full lg:w-2/3 flex items-center justify-end p-8 relative overflow-hidden">
+        {/* Background: blue car behind gradient */}
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-90"
+          style={{ backgroundImage: "url('/images/blue_car.svg')" }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 z-[1] bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/bggradient.png')" }}
+          aria-hidden
+        />
+        {/* Content */}
+        <div className="relative z-10 flex w-full flex-col items-end justify-center gap-6">
+          <Image
+            src="/images/fans.png"
+            alt=""
+            width={600}
+            height={400}
+            className="w-2/3 max-w-xl object-cover object-right"
+          />
+          <div className="w-1/3 min-h-[4.5rem] overflow-hidden pl-10 pr-0 text-left font-black">
+            <div
+              className="flex ease-in-out"
+              style={{
+                width: `${SLIDE_COUNT * 100}%`,
+                transform: `translateX(-${slideIndex * (100 / SLIDE_COUNT)}%)`,
+                transition: transitionEnabled ? 'transform 500ms ease-in-out' : 'none',
+              }}
+            >
+              {SLIDES_LOOP.map((text, idx) => (
+                <p
+                  key={idx}
+                  className="shrink-0 text-2xl text-white"
+                  style={{ width: `${100 / SLIDE_COUNT}%` }}
+                  aria-live="polite"
+                  aria-hidden={slideIndex !== idx}
+                >
+                  {text}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="w-full py-4 text-center text-xs text-white/70 lg:absolute lg:bottom-4">
+        <div className="absolute bottom-4 left-0 right-0 z-10 text-center text-xs text-white/70">
         <span>© 2026 Who&apos;s on Pole? All rights reserved.</span>
         <span className="mx-2 text-white/40">|</span>
         <Link href="/privacy" className="hover:text-white">
