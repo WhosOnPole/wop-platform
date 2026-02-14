@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Logo } from '@/components/ui/logo'
@@ -12,44 +12,18 @@ const RIGHT_SIDE_SLIDES = [
   "Hot takes welcome — hate isn't",
 ]
 
-// Clone first slide at end for seamless loop
-const SLIDES_LOOP = [...RIGHT_SIDE_SLIDES, RIGHT_SIDE_SLIDES[0]]
-const SLIDE_COUNT = SLIDES_LOOP.length
-
 export function ComingSoonContent() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [slideIndex, setSlideIndex] = useState(0)
-  const [transitionEnabled, setTransitionEnabled] = useState(true)
-  const slideIndexRef = useRef(0)
-
-  useEffect(() => {
-    slideIndexRef.current = slideIndex
-  }, [slideIndex])
 
   useEffect(() => {
     const t = setInterval(() => {
-      const i = slideIndexRef.current
-      const next = i + 1
-      if (next === SLIDE_COUNT) {
-        setTransitionEnabled(false)
-        setSlideIndex(0)
-      } else {
-        setSlideIndex(next)
-      }
+      setSlideIndex((i) => (i + 1) % RIGHT_SIDE_SLIDES.length)
     }, 3000)
     return () => clearInterval(t)
   }, [])
-
-  useEffect(() => {
-    if (slideIndex === 0 && !transitionEnabled) {
-      const id = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setTransitionEnabled(true))
-      })
-      return () => cancelAnimationFrame(id)
-    }
-  }, [slideIndex, transitionEnabled])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -200,27 +174,18 @@ export function ComingSoonContent() {
             height={400}
             className="w-2/3 max-w-xl object-cover object-right"
           />
-          <div className="w-1/3 min-h-[4.5rem] overflow-hidden pl-10 pr-0 text-left font-black">
-            <div
-              className="flex ease-in-out"
-              style={{
-                width: `${SLIDE_COUNT * 100}%`,
-                transform: `translateX(-${slideIndex * (100 / SLIDE_COUNT)}%)`,
-                transition: transitionEnabled ? 'transform 500ms ease-in-out' : 'none',
-              }}
-            >
-              {SLIDES_LOOP.map((text, idx) => (
-                <p
-                  key={idx}
-                  className="shrink-0 text-2xl text-white"
-                  style={{ width: `${100 / SLIDE_COUNT}%` }}
-                  aria-live="polite"
-                  aria-hidden={slideIndex !== idx}
-                >
-                  {text}
-                </p>
-              ))}
-            </div>
+          <div className="relative w-1/3 min-h-[4.5rem] pl-10 pr-0 text-left font-black">
+            {RIGHT_SIDE_SLIDES.map((text, idx) => (
+              <p
+                key={idx}
+                className="absolute inset-0 flex items-center text-2xl text-white transition-opacity duration-500"
+                style={{ opacity: slideIndex === idx ? 1 : 0 }}
+                aria-live="polite"
+                aria-hidden={slideIndex !== idx}
+              >
+                {text}
+              </p>
+            ))}
           </div>
         </div>
         <div className="absolute bottom-4 left-0 right-0 z-10 text-center text-xs text-white/70">
