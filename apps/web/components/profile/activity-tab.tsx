@@ -108,7 +108,7 @@ export function ActivityTab({
                 <>
                   <div className="flex-shrink-0">{getActivityIcon(item)}</div>
 
-                  <div className="flex-1 min-w-0">
+                  <div id={item.post_id ? `post-${item.post_id}` : undefined} className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="font-medium text-white">{getActivityLabel(item)}</span>
                       {item.target_name && (

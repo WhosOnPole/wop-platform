@@ -376,9 +376,9 @@ export default async function DynamicPage({ params }: PageProps) {
   }
 
   return (
-    <div className="relative min-h-screen">
-      {/* Top Section with Background Image - in flow */}
-      <div className="relative z-10 h-[40vh] min-h-[40vh]">
+    <div className="relative min-h-screen -mt-14">
+      {/* Top Section with Background Image - extends to top of view */}
+      <div className="relative z-10 h-[40vh] min-h-[40vh] pt-14">
         {/* Hero Background */}
         <EntityHeroBackground
           imageUrl={backgroundImage}

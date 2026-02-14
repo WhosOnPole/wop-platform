@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import { Heart, MessageSquare, UserPlus, AtSign, Vote, Settings, Check } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
 import Link from 'next/link'
 import { getAvatarUrl } from '@/utils/avatar'
+import { createClientComponentClient } from '@/utils/supabase-client'
 
 type FilterType = 'all' | 'unread' | 'likes' | 'comments' | 'follows'
 
@@ -54,29 +56,28 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString()
 }
 
-function getNotificationUrl(notification: any): string {
+function getNotificationUrl(notification: any, currentUsername?: string | null): string {
   const { type, target_type, target_id, actor_id, metadata } = notification
 
   switch (type) {
     case 'like_grid':
-      // For grid likes, link to the grid owner's profile if available in metadata
-      // Otherwise, link to the actor's profile (person who liked it)
       if (metadata?.grid_owner_username) {
         return `/u/${metadata.grid_owner_username}`
       }
-      return `/u/${notification.actor?.username || actor_id}`
+      return `/u/${notification.actor?.username ?? actor_id}`
     case 'comment':
-      // Comments are on posts, so link to the post
-      // In a real implementation, we might want a post detail page
-      // For now, link to feed or the post owner's profile
+      if (currentUsername && target_id) {
+        return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`
+      }
       return '/feed'
     case 'like_post':
-      // Similar to comments, link to feed or post detail
+      if (currentUsername && target_id) {
+        return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`
+      }
       return '/feed'
     case 'follow':
-      return `/u/${notification.actor?.username || actor_id}`
+      return `/u/${notification.actor?.username ?? actor_id}`
     case 'mention':
-      // Mentions are in posts, link to feed
       return '/feed'
     case 'poll_vote':
       return `/podiums`
@@ -88,9 +89,24 @@ function getNotificationUrl(notification: any): string {
 export default function NotificationsPage() {
   const router = useRouter()
   const [filter, setFilter] = useState<FilterType>('all')
+  const supabase = createClientComponentClient()
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } = useNotifications({
     limit: 50,
     unreadOnly: filter === 'unread',
+  })
+
+  const { data: currentUsername } = useQuery({
+    queryKey: ['current-user-username'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return null
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .single()
+      return data?.username ?? null
+    },
   })
 
   // Filter notifications by type
@@ -107,7 +123,7 @@ export default function NotificationsPage() {
     if (!notification.read_at) {
       markAsRead(notification.id)
     }
-    const url = getNotificationUrl(notification)
+    const url = getNotificationUrl(notification, currentUsername)
     router.push(url)
   }
 

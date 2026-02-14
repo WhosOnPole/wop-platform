@@ -12,6 +12,7 @@ interface TipModalProps {
 interface TrackOption {
   id: string
   name: string
+  circuit_ref: string | null
 }
 
 const TIP_TYPE_OPTIONS = [
@@ -39,8 +40,8 @@ export function TipModal({ onClose }: TipModalProps) {
       try {
         const { data, error } = await supabase
           .from('tracks')
-          .select('id, name')
-          .order('name', { ascending: true })
+          .select('id, name, circuit_ref')
+          .order('circuit_ref', { ascending: true, nullsFirst: false })
 
         if (error) {
           console.error('Error loading tracks for tip modal:', error)
@@ -149,7 +150,7 @@ export function TipModal({ onClose }: TipModalProps) {
               </option>
               {tracks.map((t) => (
                 <option key={t.id} value={t.id} className="bg-[#1D1D1D] text-white">
-                  {t.name}
+                  {t.circuit_ref ? `${t.circuit_ref} — ${t.name}` : t.name}
                 </option>
               ))}
             </select>

@@ -65,7 +65,13 @@ export default async function DashboardPage() {
   }
 
   // Get counts for dashboard stats
-  const [pendingReports, pendingTips, recentNews, recentArticles] = await Promise.all([
+  const [
+    pendingReports,
+    pendingTips,
+    pendingStories,
+    recentNews,
+    recentArticles,
+  ] = await Promise.all([
     supabase
       .from('reports')
       .select('id', { count: 'exact', head: true })
@@ -74,6 +80,10 @@ export default async function DashboardPage() {
       .from('track_tips')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending'),
+    supabase
+      .from('user_story_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending_approval'),
     supabase
       .from('news_stories')
       .select('id', { count: 'exact', head: true }),
@@ -97,6 +107,13 @@ export default async function DashboardPage() {
       icon: MessageSquare,
       href: '/dashboard/track-tips',
       color: 'bg-yellow-500',
+    },
+    {
+      name: 'Pending User Stories',
+      value: pendingStories.count || 0,
+      icon: FileText,
+      href: '/dashboard/content?tab=stories',
+      color: 'bg-purple-500',
     },
     {
       name: 'News Stories',
@@ -126,7 +143,7 @@ export default async function DashboardPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => {
           const Icon = stat.icon
           return (

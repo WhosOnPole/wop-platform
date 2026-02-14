@@ -1,34 +1,94 @@
 'use client'
 
-import { useState, FormEvent, useRef } from 'react'
+import { useState, FormEvent, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { X, Plus } from 'lucide-react'
+import { createClientComponentClient } from '@/utils/supabase-client'
 
 interface StoryModalProps {
   onClose: () => void
 }
 
 export function StoryModal({ onClose }: StoryModalProps) {
+  const router = useRouter()
+  const supabase = createClientComponentClient()
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [body, setBody] = useState('')
   const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreview(null)
+      return
+    }
+    const url = URL.createObjectURL(image)
+    setImagePreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [image])
 
   function reset() {
     setTitle('')
     setSummary('')
     setBody('')
     setImage(null)
+    setImagePreview(null)
+    setError(null)
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitting(true)
-    console.info('Submit story (stub):', { title, summary, body, image })
-    // TODO: call API to create story with status=pending_approval; rename "news stories" to "user stories"
+    setError(null)
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      setError('You must be signed in to submit a story.')
+      setSubmitting(false)
+      return
+    }
+
+    let imageUrl: string | null = null
+    if (image) {
+      const fileExt = image.name.split('.').pop() || 'jpg'
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
+      const { error: uploadError } = await supabase.storage
+        .from('story-images')
+        .upload(fileName, image, { upsert: true })
+
+      if (uploadError) {
+        setError('Failed to upload image. Please try again.')
+        setSubmitting(false)
+        return
+      }
+      const { data: urlData } = supabase.storage.from('story-images').getPublicUrl(fileName)
+      imageUrl = urlData.publicUrl
+    }
+
+    const { error: insertError } = await supabase.from('user_story_submissions').insert({
+      user_id: session.user.id,
+      title: title.trim(),
+      summary: summary.trim() || null,
+      content: body.trim(),
+      image_url: imageUrl,
+      status: 'pending_approval',
+    })
+
+    if (insertError) {
+      setError(insertError.message ?? 'Failed to submit story.')
+      setSubmitting(false)
+      return
+    }
+
     reset()
     setSubmitting(false)
+    router.refresh()
     onClose()
   }
 
@@ -48,7 +108,12 @@ export function StoryModal({ onClose }: StoryModalProps) {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-        <p className="text-xs text-white/60">
+          {error && (
+            <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+              {error}
+            </p>
+          )}
+          <p className="text-xs text-white/60">
             Story will go to admin dashboard as “user story” for approval. Once approved, it will
             appear in the feed.
           </p>
@@ -88,9 +153,22 @@ export function StoryModal({ onClose }: StoryModalProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-dashed border-white/20 bg-white/5 transition-colors hover:bg-white/10"
+              className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-white/20 bg-white/5 transition-colors hover:bg-white/10"
             >
-              <Plus className="h-6 w-6 text-white/70" />
+              {imagePreview ? (
+                <>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <span className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 text-center text-xs text-white">
+                    Change
+                  </span>
+                </>
+              ) : (
+                <Plus className="h-6 w-6 text-white/70" />
+              )}
             </button>
           </div>
 

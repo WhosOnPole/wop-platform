@@ -8,6 +8,8 @@ import Link from 'next/link'
 
 interface NotificationDropdownProps {
   onClose: () => void
+  /** Current user's username (for linking to "your post" on your profile) */
+  currentUsername?: string | null
 }
 
 const notificationIcons = {
@@ -63,29 +65,31 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString()
 }
 
-function getNotificationUrl(notification: any): string {
+function getNotificationUrl(notification: any, currentUsername?: string | null): string {
   const { type, target_type, target_id, actor_id, metadata } = notification
 
   switch (type) {
     case 'like_grid':
-      // For grid likes, link to the grid owner's profile if available in metadata
-      // Otherwise, link to the actor's profile (person who liked it)
       if (metadata?.grid_owner_username) {
         return `/u/${metadata.grid_owner_username}`
       }
-      return `/u/${notification.actor?.username || actor_id}`
+      return `/u/${notification.actor?.username ?? actor_id}`
     case 'comment':
-      // Comments are on posts, so link to the post
-      // In a real implementation, we might want a post detail page
-      // For now, link to feed or the post owner's profile
+      // Comment on your post → your profile, activity tab, with post highlighted
+      if (currentUsername && target_id) {
+        return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`
+      }
       return '/feed'
     case 'like_post':
-      // Similar to comments, link to feed or post detail
+      // Like on your post → your profile, activity tab, with post highlighted
+      if (currentUsername && target_id) {
+        return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`
+      }
       return '/feed'
     case 'follow':
-      return `/u/${notification.actor?.username || actor_id}`
+      // User started following you → go to that user's profile
+      return `/u/${notification.actor?.username ?? actor_id}`
     case 'mention':
-      // Mentions are in posts, link to feed
       return '/feed'
     case 'poll_vote':
       return `/podiums`
@@ -96,7 +100,7 @@ function getNotificationUrl(notification: any): string {
   }
 }
 
-export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
+export function NotificationDropdown({ onClose, currentUsername }: NotificationDropdownProps) {
   const router = useRouter()
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } = useNotifications({
     limit: 10,
@@ -106,7 +110,7 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
     if (!notification.read_at) {
       markAsRead(notification.id)
     }
-    const url = getNotificationUrl(notification)
+    const url = getNotificationUrl(notification, currentUsername)
     router.push(url)
     onClose()
   }

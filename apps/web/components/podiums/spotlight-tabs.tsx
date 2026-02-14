@@ -24,6 +24,7 @@ interface NewsStory {
   image_url: string | null
   content: string
   created_at: string
+  href?: string
 }
 
 interface Sponsor {

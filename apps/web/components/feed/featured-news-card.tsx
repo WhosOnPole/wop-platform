@@ -7,6 +7,7 @@ interface NewsStory {
   image_url: string | null
   content: string
   created_at: string
+  href?: string
 }
 
 interface FeaturedNewsCardProps {
@@ -14,9 +15,10 @@ interface FeaturedNewsCardProps {
 }
 
 export function FeaturedNewsCard({ newsStory }: FeaturedNewsCardProps) {
+  const href = newsStory.href ?? `/story/${newsStory.id}`
   return (
     <Link
-      href={`/news/${newsStory.id}`}
+      href={href}
       className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-white/10 bg-black/40 shadow backdrop-blur-sm transition-shadow hover:shadow-lg"
     >
       {newsStory.image_url && (

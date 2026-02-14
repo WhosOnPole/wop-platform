@@ -5,7 +5,11 @@ import { Bell } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
 import { NotificationDropdown } from './notification-dropdown'
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  currentUsername?: string | null
+}
+
+export function NotificationBell({ currentUsername }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { hasUnread, unreadCount } = useNotifications()
@@ -47,7 +51,12 @@ export function NotificationBell() {
         )}
       </button>
 
-      {isOpen && <NotificationDropdown onClose={() => setIsOpen(false)} />}
+      {isOpen && (
+          <NotificationDropdown
+            currentUsername={currentUsername}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
     </div>
   )
 }

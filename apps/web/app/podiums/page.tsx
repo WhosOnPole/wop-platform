@@ -58,11 +58,17 @@ export default async function PodiumsPage() {
   const [
     pollsResult,
     newsStoriesResult,
+    approvedUserStoriesResult,
     sponsorsResult,
     weeklyHighlightsResult,
   ] = await Promise.all([
     supabase.from('polls').select('*').order('created_at', { ascending: false }),
     supabase.from('news_stories').select('*').eq('is_featured', true).order('created_at', { ascending: false }),
+    supabase
+      .from('user_story_submissions')
+      .select('id, title, summary, content, image_url, created_at')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false }),
     supabase.from('sponsors').select('id, name, logo_url, website_url, description').order('name'),
     supabase
       .from('weekly_highlights')
@@ -132,13 +138,40 @@ export default async function PodiumsPage() {
 
   const adminPolls = polls.filter((p) => p.admin_id != null)
   const communityPolls = polls.filter((p) => p.admin_id == null)
-  const stories = (newsStoriesResult.data || []) as Array<{
+  const newsStories = (newsStoriesResult.data || []) as Array<{
     id: string
     title: string
     image_url: string | null
     content: string
     created_at: string
   }>
+  const approvedUserStories = (approvedUserStoriesResult.data || []) as Array<{
+    id: string
+    title: string
+    summary: string | null
+    content: string
+    image_url: string | null
+    created_at: string
+  }>
+
+  const stories = [
+    ...newsStories.map((n) => ({
+      id: n.id,
+      title: n.title,
+      image_url: n.image_url,
+      content: n.content,
+      created_at: n.created_at,
+      href: `/story/${n.id}`,
+    })),
+    ...approvedUserStories.map((u) => ({
+      id: u.id,
+      title: u.title,
+      image_url: u.image_url,
+      content: u.summary ? `${u.summary}\n\n${u.content}` : u.content,
+      created_at: u.created_at,
+      href: `/story/${u.id}`,
+    })),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   const sponsors = (sponsorsResult.data || []) as Array<{
     id: string
     name: string

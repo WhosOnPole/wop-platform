@@ -49,13 +49,27 @@ export function ProfilePageClient({
   const touchStartY = useRef(0)
   const isSwipe = useRef(false)
 
-  // Open tab from URL (e.g. ?tab=drivers from activity grid update link)
+  // Open tab from URL (e.g. ?tab=drivers from activity grid update link; ?post=id for notification deep link)
   useEffect(() => {
     const tabParam = searchParams.get('tab')
-    if (tabParam && TAB_ORDER.includes(tabParam as TabKey)) {
+    const postParam = searchParams.get('post')
+    if (postParam) {
+      setActiveTab('activity')
+    } else if (tabParam && TAB_ORDER.includes(tabParam as TabKey)) {
       setActiveTab(tabParam as TabKey)
     }
   }, [searchParams])
+
+  // Scroll to the specific post when ?post= is present (e.g. from "commented on your post" notification)
+  useEffect(() => {
+    const postId = searchParams.get('post')
+    if (!postId || activeTab !== 'activity') return
+    const el = document.getElementById(`post-${postId}`)
+    if (el) {
+      const t = setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300)
+      return () => clearTimeout(t)
+    }
+  }, [searchParams, activeTab])
 
   // Mobile swipe gesture detection
   useEffect(() => {
