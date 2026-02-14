@@ -218,7 +218,7 @@ interface TrackCardMediaProps {
 function TrackCardMedia({ trackName, trackSlug, supabaseUrl }: TrackCardMediaProps) {
   if (!supabaseUrl) {
     return (
-      <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: 'url(/images/race_banner.png)' }} />
+      <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: 'url(/images/race_banner.jpeg)' }} />
     )
   }
 
@@ -227,7 +227,7 @@ function TrackCardMedia({ trackName, trackSlug, supabaseUrl }: TrackCardMediaPro
 
   return (
     <>
-      <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: 'url(/images/race_banner.png)' }} />
+      <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: 'url(/images/race_banner.jpeg)' }} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <Image src={svgUrl} alt="" width={220} height={220} className="object-contain opacity-90" />
       </div>

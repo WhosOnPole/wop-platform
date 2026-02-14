@@ -48,7 +48,7 @@ export default async function PitlanePage() {
   const tracksData = tracks.data || []
 
   const nextRace = getClosestRace({ tracks: tracksWithStartDate })
-  const backgroundImage = nextRace?.image_url || '/images/race_banner.png'
+  const backgroundImage = nextRace?.image_url || '/images/race_banner.jpeg'
   
   // Format dates in short format (e.g., "Mar. 6")
   const formatShortDate = (dateString: string | null) => {

@@ -420,7 +420,7 @@ function ScheduleCard({ race, onClose }: ScheduleCardProps) {
     dateDisplay = `Race Day: ${raceDayDateFormatted}`
   }
 
-  const backgroundImage = race.image_url || '/images/race_banner.png'
+  const backgroundImage = race.image_url || '/images/race_banner.jpeg'
   const trackSlug = slugify(race.name)
   const bannerHref = `/tracks/${trackSlug}`
 

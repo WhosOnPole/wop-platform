@@ -293,13 +293,13 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                         />
                         <div className="absolute inset-0 z-10 bg-black/30" aria-hidden />
                         <span
-                          className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none tracking-[-5%] opacity-90 line-clamp-2"
+                          className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none opacity-90 line-clamp-2"
                           style={{
                             fontFamily: 'Inter, sans-serif',
                             fontWeight: 900,
                             fontSize: 'clamp(1.22em, 2.5vw, 1.22em)',
                             color: 'white',
-                            textShadow: '0 1px 2px rgba(0, 0, 0, 0.8), 0 2.3px 1.6px rgba(51, 13, 73, 0.5)',
+                            textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                           }}
                         >
                           {team.name}
@@ -450,7 +450,7 @@ function ScheduleCard({ race }: ScheduleCardProps) {
     dateDisplay = `Race Day: ${raceDayDateFormatted}`
   }
 
-  const backgroundImage = race.image_url || '/images/race_banner.png'
+  const backgroundImage = race.image_url || '/images/race_banner.jpeg'
   const trackSlug = slugify(race.name)
   const bannerHref = `/tracks/${trackSlug}`
 

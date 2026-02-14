@@ -8,7 +8,6 @@ import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { UpcomingRaceCard } from './upcoming-race-card'
 import { SponsorCard } from './sponsor-card'
 import { FeaturedNewsCard } from './featured-news-card'
-import { StepperBar } from '@/components/stepper-bar'
 
 interface SpotlightProfile {
   id: string
@@ -283,14 +282,29 @@ export function SpotlightCarousel({
           </div>
         </div>
 
-        {/* Slider: mobile only (same as grid detail view stepper) */}
-        <div className="mt-3 w-full px-1 lg:hidden">
-          <StepperBar
-            currentIndex={activeIndex}
-            total={cards.length}
-            onSelectIndex={(index, options) => scrollToIndex(index, options?.isDragging)}
-            ariaLabel="Featured banner position"
-          />
+        {/* Indicator bar: notification-style tabs (mobile only) */}
+        <div className="mt-3 w-full border-b border-white/20 lg:hidden">
+          <nav
+            className="-mb-px flex w-full"
+            role="tablist"
+            aria-label="Featured banner position"
+          >
+            {cards.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                role="tab"
+                aria-selected={activeIndex === idx}
+                aria-label={`Slide ${idx + 1} of ${cards.length}`}
+                onClick={() => scrollToIndex(idx)}
+                className={`flex-1 min-w-0 border-b-2 py-3 transition-colors ${
+                  activeIndex === idx
+                    ? 'border-[#25B4B1]'
+                    : 'border-transparent hover:border-white/30'
+                }`}
+              />
+            ))}
+          </nav>
         </div>
       </div>
 

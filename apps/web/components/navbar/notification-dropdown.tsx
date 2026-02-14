@@ -107,31 +107,31 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
 
   if (isLoading) {
     return (
-      <div className="absolute right-0 top-12 z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-xl">
+      <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
         <div className="p-4">
-          <div className="text-sm text-gray-500">Loading notifications...</div>
+          <div className="text-sm text-white/60">Loading notifications...</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="absolute right-0 top-12 z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-xl">
+    <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between border-b border-white/20 px-4 py-3">
+        <h3 className="text-sm font-semibold text-white">Notifications</h3>
+        <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="text-xs text-blue-600 hover:text-blue-700"
+              className="text-xs text-[#25B4B1] hover:text-[#3BEFEB]"
             >
               Mark all as read
             </button>
           )}
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-white/50 hover:text-white"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -143,17 +143,17 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
       <div className="max-h-96 overflow-y-auto">
         {notifications.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-sm text-gray-500">No notifications yet</p>
+            <p className="text-sm text-white/60">No notifications yet</p>
             <Link
               href="/notifications"
-              className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+              className="mt-2 inline-block text-sm text-[#25B4B1] hover:text-[#3BEFEB]"
               onClick={onClose}
             >
               View all notifications
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-white/10">
             {notifications.map((notification) => {
               const Icon = notificationIcons[notification.type]
               const actor = notification.actor?.username || 'Someone'
@@ -164,39 +164,36 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
                 <button
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`w-full px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
-                    isUnread ? 'bg-blue-50' : ''
+                  className={`w-full px-4 py-3 text-left transition-colors hover:bg-white/5 ${
+                    isUnread ? 'bg-white/5' : ''
                   }`}
                 >
-                  <div className="flex items-start space-x-3">
-                    {/* Actor Avatar */}
+                  <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
                       <img
                         src={getAvatarUrl(notification.actor?.profile_image_url)}
                         alt={actor}
-                        className="h-10 w-10 rounded-full object-cover"
+                        className="h-10 w-10 rounded-full object-cover ring-1 ring-white/20"
                       />
                     </div>
-
-                    {/* Notification Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start space-x-2">
-                        <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
-                        <div className="flex-1">
-                          <p className={`text-sm ${isUnread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start gap-2">
+                        <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-white/50" />
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm ${isUnread ? 'font-semibold text-white' : 'text-white/90'}`}>
                             {message}
                           </p>
                           {notification.metadata?.preview && (
-                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                            <p className="mt-1 text-xs text-white/50 line-clamp-2">
                               {notification.metadata.preview}
                             </p>
                           )}
-                          <p className="mt-1 text-xs text-gray-400">
+                          <p className="mt-1 text-xs text-white/40">
                             {formatTimeAgo(notification.created_at)}
                           </p>
                         </div>
                         {isUnread && (
-                          <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
+                          <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-[#25B4B1]" />
                         )}
                       </div>
                     </div>
@@ -210,10 +207,10 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
 
       {/* Footer */}
       {notifications.length > 0 && (
-        <div className="border-t border-gray-200 px-4 py-3">
+        <div className="border-t border-white/20 px-4 py-3">
           <Link
             href="/notifications"
-            className="block text-center text-sm text-blue-600 hover:text-blue-700"
+            className="block text-center text-sm text-[#25B4B1] hover:text-[#3BEFEB]"
             onClick={onClose}
           >
             View all notifications

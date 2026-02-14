@@ -70,7 +70,7 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
     counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
   }
 
-  const backgroundImage = race.image_url || '/images/race_banner.png'
+  const backgroundImage = race.image_url || '/images/race_banner.jpeg'
   const trackSlug = race.slug
   // When live, link to race page (which shows chat). Otherwise link to track page.
   const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
