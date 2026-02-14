@@ -174,12 +174,15 @@ export function ComingSoonContent() {
             height={400}
             className="w-2/3 max-w-xl object-cover object-right"
           />
-          <div className="relative w-1/3 min-h-[4.5rem] pl-10 pr-0 text-left font-black">
+          <div className="relative w-1/3 min-h-[4.5rem] overflow-hidden pl-10 pr-0 text-left font-black">
             {RIGHT_SIDE_SLIDES.map((text, idx) => (
               <p
                 key={idx}
-                className="absolute inset-0 flex items-center text-2xl text-white transition-opacity duration-500"
-                style={{ opacity: slideIndex === idx ? 1 : 0 }}
+                className="absolute inset-0 z-0 flex items-center text-2xl text-white transition-opacity duration-500"
+                style={{
+                  opacity: slideIndex === idx ? 1 : 0,
+                  zIndex: slideIndex === idx ? 1 : 0,
+                }}
                 aria-live="polite"
                 aria-hidden={slideIndex !== idx}
               >
