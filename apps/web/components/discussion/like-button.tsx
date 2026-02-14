@@ -252,7 +252,11 @@ export function LikeButton({
       className={`inline-flex items-center gap-1 align-middle leading-none transition-colors disabled:opacity-50 ${buttonClasses}`}
       title={isLiked ? 'Unlike' : 'Like'}
     >
-      <Heart className={`h-4 w-4 shrink-0 ${isLiked ? 'fill-current' : ''}`} />
+      {isLiked ? (
+        <span className="heart-fill-sunset inline-block h-5 w-5 shrink-0" aria-hidden />
+      ) : (
+        <Heart className="h-5 w-5 shrink-0" />
+      )}
       {likeCount > 0 && (
         <span className="text-sm font-medium leading-none">{likeCount}</span>
       )}

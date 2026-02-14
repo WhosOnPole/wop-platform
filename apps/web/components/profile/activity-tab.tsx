@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MessageSquare, Heart, MapPin, Grid3x3 } from 'lucide-react'
+import { MessageSquare, MapPin, Grid3x3 } from 'lucide-react'
 
 interface ActivityItem {
   id: string
@@ -27,13 +27,13 @@ export function ActivityTab({
   activities,
   profileUsername,
 }: ActivityTabProps) {
+  const filteredActivities = activities.filter((item) => item.type !== 'like')
+
   function getActivityIcon(item: ActivityItem) {
     switch (item.type) {
       case 'post':
       case 'comment':
         return <MessageSquare className="h-4 w-4 text-[#25B4B1]" />
-      case 'like':
-        return <Heart className="h-4 w-4 text-sunset-start fill-sunset-start" />
       case 'checkin':
         return <MapPin className="h-4 w-4 text-emerald-400" />
       case 'grid_update':
@@ -49,8 +49,6 @@ export function ActivityTab({
         return 'Posted'
       case 'comment':
         return 'Commented'
-      case 'like':
-        return 'Liked'
       case 'checkin':
         return 'Checked in at'
       case 'grid_update':
@@ -94,13 +92,13 @@ export function ActivityTab({
   return (
     <div className="flex min-h-0 flex-col gap-4">
       <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-        {activities.length === 0 ? (
+        {filteredActivities.length === 0 ? (
           <div className="py-12 text-center rounded-lg border border-white/10 bg-white/5">
             <p className="text-white/60">No activity yet</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {activities.map((item) => {
+            {filteredActivities.map((item) => {
               const link = getActivityLink(item)
               const className = `flex items-start gap-4 rounded-lg border border-white/10 bg-white/5 p-4 ${
                 link ? 'hover:bg-white/10 transition-colors cursor-pointer active:bg-white/15' : ''

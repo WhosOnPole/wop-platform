@@ -1,10 +1,44 @@
 import { cookies } from 'next/headers'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { PollList } from '@/components/polls/poll-list'
-import { PollRail } from '@/components/polls/poll-rail'
+import { SpotlightTabs } from '@/components/podiums/spotlight-tabs'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+async function getCurrentWeekStart() {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+  const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
+  const monday = new Date(today.setDate(diff))
+  monday.setHours(0, 0, 0, 0)
+  return monday.toISOString().split('T')[0]
+}
+
+function isSpotlightGridType(value: unknown): value is 'driver' | 'team' | 'track' {
+  return value === 'driver' || value === 'team' || value === 'track'
+}
+
+function getSpotlightFeaturedGrid(params: { grid: unknown }) {
+  const { grid } = params
+  if (!grid || typeof grid !== 'object') return null
+  const maybeGrid = grid as Record<string, unknown>
+  const type = maybeGrid.type
+  if (!isSpotlightGridType(type)) return null
+  const user = maybeGrid.user as Record<string, unknown> | null | undefined
+  return {
+    id: String(maybeGrid.id),
+    type,
+    comment: typeof maybeGrid.blurb === 'string' ? maybeGrid.blurb : null,
+    ranked_items: Array.isArray(maybeGrid.ranked_items) ? maybeGrid.ranked_items : [],
+    user: user
+      ? {
+          id: String(user.id),
+          username: String(user.username),
+          profile_image_url: typeof user.profile_image_url === 'string' ? user.profile_image_url : null,
+        }
+      : null,
+  }
+}
 
 export default async function PodiumsPage() {
   const cookieStore = await cookies()
@@ -19,46 +53,69 @@ export default async function PodiumsPage() {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const { data: polls } = await supabase
-    .from('polls')
-    .select('*')
-    .order('created_at', { ascending: false })
+  const weekStart = await getCurrentWeekStart()
 
-  // Fetch user's poll responses if logged in
+  const [
+    pollsResult,
+    newsStoriesResult,
+    sponsorsResult,
+    weeklyHighlightsResult,
+  ] = await Promise.all([
+    supabase.from('polls').select('*').order('created_at', { ascending: false }),
+    supabase.from('news_stories').select('*').eq('is_featured', true).order('created_at', { ascending: false }),
+    supabase.from('sponsors').select('id, name, logo_url, website_url, description').order('name'),
+    supabase
+      .from('weekly_highlights')
+      .select(
+        `
+        highlighted_fan_id,
+        highlighted_fan_grid_id,
+        highlighted_fan:profiles!highlighted_fan_id (
+          id,
+          username,
+          profile_image_url
+        ),
+        highlighted_fan_grid:grids!highlighted_fan_grid_id (
+          *,
+          user:profiles!user_id (
+            id,
+            username,
+            profile_image_url
+          )
+        )
+      `
+      )
+      .eq('week_start_date', weekStart)
+      .single(),
+  ])
+
+  const polls = pollsResult.data || []
+  const pollIds = polls.map((p) => p.id)
   let userResponses: Record<string, string> = {}
-  if (session) {
+  let voteCounts: Record<string, Record<string, number>> = {}
+
+  if (session && pollIds.length > 0) {
     const { data: responses } = await supabase
       .from('poll_responses')
       .select('poll_id, selected_option_id')
       .eq('user_id', session.user.id)
-
     if (responses) {
-      userResponses = responses.reduce(
-        (acc, r) => {
-          acc[r.poll_id] = r.selected_option_id
-          return acc
-        },
-        {} as Record<string, string>
-      )
+      userResponses = responses.reduce((acc, r) => {
+        acc[r.poll_id] = r.selected_option_id
+        return acc
+      }, {} as Record<string, string>)
     }
   }
-
-  // Fetch vote counts for all polls
-  const pollIds = polls?.map((p) => p.id) || []
-  let voteCounts: Record<string, Record<string, number>> = {}
 
   if (pollIds.length > 0) {
     const { data: allResponses } = await supabase
       .from('poll_responses')
       .select('poll_id, selected_option_id')
       .in('poll_id', pollIds)
-
     if (allResponses) {
       voteCounts = allResponses.reduce(
         (acc, response) => {
-          if (!acc[response.poll_id]) {
-            acc[response.poll_id] = {}
-          }
+          if (!acc[response.poll_id]) acc[response.poll_id] = {}
           acc[response.poll_id][response.selected_option_id] =
             (acc[response.poll_id][response.selected_option_id] || 0) + 1
           return acc
@@ -68,63 +125,52 @@ export default async function PodiumsPage() {
     }
   }
 
-  const featuredPolls = (polls || []).filter((p) => p.is_featured_podium)
-  const communityPolls = (polls || []).filter((p) => !p.is_featured_podium)
+  const adminPolls = polls.filter((p) => p.admin_id != null)
+  const communityPolls = polls.filter((p) => p.admin_id == null)
+  const stories = (newsStoriesResult.data || []) as Array<{
+    id: string
+    title: string
+    image_url: string | null
+    content: string
+    created_at: string
+  }>
+  const sponsors = (sponsorsResult.data || []) as Array<{
+    id: string
+    name: string
+    logo_url: string | null
+    website_url: string | null
+    description: string | null
+  }>
+  const highlights = weeklyHighlightsResult.data
+  const highlightedFan = highlights?.highlighted_fan
+  const fanProfile = Array.isArray(highlightedFan) ? highlightedFan[0] : highlightedFan
+  const highlightedFanNormalized = fanProfile
+    ? {
+        id: String(fanProfile.id),
+        username: String(fanProfile.username),
+        profile_image_url:
+          typeof fanProfile.profile_image_url === 'string' ? fanProfile.profile_image_url : null,
+      }
+    : null
+  const featuredGrid = getSpotlightFeaturedGrid({ grid: highlights?.highlighted_fan_grid })
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-10 pt-4">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 pt-4">
       <div className="space-y-1">
         <h1 className="text-3xl font-semibold text-white font-display">Spotlight</h1>
         <h3 className="text-sm text-white/70 font-sans mb-6">Predict. Vote. Go For Glory.</h3>
       </div>
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Featured Podiums</h2>
-            <p className="text-sm text-gray-600">Admin-curated polls</p>
-          </div>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-            curated
-          </span>
-        </div>
-        {featuredPolls.length > 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-            <PollRail
-              polls={featuredPolls}
-              userResponses={userResponses}
-              voteCounts={voteCounts}
-            />
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-500">
-            No featured podiums yet.
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Community Podiums</h2>
-            <p className="text-sm text-gray-600">Polls created by the community</p>
-          </div>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-            community
-          </span>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <PollList
-            polls={communityPolls}
-            userResponses={userResponses}
-            voteCounts={voteCounts}
-          />
-          <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-            TODO: Replace with infinite scroll (see todo-infinite-scroll)
-          </div>
-        </div>
-      </section>
+      <SpotlightTabs
+        adminPolls={adminPolls}
+        communityPolls={communityPolls}
+        userResponses={userResponses}
+        voteCounts={voteCounts}
+        stories={stories}
+        sponsors={sponsors}
+        highlightedFan={highlightedFanNormalized}
+        featuredGrid={featuredGrid}
+      />
     </div>
   )
 }

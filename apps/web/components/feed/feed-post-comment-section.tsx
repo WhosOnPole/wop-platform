@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { MessageSquare, Send } from 'lucide-react'
+import { Send } from 'lucide-react'
+import { CommentIcon } from '@/components/ui/comment-icon'
 import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
@@ -28,11 +30,14 @@ interface Comment {
 interface FeedPostCommentSectionProps {
   postId: string
   initialCommentCount?: number
+  /** When set, the expanded comment panel is portaled into this element id (e.g. bottom of card) */
+  panelTargetId?: string
 }
 
 export function FeedPostCommentSection({
   postId,
   initialCommentCount = 0,
+  panelTargetId,
 }: FeedPostCommentSectionProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
@@ -159,23 +164,8 @@ export function FeedPostCommentSection({
     }
   })
 
-  return (
-    <div className="flex flex-col gap-2">
-      <button
-        type="button"
-        onClick={() => {
-          const next = !isOpen
-          setIsOpen(next)
-          if (next) loadComments()
-        }}
-        className="inline-flex items-center gap-1 text-sm text-white/90 transition-colors hover:text-white"
-      >
-        <MessageSquare className="h-4 w-4" />
-        <span>Comment{commentCount > 0 ? ` (${commentCount})` : ''}</span>
-      </button>
-
-      {isOpen && (
-        <div className="mt-3 rounded-md border border-white/10 bg-black/40 p-3 backdrop-blur-sm">
+  const panelContent = isOpen ? (
+    <div className="rounded-md border border-white/10 bg-black/40 p-3 backdrop-blur-sm">
           {isLoading ? (
             <p className="text-sm text-white/90">Loading comments...</p>
           ) : (
@@ -330,8 +320,34 @@ export function FeedPostCommentSection({
               </form>
             </>
           )}
-        </div>
-      )}
     </div>
+  ) : null
+
+  const target = typeof document !== 'undefined' && panelTargetId ? document.getElementById(panelTargetId) : null
+  const panelRendered = isOpen && panelContent
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          const next = !isOpen
+          setIsOpen(next)
+          if (next) loadComments()
+        }}
+        className="inline-flex items-center justify-center text-white/90 transition-colors hover:text-white"
+        title={commentCount > 0 ? `${commentCount} comment${commentCount !== 1 ? 's' : ''}` : 'Comment'}
+      >
+        <CommentIcon className="h-5 w-5 shrink-0" />
+        {commentCount > 0 && (
+          <span className="ml-0.5 text-sm font-medium leading-none text-white/90">{commentCount}</span>
+        )}
+      </button>
+      {panelRendered && panelTargetId && target
+        ? createPortal(panelContent, target)
+        : panelRendered && !panelTargetId
+          ? panelContent
+          : null}
+    </>
   )
 }

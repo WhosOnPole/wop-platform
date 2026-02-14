@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Radio } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
@@ -74,20 +75,25 @@ interface NewsStory {
 interface SpotlightCarouselProps {
   spotlight: SpotlightData | null
   polls: Poll[]
+  userResponses?: Record<string, string>
+  voteCounts?: Record<string, Record<string, number>>
   discussionPosts: any[]
   upcomingRace?: Race | null
   sponsors?: Sponsor[]
   featuredNews?: NewsStory[]
 }
 
-export function SpotlightCarousel({ 
-  spotlight, 
-  polls, 
-  discussionPosts, 
-  upcomingRace, 
-  sponsors = [], 
-  featuredNews = [] 
+export function SpotlightCarousel({
+  spotlight,
+  polls,
+  userResponses = {},
+  voteCounts = {},
+  discussionPosts,
+  upcomingRace,
+  sponsors = [],
+  featuredNews = [],
 }: SpotlightCarouselProps) {
+  const router = useRouter()
   const hasHotTake = Boolean(spotlight?.hot_take)
   const hasFeaturedGrid = Boolean(spotlight?.featured_grid)
   const hasAdminPolls = polls.length > 0
@@ -232,10 +238,9 @@ export function SpotlightCarousel({
         <div className="flex h-full w-full min-w-0 flex-col overflow-hidden rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm">
           <PollCard
             poll={card.data}
-            userResponse={undefined}
-            voteCounts={{}}
-            onVote={() => {}}
-            showDiscussion={false}
+            userResponse={userResponses[card.data.id]}
+            voteCounts={voteCounts[card.data.id] ?? {}}
+            onVote={() => router.refresh()}
             variant="dark"
             className="min-h-0 flex-1 overflow-auto border-0 bg-transparent p-0 shadow-none backdrop-blur-none"
           />
@@ -256,11 +261,11 @@ export function SpotlightCarousel({
 
   return (
     <>
-      {/* Single container: horizontal carousel on mobile, vertical scroll on desktop */}
-      <div className="mb-6 lg:mb-0 h-[200px] min-h-[200px] max-h-[200px] lg:h-auto lg:min-h-0 lg:max-h-none">
+      {/* Single container: horizontal carousel on mobile, vertical scroll on desktop; relative z-10 so slider/tabs stay above feed content */}
+      <div className="relative z-10 mb-0 flex flex-col lg:block lg:h-auto lg:min-h-0 lg:max-h-none">
         <div
           ref={scrollContainerRef}
-          className="flex flex-row lg:flex-col w-full h-full lg:max-h-[calc(100vh-8rem)] overflow-x-auto overflow-y-hidden lg:overflow-x-hidden lg:overflow-y-auto snap-x snap-mandatory lg:snap-none pb-2 lg:pr-2"
+          className="flex h-[200px] min-h-[200px] flex-shrink-0 flex-row lg:h-auto lg:min-h-0 lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pr-2 w-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory lg:snap-none"
           style={{ scrollSnapType: 'x mandatory' }}
         >
           <div className="flex w-full h-full gap-4 lg:flex-col lg:gap-0">
@@ -282,8 +287,8 @@ export function SpotlightCarousel({
           </div>
         </div>
 
-        {/* Indicator bar: notification-style tabs (mobile only) */}
-        <div className="mt-3 w-full border-b border-white/20 lg:hidden">
+        {/* Indicator bar: flush under cards (mobile only) */}
+        <div className="w-full flex-shrink-0 border-b border-white/20 lg:hidden">
           <nav
             className="-mb-px flex w-full"
             role="tablist"

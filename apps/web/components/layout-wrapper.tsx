@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { CreateModalProvider } from '@/components/providers/create-modal-provider'
 import { TopNav } from '@/components/navbar/top-nav'
 import { Footer } from '@/components/footer'
 import { LiveRaceBanner } from '@/components/live-race-banner'
@@ -71,7 +72,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const mainPadTop = !isGridFullBleed && !isHome ? 'pt-14' : ''
 
   return (
-    <>
+    <CreateModalProvider>
       <FullscreenHandler autoRequest={true} />
       <TopNav />
       <main className={`min-h-screen ${mainPadTop}`}>
@@ -79,7 +80,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
       </main>
       {showFooter ? <Footer /> : null}
       <LiveRaceBanner />
-    </>
+    </CreateModalProvider>
   )
 }
 

@@ -213,38 +213,7 @@ export default async function UserProfilePage({ params }: PageProps) {
   // TODO: Implement check-in system to track user check-ins on race starts (not race day start, the race's general start) on track pages when button is enabled
   // For now, this is a placeholder - will fetch from race_checkins table when implemented
 
-  // Likes (votes)
-  const { data: likes } = await supabase
-    .from('votes')
-    .select('*, target_type, target_id')
-    .eq('user_id', profile.id)
-    .order('created_at', { ascending: false })
-
-  if (likes) {
-    for (const like of likes) {
-      // Fetch target name based on type
-      let targetName = null
-      if (like.target_type === 'driver') {
-        const { data } = await supabase.from('drivers').select('name').eq('id', like.target_id).single()
-        targetName = data?.name
-      } else if (like.target_type === 'team') {
-        const { data } = await supabase.from('teams').select('name').eq('id', like.target_id).single()
-        targetName = data?.name
-      } else if (like.target_type === 'track') {
-        const { data } = await supabase.from('tracks').select('name').eq('id', like.target_id).single()
-        targetName = data?.name
-      }
-
-      activities.push({
-        id: like.id,
-        type: 'like',
-        created_at: like.created_at,
-        target_id: like.target_id,
-        target_type: like.target_type,
-        target_name: targetName,
-      })
-    }
-  }
+  // Likes are not shown in activity (removed per product)
 
   // Grid updates (from posts with parent_page_type='profile' and parent_page_id=user_id)
   const { data: gridUpdatePosts } = await supabase

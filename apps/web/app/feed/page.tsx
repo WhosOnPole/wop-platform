@@ -1,10 +1,14 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Calendar, Star } from 'lucide-react'
 import { FeedContent, type Post, type Grid } from '@/components/feed/feed-content'
-import { UpcomingRace } from '@/components/feed/upcoming-race'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
+import { FeedHighlightedSidebar } from '@/components/feed/feed-highlighted-sidebar'
+import { SponsorCard } from '@/components/feed/sponsor-card'
+import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
+import { BannerPollCard } from '@/components/feed/banner-poll-card'
+import { BannerFeaturedGridCard } from '@/components/feed/banner-featured-grid-card'
+import { BannerHighlightedFanCard } from '@/components/feed/banner-highlighted-fan-card'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -141,6 +145,7 @@ export default async function FeedPage() {
     followingGrids,
     polls,
     adminPolls,
+    adminPollsForBanner,
     featuredNews,
     sponsors,
     weeklyHighlights,
@@ -213,6 +218,13 @@ export default async function FeedPage() {
       .not('admin_id', 'is', null)
       .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
       .order('created_at', { ascending: false }),
+    // Admin polls for banner only: same as spotlight (no ends_at filter) so featured admin poll always shows
+    supabase
+      .from('polls')
+      .select('*')
+      .not('admin_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(20),
     // Featured news
     supabase
       .from('news_stories')
@@ -458,12 +470,218 @@ export default async function FeedPage() {
     })
   )
 
+  const sponsorsList = (sponsors.data || []) as Array<{
+    id: string
+    name: string
+    logo_url: string | null
+    website_url: string | null
+    description: string | null
+  }>
+  const featuredNewsList = (featuredNews.data || []) as Array<{
+    id: string
+    title: string
+    image_url: string | null
+    content: string
+    created_at: string
+  }>
+
+  const adminPollsList = (adminPolls.data || []) as Array<{
+    id: string
+    question: string
+    options?: unknown[]
+    is_featured_podium?: boolean
+    admin_id?: string | null
+  }>
+  const adminPollsForBannerList = (adminPollsForBanner.data || []) as Array<{
+    id: string
+    question: string
+    options?: unknown[]
+    is_featured_podium?: boolean
+    admin_id?: string | null
+  }>
+  const communityPollsList = (polls.data || []) as Array<{
+    id: string
+    question: string
+    options?: unknown[]
+    is_featured_podium?: boolean
+    admin_id?: string | null
+  }>
+  const allActivePolls = [...adminPollsList, ...communityPollsList]
+  // Banner uses same source as spotlight: admin polls without ends_at filter, featured first
+  const featuredAdminPoll =
+    adminPollsForBannerList.find((p) => p.is_featured_podium) ??
+    adminPollsForBannerList[0] ??
+    null
+
+  const allFeedPollIds = [
+    ...new Set([
+      ...adminPollsList.map((p) => p.id),
+      ...communityPollsList.map((p) => p.id),
+    ]),
+  ]
+  let feedPollUserResponses: Record<string, string> = {}
+  let feedPollVoteCounts: Record<string, Record<string, number>> = {}
+  if (allFeedPollIds.length > 0) {
+    if (session) {
+      const { data: responses } = await supabase
+        .from('poll_responses')
+        .select('poll_id, selected_option_id')
+        .eq('user_id', session.user.id)
+        .in('poll_id', allFeedPollIds)
+      if (responses) {
+        feedPollUserResponses = responses.reduce(
+          (acc, r) => {
+            acc[r.poll_id] = r.selected_option_id
+            return acc
+          },
+          {} as Record<string, string>
+        )
+      }
+    }
+    const { data: allResponses } = await supabase
+      .from('poll_responses')
+      .select('poll_id, selected_option_id')
+      .in('poll_id', allFeedPollIds)
+    if (allResponses) {
+      feedPollVoteCounts = allResponses.reduce(
+        (acc, r) => {
+          if (!acc[r.poll_id]) acc[r.poll_id] = {}
+          acc[r.poll_id][r.selected_option_id] =
+            (acc[r.poll_id][r.selected_option_id] || 0) + 1
+          return acc
+        },
+        {} as Record<string, Record<string, number>>
+      )
+    }
+  }
+
+  const bannerPollUserResponse = featuredAdminPoll?.id
+    ? feedPollUserResponses[featuredAdminPoll.id]
+    : undefined
+
+  const featuredStory = featuredNewsList[0] ?? null
+  const featuredGrid = getSpotlightFeaturedGrid({
+    grid: weeklyHighlights.data?.highlighted_fan_grid,
+  })
+  const highlightedFanRaw = weeklyHighlights.data?.highlighted_fan
+  const highlightedFanProfile = Array.isArray(highlightedFanRaw)
+    ? highlightedFanRaw[0]
+    : highlightedFanRaw
+  const highlightedFan = highlightedFanProfile
+    ? {
+        id: String(highlightedFanProfile.id),
+        username: String(highlightedFanProfile.username),
+        profile_image_url:
+          typeof highlightedFanProfile.profile_image_url === 'string'
+            ? highlightedFanProfile.profile_image_url
+            : null,
+      }
+    : null
+
+  type BannerItem =
+    | { type: 'sponsor'; data: (typeof sponsorsList)[number] }
+    | { type: 'featured_poll'; data: NonNullable<typeof featuredAdminPoll> }
+    | { type: 'featured_story'; data: NonNullable<typeof featuredStory> }
+    | { type: 'featured_grid'; data: NonNullable<typeof featuredGrid> }
+    | { type: 'featured_user'; data: NonNullable<typeof highlightedFan> }
+  const bannerItems: BannerItem[] = []
+  sponsorsList.forEach((sponsor) => bannerItems.push({ type: 'sponsor', data: sponsor }))
+  if (featuredAdminPoll) bannerItems.push({ type: 'featured_poll', data: featuredAdminPoll })
+  if (featuredStory) bannerItems.push({ type: 'featured_story', data: featuredStory })
+  if (featuredGrid) bannerItems.push({ type: 'featured_grid', data: featuredGrid })
+  if (highlightedFan) bannerItems.push({ type: 'featured_user', data: highlightedFan })
+
   return (
-    <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-semibold text-white font-display">Feed</h1>
-      <h3 className="text-sm text-white/80 font-sans mb-6">Post. React. Express Yourself.</h3>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="order-2 lg:order-none lg:col-span-8 space-y-6">
+    <div className="w-full">
+      <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-semibold text-white font-display">Feed</h1>
+        <h3 className="text-sm text-white/80 font-sans mb-4">Post. React. Express Yourself.</h3>
+      </div>
+
+      {bannerItems.length > 0 && (
+        <div className="relative z-10 hidden w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:block lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-auto lg:gap-8">
+            {bannerItems.map((item) => (
+              <div
+                key={
+                  item.type === 'sponsor'
+                    ? `sponsor-${item.data.id}`
+                    : item.type === 'featured_poll'
+                      ? `poll-${item.data.id}`
+                      : item.type === 'featured_story'
+                        ? `story-${item.data.id}`
+                        : item.type === 'featured_grid'
+                          ? `grid-${item.data.id}`
+                          : `fan-${item.data.id}`
+                }
+                className="min-h-[140px] min-w-[200px] max-w-[240px] flex-shrink-0"
+              >
+                {item.type === 'sponsor' && (
+                  <SponsorCard sponsor={item.data} variant="banner" />
+                )}
+                {item.type === 'featured_poll' && (
+                  <BannerPollCard
+                    poll={item.data}
+                    userResponse={bannerPollUserResponse}
+                  />
+                )}
+                {item.type === 'featured_story' && (
+                  <FeaturedNewsCard newsStory={item.data} />
+                )}
+                {item.type === 'featured_grid' && (
+                  <BannerFeaturedGridCard grid={item.data} />
+                )}
+                {item.type === 'featured_user' && (
+                  <BannerHighlightedFanCard fan={item.data} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 lg:pt-6 lg:grid-cols-12">
+        <aside className="hidden lg:block lg:col-span-4 lg:space-y-4">
+          <FeedHighlightedSidebar
+            spotlight={{ hot_take: activeHotTake.data || null }}
+            highlightedFan={(() => {
+              const fan = weeklyHighlights.data?.highlighted_fan
+              const profile = Array.isArray(fan) ? fan[0] : fan
+              if (!profile) return null
+              return {
+                id: String(profile.id),
+                username: String(profile.username),
+                profile_image_url:
+                  typeof profile.profile_image_url === 'string' ? profile.profile_image_url : null,
+              }
+            })()}
+            featuredGrid={getSpotlightFeaturedGrid({
+              grid: weeklyHighlights.data?.highlighted_fan_grid,
+            })}
+            polls={adminPolls.data || []}
+            userResponses={feedPollUserResponses}
+            voteCounts={feedPollVoteCounts}
+            featuredNews={featuredNewsList}
+            discussionPosts={hotTakePosts}
+          />
+        </aside>
+        <div className="lg:col-span-8 space-y-6 md:space-y-0">
+          <div className="relative z-10 lg:hidden mb-0">
+            <SpotlightCarousel
+              spotlight={{
+                hot_take: activeHotTake.data || null,
+                featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
+              }}
+              polls={adminPolls.data || []}
+              userResponses={feedPollUserResponses}
+              voteCounts={feedPollVoteCounts}
+              discussionPosts={hotTakePosts}
+              upcomingRace={upcomingRaceForCarousel}
+              sponsors={sponsorsList}
+              featuredNews={featuredNewsList}
+            />
+          </div>
           <FeedContent
             posts={enrichedFeedPosts}
             grids={enrichedFeedGrids as Grid[]}
@@ -472,18 +690,6 @@ export default async function FeedPage() {
             featuredNews={[]}
           />
         </div>
-        <div className="order-1 lg:order-none lg:col-span-4 space-y-4 mb-8 lg:mb-0">
-          <SpotlightCarousel
-            spotlight={{
-              hot_take: activeHotTake.data || null,
-              featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
-            }}
-            polls={adminPolls.data || []}
-            discussionPosts={hotTakePosts}
-            upcomingRace={upcomingRaceForCarousel}
-            sponsors={(sponsors.data || []) as Array<{ id: string; name: string; logo_url: string | null; website_url: string | null; description: string | null }>}
-            featuredNews={(featuredNews.data || []) as Array<{ id: string; title: string; image_url: string | null; content: string; created_at: string }>}
-          />
         </div>
       </div>
     </div>

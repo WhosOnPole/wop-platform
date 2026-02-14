@@ -77,7 +77,11 @@ export function GridHeartButton({
       title={isLiked ? 'Unlike this grid' : 'Like this grid'}
       aria-label={isLiked ? 'Unlike this grid' : 'Like this grid'}
     >
-      <Heart className={`h-4 w-4 shrink-0 ${isLiked ? 'fill-current' : ''}`} />
+      {isLiked ? (
+        <span className="heart-fill-sunset inline-block h-5 w-5 shrink-0" aria-hidden />
+      ) : (
+        <Heart className="h-5 w-5 shrink-0" />
+      )}
       <span className="leading-none">{likeCount}</span>
     </button>
   )

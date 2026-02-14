@@ -54,7 +54,6 @@ export function PollRail({
             userResponse={userResponses[poll.id]}
             voteCounts={voteCounts[poll.id] || {}}
             onVote={handleVote}
-            showDiscussion={false}
           />
         </div>
       ))}

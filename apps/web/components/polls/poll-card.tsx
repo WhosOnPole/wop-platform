@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { Trophy } from 'lucide-react'
-import { DiscussionSection } from '@/components/dtt/discussion-section'
+import { Trophy, Repeat2 } from 'lucide-react'
+import { useCreateModal } from '@/components/providers/create-modal-provider'
 
 interface Poll {
   id: string
@@ -19,7 +19,6 @@ interface PollCardProps {
   userResponse: string | undefined
   voteCounts: Record<string, number>
   onVote: (pollId: string, optionId: string) => void
-  showDiscussion?: boolean
   className?: string
   variant?: 'light' | 'dark'
 }
@@ -29,15 +28,22 @@ export function PollCard({
   userResponse,
   voteCounts,
   onVote,
-  showDiscussion = true,
   className,
   variant = 'light',
 }: PollCardProps) {
   const isDark = variant === 'dark'
   const supabase = createClientComponentClient()
   const router = useRouter()
+  const createModal = useCreateModal()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [localResponse, setLocalResponse] = useState(userResponse)
+
+  function handleRepost() {
+    createModal?.openPostModal({
+      referencePollId: poll.id,
+      referencePollQuestion: poll.question,
+    })
+  }
 
   // Calculate vote counts and percentages
   // Note: poll.options is a JSONB array of strings, not objects
@@ -67,6 +73,7 @@ export function PollCard({
     } = await supabase.auth.getSession()
 
     if (!session) {
+      setIsSubmitting(false)
       router.push('/login')
       return
     }
@@ -81,12 +88,21 @@ export function PollCard({
     })
 
     if (error) {
-      console.error('Error voting:', error)
-      alert(`Failed to record vote: ${error.message}`)
+      const isDuplicate =
+        error.code === '23505' ||
+        /unique|duplicate/i.test(error.message ?? '')
+      if (isDuplicate) {
+        setLocalResponse(selectedOptionId)
+        onVote(poll.id, selectedOptionId)
+        router.refresh()
+      } else {
+        console.error('Error voting:', error)
+        alert(`Failed to record vote: ${error.message}`)
+      }
     } else {
       setLocalResponse(selectedOptionId)
       onVote(poll.id, selectedOptionId)
-      router.refresh() // Refresh to get updated vote counts
+      router.refresh()
     }
     setIsSubmitting(false)
   }
@@ -95,9 +111,9 @@ export function PollCard({
 
   return (
     <div
-      className={`h-full w-full rounded-lg border p-6 shadow ${
+      className={`h-full w-full rounded-lg p-0 shadow ${
         isDark
-          ? 'border-white/10 bg-black/40 backdrop-blur-sm text-white'
+          ? ' backdrop-blur-sm text-white'
           : 'border-gray-200 bg-white text-black'
       } ${className || ''}`}
     >
@@ -107,12 +123,10 @@ export function PollCard({
         </h2>
         {poll.is_featured_podium && (
           <div
-            className={`flex items-center space-x-1 rounded-full px-3 py-1 ${
-              isDark ? 'bg-yellow-500/30' : 'bg-yellow-100'
-            }`}
+            className="flex items-center space-x-1 rounded-full px-3 py-1 bg-sunset-gradient"
           >
-            <Trophy className={`h-4 w-4 ${isDark ? 'text-yellow-200' : 'text-yellow-600'}`} />
-            <span className={`text-xs font-medium ${isDark ? 'text-yellow-200' : 'text-yellow-800'}`}>
+            <Trophy className="h-4 w-4 " />
+            <span className="text-xs font-medium">
               Featured
             </span>
           </div>
@@ -188,16 +202,22 @@ export function PollCard({
         </div>
       )}
 
-      {/* Discussion Section */}
-      {showDiscussion && (
+      {createModal && (
         <div
-          className={`mt-6 border-t pt-6 ${isDark ? 'border-white/10' : 'border-gray-200'}`}
+          className={`mt-4 border-t pt-4 ${isDark ? 'border-white/10' : 'border-gray-200'}`}
         >
-          <DiscussionSection
-            posts={[]}
-            parentPageType="poll"
-            parentPageId={poll.id}
-          />
+          <button
+            type="button"
+            onClick={handleRepost}
+            className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+              isDark
+                ? 'text-white/80 hover:text-white'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Repeat2 className="h-4 w-4" />
+            Repost
+          </button>
         </div>
       )}
     </div>

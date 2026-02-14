@@ -14,6 +14,7 @@ import { TipModal } from '@/components/create/modals/tip-modal'
 import { PostModal } from '@/components/create/modals/post-modal'
 import { NotificationBell } from '@/components/navbar/notification-bell'
 import { GlobalSearchModal } from '@/components/search/global-search-modal'
+import { useCreateModal } from '@/components/providers/create-modal-provider'
 import { PlusCircle, Settings, LogOut, Search } from 'lucide-react'
 
 interface Profile {
@@ -30,7 +31,12 @@ export function TopNav() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [activeModal, setActiveModal] = useState<'story' | 'poll' | 'tip' | 'post' | null>(null)
+  const createModal = useCreateModal()
+  const activeModal = createModal?.activeModal ?? null
+  const setActiveModal = createModal?.setActiveModal ?? (() => {})
+  const closeModal = createModal?.closeModal ?? (() => {})
+  const openPostModal = createModal?.openPostModal ?? (() => {})
+  const postModalRef = createModal?.postModalRef ?? null
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [hasScrolled, setHasScrolled] = useState(false)
 
@@ -125,7 +131,7 @@ export function TopNav() {
     <div
       className={`fixed top-0 left-0 right-0 text-white z-50 transition-[background] ease-in-out duration-800 ${
         showNavBg
-          ? 'bg-gradient-to-b from-black to-transparent'
+          ? 'bg-[linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)]'
           : 'bg-transparent'
       }`}
     >
@@ -153,7 +159,7 @@ export function TopNav() {
                 {isCreateOpen ? (
                   <CreateMenu
                     onClose={() => setIsCreateOpen(false)}
-                    onSelect={(key) => setActiveModal(key)}
+                    onSelect={(key) => (key === 'post' ? openPostModal() : setActiveModal(key))}
                   />
                 ) : null}
               </div>
@@ -166,8 +172,8 @@ export function TopNav() {
                     href={item.href}
                     className={`text-sm font-semibold transition-colors ${
                       active
-                        ? 'text-sunset-start'
-                        : 'text-white hover:text-sunset-start'
+                        ? 'text-[#25B4B1]'
+                        : 'text-white hover:text-[#25B4B1]'
                     }`}
                   >
                     {item.label}
@@ -182,7 +188,7 @@ export function TopNav() {
                 href={item.href}
                 className={`text-sm font-semibold transition-colors ${
                   pathname === item.href
-                    ? 'text-sunset-start'
+                    ? 'text-[#25B4B1]'
                     : 'text-white hover:text-sunset-start'
                 }`}
               >
@@ -319,10 +325,16 @@ export function TopNav() {
         </div>
       </div>
 
-      {activeModal === 'story' ? <StoryModal onClose={() => setActiveModal(null)} /> : null}
-      {activeModal === 'poll' ? <PollModal onClose={() => setActiveModal(null)} /> : null}
-      {activeModal === 'tip' ? <TipModal onClose={() => setActiveModal(null)} /> : null}
-      {activeModal === 'post' ? <PostModal onClose={() => setActiveModal(null)} /> : null}
+      {activeModal === 'story' ? <StoryModal onClose={closeModal} /> : null}
+      {activeModal === 'poll' ? <PollModal onClose={closeModal} /> : null}
+      {activeModal === 'tip' ? <TipModal onClose={closeModal} /> : null}
+      {activeModal === 'post' ? (
+        <PostModal
+          onClose={closeModal}
+          referencePollId={postModalRef?.referencePollId}
+          referencePollQuestion={postModalRef?.referencePollQuestion}
+        />
+      ) : null}
       <GlobalSearchModal open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {isCreateOpen ? (
@@ -342,7 +354,7 @@ export function TopNav() {
                 <CreateMenu
                   variant="sheet"
                   onClose={() => setIsCreateOpen(false)}
-                  onSelect={(key) => setActiveModal(key)}
+                  onSelect={(key) => (key === 'post' ? openPostModal() : setActiveModal(key))}
                 />
               </div>
             </div>

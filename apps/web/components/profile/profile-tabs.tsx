@@ -20,7 +20,7 @@ export function ProfileTabs({ activeTab, onTabChange, teamBackground }: ProfileT
 
   return (
     <div className="z-30 bg-black transition-colors duration-300 px-4 pt-4">
-      <div className="flex items-center justify-between w-full rounded-full overflow-hidden">
+      <div className="flex items-center justify-between w-full rounded-full overflow-hidden max-w-4xl mx-auto">
         <div className="flex w-full">
           {tabs.map((tab, index) => (
             <TabButton

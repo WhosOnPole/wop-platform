@@ -17,12 +17,14 @@ interface PollListProps {
   polls: Poll[]
   userResponses: Record<string, string>
   voteCounts: Record<string, Record<string, number>>
+  variant?: 'light' | 'dark'
 }
 
 export function PollList({
   polls: initialPolls,
   userResponses: initialUserResponses,
   voteCounts: initialVoteCounts,
+  variant = 'light',
 }: PollListProps) {
   const [polls] = useState(initialPolls)
   const [userResponses, setUserResponses] = useState(initialUserResponses)
@@ -40,11 +42,17 @@ export function PollList({
     })
   }
 
+  const isDark = variant === 'dark'
+
   return (
     <div className="space-y-6">
       {polls.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
-          <p className="text-gray-500">No polls available yet. Check back soon!</p>
+        <div
+          className={`rounded-lg border p-12 text-center shadow ${
+            isDark ? 'border-white/20 bg-white/5' : 'border-gray-200 bg-white'
+          }`}
+        >
+          <p className={isDark ? 'text-white/60' : 'text-gray-500'}>No polls available yet. Check back soon!</p>
         </div>
       ) : (
         polls.map((poll) => (
@@ -54,6 +62,7 @@ export function PollList({
             userResponse={userResponses[poll.id]}
             voteCounts={voteCounts[poll.id] || {}}
             onVote={handleVote}
+            variant={variant}
           />
         ))
       )}

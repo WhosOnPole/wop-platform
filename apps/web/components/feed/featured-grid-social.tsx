@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
-import { Heart, MessageSquare } from 'lucide-react'
+import { Heart } from 'lucide-react'
+import { CommentIcon } from '@/components/ui/comment-icon'
 
 interface FeaturedGridSocialProps {
   gridId: string
@@ -86,11 +87,15 @@ export function FeaturedGridSocial({ gridId, initialLikeCount }: FeaturedGridSoc
             : 'text-pink-600 hover:text-pink-700'
         } disabled:opacity-50`}
       >
-        <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+        {isLiked ? (
+          <span className="heart-fill-sunset inline-block h-5 w-5 shrink-0" aria-hidden />
+        ) : (
+          <Heart className="h-5 w-5" />
+        )}
         {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
       </button>
       <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-700 transition-colors">
-        <MessageSquare className="h-5 w-5" />
+        <CommentIcon className="h-5 w-5" />
         <span className="text-sm font-medium">0</span>
       </button>
     </div>

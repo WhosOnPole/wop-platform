@@ -101,23 +101,29 @@ export function FeedContent({ posts, grids, featuredNews, supabaseUrl, currentUs
               key={`post-${post.id}`}
               className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
-              <div className="mb-4 flex items-center space-x-3">
-                <img
-                  src={getAvatarUrl(post.user?.profile_image_url)}
-                  alt={post.user?.username ?? ''}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-                <div>
-                  <Link
-                    href={`/u/${post.user?.username || 'unknown'}`}
-                    className="font-medium text-white/90 hover:text-white"
-                  >
-                    {post.user?.username || 'Unknown'}
-                  </Link>
-                  <p className="text-xs text-white/70">
-                    {new Date(post.created_at).toLocaleDateString()}
-                  </p>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center space-x-3">
+                  <img
+                    src={getAvatarUrl(post.user?.profile_image_url)}
+                    alt={post.user?.username ?? ''}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  />
+                  <div className="min-w-0">
+                    <Link
+                      href={`/u/${post.user?.username || 'unknown'}`}
+                      className="font-medium text-white/90 hover:text-white"
+                    >
+                      {post.user?.username || 'Unknown'}
+                    </Link>
+                    <p className="text-xs text-white/70">
+                      {new Date(post.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
+                <FeedPostActionsMenu
+                  postId={post.id}
+                  postAuthorId={post.user?.id ?? null}
+                />
               </div>
               <p className="text-white/90">{post.content}</p>
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
@@ -131,12 +137,10 @@ export function FeedContent({ posts, grids, featuredNews, supabaseUrl, currentUs
                 <FeedPostCommentSection
                   postId={post.id}
                   initialCommentCount={post.comment_count ?? 0}
-                />
-                <FeedPostActionsMenu
-                  postId={post.id}
-                  postAuthorId={post.user?.id ?? null}
+                  panelTargetId={`comments-${post.id}`}
                 />
               </div>
+              <div id={`comments-${post.id}`} className="mt-3" aria-live="polite" />
             </div>
           )
         }
