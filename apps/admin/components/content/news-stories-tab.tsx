@@ -4,15 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { NewsStoryModal } from './news-story-modal'
-
-interface NewsStory {
-  id: string
-  title: string
-  image_url: string | null
-  content: string
-  is_featured: boolean
-  created_at: string
-}
+import { NewsStory } from './content.types'
 
 export function NewsStoriesTab() {
   const supabase = createClientComponentClient()

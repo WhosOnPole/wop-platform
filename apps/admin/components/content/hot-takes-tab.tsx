@@ -4,16 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { HotTakeModal } from './hot-take-modal'
-
-interface HotTake {
-  id: string
-  content_text: string
-  featured_grid_id: string | null
-  active_date: string | null
-  starts_at: string
-  ends_at: string
-  created_at: string
-}
+import { HotTake } from './content.types'
 
 export function HotTakesTab() {
   const supabase = createClientComponentClient()

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2, Plus, Trash2 } from 'lucide-react'
 import { z } from 'zod'
+import { Poll } from './content.types'
 
 const pollSchema = z.object({
   question: z.string().min(1),
@@ -13,13 +14,7 @@ const pollSchema = z.object({
 })
 
 interface PollModalProps {
-  poll: {
-    id: string
-    question: string
-    options: string[]
-    is_featured_podium: boolean
-    ends_at?: string | null
-  } | null
+  poll: Poll | null
   onClose: () => void
 }
 

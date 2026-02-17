@@ -4,15 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { PollModal } from './poll-modal'
-
-interface Poll {
-  id: string
-  question: string
-  options: string[]
-  is_featured_podium: boolean
-  created_at: string
-  ends_at?: string | null
-}
+import { Poll } from './content.types'
 
 export function PollsTab() {
   const supabase = createClientComponentClient()

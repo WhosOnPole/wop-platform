@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { HotTake } from './content.types'
 
 const hotTakeSchema = z.object({
   content_text: z.string().min(1),
@@ -14,14 +15,7 @@ const hotTakeSchema = z.object({
 })
 
 interface HotTakeModalProps {
-  hotTake: {
-    id: string
-    content_text: string
-    featured_grid_id: string | null
-    active_date: string | null
-    starts_at?: string | null
-    ends_at?: string | null
-  } | null
+  hotTake: HotTake | null
   onClose: () => void
 }
 

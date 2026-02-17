@@ -4,14 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { SponsorModal } from './sponsor-modal'
-
-interface Sponsor {
-  id: string
-  name: string
-  logo_url: string | null
-  website_url: string | null
-  created_at: string
-}
+import { Sponsor } from './content.types'
 
 export function SponsorsTab() {
   const supabase = createClientComponentClient()

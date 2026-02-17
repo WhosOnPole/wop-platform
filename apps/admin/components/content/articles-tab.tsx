@@ -4,17 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { ArticleModal } from './article-modal'
-
-interface Article {
-  id: string
-  title: string
-  slug: string
-  content: string
-  category: string
-  header_image_url: string | null
-  status: string
-  created_at: string
-}
+import { Article } from './content.types'
 
 export function ArticlesTab() {
   const supabase = createClientComponentClient()

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { Sponsor } from './content.types'
 
 const sponsorSchema = z.object({
   name: z.string().min(1),
@@ -13,13 +14,7 @@ const sponsorSchema = z.object({
 })
 
 interface SponsorModalProps {
-  sponsor: {
-    id: string
-    name: string
-    logo_url: string | null
-    website_url: string | null
-    description: string | null
-  } | null
+  sponsor: Sponsor | null
   onClose: () => void
 }
 

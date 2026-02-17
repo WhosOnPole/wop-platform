@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { NewsStory } from './content.types'
 
 const newsStorySchema = z.object({
   title: z.string().min(1).max(500),
@@ -13,13 +14,7 @@ const newsStorySchema = z.object({
 })
 
 interface NewsStoryModalProps {
-  story: {
-    id: string
-    title: string
-    image_url: string | null
-    content: string
-    is_featured: boolean
-  } | null
+  story: NewsStory | null
   onClose: () => void
 }
 
