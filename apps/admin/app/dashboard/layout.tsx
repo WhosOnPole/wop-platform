@@ -72,9 +72,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <MobileMenu navItems={navItems} userEmail={session.user.email || ''} />
 
       {/* Desktop Sidebar - hidden on mobile */}
-      <aside className="hidden lg:block w-64 bg-gray-900 text-white">
+      <aside className="hidden lg:block w-64 bg-black text-white">
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center border-b border-gray-800 px-6">
+          <div className="flex h-16 items-center border-b border-gray-800 p-6">
             <h1 className="text-xl font-bold">Admin Dashboard</h1>
           </div>
           <nav className="flex-1 space-y-1 px-3 py-4">
