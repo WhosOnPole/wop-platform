@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 export default function HomePage() {
@@ -10,10 +11,17 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-black">
       {/* Background image */}
-      <div
-      className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: 'url(/images/landing_bg.jpg)' }}
-      />
+      <div className="absolute inset-0">
+        <Image
+          src="/images/landing_bg.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          aria-hidden
+        />
+      </div>
         {/* Gradient overlay: fade to black toward bottom */}
         <div
         className="absolute inset-0 z-[1]"
@@ -51,12 +59,13 @@ export default function HomePage() {
                 Where passion becomes community
               </p>
               <div className=" w-px bg-white/50 md:h-[35vh] h-[20vh] mr-10" aria-hidden />
-              <img
+              <Image
                 src="/images/seal_white.png"
                 alt=""
-                className="h-auto w-24 object-contain lg:w-32"
                 width={128}
                 height={128}
+                className="h-auto w-24 object-contain lg:w-32"
+                aria-hidden
               />
             </div>
           </div>
@@ -78,12 +87,14 @@ export default function HomePage() {
             >
               or learn more
             </Link>
-            <img
+            <Image
               src="/images/trio.png"
               alt=""
-              className="h-auto w-full max-w-5xl object-contain px-4 relative md:top-[-10vh]"
               width={500}
               height={550}
+              className="h-auto w-full max-w-5xl object-contain px-4 relative md:top-[-10vh]"
+              sizes="(max-width: 768px) 100vw, 900px"
+              aria-hidden
             />
           </div>
         </div>

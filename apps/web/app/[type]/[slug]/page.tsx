@@ -3,11 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import { EntityHeroBackground } from '@/components/entity/entity-hero-background'
 import { EntityHeaderWrapper } from '@/components/entity/entity-header-wrapper'
 import { PageBackButton } from '@/components/page-back-button'
 import { EntityOverview } from '@/components/entity/entity-overview'
-import { EntityImageGallery } from '@/components/entity/entity-image-gallery'
+import { EntityImageGallerySection } from '@/components/entity/entity-image-gallery-section'
 import { EntityTabs } from '@/components/entity/entity-tabs'
 import { TrackSubmissionsTab } from '@/components/entity/tabs/track-submissions-tab'
 import { TrackTipsTab } from '@/components/entity/tabs/track-tips-tab'
@@ -17,9 +18,7 @@ import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { TeamQuotesTab } from '@/components/entity/tabs/team-quotes-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { CheckInSection } from '@/components/race/check-in-section'
-import { getRecentInstagramMedia } from '@/services/instagram'
-import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
-import { getTeamLogoUrl, getTeamBackgroundUrl, getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
+import { getTeamLogoUrl, getTeamBackgroundUrl, getTrackSlug } from '@/utils/storage-urls'
 import { getCountryFlagPath } from '@/utils/flags'
 import { isRaceWeekendActive } from '@/utils/race-weekend'
 
@@ -81,7 +80,6 @@ export default async function DynamicPage({ params }: PageProps) {
   // Fetch the entity based on type
   let entity: any = null
   let relatedData: any = null
-  let instagramPosts: Array<{ id: string; href: string; imageUrl: string }> = []
 
   if (type === 'drivers') {
     // Decode URL-encoded slug and normalize
@@ -110,16 +108,6 @@ export default async function DynamicPage({ params }: PageProps) {
 
     entity = driver
 
-    if (driver?.instagram_url) {
-      const parsed = getInstagramUsernameFromEmbed({ embedHtml: driver.instagram_url })
-      if (parsed?.username) {
-        try {
-          instagramPosts = await getRecentInstagramMedia({ username: parsed.username, limit: 20 })
-        } catch (err) {
-          console.error('Failed to load Instagram posts', err)
-        }
-      }
-    }
   } else if (type === 'teams') {
     // Decode URL-encoded slug and normalize
     const decodedSlug = decodeURIComponent(slug)
@@ -148,17 +136,6 @@ export default async function DynamicPage({ params }: PageProps) {
 
       relatedData = drivers || []
 
-      // Fetch Instagram posts if possible
-      if (team.instagram_url) {
-        const parsed = getInstagramUsernameFromEmbed({ embedHtml: team.instagram_url })
-        if (parsed?.username) {
-          try {
-            instagramPosts = await getRecentInstagramMedia({ username: parsed.username, limit: 20 })
-          } catch (err) {
-            console.error('Failed to load Instagram posts', err)
-          }
-        }
-      }
     }
   } else if (type === 'tracks') {
     const decodedSlug = decodeURIComponent(slug)
@@ -273,17 +250,13 @@ export default async function DynamicPage({ params }: PageProps) {
     galleryImages.push(...entity.admin_images.filter((url: string) => url))
   }
 
-  // Then user submission images (tracks) or Instagram (teams/drivers)
+  // Then user submission images (tracks)
   if (type === 'tracks') {
     const allSubmissions = [...trackTips, ...trackStays, ...trackMeetups, ...trackTransit]
     const submissionImages = allSubmissions
       .map((s) => s.image_url)
       .filter((url): url is string => Boolean(url))
     galleryImages.push(...submissionImages)
-  } else {
-    // Teams and drivers: Instagram images
-    const instagramImages = instagramPosts.map((p) => p.imageUrl)
-    galleryImages.push(...instagramImages)
   }
 
   // Get background image
@@ -295,13 +268,7 @@ export default async function DynamicPage({ params }: PageProps) {
       backgroundImage = entity.image_url
     } else {
       const backgroundUrl = getTeamBackgroundUrl(entity.name, supabaseUrl)
-      const logoUrl = getTeamLogoUrl(entity.name, supabaseUrl)
-      try {
-        const headRes = await fetch(backgroundUrl, { method: 'HEAD' })
-        backgroundImage = headRes.ok ? backgroundUrl : logoUrl
-      } catch {
-        backgroundImage = logoUrl
-      }
+      backgroundImage = backgroundUrl || getTeamLogoUrl(entity.name, supabaseUrl)
     }
   } else if (type === 'tracks') {
     backgroundImage = '/images/entity_bg.png'
@@ -486,7 +453,19 @@ export default async function DynamicPage({ params }: PageProps) {
           </div>
 
           {/* Image Gallery */}
-          <EntityImageGallery images={galleryImages} />
+          <Suspense fallback={null}>
+            <EntityImageGallerySection
+              images={galleryImages}
+              instagramEmbedHtml={
+                type === 'drivers'
+                  ? entity.instagram_url
+                  : type === 'teams'
+                    ? entity.instagram_url
+                    : null
+              }
+              enableInstagram={type === 'drivers' || type === 'teams'}
+            />
+          </Suspense>
 
           {/* Entity Header - Positioned at bottom */}
           <EntityHeaderWrapper

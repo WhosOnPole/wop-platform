@@ -11,7 +11,7 @@ import { BannerPollCard } from '@/components/feed/banner-poll-card'
 import { BannerFeaturedGridCard } from '@/components/feed/banner-featured-grid-card'
 import { BannerHighlightedFanCard } from '@/components/feed/banner-highlighted-fan-card'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 export const runtime = 'nodejs'
 
 async function getCurrentWeekStart() {
@@ -485,58 +485,113 @@ export default async function FeedPage() {
 
   // Enrich feed grids: ranked_items with images/location, like/comment counts
   const feedGridsRaw = followingGrids.data || []
-  const enrichedFeedGrids = await Promise.all(
-    feedGridsRaw.map(async (grid: Record<string, unknown> & { id: string; type: string; ranked_items: any[]; user_id: string }) => {
+  const feedGridIds = feedGridsRaw.map((grid: { id: string }) => grid.id)
+  const driverIds = Array.from(
+    new Set(
+      feedGridsRaw
+        .filter((grid: { type: string }) => grid.type === 'driver')
+        .flatMap((grid: { ranked_items: Array<{ id: string }> }) =>
+          Array.isArray(grid.ranked_items) ? grid.ranked_items.map((item) => item.id) : []
+        )
+    )
+  )
+  const trackIds = Array.from(
+    new Set(
+      feedGridsRaw
+        .filter((grid: { type: string }) => grid.type === 'track')
+        .flatMap((grid: { ranked_items: Array<{ id: string }> }) =>
+          Array.isArray(grid.ranked_items) ? grid.ranked_items.map((item) => item.id) : []
+        )
+    )
+  )
+
+  const [
+    { data: driversData },
+    { data: tracksData },
+    { data: likesData },
+    { data: commentsData },
+    { data: userLikesData },
+  ] = await Promise.all([
+    driverIds.length > 0
+      ? supabase.from('drivers').select('id, name, headshot_url, image_url').in('id', driverIds)
+      : Promise.resolve({ data: [] }),
+    trackIds.length > 0
+      ? supabase
+          .from('tracks')
+          .select('id, name, image_url, location, country, circuit_ref')
+          .in('id', trackIds)
+      : Promise.resolve({ data: [] }),
+    feedGridIds.length > 0
+      ? supabase.from('grid_likes').select('grid_id').in('grid_id', feedGridIds)
+      : Promise.resolve({ data: [] }),
+    feedGridIds.length > 0
+      ? supabase.from('grid_slot_comments').select('grid_id').in('grid_id', feedGridIds)
+      : Promise.resolve({ data: [] }),
+    feedGridIds.length > 0
+      ? supabase
+          .from('grid_likes')
+          .select('grid_id')
+          .eq('user_id', session.user.id)
+          .in('grid_id', feedGridIds)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const driversById = new Map(
+    (driversData || []).map((driver: { id: string }) => [driver.id, driver])
+  )
+  const tracksById = new Map(
+    (tracksData || []).map((track: { id: string }) => [track.id, track])
+  )
+  const likeCounts = (likesData || []).reduce((acc: Record<string, number>, row: { grid_id: string }) => {
+    acc[row.grid_id] = (acc[row.grid_id] || 0) + 1
+    return acc
+  }, {})
+  const commentCounts = (commentsData || []).reduce(
+    (acc: Record<string, number>, row: { grid_id: string }) => {
+      acc[row.grid_id] = (acc[row.grid_id] || 0) + 1
+      return acc
+    },
+    {}
+  )
+  const userLikedGridIds = new Set((userLikesData || []).map((row: { grid_id: string }) => row.grid_id))
+
+  const enrichedFeedGrids = feedGridsRaw.map(
+    (grid: Record<string, unknown> & { id: string; type: string; ranked_items: any[]; user_id: string }) => {
       const rankedItems = Array.isArray(grid.ranked_items) ? grid.ranked_items : []
-      const enrichedItems = await Promise.all(
-        rankedItems.map(async (item: { id: string; name: string }) => {
-          if (grid.type === 'driver') {
-            const { data: driver } = await supabase
-              .from('drivers')
-              .select('id, name, headshot_url, image_url')
-              .eq('id', item.id)
-              .maybeSingle()
-            return {
-              ...item,
-              headshot_url: driver?.headshot_url || null,
-              image_url: driver?.headshot_url || driver?.image_url || null,
-            }
+      const enrichedItems = rankedItems.map((item: { id: string; name: string }) => {
+        if (grid.type === 'driver') {
+          const driver = driversById.get(item.id) as
+            | { headshot_url?: string | null; image_url?: string | null }
+            | undefined
+          return {
+            ...item,
+            headshot_url: driver?.headshot_url || null,
+            image_url: driver?.headshot_url || driver?.image_url || null,
           }
-          if (grid.type === 'track') {
-            const { data: track } = await supabase
-              .from('tracks')
-              .select('id, name, image_url, location, country, circuit_ref')
-              .eq('id', item.id)
-              .maybeSingle()
-            return {
-              ...item,
-              image_url: track?.image_url || null,
-              location: track?.location || null,
-              country: track?.country || null,
-              circuit_ref: track?.circuit_ref || null,
-            }
+        }
+        if (grid.type === 'track') {
+          const track = tracksById.get(item.id) as
+            | { image_url?: string | null; location?: string | null; country?: string | null; circuit_ref?: string | null }
+            | undefined
+          return {
+            ...item,
+            image_url: track?.image_url || null,
+            location: track?.location || null,
+            country: track?.country || null,
+            circuit_ref: track?.circuit_ref || null,
           }
-          return item
-        })
-      )
-      const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
-        supabase.from('grid_likes').select('*', { count: 'exact', head: true }).eq('grid_id', grid.id),
-        supabase.from('grid_slot_comments').select('*', { count: 'exact', head: true }).eq('grid_id', grid.id),
-      ])
-      const { data: userLike } = await supabase
-        .from('grid_likes')
-        .select('id')
-        .eq('grid_id', grid.id)
-        .eq('user_id', session.user.id)
-        .maybeSingle()
+        }
+        return item
+      })
+
       const user = grid.user as Record<string, unknown> | null
       return {
         ...grid,
         ranked_items: enrichedItems,
         blurb: grid.blurb ?? null,
-        like_count: likeCount ?? 0,
-        comment_count: commentCount ?? 0,
-        is_liked: !!userLike,
+        like_count: likeCounts[grid.id] ?? 0,
+        comment_count: commentCounts[grid.id] ?? 0,
+        is_liked: userLikedGridIds.has(grid.id),
         created_at: grid.updated_at || grid.created_at,
         user: user
           ? {
@@ -546,7 +601,7 @@ export default async function FeedPage() {
             }
           : null,
       }
-    })
+    }
   )
 
   const sponsorsList = (sponsors.data || []) as Array<{

@@ -201,7 +201,7 @@ export default function OnboardingPage() {
                 <ChevronLeft className="h-4 w-4" />
                 Back
               </button>
-              <span className="text-sm text-white/50">You can always go back and adjust your selections.</span>
+              <span className="text-sm text-right text-white/50">You can always go back and adjust your selections.</span>
             </div>
           )}
           {currentStep === 'profile' && (
@@ -231,7 +231,7 @@ export default function OnboardingPage() {
           {currentStep === 'complete' && (
             <div className="text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-[#25B4B1]" />
-              <h2 className="mt-4 font-display text-2xl font-normal text-white">Welcome to Who&apos;s on Pole!</h2>
+              <h2 className="mt-4 font-display text-2xl text-white">Welcome to Who&apos;s on Pole!</h2>
               <p className="mt-2 text-white/70">
                 {isRedirectingToFeed ? 'Redirecting to your feed…' : 'Finalizing…'}
               </p>

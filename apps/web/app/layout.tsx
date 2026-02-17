@@ -1,10 +1,33 @@
 import type { Metadata, Viewport } from 'next'
+import localFont from 'next/font/local'
 import './globals.css'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { BotIDProviderWrapper } from '@/components/providers/botid-provider'
 import { AuthSessionProvider } from '@/components/providers/auth-session-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 import { LoadingScreen } from '@/components/loading-screen'
+
+const inter = localFont({
+  src: '../public/fonts/Inter.ttf',
+  display: 'swap',
+  weight: '100 900',
+  style: 'normal',
+  variable: '--font-inter',
+})
+const raygun = localFont({
+  src: '../public/fonts/RaygunRegular.ttf',
+  display: 'swap',
+  weight: '400',
+  style: 'normal',
+  variable: '--font-raygun',
+})
+const sageva = localFont({
+  src: '../public/fonts/Sageva.ttf',
+  display: 'swap',
+  weight: '400',
+  style: 'normal',
+  variable: '--font-sageva',
+})
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -39,7 +62,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className={`${inter.variable} ${raygun.variable} ${sageva.variable}`}
+      >
         <QueryProvider>
           <BotIDProviderWrapper>
             <AuthSessionProvider>

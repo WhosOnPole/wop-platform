@@ -222,32 +222,6 @@ export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridS
         />
       </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-white/90">
-          Blurb (optional, max 140 characters)
-        </label>
-        <textarea
-          id={`${config.type}-blurb`}
-          name={`${config.type}-blurb`}
-          value={blurb}
-          onChange={(e) => {
-            if (e.target.value.length <= 140) setBlurb(e.target.value)
-          }}
-          rows={2}
-          placeholder={config.blurbPlaceholder}
-          autoComplete="off"
-          data-form-type="other"
-          data-lpignore="true"
-          data-1p-ignore="true"
-          data-bwignore="true"
-          spellCheck={false}
-          role="textbox"
-          aria-label={`${config.type} grid blurb`}
-          className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-        />
-        <p className="mt-1 text-xs text-white/50">{blurb.length}/140 characters</p>
-      </div>
-
       <div className="flex justify-between">
         <button
           type="button"

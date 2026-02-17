@@ -7,6 +7,7 @@ import {
   DragStartEvent,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
   TouchSensor,
   KeyboardSensor,
   useSensor,
@@ -14,6 +15,7 @@ import {
   useDraggable,
   useDroppable,
 } from '@dnd-kit/core'
+import { snapCenterToCursor } from '@dnd-kit/modifiers'
 import { GridTileContent, type GridTileItem } from './grid-tile-content'
 
 export type GridType = 'driver' | 'team' | 'track'
@@ -317,6 +319,7 @@ export function GridEditCanvas({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
@@ -370,7 +373,7 @@ export function GridEditCanvas({
         </PaletteDroppable>
       </div>
 
-      <DragOverlay>
+      <DragOverlay modifiers={[snapCenterToCursor]}>
         {activeId && overlayItem ? (
           <div
             className={`cursor-grabbing touch-none rounded-xl overflow-hidden bg-black shadow-lg ${

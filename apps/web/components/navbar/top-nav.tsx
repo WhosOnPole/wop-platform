@@ -8,14 +8,31 @@ import { useAuthSession } from '@/components/providers/auth-session-provider'
 import { getAvatarUrl } from '@/utils/avatar'
 import { Logo } from '@/components/ui/logo'
 import { CreateMenu } from '@/components/create/create-menu'
-import { StoryModal } from '@/components/create/modals/story-modal'
-import { PollModal } from '@/components/create/modals/poll-modal'
-import { TipModal } from '@/components/create/modals/tip-modal'
-import { PostModal } from '@/components/create/modals/post-modal'
+import dynamic from 'next/dynamic'
 import { NotificationBell } from '@/components/navbar/notification-bell'
-import { GlobalSearchModal } from '@/components/search/global-search-modal'
 import { useCreateModal } from '@/components/providers/create-modal-provider'
 import { PlusCircle, Settings, LogOut, Search } from 'lucide-react'
+
+const StoryModal = dynamic(
+  () => import('@/components/create/modals/story-modal').then((mod) => mod.StoryModal),
+  { ssr: false }
+)
+const PollModal = dynamic(
+  () => import('@/components/create/modals/poll-modal').then((mod) => mod.PollModal),
+  { ssr: false }
+)
+const TipModal = dynamic(
+  () => import('@/components/create/modals/tip-modal').then((mod) => mod.TipModal),
+  { ssr: false }
+)
+const PostModal = dynamic(
+  () => import('@/components/create/modals/post-modal').then((mod) => mod.PostModal),
+  { ssr: false }
+)
+const GlobalSearchModal = dynamic(
+  () => import('@/components/search/global-search-modal').then((mod) => mod.GlobalSearchModal),
+  { ssr: false }
+)
 
 interface Profile {
   id: string
