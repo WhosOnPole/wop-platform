@@ -18,7 +18,9 @@ interface HotTakeModalProps {
     id: string
     content_text: string
     featured_grid_id: string | null
-    active_date: string
+    active_date: string | null
+    starts_at?: string | null
+    ends_at?: string | null
   } | null
   onClose: () => void
 }
