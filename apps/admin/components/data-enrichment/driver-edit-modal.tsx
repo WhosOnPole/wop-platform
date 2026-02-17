@@ -13,6 +13,7 @@ const driverSchema = z.object({
   racing_number: z.number().int().positive().optional().or(z.null()),
   age: z.number().int().positive().max(100).optional().or(z.null()),
   nationality: z.string().max(100).optional().or(z.literal('')),
+  overview_text: z.string().max(5000).optional().or(z.literal('')),
   podiums_total: z.number().int().min(0).optional(),
   current_standing: z.number().int().positive().optional().or(z.null()),
   world_championships: z.number().int().min(0).optional(),
@@ -35,6 +36,7 @@ interface DriverEditModalProps {
     racing_number: number | null
     age: number | null
     nationality: string | null
+    overview_text: string | null
     podiums_total: number
     current_standing: number | null
     world_championships: number
@@ -57,6 +59,7 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
     racing_number: driver.racing_number?.toString() || '',
     age: driver.age?.toString() || '',
     nationality: driver.nationality || '',
+    overview_text: driver.overview_text || '',
     podiums_total: driver.podiums_total.toString(),
     current_standing: driver.current_standing?.toString() || '',
     world_championships: driver.world_championships.toString(),
@@ -100,22 +103,28 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
         racing_number: formData.racing_number ? parseInt(formData.racing_number) : null,
         age: formData.age ? parseInt(formData.age) : null,
         nationality: formData.nationality || undefined,
+        overview_text: formData.overview_text || undefined,
         podiums_total: parseInt(formData.podiums_total),
         current_standing: formData.current_standing ? parseInt(formData.current_standing) : null,
         world_championships: parseInt(formData.world_championships),
         instagram_url: formData.instagram_url || undefined,
       })
 
-      // Use service role for admin operations (this should be done via Server Action in production)
       const { error: updateError } = await supabase
         .from('drivers')
         .update({
-          ...validated,
           name: validated.name,
           image_url: validated.image_url || null,
           team_id: validated.team_id || null,
           active: validated.active ?? true,
-          team_icon_url: null, // Remove team_icon_url, it will come from team relationship
+          team_icon_url: null,
+          overview_text: validated.overview_text || null,
+          racing_number: validated.racing_number ?? null,
+          age: validated.age ?? null,
+          nationality: validated.nationality || null,
+          podiums_total: validated.podiums_total ?? 0,
+          current_standing: validated.current_standing ?? null,
+          world_championships: validated.world_championships ?? 0,
           instagram_url: validated.instagram_url || null,
         })
         .eq('id', driver.id)
@@ -244,6 +253,20 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
                 onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Overview (driver page section)
+              </label>
+              <textarea
+                rows={4}
+                value={formData.overview_text}
+                onChange={(e) => setFormData({ ...formData, overview_text: e.target.value })}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                placeholder="Short overview or bio shown on the driver entity page"
+              />
+              <p className="mt-1 text-xs text-gray-500">Max 5000 characters. Shown next to racing number on the driver page.</p>
             </div>
 
             <div>

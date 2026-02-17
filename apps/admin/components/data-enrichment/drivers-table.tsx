@@ -15,6 +15,7 @@ interface Driver {
   racing_number: number | null
   age: number | null
   nationality: string | null
+  overview_text: string | null
   podiums_total: number
   current_standing: number | null
   world_championships: number

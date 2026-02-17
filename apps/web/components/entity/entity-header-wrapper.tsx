@@ -51,7 +51,12 @@ export function EntityHeaderWrapper({
 }: EntityHeaderWrapperProps) {
   const [scrollProgress, setScrollProgress] = useState(0)
 
+  // Driver pages use simple page scroll; no scroll-linked parallax
+  const useScrollProgress = type !== 'driver'
+
   useEffect(() => {
+    if (!useScrollProgress) return
+
     function handleScroll() {
       const scrollY = window.scrollY
       const heroHeight = window.innerHeight * 0.4
@@ -63,7 +68,7 @@ export function EntityHeaderWrapper({
     handleScroll()
 
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [useScrollProgress])
 
   return (
     <EntityHeader
@@ -71,7 +76,7 @@ export function EntityHeaderWrapper({
       entity={entity}
       drivers={drivers}
       supabaseUrl={supabaseUrl}
-      scrollProgress={scrollProgress}
+      scrollProgress={useScrollProgress ? scrollProgress : 0}
     />
   )
 }

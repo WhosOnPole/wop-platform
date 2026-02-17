@@ -194,19 +194,14 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
     )
   }
 
-  // Driver
+  // Driver: simple scrolling, no scroll-linked transform
   const driver = entity as DriverEntity
   const flagPath = getNationalityFlagPath(driver.nationality)
   const team = driver.teams
 
   return (
     <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
-      <div
-        style={{
-          transform: `translateY(-${scrollOffset}px)`,
-          transition: 'transform 0.3s ease',
-        }}
-      >
+      <div>
       <h1 className="mb-4 text-3xl font-display tracking-wider md:text-6xl">
         {driver.name}
       </h1>
