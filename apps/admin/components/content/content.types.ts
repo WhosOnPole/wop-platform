@@ -32,7 +32,7 @@ export interface NewsStory {
   image_url: string | null
   content: string
   is_featured: boolean
-  created_at?: string | null
+  created_at: string
 }
 
 export interface Article {
