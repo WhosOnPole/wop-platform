@@ -162,36 +162,7 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
   if (type === 'team') {
     const team = entity as TeamEntity
 
-    return (
-      <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
-        <div
-          style={{
-            transform: `translateY(-${scrollOffset}px)`,
-            transition: 'transform 0.3s ease',
-          }}
-        >
-        <h1 className="mb-6 text-3xl font-display tracking-wider md:text-6xl">
-          {team.name}
-        </h1>
-        {drivers.length > 0 && (
-          <div className="flex flex-wrap gap-4">
-            {drivers.map((driver) => {
-              const driverSlug = slugify(driver.name)
-              return (
-                <Link
-                  key={driver.id}
-                  href={`/drivers/${driverSlug}`}
-                  className="text-lg text-white/90 hover:text-white transition-colors"
-                >
-                  {driver.name}
-                </Link>
-              )
-            })}
-          </div>
-        )}
-        </div>
-      </div>
-    )
+    return null;
   }
 
   // Driver: simple scrolling, no scroll-linked transform

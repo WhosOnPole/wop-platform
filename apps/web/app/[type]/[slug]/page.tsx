@@ -14,6 +14,7 @@ import { TrackTipsTab } from '@/components/entity/tabs/track-tips-tab'
 import { TrackScheduleTab } from '@/components/entity/tabs/track-schedule-tab'
 import { StatsTab } from '@/components/entity/tabs/stats-tab'
 import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
+import { TeamQuotesTab } from '@/components/entity/tabs/team-quotes-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { CheckInSection } from '@/components/race/check-in-section'
 import { getRecentInstagramMedia } from '@/services/instagram'
@@ -399,14 +400,14 @@ export default async function DynamicPage({ params }: PageProps) {
     })
   } else if (type === 'teams') {
     tabs.push({
-      id: 'stats',
-      label: 'Stats',
-      content: <StatsTab type="team" stats={entity} />,
-    })
-    tabs.push({
       id: 'drivers',
       label: 'Drivers',
       content: <TeamDriversTab drivers={relatedData || []} />,
+    })
+    tabs.push({
+      id: 'quotes',
+      label: 'Quotes',
+      content: <TeamQuotesTab teamId={entity.id} />,
     })
     tabs.push({
       id: 'discussion',
@@ -452,7 +453,7 @@ export default async function DynamicPage({ params }: PageProps) {
           trackSlug={trackSlugForHero ?? undefined}
           trackName={type === 'tracks' ? entity.name : undefined}
           supabaseUrl={type === 'tracks' || type === 'teams' ? supabaseUrl : undefined}
-          teamDrivers={type === 'teams' ? relatedData : undefined}
+          teamName={type === 'teams' ? entity.name : undefined}
         />
         
         {/* Content over background */}

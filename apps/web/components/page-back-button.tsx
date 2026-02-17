@@ -20,10 +20,10 @@ export function PageBackButton({
   const router = useRouter()
 
   const base =
-    'inline-flex items-center rounded-full text-lg font-medium transition-colors  [font-variant:all-small-caps;]'
+    'inline-flex items-center rounded-full text-md font-sans font-black opacity-65 transition-colors  [font-variant:all-small-caps;]'
   const styles =
     variant === 'dark'
-      ? 'text-[#25B4B1] hover:text-white'
+      ? 'hover:text-[#25B4B1] text-white hover:opacity-full transition-opacity'
       : 'text-gray-900 bg-white/90 hover:text-[#25B4B1]'
 
   return (

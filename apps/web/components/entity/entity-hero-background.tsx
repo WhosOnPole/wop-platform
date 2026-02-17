@@ -1,6 +1,4 @@
-import Image from 'next/image'
 import { TrackHeroMedia } from '@/components/grids/hero/track-hero-media'
-import { getDriverBodyImageUrl } from '@/utils/storage-urls'
 
 interface EntityHeroBackgroundProps {
   imageUrl: string | null | undefined
@@ -10,7 +8,12 @@ interface EntityHeroBackgroundProps {
   trackSlug?: string
   trackName?: string
   supabaseUrl?: string
-  teamDrivers?: Array<{ id: string; name: string }>
+  teamName?: string
+}
+
+function getTeamShortCode(teamName: string): string {
+  const letters = teamName.replace(/[^a-zA-Z]/g, '').slice(0, 3)
+  return letters.toUpperCase() || teamName.slice(0, 3).toUpperCase()
 }
 
 export function EntityHeroBackground({
@@ -21,13 +24,12 @@ export function EntityHeroBackground({
   trackSlug,
   trackName,
   supabaseUrl,
-  teamDrivers,
+  teamName,
 }: EntityHeroBackgroundProps) {
   const isTrack = entityType === 'track'
   const isTeam = entityType === 'team'
   const showTrackSvg = isTrack && trackSlug && supabaseUrl
-  const showTeamDriverBodies = isTeam && supabaseUrl && teamDrivers && teamDrivers.length > 0
-  const driversToShow = showTeamDriverBodies ? teamDrivers.slice(0, 2) : []
+  const showTeamShortCode = isTeam && teamName
 
   return (
     <div className="absolute inset-0 z-0">
@@ -57,32 +59,19 @@ export function EntityHeroBackground({
         </div>
       )}
 
-      {/* Team: two driver body.png overlay, split left/right, bottom strip */}
-      {showTeamDriverBodies && (
-        <div className="absolute inset-x-0 bottom-0 z-[1] flex items-end justify-center pointer-events-none h-[min(68vh,480px)] min-h-[220px] translate-y-4">
-          <div
-            className="grid w-full h-full max-w-5xl mx-auto"
+      {/* Team: short code (first 3 letters) full width, font-weight 900, opacity 30% */}
+      {showTeamShortCode && (
+        <div className="absolute inset-0 z-[1] flex items-center pointer-events-none overflow-visible">
+          <span
+            className="font-sans font-black text-white/30 select-none origin-left"
             style={{
-              gridTemplateColumns: driversToShow.length === 1 ? '1fr' : '1fr 1fr',
+              letterSpacing: '-0.05em',
+              fontSize: 'clamp(15.5rem, 20vw, 18rem)',
+              transform: 'translateX(-0.04em)',
             }}
           >
-            {driversToShow.map((driver) => (
-              <div
-                key={driver.id}
-                className="relative flex items-start justify-center min-h-0 w-full"
-              >
-                <div className="relative w-full h-full">
-                  <Image
-                    src={getDriverBodyImageUrl(driver.name, supabaseUrl!)}
-                    alt=""
-                    fill
-                    sizes="(max-width: 668px) 60vw, 400px"
-                    className="object-cover object-top pt-32"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+            {getTeamShortCode(teamName)}
+          </span>
         </div>
       )}
     </div>

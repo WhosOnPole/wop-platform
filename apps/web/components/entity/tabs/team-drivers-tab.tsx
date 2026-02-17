@@ -83,7 +83,7 @@ export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-4">
       {drivers.map((driver) => {
         const slug = slugify(driver.name)
         const imageSrc = driver.headshot_url || driver.image_url
@@ -101,11 +101,11 @@ export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
                   src={imageSrc}
                   alt={driver.name}
                   fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                  sizes="50vw"
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-white/60">
+                <div className="flex h-full w-full items-center justify-center text-4xl font-semibold text-white/60">
                   {driver.name.charAt(0)}
                 </div>
               )}

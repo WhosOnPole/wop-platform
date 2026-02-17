@@ -65,9 +65,7 @@ export function getTeamBackgroundUrl(teamName: string, supabaseUrl: string): str
 }
 
 /** Slug overrides for driver profile.jpg when storage folder name differs (e.g. typos) */
-const DRIVER_PROFILE_SLUG_OVERRIDES: Record<string, string> = {
-  valtteri_bottas: 'valterri_bottas',
-}
+const DRIVER_PROFILE_SLUG_OVERRIDES: Record<string, string> = {}
 
 /**
  * Gets the public URL for a driver's profile.jpg from S3 storage
@@ -85,10 +83,7 @@ export function getDriverProfileImageUrl(
   return `${supabaseUrl}/storage/v1/object/public/drivers/${path}`
 }
 
-const DRIVER_BODY_SLUG_OVERRIDES: Record<string, string> = {
-  // Storage folder is misspelled in bucket
-  valtteri_bottas: 'valterri_bottas',
-}
+const DRIVER_BODY_SLUG_OVERRIDES: Record<string, string> = {}
 
 /**
  * Gets the public URL for a driver's body.png from storage
