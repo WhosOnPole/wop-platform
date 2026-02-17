@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
@@ -9,6 +10,8 @@ import { EntityOverview } from '@/components/entity/entity-overview'
 import { EntityImageGallery } from '@/components/entity/entity-image-gallery'
 import { EntityTabs } from '@/components/entity/entity-tabs'
 import { TrackSubmissionsTab } from '@/components/entity/tabs/track-submissions-tab'
+import { TrackTipsTab } from '@/components/entity/tabs/track-tips-tab'
+import { TrackScheduleTab } from '@/components/entity/tabs/track-schedule-tab'
 import { StatsTab } from '@/components/entity/tabs/stats-tab'
 import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
@@ -16,12 +19,13 @@ import { CheckInSection } from '@/components/race/check-in-section'
 import { getRecentInstagramMedia } from '@/services/instagram'
 import { getInstagramUsernameFromEmbed } from '@/utils/instagram'
 import { getTeamLogoUrl, getTeamBackgroundUrl, getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
+import { getCountryFlagPath } from '@/utils/flags'
 import { isRaceWeekendActive } from '@/utils/race-weekend'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600 // Revalidate every hour
 
-// Normalize accented characters and create slug
+// Normalize accented characters and create slug (hyphen-separated for URLs)
 function normalizeSlug(text: string): string {
   return text
     .toLowerCase()
@@ -32,10 +36,20 @@ function normalizeSlug(text: string): string {
     .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric except hyphens
 }
 
+// For comparison: strip all separators so "autodromo-hermanos-rodriguez" === "autodromo_hermanos_rodriguez"
+function slugCompare(a: string, b: string): boolean {
+  const strip = (s: string) =>
+    normalizeSlug(s)
+      .replace(/[-_]/g, '')
+      .toLowerCase()
+  return strip(a) === strip(b)
+}
+
 function getIlikeQueryFromSlug(slug: string): string {
   return slug
     .trim()
     .replace(/-+/g, '%')
+    .replace(/_/g, '%') // Also treat underscores as word boundaries for tracks
     .replace(/%+/g, '%')
 }
 
@@ -146,19 +160,34 @@ export default async function DynamicPage({ params }: PageProps) {
       }
     }
   } else if (type === 'tracks') {
-    // Decode URL-encoded slug and normalize
     const decodedSlug = decodeURIComponent(slug)
     const normalizedSlug = normalizeSlug(decodedSlug)
-    const ilikeQuery = getIlikeQueryFromSlug(decodedSlug)
-    
-    const { data: tracks } = await supabase
-      .from('tracks')
-      .select('*')
-      .ilike('name', `%${ilikeQuery}%`)
 
-    const track = tracks?.find(
-      (t) => normalizeSlug(t.name) === normalizedSlug
-    ) || tracks?.[0]
+    // Use segments for accent-insensitive matching (e.g. "hermanos" matches "Hermanos Rodríguez")
+    const segments = decodedSlug.split(/[-_]+/).filter((s) => s.length >= 2)
+    const orFilters = segments.map((seg) => `name.ilike.%${seg}%`).join(',')
+    const tracksQuery = supabase.from('tracks').select('*')
+    const { data: tracks } = orFilters
+      ? await tracksQuery.or(orFilters)
+      : await tracksQuery
+
+    const track =
+      tracks?.find(
+        (t) =>
+          slugCompare(t.name, decodedSlug) ||
+          getTrackSlug(t.name) === decodedSlug ||
+          normalizeSlug(t.name) === normalizedSlug
+      ) ??
+      // Fallback: when multiple matches (e.g. "autodromo" matches Monza + Mexico), pick the one with most segment matches
+      (tracks && segments.length > 0
+        ? tracks.reduce((best, t) => {
+            const nameLower = t.name.toLowerCase()
+            const bestMatches = (best ? segments.filter((s) => nameLower.includes(s.toLowerCase())).length : 0)
+            const tMatches = segments.filter((s) => nameLower.includes(s.toLowerCase())).length
+            return tMatches > bestMatches ? t : best
+          }, null as (typeof tracks)[0] | null)
+        : null) ??
+      tracks?.[0]
 
     entity = track
   }
@@ -172,29 +201,48 @@ export default async function DynamicPage({ params }: PageProps) {
   let trackStays: any[] = []
   let trackMeetups: any[] = []
   let trackTransit: any[] = []
+  let trackEvents: Array<{ event_type: string; scheduled_at: string; duration_minutes: number | null }> = []
 
   if (type === 'tracks') {
-    const { data: allSubmissions } = await supabase
-      .from('track_tips')
-      .select(
+    const currentSeason = new Date().getFullYear()
+    const [submissionsRes, eventsRes] = await Promise.all([
+      supabase
+        .from('track_tips')
+        .select(
+          `
+          *,
+          user:profiles!user_id (
+            id,
+            username,
+            profile_image_url
+          )
         `
-        *,
-        user:profiles!user_id (
-          id,
-          username,
-          profile_image_url
         )
-      `
-      )
-      .eq('track_id', entity.id)
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
+        .eq('track_id', entity.id)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('track_events')
+        .select('event_type, scheduled_at, duration_minutes')
+        .eq('track_id', entity.id)
+        .eq('season_year', currentSeason)
+        .order('scheduled_at', { ascending: true }),
+    ])
 
+    const allSubmissions = submissionsRes.data
     if (allSubmissions) {
       trackTips = allSubmissions.filter((s) => s.type === 'tips' || !s.type)
       trackStays = allSubmissions.filter((s) => s.type === 'stays')
       trackMeetups = allSubmissions.filter((s) => s.type === 'meetups')
       trackTransit = allSubmissions.filter((s) => s.type === 'transit')
+    }
+
+    if (eventsRes.data?.length) {
+      trackEvents = eventsRes.data.map((row) => ({
+        event_type: row.event_type ?? '',
+        scheduled_at: row.scheduled_at ?? '',
+        duration_minutes: row.duration_minutes ?? null,
+      }))
     }
   }
 
@@ -315,23 +363,39 @@ export default async function DynamicPage({ params }: PageProps) {
   if (type === 'tracks') {
     tabs.push({
       id: 'tips',
-      label: 'General tips',
-      content: <TrackSubmissionsTab submissions={trackTips} typeLabel="General tips" />,
-    })
-    tabs.push({
-      id: 'stays',
-      label: 'Stay tips',
-      content: <TrackSubmissionsTab submissions={trackStays} typeLabel="Stay tips" />,
-    })
-    tabs.push({
-      id: 'transit',
-      label: 'Transit tips',
-      content: <TrackSubmissionsTab submissions={trackTransit} typeLabel="Transit tips" />,
+      label: 'Tips',
+      content: (
+        <TrackTipsTab
+          trackTips={trackTips}
+          trackStays={trackStays}
+          trackTransit={trackTransit}
+        />
+      ),
     })
     tabs.push({
       id: 'meetups',
       label: 'Meetups',
       content: <TrackSubmissionsTab submissions={trackMeetups} typeLabel="Meetups" />,
+    })
+    tabs.push({
+      id: 'schedule',
+      label: 'Schedule',
+      content: (
+        <TrackScheduleTab
+          events={trackEvents}
+          track={
+            type === 'tracks' && entity
+              ? {
+                  start_date: entity.start_date,
+                  end_date: entity.end_date,
+                  name: entity.name,
+                  location: entity.location,
+                  country: entity.country,
+                }
+              : null
+          }
+        />
+      ),
     })
   } else if (type === 'teams') {
     tabs.push({
@@ -378,7 +442,7 @@ export default async function DynamicPage({ params }: PageProps) {
   return (
     <div className="relative min-h-screen -mt-14">
       {/* Top Section with Background Image - extends to top of view */}
-      <div className="relative z-10 h-[40vh] min-h-[40vh] pt-14">
+      <div className="relative z-10 h-[60vh] min-h-[60vh] pt-14">
         {/* Hero Background */}
         <EntityHeroBackground
           imageUrl={backgroundImage}
@@ -394,10 +458,31 @@ export default async function DynamicPage({ params }: PageProps) {
         {/* Content over background */}
         <div className="relative z-10 h-full flex flex-col">
           <div className="shrink-0 pt-4 px-4">
+            
+            {/* Track title at top: Title, under -> Flag, City, Country */}
+            {type === 'tracks' && (
+              <div className="mb-4 text-white">
+                <h1 className="font-display text-2xl tracking-wider sm:text-3xl md:text-4xl">
+                  {entity.name}
+                </h1>
+                <div className="mt-2 flex items-center gap-2 font-sans text-sm text-white/90 sm:text-base">
+                  {getCountryFlagPath(entity.country) && (
+                    <Image
+                      src={getCountryFlagPath(entity.country)!}
+                      alt={entity.country || 'Flag'}
+                      width={20}
+                      height={20}
+                      className="object-contain"
+                    />
+                  )}
+                  <span>
+                    {[entity.location, entity.country].filter(Boolean).join(', ')}
+                  </span>
+                </div>
+              </div>
+            )}
             <PageBackButton variant="dark" />
           </div>
-          {/* Overview (Tracks only) */}
-          {type === 'tracks' && <EntityOverview overviewText={entity.overview_text} />}
 
           {/* Image Gallery */}
           <EntityImageGallery images={galleryImages} />
@@ -411,6 +496,31 @@ export default async function DynamicPage({ params }: PageProps) {
           />
         </div>
       </div>
+
+      {/* Overview Section - Black background, above tabs (tracks + drivers) */}
+      {(type === 'tracks' || type === 'drivers') && (
+        <div className="relative z-20 w-full overflow-visible bg-black">
+          {type === 'tracks' && (
+            <EntityOverview
+              type="track"
+              entity={{
+                track_length: entity.track_length,
+                overview_text: entity.overview_text,
+              }}
+            />
+          )}
+          {type === 'drivers' && (
+            <EntityOverview
+              type="driver"
+              entity={{
+                name: entity.name,
+                racing_number: entity.racing_number,
+                overview_text: (entity as { overview_text?: string | null }).overview_text ?? null,
+              }}
+            />
+          )}
+        </div>
+      )}
 
       {/* Tabs Section */}
       <div className="relative z-20 bg-[#000000] min-h-[30vh]">

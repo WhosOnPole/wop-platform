@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { X } from 'lucide-react'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { formatWeekendRange } from '@/utils/date-utils'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface Driver {
@@ -37,7 +38,7 @@ interface ScheduleTrack {
   location?: string | null
   country?: string | null
   start_date: string | null
-  race_day_date: string | null
+  end_date: string | null
   circuit_ref?: string | null
 }
 
@@ -174,7 +175,7 @@ export function PitlaneSearchResults({
                           {driver.racing_number != null && (
                             <div className="absolute right-2 top-2 z-30">
                               <span
-                                className="font-bold leading-none tabular-nums font-display"
+                                className="font-bold leading-none tabular-nums font-sageva"
                                 style={{ color: '#25B4B1', fontSize: 'clamp(14px, 4vw, 18px)' }}
                               >
                                 {driver.racing_number}
@@ -289,7 +290,7 @@ export function PitlaneSearchResults({
                           {showTrackSvg && (
                             <div
                               className="absolute inset-0 z-10 flex items-center justify-center p-2"
-                              style={{ transform: 'scale(1.1)', transformOrigin: 'center left' }}
+                              style={{ transform: 'scale(2.2)', transformOrigin: '-2% 40%' }}
                             >
                               <img
                                 src={trackSvgUrl}
@@ -399,26 +400,8 @@ interface ScheduleCardProps {
 }
 
 function ScheduleCard({ race, onClose }: ScheduleCardProps) {
-  const formatShortDate = (dateString: string | null) => {
-    if (!dateString) return null
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
-
-  const startDateFormatted = formatShortDate(race.start_date)
-  const raceDayDateFormatted = formatShortDate(race.race_day_date)
-
-  let dateDisplay = 'Date TBA'
-  if (startDateFormatted && raceDayDateFormatted) {
-    dateDisplay = `${startDateFormatted}`
-  } else if (startDateFormatted) {
-    dateDisplay = `Start: ${startDateFormatted}`
-  } else if (raceDayDateFormatted) {
-    dateDisplay = `Race Day: ${raceDayDateFormatted}`
-  }
+  const dateDisplay =
+    formatWeekendRange(race.start_date, race.end_date) ?? 'Date TBA'
 
   const backgroundImage = race.image_url || '/images/race_banner.jpeg'
   const trackSlug = slugify(race.name)

@@ -129,7 +129,10 @@ export function GridTileContent({
       {type === 'track' && imageUrl && !trackSvgFailed && (
         <div
           className={`absolute inset-0 z-10 flex items-center justify-center ${isLarge ? 'p-2' : 'p-0.5'}`}
-          style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+          style={{
+            transform: 'scale(2.2)',
+            transformOrigin: isLarge ? '-10% 40%' : '-20% 40%',
+          }}
         >
           <img
             src={imageUrl}
@@ -153,16 +156,35 @@ export function GridTileContent({
       )}
       {verticalText && (
         <div
-          className={`absolute z-30 flex items-center justify-center overflow-visible ${isLarge ? 'h-[70%] w-5 md:w-6 mt-4 left-2 top-2' : 'h-[44px] w-3 left-0.5 top-0.5'} ${type === 'track' && !isLarge ? 'left-0.5 top-1' : ''}`}
+          className={`absolute z-30 flex items-center justify-center overflow-visible ${
+            type === 'track'
+              ? isLarge
+                ? 'left-1 top-1/2 h-[70%] w-5 md:w-6 -translate-y-1/2'
+                : 'left-0.5 top-1/2 h-[100%] w-[12px] -translate-y-1/2'
+              : isLarge
+                ? 'h-[70%] w-5 md:w-6 mt-4 left-2 top-2'
+                : 'h-[44px] w-3 left-0.5 top-0.5'
+          }`}
         >
           <span
             className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
             style={{
-              fontSize: isLarge ? (type === 'driver' ? 'clamp(30px, 2.5vw, 20px)' : 'clamp(25px, 1.6vw, 16px)') : type === 'driver' ? '8px' : '15px',
+              fontSize:
+                type === 'track'
+                  ? isLarge
+                    ? 'clamp(14px, 1.5vw, 22px)'
+                    : '9px'
+                  : isLarge
+                    ? type === 'driver'
+                      ? 'clamp(30px, 2.5vw, 20px)'
+                      : 'clamp(25px, 1.6vw, 16px)'
+                    : type === 'driver'
+                      ? '8px'
+                      : '15px',
               fontFamily: 'Inter, sans-serif',
               letterSpacing: type === 'track' ? '0' : '0.05em',
               transform: 'rotate(-90deg)',
-              transformOrigin: type === 'driver' ? 'center center' : '90% 100%',
+              transformOrigin: type === 'track' ? 'center center' : type === 'driver' ? 'center center' : '90% 100%',
             }}
           >
             {verticalText}

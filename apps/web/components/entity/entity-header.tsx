@@ -151,61 +151,12 @@ function slugify(name: string) {
 }
 
 export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollProgress = 0 }: EntityHeaderProps) {
-  // Calculate scroll transform - content scrolls up limitedly
-  const maxScroll = 80 // Maximum scroll distance in pixels
+  const maxScroll = 80
   const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
 
   if (type === 'track') {
-    const track = entity as TrackEntity
-    const flagPath = getCountryFlagPath(track.country)
-    const yearEstablished = track.built_date
-      ? new Date(track.built_date).getFullYear()
-      : null
-
-    return (
-      <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
-        <div
-          style={{
-            transform: `translateY(-${scrollOffset}px)`,
-            transition: 'transform 0.3s ease',
-          }}
-        >
-        <div className="flex items-center gap-3 mb-4">
-          {flagPath && (
-            <Image
-              src={flagPath}
-              alt={track.country || 'Flag'}
-              width={32}
-              height={32}
-              className="object-contain"
-            />
-          )}
-          <h1 className="text-3xl font-display tracking-wider md:text-6xl">
-            {track.name}
-          </h1>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-lg">
-            <span>
-              {track.location || ''}
-              {track.location && track.country ? ', ' : ''}
-              {track.country || ''}
-            </span>
-          </div>
-          {(track.track_length || track.turns || yearEstablished) && (
-            <div className="flex flex-wrap items-center gap-4 text-sm text-white/80">
-              {track.track_length && track.turns && (
-                <span>
-                  {track.track_length} km / {track.turns} turns
-                </span>
-              )}
-              {yearEstablished && <span>Est. {yearEstablished}</span>}
-            </div>
-          )}
-        </div>
-        </div>
-      </div>
-    )
+    // Track title, flag, location are shown at top of page (over back button)
+    return <div className="relative z-10 h-full" aria-hidden />
   }
 
   if (type === 'team') {

@@ -147,7 +147,7 @@ export default function HomePage() {
                 Your Profile
               </h3>
               <p className="mb-3">
-                Your profile page is the heart of the Who&apos;s On Pole experience - a blank space to make your own. Build your dream grid by selecting up to 20 drivers. Maybe you&apos;ve got data and essays defending every pick. Maybe you&apos;re a loyalist and only showcase your #1. Every type of grid is perfect, as long as it&apos;s unapologetically yours.
+                Your profile page is the heart of the Who&apos;s On Pole experience - a blank space to make your own. Build your dream grid by selecting up to 10 drivers. Maybe you&apos;ve got data and essays defending every pick. Maybe you&apos;re a loyalist and only showcase your #1. Every type of grid is perfect, as long as it&apos;s unapologetically yours.
               </p>
               <p>
                 Your profile also displays your favorite tracks, your votes in polls, and your comments across driver and team pages. Think of it as your racing DNA - easy to share, easy to discover, and a great way to find like-minded fans. And if you&apos;re really dedicated, you might even land a spot on a driver&apos;s Top Fans Grid.

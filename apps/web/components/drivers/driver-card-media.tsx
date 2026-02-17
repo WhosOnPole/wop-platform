@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { getDriverBodyImageUrl } from '@/utils/storage-urls'
 
+/** Position so head and shoulders are in frame and head isn't clipped */
 const DRIVER_BODY_OBJECT_POSITION = '50% 0%'
 
 interface DriverCardMediaProps {

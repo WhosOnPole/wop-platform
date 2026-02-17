@@ -54,13 +54,13 @@ export function EntityHeaderWrapper({
   useEffect(() => {
     function handleScroll() {
       const scrollY = window.scrollY
-      const heroHeight = window.innerHeight * 0.4 // 40vh - full top section height
+      const heroHeight = window.innerHeight * 0.4
       const progress = heroHeight > 0 ? Math.min(scrollY / heroHeight, 1) : 0
       setScrollProgress(progress)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll() // Initial check
+    handleScroll()
 
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])

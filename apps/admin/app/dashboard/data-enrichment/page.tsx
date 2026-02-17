@@ -4,17 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DriversTable } from '@/components/data-enrichment/drivers-table'
 import { TeamsTable } from '@/components/data-enrichment/teams-table'
 import { TracksTable } from '@/components/data-enrichment/tracks-table'
+import { SchedulesTable } from '@/components/data-enrichment/schedules-table'
 
 export default async function DataEnrichmentPage() {
-  const cookieStore = await cookies()
-  const supabase = createServerComponentClient(
-    { cookies: () => cookieStore as any },
-    {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    }
-  )
-
   return (
     <div>
       <h1 className="mb-6 text-3xl font-bold text-gray-900">Data Enrichment</h1>
@@ -28,6 +20,7 @@ export default async function DataEnrichmentPage() {
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="tracks">Tracks</TabsTrigger>
+          <TabsTrigger value="schedules">Schedules</TabsTrigger>
         </TabsList>
 
         <TabsContent value="drivers">
@@ -41,8 +34,11 @@ export default async function DataEnrichmentPage() {
         <TabsContent value="tracks">
           <TracksTable />
         </TabsContent>
-      </Tabs>
 
+        <TabsContent value="schedules">
+          <SchedulesTable />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

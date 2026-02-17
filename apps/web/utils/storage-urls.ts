@@ -104,11 +104,21 @@ export function getDriverBodyImageUrl(driverName: string, supabaseUrl: string): 
 }
 
 /**
+ * Normalizes accented characters to ASCII (é→e, ó→o, etc.)
+ */
+function normalizeAccents(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+/**
  * Converts a track name to storage folder format (lowercase with underscores)
- * Example: "Bahrain International Circuit" -> "bahrain_international_circuit"
+ * Example: "Autódromo Hermanos Rodríguez" -> "autodromo_hermanos_rodriguez"
+ * Handles accented characters by normalizing to ASCII equivalents.
  */
 export function getTrackSlug(trackName: string): string {
-  return trackName
+  return normalizeAccents(trackName)
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '_')
@@ -116,11 +126,20 @@ export function getTrackSlug(trackName: string): string {
 }
 
 /**
+ * Overrides when storage folder name differs from getTrackSlug (e.g. legacy typo in bucket)
+ */
+const TRACK_SLUG_OVERRIDES: Record<string, string> = {
+  // Storage folders created before accent normalization fix (ó stripped → autdromo)
+  autodromo_hermanos_rodriguez: 'autdromo_hermanos_rodriguez',
+  autodromo_jose_carlos_pace: 'autdromo_jose_carlos_pace',
+}
+
+/**
  * Gets the public URL for a track's circuit SVG from Storage (tracks bucket)
  * Path: tracks/<track_slug>/track.svg
  */
 export function getTrackSvgUrl(trackSlug: string, supabaseUrl: string): string {
-  const path = `${trackSlug}/track.svg`
+  const path = `${TRACK_SLUG_OVERRIDES[trackSlug] ?? trackSlug}/track.svg`
   return `${supabaseUrl}/storage/v1/object/public/tracks/${path}`
 }
 

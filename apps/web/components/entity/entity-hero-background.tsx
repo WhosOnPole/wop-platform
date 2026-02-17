@@ -52,7 +52,7 @@ export function EntityHeroBackground({
             trackSlug={trackSlug}
             trackName={trackName ?? alt}
             supabaseUrl={supabaseUrl}
-            className="h-[min(50vh,320px)] w-full max-w-[min(90vw,320px)] max-h-full"
+            className="h-[min(50vh,320px)] w-full max-h-full"
           />
         </div>
       )}

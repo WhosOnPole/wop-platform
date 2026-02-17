@@ -23,18 +23,24 @@ export function TrackHeroMedia({
     return (
       <div
         className={`flex items-center justify-center ${className}`}
-        style={{ minHeight: 200 }}
+        style={{ minHeight: 500 }}
         aria-label={trackName}
       />
     )
   }
 
+  const translateY = trackName === 'Circuit Gilles-Villeneuve' ? '40%' : '20%'
+
   return (
-    <div className={`relative flex items-center justify-center w-full max-w-[min(80vw,320px)] ${className}`}>
+    <div
+      className={`flex items-start justify-center w-full ${className}`}
+      style={{ minWidth: 390, minHeight: 450, transform: `translateY(${translateY})` }}
+    >
       <img
         src={svgUrl}
         alt=""
-        className="h-full max-h-full w-auto object-contain"
+        className="max-h-full max-w-full w-auto object-contain object-top"
+        style={{ objectPosition: 'center bottom' }}
         onError={() => setFailed(true)}
         aria-hidden
       />

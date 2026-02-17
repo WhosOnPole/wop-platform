@@ -2,11 +2,13 @@
  * Race weekend detection and chat status utilities
  */
 
+import { parseDateOnly } from './date-utils'
+
 interface Track {
   id: string
   name?: string
   start_date?: string | null
-  race_day_date?: string | null
+  end_date?: string | null
   chat_enabled?: boolean
 }
 
@@ -28,18 +30,21 @@ export function isChatEnabled(track: Track): boolean {
 
 /**
  * Get race weekend window (start and end times)
+ * Uses parseDateOnly for date-only end_date to avoid timezone shift.
  */
 export function getRaceWeekendWindow(track: Track): {
   start: Date | null
   end: Date | null
 } {
-  if (!track.start_date || !track.race_day_date) {
+  if (!track.start_date || !track.end_date) {
     return { start: null, end: null }
   }
 
   const start = new Date(track.start_date)
-  const raceDay = new Date(track.race_day_date)
-  const end = new Date(raceDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
+  const endDay =
+    track.end_date.length <= 10 ? parseDateOnly(track.end_date) : new Date(track.end_date)
+  if (!endDay) return { start: null, end: null }
+  const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
 
   return { start, end }
 }

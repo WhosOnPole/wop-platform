@@ -21,6 +21,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Sageva';
+  src: url('/fonts/Sageva.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #111111;
   --foreground: #ffffff;
@@ -148,6 +156,10 @@ html:-ms-fullscreen {
     font-family: 'Raygun', serif;
   }
 
+  .font-sageva {
+    font-family: 'Sageva', serif;
+  }
+
   .bg-sunset-gradient {
     background: linear-gradient(90deg, var(--sunset-start), var(--sunset-end));
   }
@@ -223,4 +235,3 @@ html:-ms-fullscreen {
 .animate-rank-number-fade {
   animation: rankNumberFade 0.2s ease-out forwards;
 }
-

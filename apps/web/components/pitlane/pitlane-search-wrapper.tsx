@@ -35,7 +35,7 @@ interface ScheduleTrack {
   location?: string | null
   country?: string | null
   start_date: string | null
-  race_day_date: string | null
+  end_date: string | null
   circuit_ref?: string | null
 }
 

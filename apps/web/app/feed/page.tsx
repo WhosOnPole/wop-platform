@@ -1,6 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { parseDateOnly } from '@/utils/date-utils'
 import { FeedContent, type Post, type Grid } from '@/components/feed/feed-content'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 import { FeedHighlightedSidebar } from '@/components/feed/feed-highlighted-sidebar'
@@ -26,7 +27,7 @@ interface TrackRace {
   id: string
   name: string
   start_date: string | null
-  race_day_date: string | null
+  end_date: string | null
   location: string | null
   country: string | null
   image_url: string | null
@@ -47,13 +48,15 @@ function getClosestRaceFromTracks(params: { tracks: TrackRace[] }) {
 
   // First, find live races (within race weekend window)
   const liveRaces = tracks.filter((track) => {
-    if (!track.start_date || !track.race_day_date) return false
+    if (!track.start_date || !track.end_date) return false
     if (track.chat_enabled === false) return false
-    
+
     const start = new Date(track.start_date)
-    const raceDay = new Date(track.race_day_date)
-    const end = new Date(raceDay.getTime() + graceMs)
-    
+    const endDay =
+      track.end_date.length <= 10 ? parseDateOnly(track.end_date) : new Date(track.end_date)
+    if (!endDay) return false
+    const end = new Date(endDay.getTime() + graceMs)
+
     return now >= start && now <= end
   })
 
@@ -275,7 +278,7 @@ export default async function FeedPage() {
     // Upcoming race (based on tracks.start_date)
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country, start_date, race_day_date, circuit_ref, chat_enabled')
+      .select('id, name, image_url, location, country, start_date, end_date, circuit_ref, chat_enabled')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     // Active hot take (single) by date range
@@ -322,14 +325,18 @@ export default async function FeedPage() {
 
   // Check if upcoming race is live (for carousel display)
   const isUpcomingRaceLive = (() => {
-    if (!upcomingRace || !upcomingRace.start_date || !upcomingRace.race_day_date) return false
+    if (!upcomingRace || !upcomingRace.start_date || !upcomingRace.end_date) return false
     if (upcomingRace.chat_enabled === false) return false
-    
+
     const now = new Date()
     const start = new Date(upcomingRace.start_date)
-    const raceDay = new Date(upcomingRace.race_day_date)
-    const end = new Date(raceDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
-    
+    const endDay =
+      upcomingRace.end_date.length <= 10
+        ? parseDateOnly(upcomingRace.end_date)
+        : new Date(upcomingRace.end_date)
+    if (!endDay) return false
+    const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
+
     return now >= start && now <= end
   })()
 

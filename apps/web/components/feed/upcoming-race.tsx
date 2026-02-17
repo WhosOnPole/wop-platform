@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { formatWeekendRange, parseDateOnly } from '@/utils/date-utils'
 
 interface Race {
   id: string
   name: string
   slug: string
   start_date: string | null
-  race_day_date: string | null
+  end_date: string | null
   location: string | null
   country: string | null
   image_url: string | null
@@ -29,38 +30,20 @@ export function UpcomingRace({ race }: UpcomingRaceProps) {
 
   // Check if race is live (within race weekend window)
   const isLive = (() => {
-    if (!race.start_date || !race.race_day_date) return false
+    if (!race.start_date || !race.end_date) return false
     if (race.chat_enabled === false) return false
-    
+
     const start = new Date(race.start_date)
-    const raceDay = new Date(race.race_day_date)
-    const end = new Date(raceDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
-    
+    const endDay =
+      race.end_date.length <= 10 ? parseDateOnly(race.end_date) : new Date(race.end_date)
+    if (!endDay) return false
+    const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
+
     return now >= start && now <= end
   })()
 
-  // Format dates in short format
-  const formatShortDate = (dateString: string | null) => {
-    if (!dateString) return null
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
-
-  const startDateFormatted = formatShortDate(race.start_date)
-  const raceDayDateFormatted = formatShortDate(race.race_day_date)
-
-  // Build date display string
-  let dateDisplay = 'Date TBA'
-  if (startDateFormatted && raceDayDateFormatted) {
-    dateDisplay = `Start: ${startDateFormatted} • Race Day: ${raceDayDateFormatted}`
-  } else if (startDateFormatted) {
-    dateDisplay = `Start: ${startDateFormatted}`
-  } else if (raceDayDateFormatted) {
-    dateDisplay = `Race Day: ${raceDayDateFormatted}`
-  }
+  // Weekend range (e.g. "Mar 7-8")
+  const dateDisplay = formatWeekendRange(race.start_date, race.end_date) ?? 'Date TBA'
 
   // Build counter text
   let counterText = ''
@@ -70,8 +53,8 @@ export function UpcomingRace({ race }: UpcomingRaceProps) {
 
   const backgroundImage = race.image_url || '/images/race_banner.jpeg'
   const trackSlug = race.slug
-  // When live, link to race page (which shows chat). Otherwise link to track page.
-  const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
+  // When live, link to race page (which shows chat). Otherwise link to track entity page on meetups tab.
+  const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}#meetups`
 
   return (
     <div className="overflow-hidden rounded-lg relative" style={{

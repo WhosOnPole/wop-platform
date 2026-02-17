@@ -186,6 +186,7 @@ export function GridDisplayCard({
                               : 'url(/images/pit_bg.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
+                        backgroundRepeat: grid.type === 'team' ? 'no-repeat' : undefined,
                         backgroundColor:
                           grid.type === 'track' || getItemImageUrl(firstItem)
                             ? undefined
@@ -199,7 +200,7 @@ export function GridDisplayCard({
                       driverName={firstItem.name}
                       supabaseUrl={supabaseUrl}
                       fallbackSrc={firstItem.headshot_url || firstItem.image_url}
-                      sizes="(max-width: 768px) 50vw, 200px"
+                      sizes="(max-width: 868px) 50vw, 300px"
                     />
                   </div>
                 )}
@@ -211,7 +212,7 @@ export function GridDisplayCard({
                 {grid.type === 'track' && getItemImageUrl(firstItem) && !firstTrackSvgFailed && (
                   <div
                     className="absolute inset-0 z-10 flex items-center justify-center p-2"
-                    style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+                    style={{ transform: 'scale(2.2)', transformOrigin: '-10% 40%' }}
                   >
                     <img
                       src={getItemImageUrl(firstItem)!}
@@ -222,13 +223,16 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Team: centered uppercase Inter text overlay */}
+                {/* Team: centered uppercase text overlay (match pitlane team cards) */}
                 {grid.type === 'team' && (
                   <span
-                    className="absolute inset-0 z-10 flex items-center justify-center px-3 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                    className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none opacity-90 line-clamp-2"
                     style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: 'clamp(16px, 2.5vw, 24px)',
+                      fontWeight: 900,
+                      fontSize: 'clamp(1.22em, 2.5vw, 1.22em)',
+                      color: 'white',
+                      textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                     }}
                   >
                     {firstItem.name}
@@ -334,6 +338,7 @@ export function GridDisplayCard({
                               : 'url(/images/pit_bg.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
+                        backgroundRepeat: grid.type === 'team' ? 'no-repeat' : undefined,
                         backgroundColor:
                           grid.type === 'track' || getItemImageUrl(item)
                             ? undefined
@@ -351,15 +356,18 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Dark overlay (tracks and teams) */}
-                {(grid.type === 'track' || grid.type === 'team') && (
+                {/* Dark overlay (tracks and teams); team uses bg-black/30 to match pitlane */}
+                {grid.type === 'track' && (
                   <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
+                )}
+                {grid.type === 'team' && (
+                  <div className="absolute inset-0 z-0 bg-black/30" aria-hidden />
                 )}
                 {/* Track SVG from storage: scale + bleed right (matches pitlane track cards) */}
                 {grid.type === 'track' && getItemImageUrl(item) && !failedTrackIds.has(item.id) && (
                   <div
                     className="absolute inset-0 z-10 flex items-center justify-center p-0.5"
-                    style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+                    style={{ transform: 'scale(2.2)', transformOrigin: '-20% 40%' }}
                   >
                     <img
                       src={getItemImageUrl(item)!}
@@ -370,17 +378,23 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Team: centered uppercase Inter text overlay (small tiles) */}
+                {/* Team: centered uppercase text overlay (match pitlane team cards) */}
                 {grid.type === 'team' && (
                   <span
-                    className="absolute inset-0 z-10 flex items-center justify-center px-0.5 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
+                    className="absolute inset-0 z-20 flex items-center justify-center px-0.5 text-center text-white font-semibold uppercase leading-none opacity-90 line-clamp-2"
                     style={{
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '10px',
+                      fontWeight: 900,
+                      fontSize: 'clamp(10px, 2.5vw, 14px)',
+                      textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                     }}
                   >
                     {item.name}
                   </span>
+                )}
+                {/* Overlay gradient for text readability (drivers/tracks) */}
+                {grid.type !== 'team' && (
+                  <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 )}
                 {/* Track: vertical text on left edge, centered at half height (small tiles) */}
                 {grid.type === 'track' && getTrackDisplayText(item) && (
@@ -398,13 +412,9 @@ export function GridDisplayCard({
                     </span>
                   </div>
                 )}
-                {/* Overlay gradient for text readability (drivers/tracks) */}
-                {grid.type !== 'team' && (
-                  <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                )}
                 {/* Driver short code: vertical text near top left (small tiles) */}
                 {getDriverCode(item) && (
-                  <div className="absolute left-0.5 top-0 z-30 flex h-[100%] w-[12px] items-center justify-center">
+                  <div className="absolute left-0.5 bottom-0 z-30 flex h-[100%] w-[12px] items-center justify-center">
                     <span
                       className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                       style={{
@@ -421,7 +431,7 @@ export function GridDisplayCard({
                 )}
                 {/* Rating/Rank number on top right */}
                 <div className="absolute top-0.5 right-0.5 z-30">
-                  <div className="text-[clamp(8px,2vw,10px)] font-bold text-white leading-none">{rank}</div>
+                  <div className="text-[clamp(15px,2vw,1px)] font-bold text-white leading-none">{rank}</div>
                 </div>
 
               </Link>

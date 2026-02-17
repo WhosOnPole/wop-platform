@@ -79,7 +79,7 @@ export function ProfileHeroSection({
       {isOwnProfile && (
         <Link
           href="/settings"
-          className="absolute top-16 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors md:hidden"
+          className="absolute top-16 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/5 hover:backdrop-blur-md transition-colors md:hidden"
           aria-label="Settings"
         >
           <Settings className="h-5 w-5" />

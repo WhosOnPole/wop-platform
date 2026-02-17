@@ -18,10 +18,10 @@ export default async function DashboardPage() {
   const now = new Date().toISOString()
   const { data: currentRace } = await supabase
     .from('tracks')
-    .select('id, name, location, start_date, race_day_date, chat_enabled')
+    .select('id, name, location, start_date, end_date, chat_enabled')
     .not('start_date', 'is', null)
-    .not('race_day_date', 'is', null)
-    .or(`start_date.lte.${now},and(start_date.gte.${now},race_day_date.gte.${now})`)
+    .not('end_date', 'is', null)
+    .or(`start_date.lte.${now},and(start_date.gte.${now},end_date.gte.${now})`)
     .order('start_date', { ascending: true })
     .limit(1)
     .single()

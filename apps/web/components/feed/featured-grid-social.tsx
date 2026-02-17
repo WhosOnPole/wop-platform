@@ -82,9 +82,7 @@ export function FeaturedGridSocial({ gridId, initialLikeCount }: FeaturedGridSoc
         onClick={toggleLike}
         disabled={isLoading}
         className={`flex items-center space-x-1 transition-colors ${
-          isLiked
-            ? 'text-pink-600 hover:text-pink-700'
-            : 'text-pink-600 hover:text-pink-700'
+          isLiked ? 'text-sunset-end hover:opacity-90' : 'text-gray-600 hover:text-gray-700'
         } disabled:opacity-50`}
       >
         {isLiked ? (
@@ -92,7 +90,7 @@ export function FeaturedGridSocial({ gridId, initialLikeCount }: FeaturedGridSoc
         ) : (
           <Heart className="h-5 w-5" />
         )}
-        {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
+        {likeCount > 0 && <span className={`text-sm font-medium ${isLiked ? 'text-sunset-end' : ''}`}>{likeCount}</span>}
       </button>
       <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-700 transition-colors">
         <CommentIcon className="h-5 w-5" />

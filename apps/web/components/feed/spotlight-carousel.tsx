@@ -48,7 +48,7 @@ interface Race {
   name: string
   slug: string
   start_date: string | null
-  race_day_date: string | null
+  end_date: string | null
   location: string | null
   country: string | null
   image_url: string | null

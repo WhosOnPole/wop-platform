@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, ReactNode } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 
 interface Tab {
   id: string
@@ -13,8 +13,40 @@ interface EntityTabsProps {
   defaultTab?: string
 }
 
+function getTabFromHash(): string | null {
+  if (typeof window === 'undefined') return null
+  const hash = window.location.hash?.replace(/^#/, '')
+  return hash || null
+}
+
 export function EntityTabs({ tabs, defaultTab }: EntityTabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id || '')
+  const tabIds = tabs.map((t) => t.id)
+  const [activeTab, setActiveTab] = useState(defaultTab ?? tabs[0]?.id ?? '')
+
+  useEffect(() => {
+    const hashTabId = getTabFromHash()
+    if (hashTabId && tabIds.includes(hashTabId)) {
+      setActiveTab(hashTabId)
+    }
+  }, [tabIds.join(',')])
+
+  useEffect(() => {
+    const handler = () => {
+      const hashTabId = getTabFromHash()
+      if (hashTabId && tabIds.includes(hashTabId)) {
+        setActiveTab(hashTabId)
+      }
+    }
+    window.addEventListener('hashchange', handler)
+    return () => window.removeEventListener('hashchange', handler)
+  }, [tabIds.join(',')])
+
+  function handleTabClick(tabId: string) {
+    setActiveTab(tabId)
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `#${tabId}`)
+    }
+  }
 
   if (tabs.length === 0) return null
 
@@ -24,12 +56,12 @@ export function EntityTabs({ tabs, defaultTab }: EntityTabsProps) {
     <div className="sticky top-[10vh] z-30 bg-black pt-8">
       <div className="flex items-center justify-between w-full rounded-full overflow-hidden mb-6">
         <div className="flex w-full capitalize">
-          {tabs.map((tab, index) => (
+          {tabs.map((tab) => (
             <TabButton
               key={tab.id}
               label={tab.label}
               active={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               width={`${100 / tabs.length}%`}
             />
           ))}

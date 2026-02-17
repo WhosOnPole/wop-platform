@@ -239,10 +239,10 @@ export function LikeButton({
   const isDark = variant === 'dark'
   const buttonClasses = isDark
     ? isLiked
-      ? 'text-[#25B4B1] hover:text-[#25B4B1]/90'
+      ? 'text-sunset-end hover:opacity-90'
       : 'text-white/90 hover:text-white'
     : isLiked
-      ? 'text-pink-600 hover:text-pink-700'
+      ? 'text-sunset-end hover:opacity-90'
       : 'text-gray-600 hover:text-gray-700'
 
   return (
@@ -258,7 +258,7 @@ export function LikeButton({
         <Heart className="h-5 w-5 shrink-0" />
       )}
       {likeCount > 0 && (
-        <span className="text-sm font-medium leading-none">{likeCount}</span>
+        <span className={`text-sm font-medium leading-none ${isLiked ? 'text-sunset-end' : ''}`}>{likeCount}</span>
       )}
     </button>
   )

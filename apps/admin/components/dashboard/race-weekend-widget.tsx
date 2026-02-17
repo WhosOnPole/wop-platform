@@ -105,8 +105,8 @@ export function RaceWeekendWidget({
   const startDate = initialRace.start_date
     ? new Date(initialRace.start_date)
     : null
-  const endDate = initialRace.race_day_date
-    ? new Date(new Date(initialRace.race_day_date).getTime() + 24 * 60 * 60 * 1000)
+  const endDate = initialRace.end_date
+    ? new Date(new Date(initialRace.end_date).getTime() + 24 * 60 * 60 * 1000)
     : null
 
   const now = new Date()

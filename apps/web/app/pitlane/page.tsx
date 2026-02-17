@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PitlaneSearchProvider, PitlaneTabsComponent } from '@/components/pitlane/pitlane-search-wrapper'
 import { UpcomingRaceBannerActions } from '@/components/pitlane/upcoming-race-banner-actions'
+import { formatWeekendRange, parseDateOnly } from '@/utils/date-utils'
 
 export const revalidate = 300
 
@@ -18,12 +19,11 @@ export default async function PitlanePage() {
   }
 
   const supabase = createClient(supabaseUrl!, supabaseKey!)
-  const nowIso = new Date().toISOString()
 
   const [tracksWithDates, drivers, teams, tracks] = await Promise.all([
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country, start_date, race_day_date, circuit_ref, chat_enabled')
+      .select('id, name, image_url, location, country, start_date, end_date, circuit_ref, chat_enabled')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     supabase
@@ -34,7 +34,7 @@ export default async function PitlanePage() {
     supabase
       .from('teams')
       .select('id, name, image_url')
-      .eq('active', true) 
+      .eq('active', true)
       .order('name', { ascending: true }),
     supabase
       .from('tracks')
@@ -49,42 +49,35 @@ export default async function PitlanePage() {
 
   const nextRace = getClosestRace({ tracks: tracksWithStartDate })
   const backgroundImage = nextRace?.image_url || '/images/race_banner.jpeg'
-  
-  // Format dates in short format (e.g., "Mar. 6")
-  const formatShortDate = (dateString: string | null) => {
-    if (!dateString) return null
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-  
-  const raceDayDateFormatted = formatShortDate(nextRace?.race_day_date || null)
-  
-  // Build date display string: "Mar. 6 - Track Name"
-  let dateDisplay = 'Date TBA'
+
+  // Weekend range (e.g. "Mar 7-8") then track name
+  const weekendRange = formatWeekendRange(nextRace?.start_date ?? null, nextRace?.end_date ?? null)
   const trackName = nextRace?.name || nextRace?.location || nextRace?.country
-  const startDateFormatted =
-    raceDayDateFormatted || (nextRace?.start_date ? formatShortDate(nextRace.start_date) : null)
-  if (startDateFormatted && trackName) {
-    dateDisplay = `${startDateFormatted} - ${trackName}`
-  } else if (startDateFormatted) {
-    dateDisplay = startDateFormatted
+  let dateDisplay = 'Date TBA'
+  if (weekendRange && trackName) {
+    dateDisplay = `${weekendRange} - ${trackName}`
+  } else if (weekendRange) {
+    dateDisplay = weekendRange
   }
-  
-  // Calculate counter - countdown to race day
+
+  // Calculate counter - countdown to race day (use parseDateOnly for date-only to avoid offset)
   let counterText = ''
-  if (nextRace?.race_day_date) {
-    const raceTime = new Date(nextRace.race_day_date)
-    const now = new Date()
-    const timeUntilRace = raceTime.getTime() - now.getTime()
-    if (timeUntilRace > 0) {
-      const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
-      const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+  if (nextRace?.end_date) {
+    const raceTime =
+      nextRace.end_date.length <= 10
+        ? parseDateOnly(nextRace.end_date)
+        : new Date(nextRace.end_date)
+    if (raceTime) {
+      const now = new Date()
+      const timeUntilRace = raceTime.getTime() - now.getTime()
+      if (timeUntilRace > 0) {
+        const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
+        const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+      }
     }
   } else if (nextRace?.start_date) {
-    // Fallback to start_date if race_day_date not available
+    // Fallback to start_date if end_date not available
     const raceTime = new Date(nextRace.start_date)
     const now = new Date()
     const timeUntilRace = raceTime.getTime() - now.getTime()
@@ -97,14 +90,18 @@ export default async function PitlanePage() {
   
   // Check if race weekend is live (within active window)
   const isLive = (() => {
-    if (!nextRace?.start_date || !nextRace?.race_day_date) return false
+    if (!nextRace?.start_date || !nextRace?.end_date) return false
     if (nextRace.chat_enabled === false) return false
-    
+
     const now = new Date()
     const start = new Date(nextRace.start_date)
-    const raceDay = new Date(nextRace.race_day_date)
-    const end = new Date(raceDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
-    
+    const endDay =
+      nextRace.end_date.length <= 10
+        ? parseDateOnly(nextRace.end_date)
+        : new Date(nextRace.end_date)
+    if (!endDay) return false
+    const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
+
     return now >= start && now <= end
   })()
   
@@ -233,7 +230,7 @@ export default async function PitlanePage() {
   )
 }
 
-function getClosestRace(params: { tracks: Array<{ start_date: string | null; race_day_date?: string | null; chat_enabled?: boolean } & Record<string, any>> }) {
+function getClosestRace(params: { tracks: Array<{ start_date: string | null; end_date?: string | null; chat_enabled?: boolean } & Record<string, any>> }) {
   const { tracks } = params
   if (tracks.length === 0) return null
 
@@ -242,13 +239,15 @@ function getClosestRace(params: { tracks: Array<{ start_date: string | null; rac
 
   // First, find live races (within race weekend window)
   const liveRaces = tracks.filter((track) => {
-    if (!track.start_date || !track.race_day_date) return false
+    if (!track.start_date || !track.end_date) return false
     if (track.chat_enabled === false) return false
-    
+
     const start = new Date(track.start_date)
-    const raceDay = new Date(track.race_day_date)
-    const end = new Date(raceDay.getTime() + graceMs)
-    
+    const endDay =
+      track.end_date.length <= 10 ? parseDateOnly(track.end_date) : new Date(track.end_date)
+    if (!endDay) return false
+    const end = new Date(endDay.getTime() + graceMs)
+
     return now >= start && now <= end
   })
 

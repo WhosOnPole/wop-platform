@@ -108,7 +108,8 @@ export default function EditGridPage() {
         const next: Record<number, string> = {}
         for (let r = 1; r <= 10; r++) next[r] = ''
         ;(slotBlurbsRows ?? []).forEach((row: { rank_index: number; content: string }) => {
-          next[row.rank_index] = row.content ?? ''
+          const rank = Number(row.rank_index)
+          if (rank >= 1 && rank <= 10) next[rank] = row.content ?? ''
         })
         setSlotBlurbs(next)
       } else {
@@ -252,9 +253,15 @@ export default function EditGridPage() {
       rank_index: i + 1,
       content: (slotBlurbs[i + 1] ?? '').trim().slice(0, 140),
     }))
-    await supabase.from('grid_slot_blurbs').upsert(slotBlurbsRows, {
-      onConflict: 'grid_id,rank_index',
-    })
+    const { error: slotBlurbsError } = await supabase
+      .from('grid_slot_blurbs')
+      .upsert(slotBlurbsRows, { onConflict: 'grid_id,rank_index' })
+
+    if (slotBlurbsError) {
+      console.error('Error saving grid slot comments:', slotBlurbsError)
+      alert('Grid saved but comments could not be saved. Please try again.')
+    }
+
     router.push(`/u/${profileData?.username || session.user.id}`)
     setIsSubmitting(false)
   }
@@ -288,6 +295,18 @@ export default function EditGridPage() {
       onRankedListChange={setRankedList}
       onSlotBlurbChange={(rankIndex, value) =>
         setSlotBlurbs((prev) => ({ ...prev, [rankIndex]: value }))
+      }
+      onSlotBlurbSave={
+        existingGridId
+          ? async (rankIndex, value) => {
+              await supabase
+                .from('grid_slot_blurbs')
+                .upsert(
+                  { grid_id: existingGridId, rank_index: rankIndex, content: value.trim().slice(0, 140) },
+                  { onConflict: 'grid_id,rank_index' }
+                )
+            }
+          : undefined
       }
       onSave={handleSave}
       availableItems={availableItems}

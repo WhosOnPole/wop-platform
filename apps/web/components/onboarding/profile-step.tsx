@@ -232,10 +232,14 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     setIsSubmitting(false)
   }
 
+  const inputClass =
+    'mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]'
+  const labelClass = 'block text-sm font-medium text-white/90'
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
       </div>
     )
   }
@@ -243,15 +247,15 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Set Up Your Profile</h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <h2 className="font-display text-2xl font-normal text-white">Set Up Your Profile</h2>
+        <p className="mt-1 text-sm text-white/70">
           Tell us about yourself. Username and date of birth are required.
         </p>
       </div>
 
       {/* Profile Image */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
+        <label className={labelClass}>Profile Picture</label>
         <div className="mt-2 flex items-center space-x-4">
           {profileImagePreview ? (
             <div className="relative">
@@ -272,11 +276,11 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
               </button>
             </div>
           ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-200">
-              <span className="text-2xl text-gray-400">?</span>
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/10">
+              <span className="text-2xl text-white/40">?</span>
             </div>
           )}
-          <label className="cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <label className="cursor-pointer rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10">
             <Upload className="mr-2 inline h-4 w-4" />
             Upload Photo
             <input
@@ -287,13 +291,13 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
             />
           </label>
         </div>
-        {errors.image && <p className="mt-1 text-sm text-red-600">{errors.image}</p>}
+        {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
       </div>
 
       {/* Username */}
       <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-          Username <span className="text-red-500">*</span>
+        <label htmlFor="username" className={labelClass}>
+          Username <span className="text-red-400">*</span>
         </label>
         <input
           type="text"
@@ -301,16 +305,16 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           required
           value={formData.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-          className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          className={inputClass}
           placeholder="Choose a username"
         />
-        {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+        {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
       </div>
 
       {/* Date of Birth */}
       <div>
-        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
-          Date of Birth <span className="text-red-500">*</span>
+        <label htmlFor="dateOfBirth" className={labelClass}>
+          Date of Birth <span className="text-red-400">*</span>
         </label>
         <input
           type="date"
@@ -319,66 +323,66 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           value={formData.dateOfBirth}
           onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
           max={maxDob}
-          className="mt-1 block w-full rounded-md text-black border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          className={inputClass}
         />
-        {errors.dateOfBirth && <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>}
+        {errors.dateOfBirth && <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>}
       </div>
 
       {/* Location */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-            City <span className="text-gray-400">(optional)</span>
+          <label htmlFor="city" className={labelClass}>
+            City <span className="text-white/50">(optional)</span>
           </label>
           <input
             type="text"
             id="city"
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className={inputClass}
             placeholder="City"
           />
         </div>
         <div>
-          <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-            State <span className="text-gray-400">(optional)</span>
+          <label htmlFor="state" className={labelClass}>
+            State <span className="text-white/50">(optional)</span>
           </label>
           <input
             type="text"
             id="state"
             value={formData.state}
             onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className={inputClass}
             placeholder="State"
           />
         </div>
         <div>
-          <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-            Country <span className="text-gray-400">(optional)</span>
+          <label htmlFor="country" className={labelClass}>
+            Country <span className="text-white/50">(optional)</span>
           </label>
           <input
             type="text"
             id="country"
             value={formData.country}
             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className={inputClass}
             placeholder="Country"
           />
         </div>
       </div>
 
-      {/* Privacy */} 
-      <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+      {/* Privacy */}
+      <div className="rounded-lg border border-white/10 bg-white/5 p-4">
         <label className="flex items-start gap-3">
           <input
             type="checkbox"
-            className="mt-1 h-4 w-4 rounded border-gray-300"
+            className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
             checked={doesShowStateOnProfile}
             onChange={(e) => setDoesShowStateOnProfile(e.target.checked)}
           />
           <span>
-            <span className="block text-sm font-medium text-gray-900">Show my state on my profile</span>
-            <span className="block text-sm text-gray-600">
+            <span className="block text-sm font-medium text-white">Show my state on my profile</span>
+            <span className="block text-sm text-white/60">
               If enabled, your state may be visible to other users on your public profile.
             </span>
           </span>
@@ -387,7 +391,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
       {/* Social Links */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Social Links (Optional)</label>
+        <label className={labelClass}>Social Links (Optional)</label>
         <div className="mt-2 space-y-2">
           {socialLinks.map((link, index) => (
             <div key={index} className="flex space-x-2">
@@ -396,19 +400,19 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
                 placeholder="Platform (e.g., Twitter, Instagram)"
                 value={link.platform}
                 onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className={`flex-1 ${inputClass}`}
               />
               <input
                 type="url"
                 placeholder="URL"
                 value={link.url}
                 onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className={`flex-1 ${inputClass}`}
               />
               <button
                 type="button"
                 onClick={() => removeSocialLink(index)}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-red-600 hover:bg-gray-50"
+                className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-red-400 hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -417,7 +421,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           <button
             type="button"
             onClick={addSocialLink}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="text-sm text-[#25B4B1] hover:text-[#25B4B1]/90"
           >
             + Add Social Link
           </button>
@@ -425,8 +429,8 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       </div>
 
       {errors.submit && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-800">{errors.submit}</p>
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+          <p className="text-sm text-red-400">{errors.submit}</p>
         </div>
       )}
 
@@ -435,7 +439,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex items-center space-x-2 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center space-x-2 rounded-lg bg-[#25B4B1] px-6 py-2 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
           <span>Continue</span>

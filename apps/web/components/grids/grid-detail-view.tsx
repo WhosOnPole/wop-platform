@@ -71,6 +71,8 @@ interface GridDetailViewProps {
   onBlurbChange?: (value: string) => void
   /** Edit mode: per-slot blurb change; when set, grid.slotBlurbs is used for current slot value */
   onSlotBlurbChange?: (rankIndex: number, value: string) => void
+  /** Edit mode: persist a single slot blurb (e.g. when Done is clicked). No redirect. */
+  onSlotBlurbSave?: (rankIndex: number, value: string) => Promise<void>
   /** Edit mode: full catalog for change-pick modal */
   availableItems?: RankItem[]
 }
@@ -475,6 +477,7 @@ export function GridDetailView({
   blurb: blurbOverride,
   onBlurbChange,
   onSlotBlurbChange,
+  onSlotBlurbSave,
   availableItems,
 }: GridDetailViewProps) {
   const items = mode === 'edit' && rankedList ? rankedList : grid.ranked_items
@@ -491,7 +494,7 @@ export function GridDetailView({
   const isPlaceholderSelected = Boolean(selectedItem && selectedItem.is_placeholder)
   const doesHaveBlurb = Boolean(currentSlotBlurbFromData.trim().length > 0)
   const isBlurbEditable = mode === 'edit' && (Boolean(onBlurbChange) || Boolean(onSlotBlurbChange))
-  const shouldShowBlurbPanel = isBlurbEditable || (doesHaveBlurb && !isThirdPartyView)
+  const shouldShowBlurbPanel = isBlurbEditable || doesHaveBlurb
   const isBlurbCollapsible = mode === 'view' && doesHaveBlurb && !isThirdPartyView
   const [isBlurbOpen, setIsBlurbOpen] = useState(true)
   const [ownBlurbLocal, setOwnBlurbLocal] = useState<string | null>(null)
@@ -623,13 +626,14 @@ export function GridDetailView({
     if (type === 'track') {
       return (
         <div
-          className={`flex items-center justify-center transition-all duration-300 ${opacity}`}
+          className={`flex items-start justify-center transition-all duration-300 ${opacity}`}
+          style={{ height: ghost ? 96 : 'min(50vh, 320px)', minHeight: ghost ? 96 : 220 }}
         >
           <TrackHeroMedia
             trackSlug={(item as TrackRankItem).track_slug ?? ''}
             trackName={item.name}
             supabaseUrl={supabaseUrl}
-            className={ghost ? 'h-24 w-24 object-cover' : 'h-full w-full max-h-full'}
+            className={ghost ? 'h-24 w-24' : 'h-full w-full max-w-full max-h-full'}
           />
         </div>
       )
@@ -727,22 +731,27 @@ export function GridDetailView({
           </div>
           {/* Hero wrapper: relative so rank number can sit bottom-right on desktop */}
           <div className="relative h-[40vh] lg:h-[60vh] shrink-0 z-10">
-            {/* Rank number: fixed on mobile, absolute in hero on desktop; color by team (driver/team) or default (track) */}
+            {/* Rank number: fixed on mobile, absolute in hero on desktop; color by team (driver/team) or white (track); smaller for track */}
             <div
-              className="fixed right-9 top-28 z-5 opacity-50  tracking-[-30px] pointer-events-none flex items-end justify-end px-2 "
-              style={{ fontSize: 'clamp(18.5rem, 18.5vw, 18.5rem)', lineHeight: 1 }}
+              className="fixed right-9 top-28 z-5 opacity-50 tracking-[-30px] pointer-events-none flex items-end justify-end px-2"
+              style={{
+                fontSize: type === 'track' ? 'clamp(12rem, 12vw, 12rem)' : 'clamp(18.5rem, 18.5vw, 18.5rem)',
+                lineHeight: 1,
+              }}
               aria-label={`Rank ${selectedIndex + 1} on this grid`}
             >
               <span
                 key={selectedIndex}
-                className="font-bold font-display animate-rank-number-fade"
+                className="font-bold font-sageva animate-rank-number-fade"
                 style={{
                   color:
-                    type === 'driver' && selectedItem && (selectedItem as DriverRankItem).team_name
-                      ? getTeamPrimaryColor((selectedItem as DriverRankItem).team_name)
-                      : type === 'team' && selectedItem
-                        ? getTeamPrimaryColor(selectedItem.name)
-                        : getTeamPrimaryColor(null),
+                    type === 'track'
+                      ? '#ffffff'
+                      : type === 'driver' && selectedItem && (selectedItem as DriverRankItem).team_name
+                        ? getTeamPrimaryColor((selectedItem as DriverRankItem).team_name)
+                        : type === 'team' && selectedItem
+                          ? getTeamPrimaryColor(selectedItem.name)
+                          : getTeamPrimaryColor(null),
                 }}
               >
                 {selectedIndex + 1}
@@ -763,7 +772,7 @@ export function GridDetailView({
                   ref={(el) => {
                     slideRefs.current[idx] = el
                   }}
-                  className="w-full min-w-full flex-shrink-0 snap-start flex items-end justify-center h-full"
+                  className={`w-full min-w-full flex-shrink-0 snap-start flex justify-center h-full ${type === 'track' ? 'items-start' : 'items-end'}`}
                 >
                   {renderHeroSlot(item ?? undefined, false)}
                 </div>
@@ -880,9 +889,11 @@ export function GridDetailView({
                   />
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
+                      const value = editBlurbDraft.trim().slice(0, 140)
                       onSlotBlurbChange(rankIndex, editBlurbDraft)
                       setIsEditingEditBlurb(false)
+                      if (grid.id && onSlotBlurbSave) await onSlotBlurbSave(rankIndex, value)
                     }}
                     className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1]"
                   >
@@ -895,11 +906,11 @@ export function GridDetailView({
             )}
 
             {onSave && (
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex w-full gap-3 mt-6">
                 <button
                   type="button"
                   onClick={() => window.history.back()}
-                  className="rounded-full border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+                  className="w-1/2 min-w-0 rounded-full border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
                 >
                   Cancel
                 </button>
@@ -907,7 +918,7 @@ export function GridDetailView({
                   type="button"
                   onClick={onSave}
                   disabled={items.filter((i) => !i.is_placeholder).length === 0}
-                  className="rounded-full bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                  className="w-1/2 min-w-0 rounded-full bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                 >
                   Save Grid
                 </button>

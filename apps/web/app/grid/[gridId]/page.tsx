@@ -117,7 +117,8 @@ export default async function GridPage({ params }: PageProps) {
   const slotBlurbs: Record<number, string> = {}
   for (let r = 1; r <= 10; r++) slotBlurbs[r] = ''
   ;(slotBlurbsRows ?? []).forEach((row: { rank_index: number; content: string }) => {
-    slotBlurbs[row.rank_index] = row.content ?? ''
+    const rank = Number(row.rank_index)
+    if (rank >= 1 && rank <= 10) slotBlurbs[rank] = row.content ?? ''
   })
 
   const gridWithLikes = {

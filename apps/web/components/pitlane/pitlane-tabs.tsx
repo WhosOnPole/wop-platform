@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
 import { getTeamPrimaryColor } from '@/utils/team-colors'
+import { formatWeekendRange } from '@/utils/date-utils'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface Driver {
@@ -37,7 +38,7 @@ interface ScheduleTrack {
   location?: string | null
   country?: string | null
   start_date: string | null
-  race_day_date: string | null
+  end_date: string | null
   circuit_ref?: string | null
 }
 
@@ -52,16 +53,44 @@ interface PitlaneTabsProps {
 
 type TabKey = 'drivers' | 'teams' | 'tracks' | 'schedule'
 
+const TAB_ORDER: TabKey[] = ['drivers', 'tracks', 'teams', 'schedule']
+
+function getTabFromHash(): TabKey | null {
+  if (typeof window === 'undefined') return null
+  const hash = window.location.hash?.replace(/^#/, '')
+  return hash && TAB_ORDER.includes(hash as TabKey) ? (hash as TabKey) : null
+}
+
 export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = [], searchQuery = '', supabaseUrl }: PitlaneTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>('drivers')
+  const [activeTab, setActiveTab] = useState<TabKey>(() => getTabFromHash() ?? 'drivers')
   const [failedTrackSvgIds, setFailedTrackSvgIds] = useState<Set<string>>(new Set())
   const contentRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const isSwipe = useRef(false)
 
-  const TAB_ORDER: TabKey[] = ['drivers', 'tracks', 'teams', 'schedule']
   const SWIPE_THRESHOLD = 50 // Minimum distance in pixels
+
+  // Sync tab to URL hash so back navigation restores tab state
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.hash.slice(1) !== activeTab) {
+      window.history.replaceState(null, '', `#${activeTab}`)
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    const handler = () => {
+      const tabFromHash = getTabFromHash()
+      if (tabFromHash) setActiveTab(tabFromHash)
+    }
+    window.addEventListener('hashchange', handler)
+    window.addEventListener('popstate', handler)
+    return () => {
+      window.removeEventListener('hashchange', handler)
+      window.removeEventListener('popstate', handler)
+    }
+  }, [])
 
   // Filter function for search
   const filterItems = <T extends { name: string }>(items: T[] | undefined, query: string): T[] => {
@@ -243,23 +272,24 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                         />
                         <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
                         {driver.racing_number != null && (
-                          <div className="absolute right-1 top-1 z-19">
+                          <div className="absolute right-1 top-1.5 z-19">
                             <span
-                              className="font-bold leading-none tabular-nums font-display text-white opacity-50"
-                              style={{ fontSize: 'clamp(34px, 4vw, 38px)' }}
+                              className="leading-none tabular-nums font-sageva text-white opacity-15"
+                              style={{ fontSize: 'clamp(3.5em, 4vw, 3em)' }}
                             >
                               {driver.racing_number}
                             </span>
                           </div>
                         )}
                         {driverCode && (
-                          <div className="absolute bottom-4 left-1 z-30 flex  w-3 items-center justify-center overflow-visible">
+                          <div className="absolute bottom-4 left-2 z-30 flex  w-3 items-center justify-center overflow-visible">
                             <span
                               className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none tracking-widest"
                               style={{
-                                fontSize: '15px',
+                                fontSize: '25px',
                                 fontFamily: 'Inter, sans-serif',
                                 letterSpacing: '0',
+                                fontWeight: 900,
                                 transform: 'rotate(-90deg)',
                                 transformOrigin: 'center center',
                               }}
@@ -327,7 +357,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       {showTrackSvg && (
                         <div
                           className="absolute inset-0 z-10 flex items-center justify-center p-2"
-                          style={{ transform: 'scale(1.7)', transformOrigin: '-2% 40%' }}
+                          style={{ transform: 'scale(2.2)', transformOrigin: '-2% 40%' }}
                         >
                           <img
                             src={trackSvgUrl}
@@ -340,13 +370,13 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       )}
                       {/* Overlay gradient for text readability */}
                       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                      {/* Vertical location on left edge (rotate -90deg like grid titles) */}
+                      {/* Vertical location on left: full-height bar with rotated text centered */}
                       {locationText && (
-                        <div className="absolute left-1 top-4 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
+                        <div className="absolute inset-y-0 left-0 z-30 flex w-8 items-center justify-center overflow-visible">
                           <span
                             className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                             style={{
-                              fontSize: '12px',
+                              fontSize: '15px',
                               fontFamily: 'Inter, sans-serif',
                               letterSpacing: '0',
                               transform: 'rotate(-90deg)',
@@ -427,30 +457,9 @@ interface ScheduleCardProps {
 }
 
 function ScheduleCard({ race }: ScheduleCardProps) {
-  // Format dates in short format
-  const formatShortDate = (dateString: string | null) => {
-    if (!dateString) return null
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
+  const dateDisplay =
+    formatWeekendRange(race.start_date, race.end_date) ?? 'Date TBA'
 
-  const startDateFormatted = formatShortDate(race.start_date)
-  const raceDayDateFormatted = formatShortDate(race.race_day_date)
-
-  // Build date display string
-  let dateDisplay = 'Date TBA'
-  if (startDateFormatted && raceDayDateFormatted) {
-    dateDisplay = `${startDateFormatted}`
-  } else if (startDateFormatted) {
-    dateDisplay = `Start: ${startDateFormatted}`
-  } else if (raceDayDateFormatted) {
-    dateDisplay = `Race Day: ${raceDayDateFormatted}`
-  }
-
-  const backgroundImage = race.image_url || '/images/race_banner.jpeg'
   const trackSlug = slugify(race.name)
   const bannerHref = `/tracks/${trackSlug}`
 
@@ -460,13 +469,6 @@ function ScheduleCard({ race }: ScheduleCardProps) {
       className="block overflow-hidden hover:opacity-90 rounded-sm border-b border-gray-900"
     >
       <section className="relative h-[90px] w-full cursor-pointer">
-        {/* <Image
-          src={backgroundImage}
-          alt={race.circuit_ref || race.name}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1024px) calc(100vw - 3rem), 1152px"
-          className="object-cover opacity-30"
-        /> */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
 
         <div className="absolute inset-0 flex flex-col justify-between">

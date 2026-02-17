@@ -5,6 +5,29 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 
+const F1_TIMEZONES = [
+  'Australia/Melbourne',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Bahrain',
+  'Asia/Riyadh',
+  'America/New_York',
+  'America/Montreal',
+  'Europe/Paris',
+  'Europe/Madrid',
+  'Europe/Vienna',
+  'Europe/London',
+  'Europe/Brussels',
+  'Europe/Budapest',
+  'Europe/Amsterdam',
+  'Europe/Rome',
+  'America/Sao_Paulo',
+  'America/Los_Angeles',
+  'Asia/Qatar',
+  'Asia/Dubai',
+  'UTC',
+] as const
+
 const trackSchema = z.object({
   name: z.string().min(1).max(200),
   image_url: z.string().url().optional().or(z.literal('')),
@@ -14,6 +37,9 @@ const trackSchema = z.object({
   location: z.string().max(200).optional().or(z.literal('')),
   country: z.string().max(200).optional().or(z.literal('')),
   start_date: z.string().optional().or(z.literal('')),
+  end_date: z.string().optional().or(z.literal('')),
+  timezone: z.string().max(100).optional().or(z.literal('')),
+  circuit_ref: z.string().max(200).optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
 })
 
@@ -28,12 +54,17 @@ interface TrackEditModalProps {
     location: string | null
     country: string | null
     start_date: string | null
+    end_date: string | null
+    timezone: string | null
+    circuit_ref: string | null
     overview_text: string | null
   }
   onClose: () => void
+  /** When true, start_date is derived from schedule (first event) and shown read-only. */
+  hasScheduleEvents?: boolean
 }
 
-export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
+export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: TrackEditModalProps) {
   const supabase = createClientComponentClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,6 +77,9 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
     location: track.location || '',
     country: track.country || '',
     start_date: toDatetimeLocal(track.start_date),
+    end_date: toDateInput(track.end_date),
+    timezone: track.timezone || 'UTC',
+    circuit_ref: track.circuit_ref || '',
     overview_text: track.overview_text || '',
   })
 
@@ -64,22 +98,31 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
         location: formData.location || undefined,
         country: formData.country || undefined,
         start_date: formData.start_date || undefined,
+        end_date: formData.end_date || undefined,
+        timezone: formData.timezone || undefined,
+        circuit_ref: formData.circuit_ref || undefined,
         overview_text: formData.overview_text || undefined,
       })
 
+      const updatePayload: Record<string, unknown> = {
+        name: validated.name,
+        image_url: validated.image_url || null,
+        built_date: validated.built_date || null,
+        turns: validated.turns ?? null,
+        location: validated.location || null,
+        country: validated.country || null,
+        end_date: validated.end_date || null,
+        timezone: validated.timezone || null,
+        circuit_ref: validated.circuit_ref || null,
+        overview_text: validated.overview_text || null,
+      }
+      if (!hasScheduleEvents) {
+        updatePayload.start_date = validated.start_date || null
+      }
+
       const { error: updateError } = await supabase
         .from('tracks')
-        .update({
-          ...validated,
-          name: validated.name,
-          image_url: validated.image_url || null,
-          built_date: validated.built_date || null,
-          turns: validated.turns ?? null,
-          location: validated.location || null,
-          country: validated.country || null,
-          start_date: validated.start_date || null,
-          overview_text: validated.overview_text || null,
-        })
+        .update(updatePayload)
         .eq('id', track.id)
 
       if (updateError) throw updateError
@@ -185,14 +228,62 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Start Date/Time</label>
-            <input
-              type="datetime-local"
-              value={formData.start_date}
-              onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Schedule</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Weekend start date/time (UTC)
+                </label>
+                {hasScheduleEvents && (
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    Start date is set from schedule (first event). Edit events in Schedule to change it.
+                  </p>
+                )}
+                <input
+                  type="datetime-local"
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  readOnly={hasScheduleEvents}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End date (race weekend end)</label>
+                <input
+                  type="date"
+                  value={formData.end_date}
+                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Timezone (IANA)</label>
+                <select
+                  value={formData.timezone}
+                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                >
+                  {F1_TIMEZONES.map((tz) => (
+                    <option key={tz} value={tz}>
+                      {tz}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Circuit ref (short name, e.g. Melbourne)
+                </label>
+                <input
+                  type="text"
+                  value={formData.circuit_ref}
+                  onChange={(e) => setFormData({ ...formData, circuit_ref: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  placeholder="e.g. Melbourne"
+                />
+              </div>
+            </div>
           </div>
 
           <div>

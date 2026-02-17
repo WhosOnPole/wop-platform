@@ -21,6 +21,7 @@ interface GridStepConfig {
   blurbPlaceholder: string
   emptyAlert: string
   buttonLabel: string
+  skipLabel: string
 }
 
 const GRID_STEP_CONFIG: Record<GridType, GridStepConfig> = {
@@ -41,6 +42,7 @@ const GRID_STEP_CONFIG: Record<GridType, GridStepConfig> = {
     blurbPlaceholder: 'Say something about your driver picks...',
     emptyAlert: 'Please add at least one driver to your grid',
     buttonLabel: 'Continue',
+    skipLabel: 'Skip',
   },
   team: {
     type: 'team',
@@ -57,6 +59,7 @@ const GRID_STEP_CONFIG: Record<GridType, GridStepConfig> = {
     blurbPlaceholder: 'Say something about your team picks...',
     emptyAlert: 'Please add at least one team to your grid',
     buttonLabel: 'Continue',
+    skipLabel: 'Skip',
   },
   track: {
     type: 'track',
@@ -75,7 +78,8 @@ const GRID_STEP_CONFIG: Record<GridType, GridStepConfig> = {
     description: 'Drag cards onto the grid to rank your favorites. Drag back to the row to remove.',
     blurbPlaceholder: 'Say something about your track picks...',
     emptyAlert: 'Please add at least one track to your grid',
-    buttonLabel: 'Complete Onboarding',
+    buttonLabel: 'Save & Finish',
+    skipLabel: 'Skip + Login',
   },
 }
 
@@ -194,7 +198,7 @@ export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridS
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
       </div>
     )
   }
@@ -204,11 +208,11 @@ export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridS
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">{config.title}</h2>
-        <p className="mt-1 text-sm text-gray-600">{config.description}</p>
+        <h2 className="font-display text-2xl font-normal text-white">{config.title}</h2>
+        <p className="mt-1 text-sm text-white/70">{config.description}</p>
       </div>
 
-      <div className="rounded-xl border border-gray-300 bg-gray-900 p-4 text-white">
+      <div className="rounded-xl border border-white/10 bg-black/60 p-4 text-white backdrop-blur-sm">
         <GridEditCanvas
           type={config.type}
           rankedList={rankedList}
@@ -219,7 +223,7 @@ export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridS
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
+        <label className="mb-2 block text-sm font-medium text-white/90">
           Blurb (optional, max 140 characters)
         </label>
         <textarea
@@ -239,24 +243,24 @@ export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridS
           spellCheck={false}
           role="textbox"
           aria-label={`${config.type} grid blurb`}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-black shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
         />
-        <p className="mt-1 text-xs text-gray-500">{blurb.length}/140 characters</p>
+        <p className="mt-1 text-xs text-white/50">{blurb.length}/140 characters</p>
       </div>
 
       <div className="flex justify-between">
         <button
           type="button"
           onClick={onSkip}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
         >
-          Skip for now
+          {config.skipLabel}
         </button>
         <button
           type="button"
           onClick={handleSave}
           disabled={isSubmitting || !hasAtLeastOne}
-          className="flex items-center space-x-2 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center space-x-2 rounded-lg bg-[#25B4B1] px-6 py-2 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
           <span>{config.buttonLabel}</span>

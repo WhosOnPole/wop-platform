@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ProfileTabs } from './profile-tabs'
 import { GridDisplayCard } from './grid-display-card'
 import { ActivityTab } from './activity-tab'
@@ -42,8 +42,13 @@ export function ProfilePageClient({
   profilePosts,
   supabaseUrl,
 }: ProfilePageClientProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<TabKey>('drivers')
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    const tabParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null
+    return (tabParam && TAB_ORDER.includes(tabParam as TabKey)) ? (tabParam as TabKey) : 'drivers'
+  })
   const contentRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
@@ -59,6 +64,18 @@ export function ProfilePageClient({
       setActiveTab(tabParam as TabKey)
     }
   }, [searchParams])
+
+  // Update URL when tab changes so back navigation restores tab state
+  const handleTabChange = useCallback(
+    (tab: TabKey) => {
+      setActiveTab(tab)
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('tab', tab)
+      const query = params.toString()
+      router.replace(`${pathname}${query ? `?${query}` : ''}`, { scroll: false })
+    },
+    [pathname, router, searchParams]
+  )
 
   // Scroll to the specific post when ?post= is present (e.g. from "commented on your post" notification)
   useEffect(() => {
@@ -127,7 +144,7 @@ export function ProfilePageClient({
           newIndex = currentIndex === TAB_ORDER.length - 1 ? 0 : currentIndex + 1
         }
 
-        setActiveTab(TAB_ORDER[newIndex])
+        handleTabChange(TAB_ORDER[newIndex])
       }
 
       touchStartX.current = 0
@@ -144,7 +161,7 @@ export function ProfilePageClient({
       content.removeEventListener('touchmove', handleTouchMove)
       content.removeEventListener('touchend', handleTouchEnd)
     }
-  }, [activeTab])
+  }, [activeTab, handleTabChange])
 
   const driverGridDisplay = driverGrid ?? buildPlaceholderGrid('driver')
   const trackGridDisplay = trackGrid ?? buildPlaceholderGrid('track')
@@ -155,7 +172,7 @@ export function ProfilePageClient({
       {/* Tabs */}
       <ProfileTabs
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         teamBackground={teamBackground}
       />
 

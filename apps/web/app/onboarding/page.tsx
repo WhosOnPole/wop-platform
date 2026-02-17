@@ -114,8 +114,8 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
       </div>
     )
   }
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Progress Indicator */}
         <div className="mb-8">
@@ -155,31 +155,31 @@ export default function OnboardingPage() {
                     aria-label={`Go to ${step.label} step`}
                   >
                     {isComplete || isPast ? (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25B4B1]">
                         <CheckCircle2 className="h-6 w-6 text-white" />
                       </div>
                     ) : isActive ? (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-blue-600 bg-blue-50">
-                        <Circle className="h-6 w-6 text-blue-600" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#25B4B1] bg-white/5">
+                        <Circle className="h-6 w-6 text-[#25B4B1]" />
                       </div>
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-300 bg-white">
-                        <Circle className="h-6 w-6 text-gray-400" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/20 bg-white/5">
+                        <Circle className="h-6 w-6 text-white/40" />
                       </div>
                     )}
                     <span
                       className={`mt-2 text-xs font-medium ${
-                        isActive ? 'text-blue-600' : isComplete || isPast ? 'text-gray-900' : 'text-gray-500'
+                        isActive ? 'text-[#25B4B1]' : isComplete || isPast ? 'text-white' : 'text-white/50'
                       }`}
                     >
                       {step.label}
-                      {step.required && <span className="text-red-500">*</span>}
+                      {step.required && <span className="text-red-400">*</span>}
                     </span>
                   </button>
                   {index < steps.length - 1 && (
                     <div
                       className={`mx-2 h-0.5 flex-1 ${
-                        isPast || isComplete ? 'bg-blue-600' : 'bg-gray-300'
+                        isPast || isComplete ? 'bg-[#25B4B1]' : 'bg-white/20'
                       }`}
                     />
                   )}
@@ -190,18 +190,18 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step Content */}
-        <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-lg border border-white/10 bg-black/40 p-8 backdrop-blur-sm">
           {currentStep !== 'profile' && (
             <div className="mb-6 flex items-center justify-between">
               <button
                 type="button"
                 onClick={handleBack}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm font-medium text-white hover:bg-white/10"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Back
               </button>
-              <span className="text-sm text-gray-500">You can always go back and adjust your selections.</span>
+              <span className="text-sm text-white/50">You can always go back and adjust your selections.</span>
             </div>
           )}
           {currentStep === 'profile' && (
@@ -230,9 +230,9 @@ export default function OnboardingPage() {
           )}
           {currentStep === 'complete' && (
             <div className="text-center">
-              <CheckCircle2 className="mx-auto h-16 w-16 text-green-500" />
-              <h2 className="mt-4 text-2xl font-bold text-gray-900">Welcome to Who's on Pole!</h2>
-              <p className="mt-2 text-gray-600">
+              <CheckCircle2 className="mx-auto h-16 w-16 text-[#25B4B1]" />
+              <h2 className="mt-4 font-display text-2xl font-normal text-white">Welcome to Who&apos;s on Pole!</h2>
+              <p className="mt-2 text-white/70">
                 {isRedirectingToFeed ? 'Redirecting to your feed…' : 'Finalizing…'}
               </p>
             </div>
