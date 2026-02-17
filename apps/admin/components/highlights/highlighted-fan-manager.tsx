@@ -71,16 +71,10 @@ export function HighlightedFanManager({
     setLoadingGrids(true)
     setGridError(null)
 
-    function buildQuery(params: { includeUser: boolean }) {
-      const { includeUser } = params
-
-      const baseSelect = includeUser
-        ? 'id,type,ranked_items,blurb,created_at,profiles!user_id(id,username,profile_image_url)'
-        : 'id,type,ranked_items,blurb,created_at'
-
+    function buildQuery() {
       const query = supabase
         .from('grids')
-        .select(baseSelect)
+        .select('id,type,ranked_items,blurb,created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(30)
@@ -90,33 +84,21 @@ export function HighlightedFanManager({
       return query
     }
 
-    const { data: dataWithUser, error: withUserError } = await buildQuery({ includeUser: true })
-    if (!withUserError) {
-      setFanGrids(dataWithUser || [])
-      // preserve selection if still present
-      if (selectedGrid) {
-        const stillExists = (dataWithUser || []).find((g) => g.id === selectedGrid.id)
-        if (!stillExists) setSelectedGrid(null)
-      }
+    const { data, error: loadError } = await buildQuery()
+    if (loadError) {
+      setGridError(loadError.message || 'Failed to load grids')
+      setFanGrids([])
+      setSelectedGrid(null)
       setLoadingGrids(false)
       return
     }
 
-    // Fallback: if the join is failing for any reason, retry without it.
-    const { data: dataNoUser, error: noUserError } = await buildQuery({ includeUser: false })
-    if (!noUserError) {
-      setFanGrids(dataNoUser || [])
-      if (selectedGrid) {
-        const stillExists = (dataNoUser || []).find((g) => g.id === selectedGrid.id)
-        if (!stillExists) setSelectedGrid(null)
-      }
-      setLoadingGrids(false)
-      return
+    setFanGrids(data || [])
+    // preserve selection if still present
+    if (selectedGrid) {
+      const stillExists = (data || []).find((g) => g.id === selectedGrid.id)
+      if (!stillExists) setSelectedGrid(null)
     }
-
-    setGridError(noUserError.message || withUserError.message || 'Failed to load grids')
-    setFanGrids([])
-    setSelectedGrid(null)
     setLoadingGrids(false)
   }
 
