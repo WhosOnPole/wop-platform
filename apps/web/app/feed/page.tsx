@@ -141,6 +141,7 @@ export default async function FeedPage() {
   }
 
   const weekStart = await getCurrentWeekStart()
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   // Fetch personalized feed content
   const [
@@ -206,20 +207,20 @@ export default async function FeedPage() {
           .limit(20)
         return { data: grids || [] }
       }),
-    // Recent active polls (ends_at is null or in the future) - regular polls only
+    // Community polls from last 30 days
     supabase
       .from('polls')
       .select('*')
       .is('admin_id', null)
-      .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
+      .gte('created_at', thirtyDaysAgo)
       .order('created_at', { ascending: false })
       .limit(3),
-    // Admin polls (ends_at is null or in the future)
+    // Admin polls from last 30 days
     supabase
       .from('polls')
       .select('*')
       .not('admin_id', 'is', null)
-      .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
+      .gte('created_at', thirtyDaysAgo)
       .order('created_at', { ascending: false }),
     // Admin polls for banner: only active (not expired) so featured poll hides when expired
     supabase

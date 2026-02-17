@@ -54,6 +54,8 @@ export default async function PodiumsPage() {
   } = await supabase.auth.getSession()
 
   const weekStart = await getCurrentWeekStart()
+  const now = new Date()
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   const [
     pollsResult,
@@ -62,7 +64,7 @@ export default async function PodiumsPage() {
     sponsorsResult,
     weeklyHighlightsResult,
   ] = await Promise.all([
-    supabase.from('polls').select('*').order('created_at', { ascending: false }),
+    supabase.from('polls').select('*').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: false }),
     supabase.from('news_stories').select('*').eq('is_featured', true).order('created_at', { ascending: false }),
     supabase
       .from('user_story_submissions')
@@ -96,11 +98,7 @@ export default async function PodiumsPage() {
   ])
 
   const allPolls = pollsResult.data || []
-  const now = new Date()
-  const activePolls = allPolls.filter(
-    (p) => p.ends_at == null || (p.ends_at && new Date(p.ends_at) > now)
-  )
-  const polls = activePolls
+  const polls = allPolls
   const pollIds = polls.map((p) => p.id)
   let userResponses: Record<string, string> = {}
   let voteCounts: Record<string, Record<string, number>> = {}

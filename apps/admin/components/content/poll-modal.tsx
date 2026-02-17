@@ -82,13 +82,12 @@ export function PollModal({ poll, onClose }: PollModalProps) {
         throw new Error('Not authenticated')
       }
 
-      const payload = {
-        ...validated,
-        admin_id: session.user.id,
-        ends_at: validated.ends_at ? new Date(validated.ends_at).toISOString() : null,
-      }
-
       if (poll) {
+        const payload = {
+          ...validated,
+          admin_id: session.user.id,
+          ends_at: validated.ends_at ? new Date(validated.ends_at).toISOString() : null,
+        }
         const { error: updateError } = await supabase
           .from('polls')
           .update(payload)
@@ -96,6 +95,13 @@ export function PollModal({ poll, onClose }: PollModalProps) {
 
         if (updateError) throw updateError
       } else {
+        const payload = {
+          question: validated.question,
+          options: validated.options,
+          is_featured_podium: validated.is_featured_podium,
+          admin_id: session.user.id,
+          ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        }
         const { error: insertError } = await supabase.from('polls').insert(payload)
 
         if (insertError) throw insertError
@@ -185,20 +191,24 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             </label>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Ends At <span className="text-gray-400">(optional)</span>
-            </label>
-            <input
-              type="datetime-local"
-              value={formData.ends_at}
-              onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Poll is active while ends_at is empty or in the future.
-            </p>
-          </div>
+          {poll ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Ends At <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.ends_at}
+                onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Poll is active while ends_at is empty or in the future.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">You have 24 hours to vote. Polls stay visible for 30 days.</p>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <button

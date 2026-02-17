@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeTipContent, validateUuid, validateTipType } from '@/utils/sanitize'
 
 interface TipModalProps {
   onClose: () => void
@@ -21,6 +22,9 @@ const TIP_TYPE_OPTIONS = [
   { value: 'transit', label: 'Transit' },
 ] as const
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
+
 export function TipModal({ onClose }: TipModalProps) {
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -29,7 +33,6 @@ export function TipModal({ onClose }: TipModalProps) {
   const [trackId, setTrackId] = useState('')
   const [tipType, setTipType] = useState<'tips' | 'stays' | 'transit'>('tips')
   const [tip, setTip] = useState('')
-  const [link, setLink] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,7 +66,6 @@ export function TipModal({ onClose }: TipModalProps) {
     setTrackId('')
     setTipType('tips')
     setTip('')
-    setLink('')
     setImage(null)
     setError(null)
   }
@@ -82,22 +84,61 @@ export function TipModal({ onClose }: TipModalProps) {
       return
     }
 
-    const payload: {
-      user_id: string
-      track_id: string
-      tip_content: string
-      type: 'tips' | 'stays' | 'transit'
-      status: string
-      link_url?: string | null
-    } = {
+    if (!validateUuid(trackId)) {
+      setError('Please select a valid track.')
+      setSubmitting(false)
+      return
+    }
+    if (!validateTipType(tipType)) {
+      setError('Invalid tip type.')
+      setSubmitting(false)
+      return
+    }
+    const contentResult = sanitizeTipContent(tip)
+    if (!contentResult.ok) {
+      setError(contentResult.error)
+      setSubmitting(false)
+      return
+    }
+
+    if (image) {
+      if (image.size > MAX_IMAGE_SIZE_BYTES) {
+        setError('Image must be 5MB or smaller.')
+        setSubmitting(false)
+        return
+      }
+      if (!ALLOWED_IMAGE_TYPES.includes(image.type)) {
+        setError('Image must be JPEG, PNG, or WebP.')
+        setSubmitting(false)
+        return
+      }
+    }
+
+    let imageUrl: string | null = null
+    if (image) {
+      const fileExt = image.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const safeExt = ['jpeg', 'jpg', 'png', 'webp'].includes(fileExt) ? fileExt : 'jpg'
+      const fileName = `${session.user.id}-${Date.now()}.${safeExt}`
+      const { error: uploadError } = await supabase.storage
+        .from('track-tip-images')
+        .upload(fileName, image, { upsert: true, contentType: image.type })
+
+      if (uploadError) {
+        setError('Failed to upload image. Please try again.')
+        setSubmitting(false)
+        return
+      }
+      const { data: urlData } = supabase.storage.from('track-tip-images').getPublicUrl(fileName)
+      imageUrl = urlData.publicUrl
+    }
+
+    const payload = {
       user_id: session.user.id,
       track_id: trackId,
-      tip_content: tip.trim(),
+      tip_content: contentResult.value,
       type: tipType,
       status: 'pending',
-    }
-    if (link.trim()) {
-      payload.link_url = link.trim()
+      image_url: imageUrl,
     }
 
     const { error: insertError } = await supabase.from('track_tips').insert(payload)
@@ -179,19 +220,9 @@ export function TipModal({ onClose }: TipModalProps) {
               value={tip}
               onChange={(e) => setTip(e.target.value)}
               rows={4}
+              maxLength={2000}
               className="mt-1 w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
               placeholder="Share your track tip"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white/90">Link (optional)</label>
-            <input
-              type="url"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-              placeholder="Supporting link"
             />
           </div>
 
@@ -199,7 +230,7 @@ export function TipModal({ onClose }: TipModalProps) {
             <label className="block text-sm font-medium text-white/90">Image (optional)</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={(e) => setImage(e.target.files?.[0] || null)}
               className="mt-1 w-full text-sm text-white/70 file:mr-2 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white file:hover:bg-white/20"
             />

@@ -25,7 +25,7 @@ export function EntityOverview(props: EntityOverviewProps) {
 
     return (
       <div className="w-full overflow-visible bg-black px-4 py-8 pt-12 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-6xl flex-row gap-4 sm:gap-8">
+        <div className="mx-auto flex max-w-6xl flex-row gap-2 sm:gap-8">
           {track.track_length != null && (
             <div className="flex w-1/2 shrink-0 flex-col items-end justify-end gap-0 font-sageva text-sunset-gradient" style={{ minWidth: 0 }}>
               <span className="whitespace-nowrap text-8xl leading-none sm:text-8xl md:text-9xl p-2">
@@ -36,7 +36,7 @@ export function EntityOverview(props: EntityOverviewProps) {
           )}
           {track.overview_text && (
             <div
-              className="flex w-1/2 shrink-0 flex-col justify-end"
+              className="flex w-1/2 shrink-0 flex-col justify-end pb-4"
               style={{ minWidth: 0 }}
             >
               <p className="text-base text-white/90 leading-relaxed font-light">
@@ -57,7 +57,7 @@ export function EntityOverview(props: EntityOverviewProps) {
 
   return (
     <div className="w-full overflow-visible bg-black px-4 py-8 pt-12 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-6xl flex-row gap-4 sm:gap-8">
+      <div className="mx-auto flex max-w-6xl flex-row gap-2 sm:gap-8">
         {driver.racing_number != null && (
           <div className="flex w-1/2 shrink-0 flex-col justify-end" style={{ minWidth: 0 }}>
             <span className="font-sageva text-7xl leading-none text-sunset-gradient sm:text-8xl md:text-9xl">
@@ -67,7 +67,7 @@ export function EntityOverview(props: EntityOverviewProps) {
         )}
         {driver.overview_text && (
           <div
-            className="flex w-1/2 shrink-0 flex-col justify-end"
+            className="flex w-1/2 shrink-0 flex-col justify-end pb-4"
             style={{ minWidth: 0 }}
           >
             <p className="text-base text-white/90 leading-relaxed font-light">

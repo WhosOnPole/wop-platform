@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import { X } from 'lucide-react'
+import { createClientComponentClient } from '@/utils/supabase-client'
 
 interface PollModalProps {
   onClose: () => void
@@ -12,14 +13,17 @@ interface PollOption {
   value: string
 }
 
+const ENDS_AT_MS = 24 * 60 * 60 * 1000
+
 export function PollModal({ onClose }: PollModalProps) {
+  const supabase = createClientComponentClient()
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState<PollOption[]>([
     { id: 'opt-1', value: '' },
     { id: 'opt-2', value: '' },
   ])
-  const [expiration, setExpiration] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   function updateOption(id: string, value: string) {
     setOptions((prev) => prev.map((opt) => (opt.id === id ? { ...opt, value } : opt)))
@@ -37,18 +41,48 @@ export function PollModal({ onClose }: PollModalProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setError(null)
     setSubmitting(true)
-    const filledOptions = options.map((o) => o.value).filter((v) => v.trim() !== '')
-    console.info('Create poll (stub):', { question, options: filledOptions, expiration })
-    // TODO: call API to create poll (community podium) immediately visible; no admin approval
+
+    const filledOptions = options.map((o) => o.value.trim()).filter((v) => v !== '')
+    if (filledOptions.length < 2) {
+      setError('Add at least 2 options.')
+      setSubmitting(false)
+      return
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      setError('You must be signed in to create a poll.')
+      setSubmitting(false)
+      return
+    }
+
+    const endsAt = new Date(Date.now() + ENDS_AT_MS).toISOString()
+    const { error: insertError } = await supabase.from('polls').insert({
+      question: question.trim(),
+      options: filledOptions,
+      admin_id: null,
+      ends_at: endsAt,
+      is_featured_podium: false,
+    })
+
+    if (insertError) {
+      setError(insertError.message ?? 'Failed to create poll.')
+      setSubmitting(false)
+      return
+    }
+
     setQuestion('')
     setOptions([
       { id: 'opt-1', value: '' },
       { id: 'opt-2', value: '' },
     ])
-    setExpiration('')
     setSubmitting(false)
     onClose()
+    window.location.href = '/podiums'
   }
 
   return (
@@ -67,6 +101,10 @@ export function PollModal({ onClose }: PollModalProps) {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-lg bg-red-500/20 p-3 text-sm text-red-200">{error}</div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-white/90">Question</label>
             <input
@@ -114,18 +152,9 @@ export function PollModal({ onClose }: PollModalProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white/90">Expiration (optional)</label>
-            <input
-              type="datetime-local"
-              value={expiration}
-              onChange={(e) => setExpiration(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-            />
-            <p className="mt-1 text-xs text-white/60">
-              Poll appears immediately under Community Podiums.
-            </p>
-          </div>
+          <p className="text-xs text-white/60">
+            You have 24 hours to vote. Polls stay visible for 30 days.
+          </p>
 
           <div className="flex justify-end gap-2 pt-2">
             <button
