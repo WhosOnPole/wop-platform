@@ -26,10 +26,12 @@ export function formatDateShort(
       ? new Date(dateStr)
       : parseDateOnly(dateStr ?? null)
   if (!d || isNaN(d.getTime())) return null
+  const showYear =
+    opts?.year === true ? true : opts?.year === false ? false : !(dateStr && dateStr.length <= 10)
   return d.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: opts?.year ?? (dateStr && dateStr.length <= 10 ? undefined : 'numeric'),
+    year: showYear ? ('numeric' as const) : undefined,
     timeZone: opts?.timeZone ?? 'UTC',
   })
 }
