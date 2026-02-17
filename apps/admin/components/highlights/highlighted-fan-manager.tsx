@@ -75,25 +75,8 @@ export function HighlightedFanManager({
       const { includeUser } = params
 
       const baseSelect = includeUser
-        ? `
-          id,
-          type,
-          ranked_items,
-          blurb,
-          created_at,
-          user:profiles!user_id (
-            id,
-            username,
-            profile_image_url
-          )
-        `
-        : `
-          id,
-          type,
-          ranked_items,
-          blurb,
-          created_at
-        `
+        ? 'id,type,ranked_items,blurb,created_at,user:profiles!user_id(id,username,profile_image_url)'
+        : 'id,type,ranked_items,blurb,created_at'
 
       const query = supabase
         .from('grids')
