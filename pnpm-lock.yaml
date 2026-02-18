@@ -14,6 +14,9 @@ importers:
       '@types/node':
         specifier: ^20.11.0
         version: 20.19.25
+      baseline-browser-mapping:
+        specifier: ^2.9.19
+        version: 2.9.19
       typescript:
         specifier: ^5.3.3
         version: 5.9.3

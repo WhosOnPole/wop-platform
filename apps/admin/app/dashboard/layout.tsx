@@ -7,6 +7,8 @@ import type { ReactNode } from 'react'
 import { PasswordRecoveryCheck } from './password-recovery-check'
 import { MobileMenu } from './mobile-menu'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies()
   const supabase = createServerComponentClient(
