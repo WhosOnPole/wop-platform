@@ -15,10 +15,10 @@ export default function AdminLoginPage() {
   const [redirectUrl, setRedirectUrl] = useState<string>('')
 
   useEffect(() => {
-    // Use current origin dynamically instead of env var
-    if (typeof window !== 'undefined') {
-      setRedirectUrl(`${window.location.origin}/auth/callback`)
-    }
+    if (typeof window === 'undefined') return
+    const envUrl = process.env.NEXT_PUBLIC_SITE_URL
+    const baseUrl = envUrl && envUrl.trim().length > 0 ? envUrl : window.location.origin
+    setRedirectUrl(`${baseUrl.replace(/\/$/, '')}/auth/callback`)
   }, [])
 
   useEffect(() => {
