@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       { cookies: () => cookieStore as any },
       {
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        supabaseKey: process.env.SUPABASE_SECRET_KEY,
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
       }
     )
     
