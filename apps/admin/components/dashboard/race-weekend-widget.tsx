@@ -110,12 +110,9 @@ export function RaceWeekendWidget({
     : null
 
   const now = new Date()
-  const isActive =
-    startDate &&
-    endDate &&
-    now >= startDate &&
-    now <= endDate &&
-    chatEnabled
+  const isWithinWindow =
+    Boolean(startDate && endDate && now >= startDate && now <= endDate)
+  const isActive = isWithinWindow && chatEnabled
 
   const isUpcoming = startDate && now < startDate
 
@@ -172,27 +169,29 @@ export function RaceWeekendWidget({
         <div>
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Live Chat</h3>
-            <button
-              onClick={handleToggleChat}
-              disabled={isToggling}
-              className={`flex items-center space-x-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                chatEnabled
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              } disabled:opacity-50`}
-            >
-              {chatEnabled ? (
-                <>
-                  <PowerOff className="h-4 w-4" />
-                  <span>{isToggling ? 'Disabling...' : 'Disable'}</span>
-                </>
-              ) : (
-                <>
-                  <Power className="h-4 w-4" />
-                  <span>{isToggling ? 'Enabling...' : 'Enable'}</span>
-                </>
-              )}
-            </button>
+            {isWithinWindow ? (
+              <button
+                onClick={handleToggleChat}
+                disabled={isToggling}
+                className={`flex items-center space-x-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  chatEnabled
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                } disabled:opacity-50`}
+              >
+                {chatEnabled ? (
+                  <>
+                    <PowerOff className="h-4 w-4" />
+                    <span>{isToggling ? 'Disabling...' : 'Disable'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Power className="h-4 w-4" />
+                    <span>{isToggling ? 'Enabling...' : 'Enable'}</span>
+                  </>
+                )}
+              </button>
+            ) : null}
           </div>
 
           {isActive && metrics && (
