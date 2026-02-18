@@ -7,8 +7,8 @@ export async function proxy(req: NextRequest) {
   const supabase = createMiddlewareClient({ req, res })
   const pathname = req.nextUrl.pathname
 
-  // Allow access to auth routes (callback, reset-password) and login page for unauthenticated users
-  const publicPaths = ['/login', '/auth/callback', '/auth/reset-password']
+  // Allow access to auth routes (callback, reset-password) and login/signup pages for unauthenticated users
+  const publicPaths = ['/login', '/signup', '/auth/callback', '/auth/reset-password']
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
 
   // Refresh session if expired
@@ -24,11 +24,11 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Check if user is trying to access login page
-  const isLoginPage = pathname === '/login'
+  // Check if user is trying to access login/signup pages
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
 
   // If user has session, check admin access
-  if (session && !isLoginPage) {
+  if (session && !isAuthPage) {
     // Check if user is admin and check ban status
     const { data: profile } = await supabase
       .from('profiles')
@@ -59,8 +59,8 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // If on login page and already authenticated
-  if (session && isLoginPage) {
+  // If on login/signup pages and already authenticated
+  if (session && isAuthPage) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, email')

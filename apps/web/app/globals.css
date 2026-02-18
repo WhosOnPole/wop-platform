@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Font Face Declarations */
+
 :root {
   --background: #111111;
   --foreground: #ffffff;

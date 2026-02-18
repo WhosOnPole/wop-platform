@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-export default function AdminLoginPage() {
+export default function AdminSignupPage() {
   const router = useRouter()
   const supabase = createClientComponentClient({
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -24,10 +24,8 @@ export default function AdminLoginPage() {
   }, [])
 
   useEffect(() => {
-    // Check if already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        // Check admin status
         supabase
           .from('profiles')
           .select('role, email')
@@ -43,12 +41,10 @@ export default function AdminLoginPage() {
       }
     })
 
-    // Listen for auth state changes (for email/password login)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // Check admin status
         const { data: profile } = await supabase
           .from('profiles')
           .select('role, email')
@@ -61,8 +57,7 @@ export default function AdminLoginPage() {
         if (isAdminEmail || isAdminRole) {
           router.push('/dashboard')
         } else {
-          // Not an admin, redirect to main site
-          const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+          const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ||
             (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
           window.location.href = mainSiteUrl
         }
@@ -89,10 +84,10 @@ export default function AdminLoginPage() {
             />
           </div>
           <h2 className="mt-6 text-center text-2xl font-semibold tracking-tight text-white">
-            Admin Login
+            Admin Sign Up
           </h2>
           <p className="mt-2 text-center text-sm text-white/70">
-            Sign in to access the admin dashboard
+            Create an admin account to access the dashboard
           </p>
         </div>
         {redirectUrl && (
@@ -119,18 +114,17 @@ export default function AdminLoginPage() {
             }}
             providers={['google', 'apple']}
             redirectTo={redirectUrl}
-            view="sign_in"
+            view="sign_up"
             onlyThirdPartyProviders={false}
           />
         )}
         <p className="text-center text-sm text-white/70">
-          New here?{' '}
-          <Link href="/signup" className="font-medium text-[#25B4B1] hover:text-[#3BEFEB]">
-            Create an admin account
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-[#25B4B1] hover:text-[#3BEFEB]">
+            Sign in
           </Link>
         </p>
       </div>
     </div>
   )
 }
-
