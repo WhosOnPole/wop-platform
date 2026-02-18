@@ -120,7 +120,7 @@ export default async function PitlanePage() {
       {/* Upcoming race banner */}
       {nextRace ? (
         <div className="mb-5 relative mx-4 mb-8 sm:mx-6 lg:mx-8">
-          <sup className="w-full text-left block text-xs text-[#838383]">Upcoming</sup>
+          <sup className="w-full text-left block text-sm text-[#838383]">Upcoming</sup>
         <Link
           href={bannerHref}
           className="block overflow-hidden hover:opacity-90"

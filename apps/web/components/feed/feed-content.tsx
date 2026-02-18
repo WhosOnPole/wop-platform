@@ -131,11 +131,19 @@ export function FeedContent({
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center space-x-3">
-                  <img
-                    src={getAvatarUrl(post.user?.profile_image_url)}
-                    alt={post.user?.username ?? ''}
-                    className="h-10 w-10 shrink-0 rounded-full object-cover"
-                  />
+                  <div
+                    className={`h-10 w-10 shrink-0 rounded-full ${
+                      post.user?.profile_image_url
+                        ? 'overflow-hidden'
+                        : 'bg-white border border-gray-200 p-1'
+                    }`}
+                  >
+                    <img
+                      src={getAvatarUrl(post.user?.profile_image_url)}
+                      alt={post.user?.username ?? ''}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
                   <div className="min-w-0">
                     <Link
                       href={`/u/${post.user?.username || 'unknown'}`}
@@ -218,11 +226,19 @@ export function FeedContent({
               className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
               <div className="mb-4 flex items-center space-x-3">
-                <img
-                  src={getAvatarUrl(grid.user?.profile_image_url)}
-                  alt={grid.user?.username ?? ''}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
+                <div
+                  className={`h-10 w-10 rounded-full ${
+                    grid.user?.profile_image_url
+                      ? 'overflow-hidden'
+                      : 'bg-white border border-gray-200 p-1'
+                  }`}
+                >
+                  <img
+                    src={getAvatarUrl(grid.user?.profile_image_url)}
+                    alt={grid.user?.username ?? ''}
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </div>
                 <div>
                   <Link
                     href={`/u/${grid.user?.username || 'unknown'}`}

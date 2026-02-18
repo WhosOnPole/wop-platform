@@ -197,7 +197,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
 
   return (
     <section>
-      <sup className="w-full text-left block text-xs text-[#838383] ">Explore the sport and voice your opinion</sup>
+      <sup className="w-full text-left block text-sm text-[#838383] ">Explore the sport and voice your opinion</sup>
       <div className="flex items-center justify-between w-full rounded-full overflow-hidden">
         <div className="flex w-full">
           <TabButton
@@ -286,7 +286,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                             <span
                               className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none tracking-widest"
                               style={{
-                                fontSize: '25px',
+                                fontSize: 'clamp(12px, 4vw, 25px)',
                                 fontFamily: 'Inter, sans-serif',
                                 letterSpacing: '0',
                                 fontWeight: 900,
@@ -417,7 +417,11 @@ function TabButton({ label, icon, active, onClick, showDivider = false }: TabBut
     >
       {icon || label}
       {showDivider ? (
-        <span className="pointer-events-none absolute right-0 top-1 bottom-1 w-[.5px] bg-white/20" />
+        <span
+          className={`pointer-events-none absolute right-0 top-1 bottom-1 w-[.5px] ${
+            active ? 'bg-white/10' : 'bg-white/20'
+          }`}
+        />
       ) : null}
     </button>
   )
