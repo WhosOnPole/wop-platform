@@ -20,6 +20,7 @@ interface User {
 export interface Post {
   id: string
   content: string
+  image_url?: string | null
   created_at: string
   user: User | null
   like_count?: number
@@ -363,7 +364,17 @@ export function FeedContent({
                   postAuthorId={post.user?.id ?? null}
                 />
               </div>
-              <p className="text-white/90">{post.content}</p>
+              {post.content ? <p className="text-white/90">{post.content}</p> : null}
+              {post.image_url && (
+                <div className="mt-3 overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.image_url}
+                    alt=""
+                    className="max-h-96 w-full object-contain"
+                  />
+                </div>
+              )}
               {post.parent_page_type === 'poll' &&
                 post.parent_page_id &&
                 embeddedPollsByPollId[post.parent_page_id] && (() => {
@@ -580,7 +591,17 @@ export function FeedContent({
                         </div>
                         <FeedPostActionsMenu postId={post.id} postAuthorId={post.user?.id ?? null} />
                       </div>
-                      <p className="text-white/90">{post.content}</p>
+                      {post.content ? <p className="text-white/90">{post.content}</p> : null}
+                      {post.image_url && (
+                        <div className="mt-3 overflow-hidden rounded-lg">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={post.image_url}
+                            alt=""
+                            className="max-h-96 w-full object-contain"
+                          />
+                        </div>
+                      )}
                       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
                         <LikeButton
                           targetId={post.id}

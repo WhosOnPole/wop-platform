@@ -137,7 +137,17 @@ export function ProfileDiscussionSection({
                   </p>
                 </div>
               </div>
-              <p className="text-gray-700">{post.content}</p>
+              {post.content ? <p className="text-gray-700">{post.content}</p> : null}
+              {(post as { image_url?: string | null }).image_url && (
+                <div className="mt-2 overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={(post as { image_url: string }).image_url}
+                    alt=""
+                    className="max-h-80 w-full object-contain"
+                  />
+                </div>
+              )}
             </div>
           ))
         )}
