@@ -53,7 +53,7 @@ export default function SettingsPage() {
   const [notificationPreferences, setNotificationPreferences] = useState<Record<string, unknown> | null>(null)
   const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false)
 
-  // Sync activeTab from URL (e.g. /settings?tab=settings from notifications page)
+  // Sync activeTab from URL (e.g. /settings?tab=settings)
   useEffect(() => {
     const t = searchParams.get('tab')
     if (isValidTab(t)) setActiveTab(t)
