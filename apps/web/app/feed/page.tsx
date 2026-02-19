@@ -14,6 +14,29 @@ import { BannerHighlightedFanCard } from '@/components/feed/banner-highlighted-f
 export const revalidate = 60
 export const runtime = 'nodejs'
 
+/** Supabase can return joined relations as arrays; normalize to single object for GridCommentItem */
+function normalizeGridComments(
+  rows: Array<{
+    id: string
+    grid_id: string
+    rank_index: number
+    content: string
+    created_at: string
+    user?: unknown
+    grid?: unknown
+  }>
+): GridCommentItem[] {
+  return rows.map((row) => ({
+    id: row.id,
+    grid_id: row.grid_id,
+    rank_index: row.rank_index,
+    content: row.content,
+    created_at: row.created_at,
+    user: Array.isArray(row.user) ? (row.user[0] as GridCommentItem['user']) ?? null : (row.user as GridCommentItem['user']) ?? null,
+    grid: Array.isArray(row.grid) ? (row.grid[0] as GridCommentItem['grid']) ?? null : (row.grid as GridCommentItem['grid']) ?? null,
+  }))
+}
+
 async function getCurrentWeekStart() {
   const today = new Date()
   const dayOfWeek = today.getDay()
@@ -846,7 +869,7 @@ export default async function FeedPage() {
           <FeedContent
             posts={enrichedFeedPosts}
             grids={enrichedFeedGrids as Grid[]}
-            gridComments={(gridCommentsOnMyGrids.data || []) as GridCommentItem[]}
+            gridComments={normalizeGridComments(gridCommentsOnMyGrids.data || [])}
             embeddedPollsByPollId={embeddedPollsByPollId}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}

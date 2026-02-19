@@ -69,7 +69,7 @@ export function UserPostsSection({ posts, username }: UserPostsSectionProps) {
                   </div>
                 )}
                 {post.content ? <p className="text-gray-700">{post.content}</p> : null}
-                {(post as { image_url?: string | null }).image_url && (
+                {'image_url' in post && typeof (post as { image_url?: string }).image_url === 'string' && (
                   <div className="mt-2 overflow-hidden rounded-lg">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
