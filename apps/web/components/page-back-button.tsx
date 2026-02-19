@@ -23,7 +23,7 @@ export function PageBackButton({
     'inline-flex items-center rounded-full text-md font-sans opacity-65 transition-colors  [font-variant:all-small-caps;] tracking-wide'
   const styles =
     variant === 'dark'
-      ? 'hover:text-[#25B4B1] text-white hover:opacity-full transition-opacity'
+      ? 'text-white hover:opacity-100 transition-opacity'
       : 'text-gray-900 bg-white/90 hover:text-[#25B4B1]'
 
   return (

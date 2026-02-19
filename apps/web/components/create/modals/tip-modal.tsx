@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useState, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
@@ -36,6 +36,7 @@ export function TipModal({ onClose }: TipModalProps) {
   const [image, setImage] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -124,7 +125,14 @@ export function TipModal({ onClose }: TipModalProps) {
         .upload(fileName, image, { upsert: true, contentType: image.type })
 
       if (uploadError) {
-        setError('Failed to upload image. Please try again.')
+        const message =
+          uploadError.message ||
+          'Failed to upload image. Please try again.'
+        setError(
+          process.env.NODE_ENV === 'development'
+            ? `Upload failed: ${message}`
+            : 'Failed to upload image. Please try again.'
+        )
         setSubmitting(false)
         return
       }
@@ -228,12 +236,34 @@ export function TipModal({ onClose }: TipModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-white/90">Image (optional)</label>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => setImage(e.target.files?.[0] || null)}
-              className="mt-1 w-full text-sm text-white/70 file:mr-2 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white file:hover:bg-white/20"
-            />
+            {!image ? (
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setImage(e.target.files?.[0] || null)}
+                className="mt-1 w-full text-sm text-white/70 file:mr-2 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-sm file:text-white file:hover:bg-white/20"
+              />
+            ) : (
+              <div className="mt-1 flex items-center justify-between gap-2 rounded-lg border border-white/20 bg-white/5 px-3 py-2">
+                <span className="truncate text-sm text-white/90" title={image.name}>
+                  {image.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImage(null)
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = ''
+                    }
+                  }}
+                  className="shrink-0 rounded p-1 text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                  aria-label="Remove image"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           <p className="text-xs text-white/60">

@@ -2,7 +2,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { parseDateOnly } from '@/utils/date-utils'
-import { FeedContent, type Post, type Grid } from '@/components/feed/feed-content'
+import { FeedContent, type Post, type Grid, type GridCommentItem } from '@/components/feed/feed-content'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 import { FeedHighlightedSidebar } from '@/components/feed/feed-highlighted-sidebar'
 import { SponsorCard } from '@/components/feed/sponsor-card'
@@ -147,6 +147,7 @@ export default async function FeedPage() {
   const [
     followingPosts,
     followingGrids,
+    gridCommentsOnMyGrids,
     polls,
     adminPolls,
     adminPollsForBanner,
@@ -206,6 +207,40 @@ export default async function FeedPage() {
           .order('updated_at', { ascending: false, nullsFirst: false })
           .limit(20)
         return { data: grids || [] }
+      }),
+    // Grid slot comments on current user's grids (owner sees these in feed)
+    supabase
+      .from('grids')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .then(async (result) => {
+        const myGridIds = (result.data || []).map((g: { id: string }) => g.id)
+        if (myGridIds.length === 0) return { data: [] }
+        const { data: comments } = await supabase
+          .from('grid_slot_comments')
+          .select(
+            `
+            id,
+            grid_id,
+            rank_index,
+            content,
+            created_at,
+            user:profiles!user_id (
+              id,
+              username,
+              profile_image_url
+            ),
+            grid:grids!grid_id (
+              id,
+              type
+            )
+          `
+          )
+          .in('grid_id', myGridIds)
+          .is('parent_comment_id', null)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        return { data: comments || [] }
       }),
     // Community polls from last 30 days
     supabase
@@ -811,6 +846,7 @@ export default async function FeedPage() {
           <FeedContent
             posts={enrichedFeedPosts}
             grids={enrichedFeedGrids as Grid[]}
+            gridComments={(gridCommentsOnMyGrids.data || []) as GridCommentItem[]}
             embeddedPollsByPollId={embeddedPollsByPollId}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}

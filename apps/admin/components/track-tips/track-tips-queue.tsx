@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Check, X, Loader2 } from 'lucide-react'
 
@@ -14,6 +15,7 @@ interface TrackTip {
   status: string
   type?: TrackTipType
   created_at: string
+  image_url?: string | null
   user?: {
     id: string
     username: string
@@ -134,6 +136,26 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
             <div className="rounded-md bg-gray-50 p-4">
               <p className="text-sm text-gray-900">{tip.tip_content}</p>
             </div>
+            {tip.image_url && (
+              <div className="mt-3">
+                <span className="mb-1 block text-xs font-medium text-gray-500">Submitted image</span>
+                <a
+                  href={tip.image_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                >
+                  <Image
+                    src={tip.image_url}
+                    alt="Tip attachment"
+                    width={320}
+                    height={240}
+                    className="h-auto max-h-60 w-full max-w-sm object-contain"
+                    style={{ width: 'auto', height: 'auto' }}
+                  />
+                </a>
+              </div>
+            )}
             <div className="mt-2 text-xs text-gray-500">
               Submitted on {new Date(tip.created_at).toLocaleString()}
             </div>

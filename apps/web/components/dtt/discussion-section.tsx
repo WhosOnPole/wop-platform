@@ -106,9 +106,6 @@ export function DiscussionSection({
                   p.id === updated.id ? { ...p, like_count: updated.like_count } : p
                 )
               )
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H4',location:'discussion-section.tsx:posts-sub',message:'post like_count update',data:{postId:updated.id,like_count:updated.like_count},timestamp:Date.now()})}).catch(()=>{})
-              // #endregion
             }
           }
         )
@@ -140,9 +137,6 @@ export function DiscussionSection({
                 })
                 return next
               })
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H5',location:'discussion-section.tsx:comments-sub',message:'comment like_count update',data:{commentId:updated.id,like_count:updated.like_count},timestamp:Date.now()})}).catch(()=>{})
-              // #endregion
             }
           }
         )
@@ -191,10 +185,6 @@ export function DiscussionSection({
     postReports?.forEach((report) => {
       reportsMap[report.target_id] = true
     })
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'H6',location:'discussion-section.tsx:loadUserLikesAndReports:posts',message:'loaded user likes/reports for posts',data:{userId:session?.user.id,postIds,likes:Object.keys(likesMap),reports:Object.keys(reportsMap)},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
 
     setUserLikes(likesMap)
     setUserReports(reportsMap)
@@ -273,10 +263,6 @@ export function DiscussionSection({
       commentReports.data?.forEach((report) => {
         reportsMap[report.target_id] = true
       })
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'H7',location:'discussion-section.tsx:loadCommentsForPosts:comments',message:'loaded user likes/reports for comments',data:{userId:session?.user.id,commentIds,likes:Object.keys(likesMap),reports:Object.keys(reportsMap)},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
 
       setUserLikes(likesMap)
       setUserReports(reportsMap)

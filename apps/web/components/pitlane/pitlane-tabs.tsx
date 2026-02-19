@@ -275,14 +275,14 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                           <div className="absolute right-1 top-1.5 z-19">
                             <span
                               className="leading-none tabular-nums font-sageva text-white opacity-15"
-                              style={{ fontSize: 'clamp(3.5em, 4vw, 3em)' }}
+                              style={{ fontSize: 'clamp(1.75rem, 8vw, 3rem)' }}
                             >
                               {driver.racing_number}
                             </span>
                           </div>
                         )}
                         {driverCode && (
-                          <div className="absolute bottom-4 left-2 z-30 flex  w-3 items-center justify-center overflow-visible">
+                          <div className="absolute bottom-4 left-2 z-30 flex w-1 items-center justify-center overflow-visible">
                             <span
                               className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none tracking-widest"
                               style={{
@@ -327,7 +327,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                           style={{
                             fontFamily: 'Inter, sans-serif',
                             fontWeight: 900,
-                            fontSize: 'clamp(1.22em, 2.5vw, 1.22em)',
+                            fontSize: 'clamp(0.6rem, 2.5vw, 1.1rem)',
                             color: 'white',
                             textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                           }}
@@ -372,11 +372,11 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                       {/* Vertical location on left: full-height bar with rotated text centered */}
                       {locationText && (
-                        <div className="absolute inset-y-0 left-0 z-30 flex w-8 items-center justify-center overflow-visible">
+                        <div className="absolute inset-y-0 left-0 z-30 flex w-4 items-center justify-center overflow-visible">
                           <span
                             className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                             style={{
-                              fontSize: '15px',
+                              fontSize: 'clamp(8px, 2vw, 15px)',
                               fontFamily: 'Inter, sans-serif',
                               letterSpacing: '0',
                               transform: 'rotate(-90deg)',

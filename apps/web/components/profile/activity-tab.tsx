@@ -3,7 +3,7 @@ import { MessageSquare, MapPin, Grid3x3 } from 'lucide-react'
 
 interface ActivityItem {
   id: string
-  type: 'post' | 'comment' | 'checkin' | 'like' | 'grid_update'
+  type: 'post' | 'comment' | 'checkin' | 'like' | 'grid_update' | 'grid_comment'
   content?: string
   created_at: string
   target_id?: string
@@ -11,6 +11,9 @@ interface ActivityItem {
   target_name?: string
   /** Post ID for post/comment items; used to deep-link to discussion */
   post_id?: string
+  /** Grid comment: grid id and slot position */
+  grid_id?: string
+  rank_index?: number
   user?: {
     id: string
     username: string
@@ -37,6 +40,7 @@ export function ActivityTab({
       case 'checkin':
         return <MapPin className="h-4 w-4 text-emerald-400" />
       case 'grid_update':
+      case 'grid_comment':
         return <Grid3x3 className="h-4 w-4 text-white/80" />
       default:
         return null
@@ -53,12 +57,17 @@ export function ActivityTab({
         return 'Checked in at'
       case 'grid_update':
         return 'Updated grid'
+      case 'grid_comment':
+        return 'Grid comment'
       default:
         return 'Activity'
     }
   }
 
   function getActivityLink(item: ActivityItem): string | null {
+    if (item.type === 'grid_comment' && item.grid_id) {
+      return `/grid/${item.grid_id}`
+    }
     if (item.type === 'grid_update') {
       const tab =
         item.target_type === 'driver'
@@ -104,7 +113,40 @@ export function ActivityTab({
                 link ? 'hover:bg-white/10 transition-colors cursor-pointer active:bg-white/15' : ''
               }`
 
-              const content = (
+              const isGridComment = item.type === 'grid_comment'
+              const gridTypeLabel =
+                item.target_type === 'driver'
+                  ? 'Drivers'
+                  : item.target_type === 'team'
+                    ? 'Teams'
+                    : item.target_type === 'track'
+                      ? 'Tracks'
+                      : 'Grid'
+
+              const content = isGridComment ? (
+                <>
+                  <div className="flex-shrink-0">{getActivityIcon(item)}</div>
+                  <div className="flex flex-1 min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-white">
+                        {gridTypeLabel} Grid Comments Updated!
+                      </p>
+                      <p className="mt-1 text-sm text-white/80">
+                        Position #{item.rank_index ?? 0}: &quot;{item.content ?? ''}&quot;
+                      </p>
+                      <p className="mt-2 text-xs text-white/50">
+                        {item.target_name ?? 'Someone'} ·{' '}
+                        {new Date(item.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    {link && (
+                      <span className="shrink-0 text-sm font-medium text-[#25B4B1] hover:text-[#25B4B1]/90">
+                        View Grid →
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
                 <>
                   <div className="flex-shrink-0">{getActivityIcon(item)}</div>
 

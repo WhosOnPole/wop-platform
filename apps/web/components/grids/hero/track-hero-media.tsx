@@ -32,7 +32,7 @@ export function TrackHeroMedia({
   return (
     <div
       className={`flex items-start justify-center w-full ${className}`}
-      style={{ minWidth: 360, minHeight: 320, maxHeight: '100%' }}
+      style={{ minWidth: 360, minHeight: 400, maxHeight: '100%' }}
     >
       <img
         src={svgUrl}

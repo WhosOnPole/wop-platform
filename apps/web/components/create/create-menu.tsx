@@ -36,6 +36,7 @@ export function CreateMenu({ onClose, onSelect, variant = 'dropdown' }: CreateMe
               width={18}
               height={18}
               className="object-contain"
+              style={{ width: 'auto', height: 'auto' }}
             />
             {item.label}
           </button>
@@ -62,6 +63,7 @@ export function CreateMenu({ onClose, onSelect, variant = 'dropdown' }: CreateMe
               width={16}
               height={16}
               className="object-contain"
+              style={{ width: 'auto', height: 'auto' }}
             />
             {item.label}
           </button>

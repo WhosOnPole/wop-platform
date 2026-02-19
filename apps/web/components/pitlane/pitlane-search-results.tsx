@@ -176,7 +176,7 @@ export function PitlaneSearchResults({
                             <div className="absolute right-2 top-2 z-30">
                               <span
                                 className="font-bold leading-none tabular-nums font-sageva"
-                                style={{ color: '#25B4B1', fontSize: 'clamp(14px, 4vw, 18px)' }}
+                                style={{ color: '#25B4B1', fontSize: 'clamp(0.875rem, 4vw, 1.5rem)' }}
                               >
                                 {driver.racing_number}
                               </span>
@@ -246,7 +246,7 @@ export function PitlaneSearchResults({
                             className="absolute inset-0 z-20 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2"
                             style={{
                               fontFamily: 'Inter, sans-serif',
-                              fontSize: 'clamp(10px, 2.5vw, 14px)',
+                              fontSize: 'clamp(8px, 2vw, 12px)',
                             }}
                           >
                             {team.name}
@@ -307,7 +307,7 @@ export function PitlaneSearchResults({
                               <span
                                 className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                                 style={{
-                                  fontSize: '7px',
+                                  fontSize: 'clamp(6px, 1.5vw, 10px)',
                                   fontFamily: 'Inter, sans-serif',
                                   letterSpacing: '0',
                                   transform: 'rotate(-90deg)',

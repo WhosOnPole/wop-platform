@@ -242,6 +242,54 @@ export default async function UserProfilePage({ params }: PageProps) {
     }
   }
 
+  // Grid slot comments on this user's grids (owner sees when someone comments on their grid)
+  const myGridIds = (grids || []).map((g: { id: string }) => g.id)
+  if (myGridIds.length > 0) {
+    const { data: gridComments } = await supabase
+      .from('grid_slot_comments')
+      .select(
+        `
+        id,
+        grid_id,
+        rank_index,
+        content,
+        created_at,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        ),
+        grid:grids!grid_id (
+          id,
+          type
+        )
+      `
+      )
+      .in('grid_id', myGridIds)
+      .is('parent_comment_id', null)
+      .order('created_at', { ascending: false })
+      .limit(30)
+
+    if (gridComments) {
+      for (const c of gridComments) {
+        const commenter = c.user as { id?: string; username?: string; profile_image_url?: string | null } | null
+        const grid = c.grid as { id?: string; type?: string } | null
+        activities.push({
+          id: c.id,
+          type: 'grid_comment',
+          content: c.content,
+          created_at: c.created_at,
+          target_id: c.grid_id,
+          target_type: grid?.type ?? null,
+          target_name: commenter?.username ?? null,
+          grid_id: c.grid_id,
+          rank_index: c.rank_index,
+          user: commenter ?? undefined,
+        })
+      }
+    }
+  }
+
   // Sort activities by created_at descending
   activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 

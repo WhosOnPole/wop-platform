@@ -3,12 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { Suspense } from 'react'
 import { EntityHeroBackground } from '@/components/entity/entity-hero-background'
 import { EntityHeaderWrapper } from '@/components/entity/entity-header-wrapper'
 import { PageBackButton } from '@/components/page-back-button'
 import { EntityOverview } from '@/components/entity/entity-overview'
-import { EntityImageGallerySection } from '@/components/entity/entity-image-gallery-section'
 import { EntityTabs } from '@/components/entity/entity-tabs'
 import { TrackSubmissionsTab } from '@/components/entity/tabs/track-submissions-tab'
 import { TrackTipsTab } from '@/components/entity/tabs/track-tips-tab'
@@ -242,23 +240,6 @@ export default async function DynamicPage({ params }: PageProps) {
     .eq('parent_page_id', entity.id)
     .order('created_at', { ascending: false })
 
-  // Collect images for gallery
-  const galleryImages: string[] = []
-  
-  // Admin images first
-  if (entity.admin_images && Array.isArray(entity.admin_images)) {
-    galleryImages.push(...entity.admin_images.filter((url: string) => url))
-  }
-
-  // Then user submission images (tracks)
-  if (type === 'tracks') {
-    const allSubmissions = [...trackTips, ...trackStays, ...trackMeetups, ...trackTransit]
-    const submissionImages = allSubmissions
-      .map((s) => s.image_url)
-      .filter((url): url is string => Boolean(url))
-    galleryImages.push(...submissionImages)
-  }
-
   // Get background image
   let backgroundImage: string | null | undefined
   if (type === 'drivers') {
@@ -451,21 +432,6 @@ export default async function DynamicPage({ params }: PageProps) {
             )}
             <PageBackButton variant="dark" />
           </div>
-
-          {/* Image Gallery */}
-          <Suspense fallback={null}>
-            <EntityImageGallerySection
-              images={galleryImages}
-              instagramEmbedHtml={
-                type === 'drivers'
-                  ? entity.instagram_url
-                  : type === 'teams'
-                    ? entity.instagram_url
-                    : null
-              }
-              enableInstagram={type === 'drivers' || type === 'teams'}
-            />
-          </Suspense>
 
           {/* Entity Header - Positioned at bottom */}
           <EntityHeaderWrapper

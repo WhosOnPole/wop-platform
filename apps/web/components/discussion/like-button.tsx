@@ -33,9 +33,6 @@ export function LikeButton({
   useEffect(() => {
     setIsLiked(initialIsLiked)
     setLikeCount(initialLikeCount)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'like-button.tsx:initial-sync',message:'initial props sync',data:{targetId,targetType,initialLikeCount,initialIsLiked},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
   }, [targetId, initialIsLiked, initialLikeCount])
 
   // Also sync when props change (for same targetId but different user session)
@@ -63,10 +60,6 @@ export function LikeButton({
 
     setIsLoading(true)
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'like-button.tsx:handleToggleLike:before',message:'before toggle',data:{targetId,targetType,isLiked,likeCount},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
-
     // Optimistic update
     const previousLiked = isLiked
     const previousCount = likeCount
@@ -92,9 +85,6 @@ export function LikeButton({
         setLikeCount(previousCount)
       } else {
         const deletedCount = Array.isArray(deletedVotes) ? deletedVotes.length : 0
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H10',location:'like-button.tsx:handleToggleLike:unlike-db',message:'unlike delete result',data:{targetId,targetType,userId:session.user.id,rowsDeleted:deletedCount},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
         const wasDeleted = deletedCount > 0
         // If nothing was deleted, revert optimistic UI
         if (!wasDeleted) {
@@ -104,11 +94,7 @@ export function LikeButton({
         // Refresh count from database after trigger updates it
         await refreshLikeCount({ allowDecrease: true })
         const userIsLiked = await refreshUserLikeState(session.user.id)
-        // Notify parent of state change based on refreshed state
         onLikeChange?.(targetId, !!userIsLiked)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'H2',location:'like-button.tsx:handleToggleLike:unlike-success',message:'unlike success',data:{targetId,targetType,rowsDeleted:wasDeleted ? deletedVotes.length : 0,userIsLiked:!!userIsLiked},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
       }
     } else {
       // Optimistically update UI
@@ -141,14 +127,7 @@ export function LikeButton({
         // Refresh count from database after trigger updates it (don't allow decrease so we don't flicker to 0 if DB is briefly stale)
         await refreshLikeCount({ allowDecrease: false })
         const userIsLiked = await refreshUserLikeState(session.user.id)
-        // Notify parent of state change based on refreshed state
         onLikeChange?.(targetId, !!userIsLiked)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'H2',location:'like-button.tsx:handleToggleLike:like-success',message:'like success',data:{targetId,targetType,userId:session.user.id},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
-        // #region agent log
-        await logVoteCount('run2', 'H8-like', targetId, targetType, session.user.id)
-        // #endregion
       }
     }
 
@@ -174,11 +153,6 @@ export function LikeButton({
     if (!error && data && data.like_count !== null && data.like_count !== undefined) {
       const dbCount = data.like_count || 0
       setLikeCount((prev) => (allowDecrease ? dbCount : Math.max(prev, dbCount)))
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'like-button.tsx:refreshLikeCount:like_count',message:'refreshed like_count',data:{targetId,targetType,like_count:data.like_count},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
-      // Always also log current vote count for comparison
-      await logVoteCount('run1', 'H9', targetId, targetType, 'n/a')
       return
     }
 
@@ -191,9 +165,6 @@ export function LikeButton({
 
     if (!countError && typeof count === 'number') {
       setLikeCount((prev) => (allowDecrease ? count : Math.max(prev, count)))
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'like-button.tsx:refreshLikeCount:fallback',message:'fallback votes count used',data:{targetId,targetType,count},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
       return
     }
 
@@ -203,21 +174,6 @@ export function LikeButton({
     if (countError) {
       console.error('Error refreshing like count (fallback votes count):', countError)
     }
-  }
-
-  async function logVoteCount(
-    runId: string,
-    hypothesisId: string,
-    targetId: string,
-    targetType: 'post' | 'comment' | 'grid_slot_comment',
-    userId: string
-  ) {
-    const { count, error } = await supabase
-      .from('votes')
-      .select('id', { head: true, count: 'exact' })
-      .eq('target_id', targetId)
-      .eq('target_type', targetType)
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId,hypothesisId,location:'like-button.tsx:logVoteCount',message:'vote count after toggle',data:{targetId,targetType,userId,count,hasError:!!error},timestamp:Date.now()})}).catch(()=>{})
   }
 
   async function refreshUserLikeState(userId: string) {
@@ -230,9 +186,6 @@ export function LikeButton({
     if (!error) {
       setIsLiked((count || 0) > 0)
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H11',location:'like-button.tsx:refreshUserLikeState',message:'refreshed user like state',data:{targetId,targetType,userId,count:count ?? null,hasError:!!error},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
     return (count || 0) > 0
   }
 

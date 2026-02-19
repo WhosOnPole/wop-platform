@@ -76,26 +76,6 @@ function SlotDroppable({
     },
     [setNodeRef]
   )
-  // #region agent log
-  useEffect(() => {
-    if (slotIndex !== 0) return
-    const el = containerRef.current
-    if (!el) return
-    const w = el.offsetWidth
-    const h = el.offsetHeight
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'grid-edit-canvas.tsx:SlotDroppable',
-        message: 'slot-0 dimensions',
-        data: { slotIndex: 0, isActive, activeSlotIndex, offsetWidth: w, offsetHeight: h },
-        timestamp: Date.now(),
-        hypothesisId: isActive ? 'H1' : 'H2',
-      }),
-    }).catch(() => {})
-  }, [slotIndex, isActive, activeSlotIndex])
-  // #endregion
   const sizeClass = size === 'large' ? 'aspect-square w-full' : ''
   return (
     <div

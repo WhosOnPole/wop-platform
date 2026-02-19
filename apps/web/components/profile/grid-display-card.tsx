@@ -7,6 +7,7 @@ import { GridHeartButton } from './grid-heart-button'
 import { CommentIcon } from '@/components/ui/comment-icon'
 import { GridSnapshot } from './grid-snapshot'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { getTeamShortCode } from '@/utils/team-colors'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface GridItem {
@@ -82,7 +83,7 @@ export function GridDisplayCard({
     return null
   }
 
-  // Driver short code for vertical text near top left (drivers only)
+  // Driver short code: last name first 3 letters, uppercase
   function getDriverCode(item: GridItem): string {
     if (grid.type !== 'driver') return ''
     const parts = item.name.split(' ')
@@ -90,10 +91,20 @@ export function GridDisplayCard({
     return lastName.substring(0, 3).toUpperCase()
   }
 
-  // Track display name (tracks only) - full text, no truncation
-  function getTrackDisplayText(item: GridItem): string {
+  // Track label: circuit_ref (e.g. MON, SPA) or location/name fallback
+  function getTrackLabel(item: GridItem): string {
     if (grid.type !== 'track') return ''
-    return (item.location || item.circuit_ref || item.name || '').toUpperCase()
+    const raw = item.circuit_ref || item.location || item.name || ''
+    return raw.toString().trim().toUpperCase()
+  }
+
+  // Overlay text: driver shortcode, team shortcode, or track circuit_ref name
+  function getOverlayText(item: GridItem, gridType: 'driver' | 'team' | 'track'): string {
+    if (item.is_placeholder || !item.name) return ''
+    if (gridType === 'driver') return getDriverCode(item)
+    if (gridType === 'team') return getTeamShortCode(item.name)
+    if (gridType === 'track') return getTrackLabel(item)
+    return ''
   }
 
   const commentCount = grid.comment_count ?? 0
@@ -159,14 +170,14 @@ export function GridDisplayCard({
                   aria-label="Add pick for rank 1"
                 >
                   <div className="absolute top-2 right-2 z-30">
-                    <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
+                    <div className="text-[clamp(1.5rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
                   </div>
                   <Plus className="h-12 w-12 text-white/50 md:h-16 md:w-16" strokeWidth={1.5} aria-hidden />
                 </Link>
               ) : (
                 <div className="relative block aspect-square w-full rounded-xl overflow-hidden border border-dashed border-white/20 bg-white/5">
                   <div className="absolute top-2 right-2 z-30">
-                    <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
+                    <div className="text-[clamp(1.5rem,8vw,3.75rem)] font-bold text-white/30 leading-none">1</div>
                   </div>
                 </div>
               )
@@ -223,61 +234,50 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Team: centered uppercase text overlay (match pitlane team cards) */}
-                {grid.type === 'team' && (
-                  <span
-                    className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none opacity-90 line-clamp-2"
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 900,
-                      fontSize: 'clamp(1.22em, 2.5vw, 1.22em)',
-                      color: 'white',
-                      textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
-                    }}
-                  >
-                    {firstItem.name}
-                  </span>
-                )}
-                {/* Track: vertical text on left edge, centered at half height */}
-                {grid.type === 'track' && getTrackDisplayText(firstItem) && (
-                  <div className="absolute left-1 top-1/2 z-10 flex h-[70%] w-5 md:w-6 -translate-y-1/2 items-center justify-center overflow-hidden">
-                    <span
-                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: 'clamp(14px, 1.5vw, 22px)',
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: 'center center',
-                      }}
-                    >
-                      {getTrackDisplayText(firstItem)}
-                    </span>
-                  </div>
-                )}
                 {/* Overlay gradient for text readability (drivers/tracks) */}
                 {grid.type !== 'team' && (
                   <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 )}
-                {/* Driver short code: vertical text near top left */}
-                {getDriverCode(firstItem) && (
-                  <div className="absolute left-2 top-6 z-30 flex h-[100%] w-5 md:w-6 items-start justify-center">
-                    <span
-                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
-                      style={{
-                        fontSize: 'clamp(30px, 2.5vw, 20px)',
-                        fontFamily: 'Inter, sans-serif',
-                        letterSpacing: '0.05em',
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: 'center center',
-                      }}
+                {/* Overlay: vertical for driver/track (shortcode / circuit_ref), centered horizontal for team */}
+                {getOverlayText(firstItem, grid.type) && (
+                  grid.type === 'team' ? (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center px-2 pointer-events-none">
+                      <span
+                        className="font-sans font-black text-white select-none block w-full text-center leading-none"
+                        style={{
+                          letterSpacing: 0,
+                          fontSize: 'clamp(1.25rem, 8vw, 3rem)',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {getOverlayText(firstItem, grid.type)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div
+                      className={`absolute z-20 flex items-center justify-center overflow-visible pointer-events-none ${
+                        grid.type === 'track'
+                          ? 'left-1 top-1/2 h-[70%] w-5 md:w-6 -translate-y-1/2'
+                          : 'left-1 bottom-0 h-[100%] w-5 md:w-6'
+                      }`}
                     >
-                      {getDriverCode(firstItem)}
-                    </span>
-                  </div>
+                      <span
+                        className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none select-none"
+                        style={{
+                          fontSize: grid.type === 'track' ? 'clamp(1rem, 3vw, 1.75rem)' : 'clamp(1rem, 2.5vw, 1.75rem)',
+                          letterSpacing: grid.type === 'track' ? 0 : '0.05em',
+                          transform: 'rotate(-90deg)',
+                          transformOrigin: 'center center',
+                        }}
+                      >
+                        {getOverlayText(firstItem, grid.type)}
+                      </span>
+                    </div>
+                  )
                 )}
                 {/* Rating/Rank number on top right */}
                 <div className="absolute top-2 right-2 z-30">
-                  <div className="text-[clamp(4rem,8vw,3.75rem)] font-bold text-white leading-none">1</div>
+                  <div className="text-[clamp(1.5rem,8vw,3.75rem)] font-bold text-white leading-none">1</div>
                 </div>
 
                 {/* Fallback if no image (non-tracks, non-teams) */}
@@ -306,7 +306,7 @@ export function GridDisplayCard({
                   aria-label={`Add pick for rank ${rank}`}
                 >
                   <div className="absolute top-0.5 right-0.5 z-30">
-                    <div className="text-[clamp(8px,2vw,10px)] font-bold text-white/30 leading-none">{rank}</div>
+                    <div className="text-[clamp(0.4rem,2.5vw,0.75rem)] font-bold text-white/30 leading-none tabular-nums">{rank}</div>
                   </div>
                   <Plus className="h-6 w-6 text-white/50 md:h-8 md:w-8" strokeWidth={1.5} aria-hidden />
                 </Link>
@@ -316,7 +316,7 @@ export function GridDisplayCard({
                   className="relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden border border-dashed border-white/20 bg-white/5"
                 >
                   <div className="absolute top-0.5 right-0.5 z-30">
-                    <div className="text-[clamp(8px,2vw,10px)] font-bold text-white/30 leading-none">{rank}</div>
+                    <div className="text-[clamp(0.4rem,2.5vw,0.75rem)] font-bold text-white/30 leading-none tabular-nums">{rank}</div>
                   </div>
                 </div>
               )
@@ -378,60 +378,50 @@ export function GridDisplayCard({
                     />
                   </div>
                 )}
-                {/* Team: centered uppercase text overlay (match pitlane team cards) */}
-                {grid.type === 'team' && (
-                  <span
-                    className="absolute inset-0 z-20 flex items-center justify-center px-0.5 text-center text-white font-semibold uppercase leading-none opacity-90 line-clamp-2"
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 900,
-                      fontSize: 'clamp(10px, 2.5vw, 14px)',
-                      textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
-                    }}
-                  >
-                    {item.name}
-                  </span>
-                )}
                 {/* Overlay gradient for text readability (drivers/tracks) */}
                 {grid.type !== 'team' && (
                   <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 )}
-                {/* Track: vertical text on left edge, centered at half height (small tiles) */}
-                {grid.type === 'track' && getTrackDisplayText(item) && (
-                  <div className="absolute left-0.5 top-1/2 z-10 flex h-[100%] w-[12px] -translate-y-1/2 items-center justify-center">
-                    <span
-                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '9px',
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: 'center center',
-                      }}
+                {/* Overlay: vertical for driver/track, centered horizontal for team (small tiles) */}
+                {getOverlayText(item, grid.type) && (
+                  grid.type === 'team' ? (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center px-0.5 pointer-events-none">
+                      <span
+                        className="font-sans font-black text-white select-none block w-full text-center leading-none"
+                        style={{
+                          letterSpacing: 0,
+                          fontSize: 'clamp(0.55rem, 3.5vw, 0.95rem)',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {getOverlayText(item, grid.type)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div
+                      className={`absolute z-20 flex items-center justify-center overflow-visible pointer-events-none ${
+                        grid.type === 'track'
+                          ? 'left-0.5 top-1/2 h-full w-[12px] -translate-y-1/2'
+                          : 'left-0.5 top-0.5 h-[44px] w-3'
+                      }`}
                     >
-                      {getTrackDisplayText(item)}
-                    </span>
-                  </div>
-                )}
-                {/* Driver short code: vertical text near top left (small tiles) */}
-                {getDriverCode(item) && (
-                  <div className="absolute left-0.5 bottom-0 z-30 flex h-[100%] w-[12px] items-center justify-center">
-                    <span
-                      className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
-                      style={{
-                        fontSize: '9px',
-                        fontFamily: 'Inter, sans-serif',
-                        letterSpacing: '0',
-                        transform: 'rotate(-90deg)',
-                        transformOrigin: '20% 0%',
-                      }}
-                    >
-                      {getDriverCode(item)}
-                    </span>
-                  </div>
+                      <span
+                        className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none select-none"
+                        style={{
+                          fontSize: grid.type === 'track' ? 'clamp(0.4rem, 2vw, 0.7rem)' : 'clamp(0.45rem, 2.5vw, 0.75rem)',
+                          letterSpacing: grid.type === 'track' ? 0 : '0.05em',
+                          transform: 'rotate(-90deg)',
+                          transformOrigin: 'center center',
+                        }}
+                      >
+                        {getOverlayText(item, grid.type)}
+                      </span>
+                    </div>
+                  )
                 )}
                 {/* Rating/Rank number on top right */}
                 <div className="absolute top-0.5 right-0.5 z-30">
-                  <div className="text-[clamp(15px,2vw,1px)] font-bold text-white leading-none">{rank}</div>
+                  <div className="text-[clamp(0.4rem,2.5vw,0.75rem)] font-bold text-white leading-none tabular-nums">{rank}</div>
                 </div>
 
               </Link>
