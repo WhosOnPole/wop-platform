@@ -851,7 +851,7 @@ export default async function FeedPage() {
           />
         </aside>
         <div className="lg:col-span-8 space-y-6 md:space-y-0">
-          <div className="relative z-10 lg:hidden mb-0">
+          <div className="relative z-10 lg:hidden md:mb-10">
             <SpotlightCarousel
               spotlight={{
                 hot_take: activeHotTake.data || null,

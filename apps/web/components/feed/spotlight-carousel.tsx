@@ -188,7 +188,7 @@ export function SpotlightCarousel({
         <div className="relative h-full w-full overflow-hidden rounded-lg">
           {/* Animated gradient border */}
           <div
-            className="absolute left-1/2 top-1/2 z-0 h-[200%] w-[170%] min-h-[170%] min-w-[170%] -translate-x-1/2 -translate-y-1/2 animate-slot-border-rotate"
+            className="absolute left-1/2 top-1/2 z-0 h-[250%] w-[250%] md:h-[400%] md:w-[400%] min-h-[170%] min-w-[170%] -translate-x-1/2 -translate-y-1/2 animate-slot-border-rotate"
             style={{
               background:
                 'linear-gradient(90deg, #EC6D00 0%, #FF006F 60%, #25B4B1 70%, #FF006F 80%, #EC6D00 100%)',
