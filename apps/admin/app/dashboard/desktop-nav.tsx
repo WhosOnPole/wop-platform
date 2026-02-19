@@ -40,7 +40,7 @@ export function DesktopNav({ navItems }: DesktopNavProps) {
             href={item.href}
             className={`flex items-center space-x-3 rounded-lg px-3 py-2 transition-colors ${
               isActive
-                ? 'bg-gray-800 text-white'
+                ? 'bg-[#25B4B1] text-white'
                 : 'text-gray-300 hover:bg-gray-800 hover:text-white'
             }`}
           >
