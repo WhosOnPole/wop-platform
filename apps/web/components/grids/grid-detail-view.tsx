@@ -276,15 +276,15 @@ function GridHeroHeader({
         className="font-serif text-white font-normal font-display min-w-0 capitalize"
         style={{ fontSize: 'clamp(1.375rem, 6vw, 1.875rem)' }}
       >
-        {username}&apos;s <br /> Grid
+        {username}&apos;s Grid
       </h1>
       {showEditLink ? (
         <Link
           href={`/profile/edit-grid/${type}`}
-          className="flex-shrink-0 flex items-center rounded-full gap-1.5 backdrop-blur-sm px-2 py-2 lg:px-3 text-sm font-medium text-white hover:bg-[#25B4B1] transition-colors"
+          className="flex-shrink-0 flex items-center rounded-full gap-1.5 backdrop-blur-sm p-2 lg:px-3 text-sm font-medium text-white hover:bg-[#25B4B1] transition-colors"
           aria-label={`Edit ${type} grid`}
         >
-          <Pencil className="h-7 w-7" />
+          <Pencil className="h-5 w-5" />
           <span className="hidden lg:inline">Edit</span>
         </Link>
       ) : gridId != null ? (
@@ -626,8 +626,11 @@ export function GridDetailView({
     if (type === 'track') {
       return (
         <div
-          className={`flex items-start justify-center transition-all duration-300 ${opacity}`}
-          style={{ height: ghost ? 96 : 'min(50vh, 320px)', minHeight: ghost ? 96 : 220 }}
+          className={`flex items-start justify-center transition-all duration-300 mt-4 ${opacity}`}
+          style={{
+            height: ghost ? 96 : '100%',
+            minHeight: ghost ? 96 : 280,
+          }}
         >
           <TrackHeroMedia
             trackSlug={(item as TrackRankItem).track_slug ?? ''}
@@ -710,7 +713,7 @@ export function GridDetailView({
       {showUnifiedHero && (
         <div className="flex flex-col min-h-screen relative">
           {/* Back button + Header: fixed above hero on mobile, in-hero on desktop */}
-          <div className="pl-4 pt-[4em] pr-5 shrink-0 relative z-10 flex flex-col gap-3">
+          <div className="pl-4 pt-[4em] pr-5 shrink-0 relative z-10 flex flex-col gap-0">
             <GridHeroHeader
               username={owner.username}
               type={type}
@@ -724,7 +727,7 @@ export function GridDetailView({
           {/* Background + vertical label: behind hero */}
           <div className="absolute inset-0 top-0 left-0 right-0 pointer-events-none" aria-hidden>
             <GridHeroBackground heroBackground={heroBackground} isDriverOrTrack={isDriverOrTrack} />
-            <div className="absolute left-[-3px] bottom-[45%] lg:top-auto lg:bottom-4 flex pl-0 w-12 z-20">
+            <div className="absolute left-[-3px] bottom-[48%] lg:top-auto lg:bottom-4 flex pl-0 w-12 z-20">
               <GridVerticalLabel type={type} />
             </div>
             <div className="absolute left-0 right-0 bottom-0 top-[65vh] lg:top-[60vh] bg-black z-0" />
@@ -733,7 +736,7 @@ export function GridDetailView({
           <div className="relative h-[40vh] lg:h-[60vh] shrink-0 z-10">
             {/* Rank number: fixed on mobile, absolute in hero on desktop; color by team (driver/team) or white (track); smaller for track */}
             <div
-              className="fixed right-9 top-28 z-5 opacity-50 tracking-[-30px] pointer-events-none flex items-end justify-end px-2"
+              className="fixed right-9 top-28 z-5 opacity-25 tracking-[-3px] pointer-events-none flex items-end justify-end px-2"
               style={{
                 fontSize: type === 'track' ? 'clamp(12rem, 12vw, 12rem)' : 'clamp(18.5rem, 18.5vw, 18.5rem)',
                 lineHeight: 1,
@@ -757,10 +760,10 @@ export function GridDetailView({
                 {selectedIndex + 1}
               </span>
             </div>
-            {/* Single hero scroll container: swipe/drag on all viewports; scrollbar hidden; track: no overflow-y so track image is not clipped */}
+            {/* Single hero scroll container: swipe/drag on all viewports; scrollbar hidden; track: taller on desktop so track art fits above bottom section */}
             <div
               ref={mobileScrollRef}
-              className={`h-[43vh] w-full overflow-x-auto snap-x snap-mandatory relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${type === 'track' ? 'overflow-y-visible' : 'overflow-y-hidden'}`}
+              className={`w-full overflow-x-auto snap-x snap-mandatory relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${type === 'track' ? 'h-[43vh] lg:h-[54vh] overflow-y-hidden' : 'h-[43vh] overflow-y-hidden'}`}
               style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
               role="region"
               aria-label="Grid ranking - swipe left or right"

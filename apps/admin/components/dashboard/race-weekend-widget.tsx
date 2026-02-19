@@ -125,7 +125,9 @@ export function RaceWeekendWidget({
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Calendar className="h-5 w-5 text-blue-500" />
-          <h2 className="text-xl font-semibold text-gray-900">Race Weekend</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isUpcoming ? 'Upcoming Race Weekend' : 'Live Race'}
+          </h2>
         </div>
         <Link
           href={`/tracks/${initialRace.name?.toLowerCase().replace(/\s+/g, '-')}`}

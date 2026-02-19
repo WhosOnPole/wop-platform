@@ -20,7 +20,7 @@ export function PageBackButton({
   const router = useRouter()
 
   const base =
-    'inline-flex items-center rounded-full text-md font-sans font-black opacity-65 transition-colors  [font-variant:all-small-caps;]'
+    'inline-flex items-center rounded-full text-md font-sans opacity-65 transition-colors  [font-variant:all-small-caps;] tracking-wide'
   const styles =
     variant === 'dark'
       ? 'hover:text-[#25B4B1] text-white hover:opacity-full transition-opacity'
@@ -33,7 +33,7 @@ export function PageBackButton({
       className={`${base} ${styles} ${className}`}
       aria-label={label}
     >
-      <ChevronLeft className="h-4 w-4 shrink-1 pt-0.5" aria-hidden />
+      <ChevronLeft className="h-4 w-5 shrink-1 pt-0.5" aria-hidden />
       {label ? <span>{label}</span> : null}
     </button>
   )

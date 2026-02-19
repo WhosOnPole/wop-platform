@@ -1,11 +1,11 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { LogOut, Users, FileText, Flag, MessageSquare, Star, Calendar, Mail, Bell, Image, Trash2, Trophy } from 'lucide-react'
+import { LogOut, Mail, Bell, Image, Trash2, Trophy } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { PasswordRecoveryCheck } from './password-recovery-check'
 import { MobileMenu } from './mobile-menu'
+import { DesktopNav } from './desktop-nav'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,15 +58,6 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     { href: '/dashboard/cleanup', label: 'Data Cleanup', icon: Trash2 },
     { href: '/dashboard/leaderboards', label: 'Leaderboards', icon: Trophy },
   ]
-  // Icon mapping for desktop sidebar (server component can use components directly)
-  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-    Users,
-    FileText,
-    Star,
-    Flag,
-    MessageSquare,
-    Calendar,
-  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -79,42 +70,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <div className="flex h-16 items-center border-b border-gray-800 p-6">
             <h1 className="text-xl font-bold">Admin Dashboard</h1>
           </div>
-          <nav className="flex-1 space-y-1 px-3 py-4">
-            {navItems.map((item) => {
-              const Icon = iconMap[item.icon] || Users
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
-              )
-            })}
-            
-            <div className="my-4 border-t border-gray-800 pt-4">
-              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Workers
-              </p>
-              {workerNavItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                )
-              })}
-            </div>
-          </nav>
+          <DesktopNav navItems={navItems} />
           <div className="border-t border-gray-800 p-4">
-            <div className="mb-2 text-sm text-gray-400">
+            <div className="mb-2 text-sm text-gray-400 text-center">
               {session.user.email}
             </div>
             <form action="/api/auth/signout" method="post">

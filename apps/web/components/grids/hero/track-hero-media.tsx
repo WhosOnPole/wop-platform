@@ -29,18 +29,16 @@ export function TrackHeroMedia({
     )
   }
 
-  const translateY = trackName === 'Circuit Gilles-Villeneuve' ? '40%' : '20%'
-
   return (
     <div
       className={`flex items-start justify-center w-full ${className}`}
-      style={{ minWidth: 390, minHeight: 450, transform: `translateY(${translateY})` }}
+      style={{ minWidth: 360, minHeight: 320, maxHeight: '100%' }}
     >
       <img
         src={svgUrl}
         alt=""
         className="max-h-full max-w-full w-auto object-contain object-top"
-        style={{ objectPosition: 'center bottom' }}
+        style={{ objectPosition: 'center top' }}
         onError={() => setFailed(true)}
         aria-hidden
       />
