@@ -4,11 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getTeamBackgroundUrl } from '@/utils/storage-urls'
-import { getTeamPrimaryColor } from '@/utils/team-colors'
+import { getTeamPrimaryColor, getTeamShortCode } from '@/utils/team-colors'
 import { getTeamSecondaryColor } from '@/utils/team-colors'
 import { DriverHeroBodyMedia } from './hero/driver-hero-body-media'
 import { TrackHeroMedia } from './hero/track-hero-media'
-import { TeamHeroMedia } from './hero/team-hero-media'
 import { GridBlurbCard } from './grid-blurb-card'
 import { GridEditCanvas } from './grid-edit-canvas'
 import { GridSlotCommentSection } from './grid-slot-comment-section'
@@ -587,28 +586,20 @@ export function GridDetailView({
     return '/images/grid_bg.png'
   }
 
-  function renderHeroSlot(item: RankItem | undefined, ghost: boolean) {
+  function renderHeroSlot(item: RankItem | undefined, rank: number) {
     if (!item || item.is_placeholder) return <div className="flex-1" aria-hidden />
-    const opacity = ghost ? 'opacity-20 ' : 'opacity-100'
-    // Scales for 320px: 90vw=288, max 320; min 220 on small mobile
-    const size = ghost ? 'min(50vw,160px)' : 'min(90vw,320px)'
-    const minDim = ghost ? 80 : 220
-    const maxDim = ghost ? 300 : 300
     if (type === 'driver') {
-      const driverMinDim = ghost ? 80 : 260
-      const driverMaxDim = ghost ? 300 : 380
+      const driverMinDim = 260
+      const driverMaxDim = 380
       return (
-        <div
-          className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
-          style={{ minHeight: ghost ? 300 : 'min(48vh, 360px)' }}
-        >
+        <div className="flex items-end justify-center transition-all duration-300 opacity-100" style={{ minHeight: 'min(48vh, 360px)' }}>
           <div
             className="flex-shrink-0 transition-all duration-300"
             style={{
-              width: ghost ? 'min(120vw,300px)' : `clamp(${driverMinDim}px, 90vw, ${driverMaxDim}px)`,
-              height: ghost ? 'min(120vw,300px)' : `clamp(${driverMinDim}px, 90vw, ${driverMaxDim}px)`,
-              minWidth: ghost ? 100 : driverMinDim,
-              minHeight: ghost ? 80 : driverMinDim,
+              width: `clamp(${driverMinDim}px, 90vw, ${driverMaxDim}px)`,
+              height: `clamp(${driverMinDim}px, 90vw, ${driverMaxDim}px)`,
+              minWidth: driverMinDim,
+              minHeight: driverMinDim,
             }}
           >
             <DriverHeroBodyMedia
@@ -626,17 +617,14 @@ export function GridDetailView({
     if (type === 'track') {
       return (
         <div
-          className={`flex items-start justify-center transition-all duration-300 mt-4 ${opacity}`}
-          style={{
-            height: ghost ? 96 : '100%',
-            minHeight: ghost ? 96 : 280,
-          }}
+          className="flex items-start justify-center transition-all duration-300 mt-4 opacity-100"
+          style={{ height: '100%', minHeight: 280 }}
         >
           <TrackHeroMedia
             trackSlug={(item as TrackRankItem).track_slug ?? ''}
             trackName={item.name}
             supabaseUrl={supabaseUrl}
-            className={ghost ? 'h-24 w-24' : 'h-full w-full max-w-full max-h-full'}
+            className="h-full w-full max-w-full max-h-full"
           />
         </div>
       )
@@ -644,15 +632,25 @@ export function GridDetailView({
     if (type === 'team') {
       return (
         <div
-          className={`flex items-end justify-center transition-all duration-300 ${opacity}`}
-          style={{ height: ghost ? 120 : 'min(58vh,380px)' }}
+          className="flex flex-col items-center justify-center transition-all duration-300 opacity-100 overflow-hidden min-h-0 w-full px-0"
+          style={{ height: 'min(58vh,380px)' }}
         >
-          <TeamHeroMedia
-            teamId={item.id}
-            teamName={item.name}
-            supabaseUrl={supabaseUrl}
-            className={ghost ? 'h-20 w-20 object-cover' : 'w-full h-[min(58vh,380px)] min-h-[220px]'}
-          />
+          <span
+            className="font-sans font-black text-white/30 select-none shrink-0 block w-full text-left pl-0 pr-0 w-full"
+            style={{
+              letterSpacing: '0em',
+              fontSize: 'clamp(4rem, 55vw, 14rem)',
+              lineHeight: 1,
+            }}
+          >
+            {getTeamShortCode(item.name)}
+          </span>
+          <span
+            className="font-sans font-normal text-white shrink-0 mt-2 text-center w-full text-xl"
+            aria-label={`Rank ${rank} on this grid`}
+          >
+            {rank}
+          </span>
         </div>
       )
     }
@@ -686,7 +684,7 @@ export function GridDetailView({
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
+          <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center w-full">
             <GridNameNationality
               selectedItem={selectedItem}
               type={type}
@@ -727,39 +725,41 @@ export function GridDetailView({
           {/* Background + vertical label: behind hero */}
           <div className="absolute inset-0 top-0 left-0 right-0 pointer-events-none" aria-hidden>
             <GridHeroBackground heroBackground={heroBackground} isDriverOrTrack={isDriverOrTrack} />
-            <div className="absolute left-[-3px] bottom-[48%] lg:top-auto lg:bottom-4 flex pl-0 w-12 z-20">
-              <GridVerticalLabel type={type} />
-            </div>
+            {type !== 'team' && (
+              <div className="absolute left-[-3px] bottom-[48%] lg:top-auto lg:bottom-4 flex pl-0 w-12 z-20">
+                <GridVerticalLabel type={type} />
+              </div>
+            )}
             <div className="absolute left-0 right-0 bottom-0 top-[65vh] lg:top-[60vh] bg-black z-0" />
           </div>
           {/* Hero wrapper: relative so rank number can sit bottom-right on desktop */}
           <div className="relative h-[40vh] lg:h-[60vh] shrink-0 z-10">
-            {/* Rank number: fixed on mobile, absolute in hero on desktop; color by team (driver/team) or white (track); smaller for track */}
-            <div
-              className="fixed right-9 top-28 z-5 opacity-25 tracking-[-3px] pointer-events-none flex items-end justify-end px-2"
-              style={{
-                fontSize: type === 'track' ? 'clamp(12rem, 12vw, 12rem)' : 'clamp(18.5rem, 18.5vw, 18.5rem)',
-                lineHeight: 1,
-              }}
-              aria-label={`Rank ${selectedIndex + 1} on this grid`}
-            >
-              <span
-                key={selectedIndex}
-                className="font-bold font-sageva animate-rank-number-fade"
+            {/* Rank number: fixed on mobile, absolute in hero on desktop; hidden for team (shown below name in content); color by team (driver) or white (track) */}
+            {type !== 'team' && (
+              <div
+                className="fixed right-9 top-28 z-5 opacity-25 tracking-[-3px] pointer-events-none flex items-end justify-end px-2"
                 style={{
-                  color:
-                    type === 'track'
-                      ? '#ffffff'
-                      : type === 'driver' && selectedItem && (selectedItem as DriverRankItem).team_name
-                        ? getTeamPrimaryColor((selectedItem as DriverRankItem).team_name)
-                        : type === 'team' && selectedItem
-                          ? getTeamPrimaryColor(selectedItem.name)
-                          : getTeamPrimaryColor(null),
+                  fontSize: type === 'track' ? 'clamp(12rem, 12vw, 12rem)' : 'clamp(18.5rem, 18.5vw, 18.5rem)',
+                  lineHeight: 1,
                 }}
+                aria-label={`Rank ${selectedIndex + 1} on this grid`}
               >
-                {selectedIndex + 1}
-              </span>
-            </div>
+                <span
+                  key={selectedIndex}
+                  className="font-bold font-sageva animate-rank-number-fade"
+                  style={{
+                    color:
+                      type === 'track'
+                        ? '#ffffff'
+                        : selectedItem && (selectedItem as DriverRankItem).team_name
+                          ? getTeamPrimaryColor((selectedItem as DriverRankItem).team_name)
+                          : getTeamPrimaryColor(null),
+                  }}
+                >
+                  {selectedIndex + 1}
+                </span>
+              </div>
+            )}
             {/* Single hero scroll container: swipe/drag on all viewports; scrollbar hidden; track: taller on desktop so track art fits above bottom section */}
             <div
               ref={mobileScrollRef}
@@ -775,9 +775,9 @@ export function GridDetailView({
                   ref={(el) => {
                     slideRefs.current[idx] = el
                   }}
-                  className={`w-full min-w-full flex-shrink-0 snap-start flex justify-center h-full ${type === 'track' ? 'items-start' : 'items-end'}`}
+                  className={`w-full min-w-full flex-shrink-0 snap-start flex justify-center h-full overflow-hidden ${type === 'track' ? 'items-start' : 'items-end'}`}
                 >
-                  {renderHeroSlot(item ?? undefined, false)}
+                  {renderHeroSlot(item ?? undefined, idx + 1)}
                 </div>
               ))}
             </div>
@@ -813,7 +813,7 @@ export function GridDetailView({
                   >
                     <ChevronLeft className="h-6 w-6" />
                   </button>
-                  <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
+                  <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center w-full">
                     <GridNameNationality
                       selectedItem={selectedItem}
                       type={type}

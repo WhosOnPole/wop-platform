@@ -32,6 +32,14 @@ function normalizeTeamKey(name: string): string {
 }
 
 /**
+ * First 3 letters of team name (letters only), uppercased, for hero display (e.g. Mercedes → MER).
+ */
+export function getTeamShortCode(teamName: string): string {
+  const letters = teamName.replace(/[^a-zA-Z]/g, '').slice(0, 3)
+  return letters.toUpperCase() || teamName.slice(0, 3).toUpperCase()
+}
+
+/**
  * Returns primary and secondary colors for a team, or null if unknown.
  */
 export function getTeamColors(teamName: string | null | undefined): { primary: string; secondary: string } | null {

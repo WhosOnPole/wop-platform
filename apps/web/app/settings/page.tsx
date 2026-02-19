@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { Save, Upload, X, LogOut } from 'lucide-react'
+import { Save, Upload, X, LogOut, Bell } from 'lucide-react'
 import Link from 'next/link'
 
 interface Profile {
@@ -235,7 +235,7 @@ export default function SettingsPage() {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
         </div>
       </div>
     )
@@ -244,28 +244,28 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold font-display">Settings</h1>
-        <p className="mt-2">Manage your profile and account settings</p>
+        <h1 className="text-3xl font-bold font-display text-white">Settings</h1>
+        <p className="mt-2 text-white/80">Manage your profile and account settings</p>
       </div>
 
       <div className="space-y-6">
         {/* Profile Section */}
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow">
-          <h2 className="mb-6 text-xl font-semibold text-gray-900">Profile</h2>
+        <section className="rounded-lg border border-white/20 bg-white/5 p-6">
+          <h2 className="mb-6 text-xl font-semibold text-white">Profile</h2>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Profile Image */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Profile Image</label>
+              <label className="block text-sm font-medium text-white/90">Profile Image</label>
               <div className="mt-2 flex items-center space-x-4">
                 {profileImagePreview && (
                   <img
                     src={profileImagePreview}
                     alt="Profile preview"
-                    className="h-20 w-20 rounded-full object-cover"
+                    className="h-20 w-20 rounded-full object-cover ring-2 ring-white/20"
                   />
                 )}
-                <label className="flex cursor-pointer items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <label className="flex cursor-pointer items-center space-x-2 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors">
                   <Upload className="h-4 w-4" />
                   <span>Upload Image</span>
                   <input
@@ -276,12 +276,12 @@ export default function SettingsPage() {
                   />
                 </label>
               </div>
-              {errors.image && <p className="mt-1 text-sm text-red-600">{errors.image}</p>}
+              {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
             </div>
 
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="username" className="block text-sm font-medium text-white/90">
                 Username *
               </label>
               <input
@@ -289,15 +289,15 @@ export default function SettingsPage() {
                 id="username"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
                 required
               />
-              {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+              {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
             </div>
 
             {/* Date of Birth */}
             <div>
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-white/90">
                 Date of Birth
               </label>
               <input
@@ -306,19 +306,19 @@ export default function SettingsPage() {
                 value={formData.dateOfBirth}
                 onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                 max={new Date().toISOString().split('T')[0]}
-                className="mt-1 mb-6 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 mb-6 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] [color-scheme:dark]"
               />
-              <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-                <label className="flex items-start gap-3">
+              <div className="rounded-md border border-white/20 bg-white/5 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-gray-300"
+                    className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-[#25B4B1] focus:ring-[#25B4B1] focus:ring-offset-0"
                     checked={doesShowAgeOnProfile}
                     onChange={(e) => setDoesShowAgeOnProfile(e.target.checked)}
                   />
                   <span>
-                    <span className="block text-sm font-medium text-gray-900">Show my age on my profile</span>
-                    <span className="block text-sm text-gray-600">
+                    <span className="block text-sm font-medium text-white">Show my age on my profile</span>
+                    <span className="block text-sm text-white/70">
                       If enabled, your age will be visible to other users on your public profile.
                     </span>
                   </span>
@@ -329,56 +329,56 @@ export default function SettingsPage() {
             {/* Location */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                  City <span className="text-gray-400">(optional)</span>
+                <label htmlFor="city" className="block text-sm font-medium text-white/90">
+                  City <span className="text-white/50">(optional)</span>
                 </label>
                 <input
                   type="text"
                   id="city"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
                 />
               </div>
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-                  State <span className="text-gray-400">(optional)</span>
+                <label htmlFor="state" className="block text-sm font-medium text-white/90">
+                  State <span className="text-white/50">(optional)</span>
                 </label>
                 <input
                   type="text"
                   id="state"
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
                 />
               </div>
               <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-                  Country <span className="text-gray-400">(optional)</span>
+                <label htmlFor="country" className="block text-sm font-medium text-white/90">
+                  Country <span className="text-white/50">(optional)</span>
                 </label>
                 <input
                   type="text"
                   id="country"
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
                 />
               </div>
             </div>
 
             {/* Privacy */}
             <div className="space-y-4">
-              <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-                <label className="flex items-start gap-3">
+              <div className="rounded-md border border-white/20 bg-white/5 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-gray-300"
+                    className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-[#25B4B1] focus:ring-[#25B4B1] focus:ring-offset-0"
                     checked={doesShowStateOnProfile}
                     onChange={(e) => setDoesShowStateOnProfile(e.target.checked)}
                   />
                   <span>
-                    <span className="block text-sm font-medium text-gray-900">Show my state on my profile</span>
-                    <span className="block text-sm text-gray-600">
+                    <span className="block text-sm font-medium text-white">Show my state on my profile</span>
+                    <span className="block text-sm text-white/70">
                       If enabled, your state may be visible to other users on your public profile.
                     </span>
                   </span>
@@ -389,8 +389,14 @@ export default function SettingsPage() {
             {/* Social Links */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">Social Links</label>
- this 
+                <label className="block text-sm font-medium text-white/90">Social Links</label>
+                <button
+                  type="button"
+                  onClick={addSocialLink}
+                  className="text-sm font-medium text-[#25B4B1] hover:text-[#3BEFEB] transition-colors"
+                >
+                  Add link
+                </button>
               </div>
               <div className="space-y-2">
                 {socialLinks.map((link, index) => (
@@ -400,19 +406,19 @@ export default function SettingsPage() {
                       placeholder="Platform (e.g., twitter)"
                       value={link.platform}
                       onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                      className="flex-1 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
                     />
                     <input
                       type="url"
                       placeholder="URL"
                       value={link.url}
                       onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                      className="flex-1 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
                     />
                     <button
                       type="button"
                       onClick={() => removeSocialLink(index)}
-                      className="rounded-md p-2 text-gray-400 hover:text-red-600"
+                      className="rounded-md p-2 text-white/60 hover:text-red-400 transition-colors"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -422,8 +428,8 @@ export default function SettingsPage() {
             </div>
 
             {errors.submit && (
-              <div className="rounded-md bg-red-50 p-4">
-                <p className="text-sm text-red-600">{errors.submit}</p>
+              <div className="rounded-md bg-red-500/20 border border-red-500/30 p-4">
+                <p className="text-sm text-red-400">{errors.submit}</p>
               </div>
             )}
 
@@ -432,7 +438,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center space-x-2 rounded-md bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
                 <Save className="h-4 w-4" />
                 <span>Save Changes</span>
@@ -441,18 +447,27 @@ export default function SettingsPage() {
           </form>
         </section>
 
-        {/* Settings Section - Placeholder for future settings */}
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Settings</h2>
-          <p className="text-sm text-gray-600">Additional settings will be available here in the future.</p>
+        {/* Notification & other settings */}
+        <section className="rounded-lg border border-white/20 bg-white/5 p-6">
+          <h2 className="mb-4 text-xl font-semibold text-white">Notifications</h2>
+          <p className="mb-4 text-sm text-white/70">
+            Manage how and when you receive notifications.
+          </p>
+          <Link
+            href="/settings/notifications"
+            className="inline-flex items-center space-x-2 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+          >
+            <Bell className="h-4 w-4" />
+            <span>Notification Settings</span>
+          </Link>
         </section>
 
         {/* Logout Section */}
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Account</h2>
+        <section className="rounded-lg border border-white/20 bg-white/5 p-6">
+          <h2 className="mb-4 text-xl font-semibold text-white">Account</h2>
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-2 rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            className="flex items-center space-x-2 rounded-md border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors"
           >
             <LogOut className="h-4 w-4" />
             <span>Log out</span>
@@ -460,26 +475,26 @@ export default function SettingsPage() {
         </section>
 
         {/* Info Section */}
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow block md:hidden">
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Info</h2>
+        <section className="rounded-lg border border-white/20 bg-white/5 p-6 block md:hidden">
+          <h2 className="mb-4 text-xl font-semibold text-white">Info</h2>
           <div className="space-y-3">
-            <details className="rounded-lg border border-gray-200 px-4 py-3">
-              <summary className="cursor-pointer text-sm font-semibold text-black">Terms of Service</summary>
-              <p className="mt-2 text-sm text-black">
+            <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
+              <summary className="cursor-pointer text-sm font-semibold text-white">Terms of Service</summary>
+              <p className="mt-2 text-sm text-white/80">
                 Placeholder: Terms of Service content will appear here.
               </p>
             </details>
 
-            <details className="rounded-lg border border-gray-200 px-4 py-3">
-              <summary className="cursor-pointer text-sm font-semibold text-black">Privacy Policy</summary>
-              <p className="mt-2 text-sm text-black">
+            <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
+              <summary className="cursor-pointer text-sm font-semibold text-white">Privacy Policy</summary>
+              <p className="mt-2 text-sm text-white/80">
                 Placeholder: Privacy Policy content will appear here.
               </p>
             </details>
 
-            <details className="rounded-lg border border-gray-200 px-4 py-3">
-              <summary className="cursor-pointer text-sm font-semibold text-black">Release Notes</summary>
-              <p className="mt-2 text-sm">
+            <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
+              <summary className="cursor-pointer text-sm font-semibold text-white">Release Notes</summary>
+              <p className="mt-2 text-sm text-white/80">
                 Placeholder: Latest production deploy notes will appear here.
               </p>
             </details>

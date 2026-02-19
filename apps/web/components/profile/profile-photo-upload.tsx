@@ -31,7 +31,7 @@ export function ProfilePhotoUpload({
   }
 
   return (
-    <div className="relative h-36 w-36 flex-shrink-0">
+    <div className="relative h-36 w-36 flex-shrink-0 rounded-full border-2 border-white/20 bg-white/10">
       <Image
         src={avatarSrc}
         alt="Profile"

@@ -1,4 +1,5 @@
 import { TrackHeroMedia } from '@/components/grids/hero/track-hero-media'
+import { getTeamShortCode } from '@/utils/team-colors'
 
 interface EntityHeroBackgroundProps {
   imageUrl: string | null | undefined
@@ -9,11 +10,6 @@ interface EntityHeroBackgroundProps {
   trackName?: string
   supabaseUrl?: string
   teamName?: string
-}
-
-function getTeamShortCode(teamName: string): string {
-  const letters = teamName.replace(/[^a-zA-Z]/g, '').slice(0, 3)
-  return letters.toUpperCase() || teamName.slice(0, 3).toUpperCase()
 }
 
 export function EntityHeroBackground({
@@ -59,15 +55,15 @@ export function EntityHeroBackground({
         </div>
       )}
 
-      {/* Team: short code (first 3 letters) full width, font-weight 900, opacity 30% */}
+      {/* Team: short code (first 3 letters) flush left to right, font-weight 900, opacity 30%; overflow-hidden so content does not leak */}
       {showTeamShortCode && (
-        <div className="absolute inset-0 z-[1] flex items-center pointer-events-none overflow-visible">
+        <div className="absolute inset-0 z-[1] flex items-center pointer-events-none overflow-hidden px-0">
           <span
-            className="font-sans font-black text-white/30 select-none origin-left"
+            className="font-sans font-black text-white/30 select-none block w-full text-left pl-0 pr-0"
             style={{
-              letterSpacing: '-0.05em',
-              fontSize: 'clamp(15.5rem, 20vw, 18rem)',
-              transform: 'translateX(-0.04em)',
+              letterSpacing: '-0.08em',
+              fontSize: 'clamp(4rem, 55vw, 14rem)',
+              lineHeight: 1,
             }}
           >
             {getTeamShortCode(teamName)}
