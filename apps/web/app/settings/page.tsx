@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
-import { useRouter } from 'next/navigation'
-import { Save, Upload, X, LogOut, Bell } from 'lucide-react'
-import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Save, Upload, X, LogOut, User, Bell, Info } from 'lucide-react'
+import { NotificationSettings } from '@/components/notifications/notification-settings'
+
+const TABS = ['profile', 'settings', 'info'] as const
+type TabId = (typeof TABS)[number]
+
+function isValidTab(t: string | null): t is TabId {
+  return t === 'profile' || t === 'settings' || t === 'info'
+}
 
 interface Profile {
   id: string
@@ -40,10 +47,42 @@ export default function SettingsPage() {
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState<TabId>(isValidTab(tabFromUrl) ? tabFromUrl : 'profile')
+  const [notificationPreferences, setNotificationPreferences] = useState<Record<string, unknown> | null>(null)
+  const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false)
+
+  // Sync activeTab from URL (e.g. /settings?tab=settings from notifications page)
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (isValidTab(t)) setActiveTab(t)
+  }, [searchParams])
 
   useEffect(() => {
     loadProfile()
   }, [])
+
+  // Fetch notification preferences when Settings tab is active
+  useEffect(() => {
+    if (activeTab !== 'settings') return
+    if (notificationPrefsLoaded) return
+
+    async function fetchPrefs() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) return
+      const { data } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single()
+      setNotificationPreferences(data ?? null)
+      setNotificationPrefsLoaded(true)
+    }
+    fetchPrefs()
+  }, [activeTab, notificationPrefsLoaded])
 
   async function loadProfile() {
     const {
@@ -80,8 +119,8 @@ export default function SettingsPage() {
         state: data.state || '',
         country: data.country || '',
       })
-      setDoesShowStateOnProfile(Boolean(data.show_state_on_profile))
-      setDoesShowAgeOnProfile(Boolean(data.show_age_on_profile))
+      setDoesShowStateOnProfile(data.show_state_on_profile !== false)
+      setDoesShowAgeOnProfile(data.show_age_on_profile !== false)
 
       if (data.social_links && typeof data.social_links === 'object') {
         setSocialLinks(
@@ -241,15 +280,56 @@ export default function SettingsPage() {
     )
   }
 
+  function setTab(tab: TabId) {
+    setActiveTab(tab)
+    router.replace(`/settings?tab=${tab}`, { scroll: false })
+  }
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold font-display text-white">Settings</h1>
         <p className="mt-2 text-white/80">Manage your profile and account settings</p>
       </div>
 
-      <div className="space-y-6">
-        {/* Profile Section */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+        {/* Tab nav: Profile, Settings, Info; Log out at bottom */}
+        <nav className="flex flex-row flex-wrap gap-2 border-b border-white/20 pb-4 lg:flex-col lg:w-52 lg:flex-shrink-0 lg:border-b-0 lg:border-r lg:border-white/20 lg:pr-6 lg:pb-0">
+          {(
+            [
+              { id: 'profile' as const, label: 'Profile', icon: User },
+              { id: 'settings' as const, label: 'Settings', icon: Bell },
+              { id: 'info' as const, label: 'Info', icon: Info },
+            ] as const
+          ).map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === id
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/70 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </button>
+          ))}
+          <div className="mt-auto hidden lg:block lg:pt-4" />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors lg:mt-6"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            Log out
+          </button>
+        </nav>
+
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          {activeTab === 'profile' && (
         <section className="rounded-lg border border-white/20 bg-white/5 p-6">
           <h2 className="mb-6 text-xl font-semibold text-white">Profile</h2>
           
@@ -446,60 +526,52 @@ export default function SettingsPage() {
             </div>
           </form>
         </section>
+          )}
 
-        {/* Notification & other settings */}
-        <section className="rounded-lg border border-white/20 bg-white/5 p-6">
-          <h2 className="mb-4 text-xl font-semibold text-white">Notifications</h2>
-          <p className="mb-4 text-sm text-white/70">
-            Manage how and when you receive notifications.
-          </p>
-          <Link
-            href="/settings/notifications"
-            className="inline-flex items-center space-x-2 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
-          >
-            <Bell className="h-4 w-4" />
-            <span>Notification Settings</span>
-          </Link>
-        </section>
-
-        {/* Logout Section */}
-        <section className="rounded-lg border border-white/20 bg-white/5 p-6">
-          <h2 className="mb-4 text-xl font-semibold text-white">Account</h2>
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-2 rounded-md border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Log out</span>
-          </button>
-        </section>
-
-        {/* Info Section */}
-        <section className="rounded-lg border border-white/20 bg-white/5 p-6 block md:hidden">
-          <h2 className="mb-4 text-xl font-semibold text-white">Info</h2>
-          <div className="space-y-3">
-            <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
-              <summary className="cursor-pointer text-sm font-semibold text-white">Terms of Service</summary>
-              <p className="mt-2 text-sm text-white/80">
-                Placeholder: Terms of Service content will appear here.
+          {activeTab === 'settings' && (
+            <section className="rounded-lg border border-white/20 bg-white/5 p-6">
+              <h2 className="mb-2 text-xl font-semibold text-white">Notifications</h2>
+              <p className="mb-6 text-sm text-white/70">
+                Manage how and when you receive notifications.
               </p>
-            </details>
+              {notificationPrefsLoaded ? (
+                <NotificationSettings initialPreferences={notificationPreferences} />
+              ) : (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
+                </div>
+              )}
+            </section>
+          )}
 
-            <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
-              <summary className="cursor-pointer text-sm font-semibold text-white">Privacy Policy</summary>
-              <p className="mt-2 text-sm text-white/80">
-                Placeholder: Privacy Policy content will appear here.
-              </p>
-            </details>
+          {activeTab === 'info' && (
+            <section className="rounded-lg border border-white/20 bg-white/5 p-6">
+              <h2 className="mb-4 text-xl font-semibold text-white">Info</h2>
+              <div className="space-y-3">
+                <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
+                  <summary className="cursor-pointer text-sm font-semibold text-white">Terms of Service</summary>
+                  <p className="mt-2 text-sm text-white/80">
+                    Placeholder: Terms of Service content will appear here.
+                  </p>
+                </details>
 
-            <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
-              <summary className="cursor-pointer text-sm font-semibold text-white">Release Notes</summary>
-              <p className="mt-2 text-sm text-white/80">
-                Placeholder: Latest production deploy notes will appear here.
-              </p>
-            </details>
-          </div>
-        </section>
+                <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
+                  <summary className="cursor-pointer text-sm font-semibold text-white">Privacy Policy</summary>
+                  <p className="mt-2 text-sm text-white/80">
+                    Placeholder: Privacy Policy content will appear here.
+                  </p>
+                </details>
+
+                <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
+                  <summary className="cursor-pointer text-sm font-semibold text-white">Release Notes</summary>
+                  <p className="mt-2 text-sm text-white/80">
+                    Placeholder: Latest production deploy notes will appear here.
+                  </p>
+                </details>
+              </div>
+            </section>
+          )}
+        </div>
       </div>
     </div>
   )

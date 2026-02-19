@@ -14,6 +14,7 @@ interface ProfileHeroSectionProps {
     state?: string | null
     age?: number | null
     show_state_on_profile?: boolean | null
+    show_age_on_profile?: boolean | null
   }
   isOwnProfile: boolean
   teamBackground?: string | null // Top team name for background (image or gradient)
@@ -49,8 +50,9 @@ export function ProfileHeroSection({
     ? getTeamBackgroundGradient(teamBackground)
     : DEFAULT_GRADIENT
 
-  // Determine location display
+  // Respect visibility preferences
   const showLocation = profile.show_state_on_profile !== false
+  const showAge = profile.show_age_on_profile !== false
   const locationParts: string[] = []
   if (profile.city) locationParts.push(profile.city)
   if (showLocation && profile.state) locationParts.push(profile.state)
@@ -125,13 +127,13 @@ export function ProfileHeroSection({
         {/* Age + Location + Follow Button Row */}
         <div className="mt-1 flex items-center justify-between gap-4">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 text-sm text-white/90 md:text-base">
-            {profile.age && showLocation && (
+            {showAge && profile.age != null && showLocation && (
               <>
                 <span>{profile.age}</span>
                 <span>•</span>
               </>
             )}
-            {profile.age && !showLocation && <span>{profile.age} •</span>}
+            {showAge && profile.age != null && !showLocation && <span>{profile.age} •</span>}
             {locationText && <span>{locationText}</span>}
           </div>
 

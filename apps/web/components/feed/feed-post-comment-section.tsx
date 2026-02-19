@@ -335,13 +335,11 @@ export function FeedPostCommentSection({
           setIsOpen(next)
           if (next) loadComments()
         }}
-        className="inline-flex items-center justify-center text-white/90 transition-colors hover:text-white"
-        title={commentCount > 0 ? `${commentCount} comment${commentCount !== 1 ? 's' : ''}` : 'Comment'}
+        className="inline-flex items-center gap-1.5 text-sm leading-none text-white transition-colors hover:text-white/90"
+        title={commentCount !== 1 ? `${commentCount} comments` : '1 comment'}
       >
         <CommentIcon className="h-5 w-5 shrink-0" />
-        {commentCount > 0 && (
-          <span className="ml-0.5 text-sm font-medium leading-none text-white/90">{commentCount}</span>
-        )}
+        <span className="font-medium leading-none tabular-nums">{commentCount}</span>
       </button>
       {panelRendered && panelTargetId && target
         ? createPortal(panelContent, target)

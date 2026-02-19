@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { Heart } from 'lucide-react'
 import { CommentIcon } from '@/components/ui/comment-icon'
@@ -8,9 +9,10 @@ import { CommentIcon } from '@/components/ui/comment-icon'
 interface FeaturedGridSocialProps {
   gridId: string
   initialLikeCount: number
+  initialCommentCount?: number
 }
 
-export function FeaturedGridSocial({ gridId, initialLikeCount }: FeaturedGridSocialProps) {
+export function FeaturedGridSocial({ gridId, initialLikeCount, initialCommentCount = 0 }: FeaturedGridSocialProps) {
   const supabase = createClientComponentClient()
   const [isLiked, setIsLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(initialLikeCount)
@@ -92,10 +94,13 @@ export function FeaturedGridSocial({ gridId, initialLikeCount }: FeaturedGridSoc
         )}
         {likeCount > 0 && <span className={`text-sm font-medium ${isLiked ? 'text-sunset-end' : ''}`}>{likeCount}</span>}
       </button>
-      <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-700 transition-colors">
-        <CommentIcon className="h-5 w-5" />
-        <span className="text-sm font-medium">0</span>
-      </button>
+      <Link
+        href={`/grid/${gridId}`}
+        className="inline-flex items-center gap-1.5 text-sm leading-none text-white transition-colors hover:text-white/90"
+      >
+        <CommentIcon className="h-5 w-5 shrink-0" />
+        <span className="font-medium leading-none tabular-nums">{initialCommentCount}</span>
+      </Link>
     </div>
   )
 }

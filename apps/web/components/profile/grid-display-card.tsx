@@ -458,15 +458,13 @@ export function GridDisplayCard({
           </div>
         )}
 
-        {/* Comment - same destination as View Grid */}
+        {/* Comment - same destination as View Grid; always show count (0 if none) */}
         <Link
           href={`/grid/${grid.id}`}
-          className="inline-flex items-center gap-1.5 text-sm leading-none text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-1.5 text-sm leading-none text-white hover:text-white/90 transition-colors"
         >
           <CommentIcon className="h-5 w-5 shrink-0" />
-          {commentCount > 0 && (
-            <span className="font-medium leading-none">{commentCount}</span>
-          )}
+          <span className="font-medium leading-none tabular-nums">{commentCount}</span>
         </Link>
 
         <Link

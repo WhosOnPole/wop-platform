@@ -1,12 +1,12 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { NotificationSettings } from '@/components/notifications/notification-settings'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export default async function NotificationSettingsPage() {
+/** Redirect to main settings page with Notifications tab active (notification settings are now in-app). */
+export default async function NotificationSettingsRedirect() {
   const cookieStore = await cookies()
   const supabase = createServerComponentClient(
     { cookies: () => cookieStore as any },
@@ -23,24 +23,5 @@ export default async function NotificationSettingsPage() {
     redirect('/login')
   }
 
-  // Fetch user's notification preferences
-  const { data: preferences } = await supabase
-    .from('notification_preferences')
-    .select('*')
-    .eq('user_id', session.user.id)
-    .single()
-
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Notification Settings</h1>
-        <p className="mt-2 text-white/80">
-          Manage how and when you receive notifications
-        </p>
-      </div>
-
-      <NotificationSettings initialPreferences={preferences} />
-    </div>
-  )
+  redirect('/settings?tab=settings')
 }
-

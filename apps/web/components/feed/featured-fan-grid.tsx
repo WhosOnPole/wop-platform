@@ -36,12 +36,18 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
     return null
   }
 
-  // Fetch grid like count
-  const { data: likeCountData } = await supabase.rpc('get_grid_like_count', {
-    grid_uuid: driverGrid.id,
-  })
+  // Fetch grid like count and comment count
+  const [{ data: likeCountData }, { count: commentCount }] = await Promise.all([
+    supabase.rpc('get_grid_like_count', { grid_uuid: driverGrid.id }),
+    supabase
+      .from('grid_slot_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('grid_id', driverGrid.id)
+      .is('deleted_at', null),
+  ])
 
   const likeCount = typeof likeCountData === 'number' ? likeCountData : 0
+  const commentCountValue = commentCount ?? 0
 
   const topThree = driverGrid.ranked_items.slice(0, 3)
   const rest = driverGrid.ranked_items.slice(3, 10)
@@ -191,7 +197,7 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
       )}
 
       {/* Social Interaction */}
-      <FeaturedGridSocial gridId={driverGrid.id} initialLikeCount={likeCount} />
+      <FeaturedGridSocial gridId={driverGrid.id} initialLikeCount={likeCount} initialCommentCount={commentCountValue} />
     </div>
   )
 }

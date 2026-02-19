@@ -154,7 +154,7 @@ export default function NotificationsPage() {
                 </button>
               )}
               <Link
-                href="/notifications/settings"
+                href="/settings?tab=settings"
                 className="flex items-center gap-2 rounded-full border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
               >
                 <Settings className="h-4 w-4" />
