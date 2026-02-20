@@ -747,12 +747,17 @@ export default async function FeedPage() {
     is_featured_podium?: boolean
     admin_id?: string | null
   }>
-  const adminPollsForBannerList = (adminPollsForBanner.data || []) as Array<{
+  const adminPollsForBannerList = (adminPollsForBanner.data || []).map((p) => ({
+    ...p,
+    options: (p as { options?: unknown[] }).options ?? [],
+    created_at: (p as { created_at?: string }).created_at ?? new Date().toISOString(),
+  })) as Array<{
     id: string
     question: string
-    options?: unknown[]
+    options: unknown[]
     is_featured_podium?: boolean
     admin_id?: string | null
+    created_at: string
   }>
   const communityPollsList = (polls.data || []) as Array<{
     id: string
