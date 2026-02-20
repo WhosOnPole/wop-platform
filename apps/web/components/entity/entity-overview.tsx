@@ -54,7 +54,7 @@ export function EntityOverview(props: EntityOverviewProps) {
           </div>
         )}
         {overviewText && (
-          <div className="flex min-w-0 flex-1 flex-col justify-end overflow-hidden pb-7">
+          <div className="flex min-w-0 flex-1 flex-col justify-end overflow-hidden">
             <p className="text-base text-white/90 leading-relaxed font-light">
               {overviewText}
             </p>

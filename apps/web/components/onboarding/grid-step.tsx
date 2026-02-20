@@ -64,12 +64,12 @@ const GRID_STEP_CONFIG: Record<GridType, GridStepConfig> = {
   track: {
     type: 'track',
     table: 'tracks',
-    select: 'id, name, image_url, location, country',
+    select: 'id, name, location, country',
     hasActiveFilter: false,
     mapRow: (t) => ({
       id: t.id,
       name: t.name,
-      image_url: t.image_url,
+      image_url: null,
       location: t.location ?? null,
       country: t.country ?? null,
       track_slug: getTrackSlug(t.name),
