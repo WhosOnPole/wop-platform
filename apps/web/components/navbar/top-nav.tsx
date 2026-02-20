@@ -38,6 +38,7 @@ interface Profile {
   id: string
   username: string
   profile_image_url: string | null
+  nav_glow_dismissed_at?: string | null
 }
 
 export function TopNav() {
@@ -56,6 +57,10 @@ export function TopNav() {
   const postModalRef = createModal?.postModalRef ?? null
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [hasScrolled, setHasScrolled] = useState(false)
+  const [navGlowDismissedInSession, setNavGlowDismissedInSession] = useState(false)
+
+  const showNavGlow =
+    !!profile && profile.nav_glow_dismissed_at == null && !navGlowDismissedInSession
 
   useEffect(() => {
     if (!user) {
@@ -65,7 +70,7 @@ export function TopNav() {
     let isMounted = true
     supabase
       .from('profiles')
-      .select('id, username, profile_image_url')
+      .select('id, username, profile_image_url, nav_glow_dismissed_at')
       .eq('id', user.id)
       .single()
       .then(({ data: profileData }) => {
@@ -234,17 +239,30 @@ export function TopNav() {
           {isAuthed ? (
             <>
               <NotificationBell currentUsername={profile?.username} />
-              <button
-                onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
-                aria-label="Open profile menu"
+              <span
+                className={`inline-flex rounded-full ${showNavGlow ? 'animate-nav-glow' : ''}`}
               >
-              <img
-                src={getAvatarUrl(profile?.profile_image_url)}
-                alt={profile?.username ?? 'User'}
-                className="h-full w-full rounded-full object-cover"
-              />
-              </button>
+                <button
+                  onClick={async () => {
+                    if (showNavGlow && user) {
+                      setNavGlowDismissedInSession(true)
+                      await supabase
+                        .from('profiles')
+                        .update({ nav_glow_dismissed_at: new Date().toISOString() })
+                        .eq('id', user.id)
+                    }
+                    setIsMenuOpen((prev) => !prev)
+                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm"
+                  aria-label="Open profile menu"
+                >
+                  <img
+                    src={getAvatarUrl(profile?.profile_image_url)}
+                    alt={profile?.username ?? 'User'}
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </button>
+              </span>
             </>
           ) : null}
 

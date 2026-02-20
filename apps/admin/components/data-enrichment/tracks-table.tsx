@@ -10,9 +10,7 @@ import { formatWeekendRange } from '@/utils/date-utils'
 interface Track {
   id: string
   name: string
-  image_url: string | null
-  built_date: string | null
-  track_length: number | null
+  laps: number | null
   turns: number | null
   location: string | null
   country: string | null
@@ -98,16 +96,7 @@ export function TracksTable() {
               {tracks.map((track) => (
                 <tr key={track.id}>
                   <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center">
-                      {track.image_url && (
-                        <img
-                          src={track.image_url}
-                          alt={track.name}
-                          className="mr-3 h-10 w-10 rounded object-cover"
-                        />
-                      )}
-                      <div className="text-sm font-medium text-gray-900">{track.name}</div>
-                    </div>
+                    <div className="text-sm font-medium text-gray-900">{track.name}</div>
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                     {formatWeekendRange(track.start_date, track.end_date) ?? '—'}

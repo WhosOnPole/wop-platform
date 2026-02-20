@@ -23,7 +23,7 @@ export default async function PitlanePage() {
   const [tracksWithDates, drivers, teams, tracks] = await Promise.all([
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country, start_date, end_date, circuit_ref, chat_enabled')
+      .select('id, name, location, country, start_date, end_date, circuit_ref, chat_enabled')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     supabase
@@ -38,7 +38,7 @@ export default async function PitlanePage() {
       .order('name', { ascending: true }),
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country')
+      .select('id, name, location, country')
       .order('name', { ascending: true }),
   ])
 
@@ -48,7 +48,7 @@ export default async function PitlanePage() {
   const tracksData = tracks.data || []
 
   const nextRace = getClosestRace({ tracks: tracksWithStartDate })
-  const backgroundImage = nextRace?.image_url || '/images/race_banner.jpeg'
+  const backgroundImage = '/images/race_banner.jpeg'
 
   // Weekend range (e.g. "Mar 7-8") then track name
   const weekendRange = formatWeekendRange(nextRace?.start_date ?? null, nextRace?.end_date ?? null)

@@ -498,8 +498,8 @@ export function DiscussionSection({
   }
 
   const sectionClasses = isDark
-    ? 'rounded-lg border border-white/20 bg-white/5 p-6'
-    : 'rounded-lg border border-gray-200 bg-white p-6 shadow'
+    ? ''
+    : 'rounded-lg border border-gray-200 bg-white p-2 shadow'
   const headingIconClasses = isDark ? 'h-5 w-5 text-white/80' : 'h-5 w-5 text-blue-500'
   const headingTextClasses = isDark
     ? 'text-xl font-semibold text-white'
@@ -537,13 +537,8 @@ export function DiscussionSection({
 
   return (
     <section className={sectionClasses}>
-      <div className="mb-6 flex items-center space-x-2">
-        <MessageSquare className={headingIconClasses} />
-        <h2 className={headingTextClasses}>Discussion</h2>
-      </div>
-
       {/* Create Post Form */}
-      <form onSubmit={handleCreatePost} className="mb-6">
+      <form onSubmit={handleCreatePost} className="mb-12">
         <textarea
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}

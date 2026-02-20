@@ -121,7 +121,7 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
             .limit(8),
           supabase.from('drivers').select('id, name, headshot_url, image_url').eq('active', true).order('name', { ascending: true }).limit(8),
           supabase.from('teams').select('id, name, image_url').eq('active', true).order('name', { ascending: true }).limit(8),
-          supabase.from('tracks').select('id, name, image_url, location, country, circuit_ref').order('name', { ascending: true }).limit(8),
+          supabase.from('tracks').select('id, name, location, country, circuit_ref').order('name', { ascending: true }).limit(8),
         ])
 
         if (id !== requestIdRef.current) return
@@ -169,7 +169,7 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
           supabase.from('teams').select('id, name, image_url').eq('active', true).ilike('name', `%${q}%`).limit(12),
           supabase
             .from('tracks')
-            .select('id, name, image_url, location, country, circuit_ref')
+            .select('id, name, location, country, circuit_ref')
             .or(`name.ilike.%${q}%,circuit_ref.ilike.%${q}%`)
             .limit(12),
         ])

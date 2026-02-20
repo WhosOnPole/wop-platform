@@ -403,7 +403,7 @@ function ScheduleCard({ race, onClose }: ScheduleCardProps) {
   const dateDisplay =
     formatWeekendRange(race.start_date, race.end_date) ?? 'Date TBA'
 
-  const backgroundImage = race.image_url || '/images/race_banner.jpeg'
+  const backgroundImage = '/images/race_banner.jpeg'
   const trackSlug = slugify(race.name)
   const bannerHref = `/tracks/${trackSlug}`
 

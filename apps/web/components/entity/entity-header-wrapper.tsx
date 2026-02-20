@@ -7,9 +7,8 @@ interface TrackEntity {
   name: string
   location?: string | null
   country?: string | null
-  track_length?: number | null
+  laps?: number | null
   turns?: number | null
-  built_date?: string | null
 }
 
 interface TeamEntity {

@@ -335,12 +335,12 @@ export default async function UserProfilePage({ params }: PageProps) {
           } else if (grid.type === 'track') {
             const { data: track } = await supabase
               .from('tracks')
-              .select('id, name, image_url, location, country, circuit_ref')
+              .select('id, name, location, country, circuit_ref')
               .eq('id', item.id)
               .maybeSingle()
             return {
               ...item,
-              image_url: track?.image_url || null,
+              image_url: null,
               location: track?.location || null,
               country: track?.country || null,
               circuit_ref: track?.circuit_ref || null,

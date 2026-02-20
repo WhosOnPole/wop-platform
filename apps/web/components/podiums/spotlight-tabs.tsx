@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Star, PenLine } from 'lucide-react'
-import { PollList } from '@/components/polls/poll-list'
+import { PollCard } from '@/components/polls/poll-card'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { getAvatarUrl } from '@/utils/avatar'
@@ -96,6 +97,7 @@ export function SpotlightTabs({
   highlightedFan,
   featuredGrid,
 }: SpotlightTabsProps) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'polls' | 'stories' | 'our-picks'>('polls')
 
   const adminPollsWithFeatured = adminPolls.map((p) => ({
@@ -137,34 +139,60 @@ export function SpotlightTabs({
         <div className="space-y-8">
           <section className="space-y-4">
             <h2 className="text-xl font-semibold text-white">Admin polls</h2>
-            <div className="rounded-xl border border-white/20 bg-white/5 overflow-hidden">
-              {adminPollsWithFeatured.length > 0 ? (
-                <div className="max-h-[320px] overflow-y-auto p-4">
-                  <PollList
-                    polls={adminPollsWithFeatured}
-                    userResponses={userResponses}
-                    voteCounts={voteCounts}
-                    variant={'dark'}
-                  />
-                </div>
-              ) : (
-                <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-white/20 p-6 text-sm text-white/60">
-                  No admin polls yet.
-                </div>
-              )}
-            </div>
+            {adminPollsWithFeatured.length > 0 ? (
+              <div
+                className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0"
+                style={{ scrollSnapType: 'x mandatory' }}
+              >
+                {adminPollsWithFeatured.map((poll) => (
+                  <div
+                    key={poll.id}
+                    className="min-w-full flex-shrink-0 snap-start rounded-xl border border-white/20 bg-white/5 p-4"
+                    style={{ minHeight: 200 }}
+                  >
+                    <PollCard
+                      poll={poll}
+                      userResponse={userResponses[poll.id]}
+                      voteCounts={voteCounts[poll.id] ?? {}}
+                      onVote={() => router.refresh()}
+                      variant="dark"
+                      className="min-h-0 border-0 bg-transparent p-0 shadow-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">
+                No admin polls yet.
+              </div>
+            )}
           </section>
 
           <section className="space-y-4">
             <h2 className="text-xl font-semibold text-white">Community polls</h2>
-            <div className="rounded-xl border border-white/20 bg-white/5 p-4">
-              <PollList
-                polls={communityPollsWithFeatured}
-                userResponses={userResponses}
-                voteCounts={voteCounts}
-                variant={'dark'}
-              />
-            </div>
+            {communityPollsWithFeatured.length > 0 ? (
+              <div className="flex flex-col gap-4">
+                {communityPollsWithFeatured.map((poll) => (
+                  <div
+                    key={poll.id}
+                    className="rounded-xl border border-white/20 bg-white/5 p-4"
+                  >
+                    <PollCard
+                      poll={poll}
+                      userResponse={userResponses[poll.id]}
+                      voteCounts={voteCounts[poll.id] ?? {}}
+                      onVote={() => router.refresh()}
+                      variant="dark"
+                      className="min-h-0 border-0 bg-transparent p-0 shadow-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">
+                No community polls yet.
+              </div>
+            )}
           </section>
         </div>
       )}

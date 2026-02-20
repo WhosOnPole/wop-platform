@@ -11,7 +11,6 @@ import { EntityTabs } from '@/components/entity/entity-tabs'
 import { TrackSubmissionsTab } from '@/components/entity/tabs/track-submissions-tab'
 import { TrackTipsTab } from '@/components/entity/tabs/track-tips-tab'
 import { TrackScheduleTab } from '@/components/entity/tabs/track-schedule-tab'
-import { StatsTab } from '@/components/entity/tabs/stats-tab'
 import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { TeamQuotesTab } from '@/components/entity/tabs/team-quotes-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
@@ -369,23 +368,7 @@ export default async function DynamicPage({ params }: PageProps) {
       ),
     })
   } else {
-    // Drivers
-    tabs.push({
-      id: 'stats',
-      label: 'Stats',
-      content: <StatsTab type="driver" stats={entity} />,
-    })
-    tabs.push({
-      id: 'discussion',
-      label: 'Discussion',
-      content: (
-        <DiscussionTab
-          posts={posts || []}
-          parentPageType="driver"
-          parentPageId={entity.id}
-        />
-      ),
-    })
+    // Drivers: no tabs; only Discussions section is rendered below
   }
 
   return (
@@ -450,7 +433,7 @@ export default async function DynamicPage({ params }: PageProps) {
             <EntityOverview
               type="track"
               entity={{
-                track_length: entity.track_length,
+                laps: entity.laps,
                 overview_text: entity.overview_text,
               }}
             />
@@ -482,7 +465,18 @@ export default async function DynamicPage({ params }: PageProps) {
               />
             </div>
           )}
-          <EntityTabs tabs={tabs} />
+          {type === 'drivers' ? (
+            <div className="sticky top-[10vh] z-30 bg-black pt-8">
+              <h2 className="mb-6 px-4 text-xl font-semibold capitalize text-white">Discussions</h2>
+              <DiscussionTab
+                posts={posts || []}
+                parentPageType="driver"
+                parentPageId={entity.id}
+              />
+            </div>
+          ) : (
+            <EntityTabs tabs={tabs} />
+          )}
         </div>
       </div>
     </div>

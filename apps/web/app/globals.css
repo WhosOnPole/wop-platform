@@ -209,3 +209,12 @@ html:-ms-fullscreen {
 .animate-rank-number-fade {
   animation: rankNumberFade 0.2s ease-out forwards;
 }
+
+/* Top nav profile button: slow pulsating glow for new users */
+@keyframes nav-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 180, 177, 0.35); }
+  50% { box-shadow: 0 0 0 8px rgba(37, 180, 177, 0); }
+}
+.animate-nav-glow {
+  animation: nav-glow 2.5s ease-in-out infinite;
+}

@@ -31,7 +31,7 @@ export default async function RacePage({ params }: PageProps) {
   const slugName = slug.replace(/-/g, ' ')
   const { data: tracks } = await supabase
     .from('tracks')
-    .select('id, name, image_url, location, country, start_date, end_date, chat_enabled')
+    .select('id, name, location, country, start_date, end_date, chat_enabled')
     .ilike('name', `%${slugName}%`)
 
   const race = tracks?.find(

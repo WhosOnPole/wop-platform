@@ -185,19 +185,16 @@ export function SpotlightCarousel({
   function renderCard(card: CardItem) {
     if (card.type === 'hot_take') {
       return (
-        <div className="relative h-full w-full overflow-hidden rounded-lg">
-          {/* Animated gradient border */}
-          <div
-            className="absolute left-1/2 top-1/2 z-0 h-[250%] w-[250%] md:h-[400%] md:w-[400%] min-h-[170%] min-w-[170%] -translate-x-1/2 -translate-y-1/2 animate-slot-border-rotate"
-            style={{
-              background:
-                'linear-gradient(90deg, #EC6D00 0%, #FF006F 60%, #25B4B1 70%, #FF006F 80%, #EC6D00 100%)',
-            }}
-          />
+        <div
+          className="h-full w-full rounded-lg p-[2px]"
+          style={{
+            background: 'linear-gradient(90deg, #EC6D00 0%, #FF006F 50%, #25B4B1 100%)',
+          }}
+        >
           <button
             type="button"
             onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
-            className="absolute inset-[1.5px] z-30 flex flex-col rounded-[6px] bg-black p-6 text-left shadow backdrop-blur-sm transition-colors hover:bg-white/5 cursor-pointer"
+            className="flex h-full w-full flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1] cursor-pointer"
           >
             <div className="flex items-center space-x-2">
               <Radio className="h-5 w-5 text-white/90" />

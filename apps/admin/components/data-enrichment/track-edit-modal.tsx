@@ -5,40 +5,13 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 
-const F1_TIMEZONES = [
-  'Australia/Melbourne',
-  'Asia/Shanghai',
-  'Asia/Tokyo',
-  'Asia/Bahrain',
-  'Asia/Riyadh',
-  'America/New_York',
-  'America/Montreal',
-  'Europe/Paris',
-  'Europe/Madrid',
-  'Europe/Vienna',
-  'Europe/London',
-  'Europe/Brussels',
-  'Europe/Budapest',
-  'Europe/Amsterdam',
-  'Europe/Rome',
-  'America/Sao_Paulo',
-  'America/Los_Angeles',
-  'Asia/Qatar',
-  'Asia/Dubai',
-  'UTC',
-] as const
-
 const trackSchema = z.object({
   name: z.string().min(1).max(200),
-  image_url: z.string().url().optional().or(z.literal('')),
-  built_date: z.string().optional().or(z.literal('')),
-  track_length: z.number().positive().optional().or(z.null()),
-  turns: z.number().int().positive().optional().or(z.null()),
+  laps: z.number().int().min(1).optional().or(z.null()),
   location: z.string().max(200).optional().or(z.literal('')),
   country: z.string().max(200).optional().or(z.literal('')),
   start_date: z.string().optional().or(z.literal('')),
   end_date: z.string().optional().or(z.literal('')),
-  timezone: z.string().max(100).optional().or(z.literal('')),
   circuit_ref: z.string().max(200).optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
 })
@@ -47,15 +20,11 @@ interface TrackEditModalProps {
   track: {
     id: string
     name: string
-    image_url: string | null
-    built_date: string | null
-    track_length: number | null
-    turns: number | null
+    laps: number | null
     location: string | null
     country: string | null
     start_date: string | null
     end_date: string | null
-    timezone: string | null
     circuit_ref: string | null
     overview_text: string | null
   }
@@ -70,15 +39,11 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: track.name || '',
-    image_url: track.image_url || '',
-    built_date: toDateInput(track.built_date),
-    track_length: track.track_length?.toString() || '',
-    turns: track.turns?.toString() || '',
+    laps: track.laps?.toString() || '',
     location: track.location || '',
     country: track.country || '',
     start_date: toDatetimeLocal(track.start_date),
     end_date: toDateInput(track.end_date),
-    timezone: track.timezone || 'UTC',
     circuit_ref: track.circuit_ref || '',
     overview_text: track.overview_text || '',
   })
@@ -91,28 +56,21 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
     try {
       const validated = trackSchema.parse({
         name: formData.name.trim(),
-        image_url: formData.image_url || undefined,
-        built_date: formData.built_date || undefined,
-        track_length: formData.track_length ? parseFloat(formData.track_length) : null,
-        turns: formData.turns ? parseInt(formData.turns) : null,
+        laps: formData.laps ? parseInt(formData.laps, 10) : null,
         location: formData.location || undefined,
         country: formData.country || undefined,
         start_date: formData.start_date || undefined,
         end_date: formData.end_date || undefined,
-        timezone: formData.timezone || undefined,
         circuit_ref: formData.circuit_ref || undefined,
         overview_text: formData.overview_text || undefined,
       })
 
       const updatePayload: Record<string, unknown> = {
         name: validated.name,
-        image_url: validated.image_url || null,
-        built_date: validated.built_date || null,
-        turns: validated.turns ?? null,
+        laps: validated.laps ?? null,
         location: validated.location || null,
         country: validated.country || null,
         end_date: validated.end_date || null,
-        timezone: validated.timezone || null,
         circuit_ref: validated.circuit_ref || null,
         overview_text: validated.overview_text || null,
       }
@@ -137,7 +95,7 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Edit Track: {track.name}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -162,48 +120,37 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Image URL</label>
-            <input
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+            <label className="block text-sm font-medium text-gray-700">Overview text</label>
+            <textarea
+              value={formData.overview_text}
+              onChange={(e) => setFormData({ ...formData, overview_text: e.target.value })}
+              rows={4}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Built Date</label>
-              <input
-                type="date"
-                value={formData.built_date}
-                onChange={(e) => setFormData({ ...formData, built_date: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Track Length (km)
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Laps</label>
               <input
                 type="number"
-                step="0.001"
-                value={formData.track_length}
-                onChange={(e) => setFormData({ ...formData, track_length: e.target.value })}
+                min={1}
+                step={1}
+                value={formData.laps}
+                onChange={(e) => setFormData({ ...formData, laps: e.target.value })}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Turns</label>
-            <input
-              type="number"
-              value={formData.turns}
-              onChange={(e) => setFormData({ ...formData, turns: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nickname</label>
+              <input
+                type="text"
+                value={formData.circuit_ref}
+                onChange={(e) => setFormData({ ...formData, circuit_ref: e.target.value })}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                placeholder="e.g. Melbourne"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -216,7 +163,6 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">Country</label>
               <input
@@ -233,7 +179,7 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Weekend start date/time (UTC)
+                  Weekend start date/time
                 </label>
                 {hasScheduleEvents && (
                   <p className="mt-0.5 text-xs text-gray-500">
@@ -249,7 +195,7 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">End date (race weekend end)</label>
+                <label className="block text-sm font-medium text-gray-700">End date</label>
                 <input
                   type="date"
                   value={formData.end_date}
@@ -257,43 +203,7 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Timezone (IANA)</label>
-                <select
-                  value={formData.timezone}
-                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                >
-                  {F1_TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz}>
-                      {tz}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Circuit ref (short name, e.g. Melbourne)
-                </label>
-                <input
-                  type="text"
-                  value={formData.circuit_ref}
-                  onChange={(e) => setFormData({ ...formData, circuit_ref: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                  placeholder="e.g. Melbourne"
-                />
-              </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Overview Text</label>
-            <textarea
-              value={formData.overview_text}
-              onChange={(e) => setFormData({ ...formData, overview_text: e.target.value })}
-              rows={4}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

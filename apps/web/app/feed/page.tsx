@@ -5,6 +5,7 @@ import { parseDateOnly } from '@/utils/date-utils'
 import { FeedContent, type Post, type Grid, type GridCommentItem } from '@/components/feed/feed-content'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 import { FeedHighlightedSidebar } from '@/components/feed/feed-highlighted-sidebar'
+import { CommunityPollsSection } from '@/components/feed/community-polls-section'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { BannerPollCard } from '@/components/feed/banner-poll-card'
@@ -337,7 +338,7 @@ export default async function FeedPage() {
     // Upcoming race (based on tracks.start_date)
     supabase
       .from('tracks')
-      .select('id, name, image_url, location, country, start_date, end_date, circuit_ref, chat_enabled')
+      .select('id, name, location, country, start_date, end_date, circuit_ref, chat_enabled')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     // Active hot take (single) by date range
@@ -371,6 +372,13 @@ export default async function FeedPage() {
       return { data }
     })(),
   ])
+
+  const { data: currentUserProfile } = await supabase
+    .from('profiles')
+    .select('nav_glow_dismissed_at')
+    .eq('id', session.user.id)
+    .single()
+  const isNewUser = !currentUserProfile?.nav_glow_dismissed_at
 
   const upcomingRace = (() => {
     const race = getClosestRaceFromTracks({ tracks: (raceTracks.data || []) as TrackRace[] })
@@ -576,7 +584,7 @@ export default async function FeedPage() {
     trackIds.length > 0
       ? supabase
           .from('tracks')
-          .select('id, name, image_url, location, country, circuit_ref')
+          .select('id, name, location, country, circuit_ref')
           .in('id', trackIds)
       : Promise.resolve({ data: [] }),
     feedGridIds.length > 0
@@ -629,11 +637,11 @@ export default async function FeedPage() {
         }
         if (grid.type === 'track') {
           const track = tracksById.get(item.id) as
-            | { image_url?: string | null; location?: string | null; country?: string | null; circuit_ref?: string | null }
+            | { location?: string | null; country?: string | null; circuit_ref?: string | null }
             | undefined
           return {
             ...item,
-            image_url: track?.image_url || null,
+            image_url: null,
             location: track?.location || null,
             country: track?.country || null,
             circuit_ref: track?.circuit_ref || null,
@@ -866,6 +874,15 @@ export default async function FeedPage() {
               featuredNews={featuredNewsList}
             />
           </div>
+          {communityPollsList.length > 0 && (
+            <div className="mb-6">
+              <CommunityPollsSection
+                polls={communityPollsList}
+                userResponses={feedPollUserResponses}
+                voteCounts={feedPollVoteCounts}
+              />
+            </div>
+          )}
           <FeedContent
             posts={enrichedFeedPosts}
             grids={enrichedFeedGrids as Grid[]}
@@ -874,6 +891,7 @@ export default async function FeedPage() {
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}
             featuredNews={[]}
+            isNewUser={isNewUser}
           />
         </div>
         </div>

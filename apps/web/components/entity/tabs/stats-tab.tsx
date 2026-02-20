@@ -13,9 +13,8 @@ interface TeamStats {
 }
 
 interface TrackStats {
-  track_length?: number | null
+  laps?: number | null
   turns?: number | null
-  built_date?: string | null
   location?: string | null
   country?: string | null
   history_text?: string | null
@@ -90,19 +89,11 @@ export function StatsTab({ type, stats }: StatsTabProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-        {trackStats.built_date && (
+        {trackStats.laps != null && (
           <div className="rounded-lg border border-white/20 bg-white/5 p-4">
-            <p className="text-sm text-white/60">Built</p>
+            <p className="text-sm text-white/60">Laps</p>
             <p className="mt-1 text-lg font-semibold text-white">
-              {new Date(trackStats.built_date).getFullYear()}
-            </p>
-          </div>
-        )}
-        {trackStats.track_length && (
-          <div className="rounded-lg border border-white/20 bg-white/5 p-4">
-            <p className="text-sm text-white/60">Length</p>
-            <p className="mt-1 text-lg font-semibold text-white">
-              {trackStats.track_length} km
+              {trackStats.laps} laps
             </p>
           </div>
         )}

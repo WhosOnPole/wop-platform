@@ -6,9 +6,8 @@ interface TrackEntity {
   name: string
   location?: string | null
   country?: string | null
-  track_length?: number | null
+  laps?: number | null
   turns?: number | null
-  built_date?: string | null
 }
 
 interface TeamEntity {
@@ -177,8 +176,8 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
         {driver.name}
       </h1>
       <div className="space-y-2 pb-4">
-        {/* First line: Flag | Nationality, Age */}
-        {(flagPath || driver.nationality || driver.age) && (
+        {/* Flag and nationality only */}
+        {(flagPath || driver.nationality) && (
           <div className="flex items-center gap-2 text-lg">
             {flagPath && (
               <Image
@@ -189,15 +188,7 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
                 className="object-contain"
               />
             )}
-            {driver.nationality && (
-              <>
-                <span className="text-lg">{driver.nationality}</span>
-                {driver.age && <span className="text-lg">• {driver.age}</span>}
-              </>
-            )}
-            {!driver.nationality && driver.age && (
-              <span className="text-lg">{driver.age}</span>
-            )}
+            {driver.nationality && <span className="text-lg">{driver.nationality}</span>}
           </div>
         )}
         {/* Second line: Team icon */}

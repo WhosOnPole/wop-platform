@@ -91,6 +91,7 @@ interface FeedContentProps {
   featuredNews: NewsStory[]
   supabaseUrl?: string
   currentUserId?: string
+  isNewUser?: boolean
 }
 
 type FeedItem =
@@ -119,6 +120,7 @@ export function FeedContent({
   featuredNews,
   supabaseUrl,
   currentUserId,
+  isNewUser = false,
 }: FeedContentProps) {
   const router = useRouter()
   const endSentinelRef = useRef<HTMLDivElement>(null)
@@ -202,7 +204,7 @@ export function FeedContent({
 
       const [driversRes, tracksRes, gridLikesRes, gridCommentsRes] = await Promise.all([
         driverIds.length > 0 ? supabase.from('drivers').select('id, name, headshot_url, image_url').in('id', driverIds) : Promise.resolve({ data: [] }),
-        trackIds.length > 0 ? supabase.from('tracks').select('id, name, image_url, location, country, circuit_ref').in('id', trackIds) : Promise.resolve({ data: [] }),
+        trackIds.length > 0 ? supabase.from('tracks').select('id, name, location, country, circuit_ref').in('id', trackIds) : Promise.resolve({ data: [] }),
         gridsList.length > 0 ? supabase.from('grid_likes').select('grid_id').in('grid_id', gridsList.map((g) => g.id)) : Promise.resolve({ data: [] }),
         gridsList.length > 0 ? supabase.from('grid_slot_comments').select('grid_id').in('grid_id', gridsList.map((g) => g.id)) : Promise.resolve({ data: [] }),
       ])
@@ -248,8 +250,8 @@ export function FeedContent({
             return { ...item, headshot_url: driver?.headshot_url || null, image_url: driver?.headshot_url || driver?.image_url || null }
           }
           if (grid.type === 'track') {
-            const track = tracksById.get(item.id) as { image_url?: string | null; location?: string | null; country?: string | null; circuit_ref?: string | null } | undefined
-            return { ...item, image_url: track?.image_url || null, location: track?.location || null, country: track?.country || null, circuit_ref: track?.circuit_ref || null }
+            const track = tracksById.get(item.id) as { location?: string | null; country?: string | null; circuit_ref?: string | null } | undefined
+            return { ...item, image_url: null, location: track?.location || null, country: track?.country || null, circuit_ref: track?.circuit_ref || null }
           }
           return item
         })
@@ -295,7 +297,7 @@ export function FeedContent({
     return () => observer.disconnect()
   }, [fetchDiscovery])
 
-  // Combine and sort all non-poll content by created_at
+  // Combine and sort all non-poll content (needed early so hasContent is available for effects)
   const allContent: FeedItem[] = [
     ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
     ...grids.map((g) => ({ ...g, contentType: 'grid' as const })),
@@ -305,26 +307,36 @@ export function FeedContent({
 
   const hasContent = allContent.length > 0
 
-  if (!hasContent) {
-    return (
-      <div className="rounded-lg border border-white/10 bg-black/40 p-12 text-center shadow backdrop-blur-sm">
-        <p className="text-white/90">
-          Start creating grids to see more content here!
-        </p>
-        <Link
-          href="/pitlane"
-          className="mt-4 inline-block text-[#25B4B1] hover:text-[#25B4B1]/90"
-        >
-          Explore Drivers, Teams & Tracks →
-        </Link>
-      </div>
-    )
+  // New user with empty feed: load discover on mount so it appears below empty state
+  useEffect(() => {
+    if (isNewUser && !hasContent) fetchDiscovery()
+  }, [isNewUser, hasContent, fetchDiscovery])
+
+  const emptyStateBlock = (
+    <div className="rounded-lg border border-white/10 bg-black/40 p-12 text-center shadow backdrop-blur-sm">
+      <p className="text-white/90">
+        Start creating grids to see more content here!
+      </p>
+      <Link
+        href="/pitlane"
+        className="mt-4 inline-block text-[#25B4B1] hover:text-[#25B4B1]/90"
+      >
+        Explore Drivers, Teams & Tracks →
+      </Link>
+    </div>
+  )
+
+  if (!hasContent && !isNewUser) {
+    return emptyStateBlock
   }
 
   return (
     <div className="space-y-6">
-      {/* Vertical feed for other content */}
-      {allContent.map((item) => {
+      {!hasContent && isNewUser && emptyStateBlock}
+      {hasContent && (
+        <>
+          {/* Vertical feed for other content */}
+          {allContent.map((item) => {
         if (item.contentType === 'post') {
           const post = item
           return (
@@ -543,10 +555,12 @@ export function FeedContent({
         return null
       })}
 
-      {/* Sentinel: when scrolled into view, load discovery */}
-      <div ref={endSentinelRef} className="h-1" aria-hidden="true" />
+          {/* Sentinel: when scrolled into view, load discovery */}
+          <div ref={endSentinelRef} className="h-1" aria-hidden="true" />
+        </>
+      )}
 
-      {/* Discover section: shown after user reaches end of feed */}
+      {/* Discover section: after feed (when hasContent) or below empty state (when !hasContent && isNewUser) */}
       {(hasLoadedDiscovery || isLoadingDiscovery) && (
         <>
           <DiscoverDivider />

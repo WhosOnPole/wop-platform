@@ -1,5 +1,5 @@
 interface TrackEntity {
-  track_length?: number | null
+  laps?: number | null
   overview_text?: string | null
 }
 
@@ -20,8 +20,8 @@ export function EntityOverview(props: EntityOverviewProps) {
   const entity = props.entity
   const isTrack = props.type === 'track'
   const leftContent =
-    isTrack && (entity as TrackEntity).track_length != null
-      ? { value: (entity as TrackEntity).track_length, suffix: 'km' }
+    isTrack && (entity as TrackEntity).laps != null
+      ? { value: (entity as TrackEntity).laps, suffix: 'laps' }
       : !isTrack && (entity as DriverEntity).racing_number != null
         ? { value: (entity as DriverEntity).racing_number, suffix: null }
         : null
