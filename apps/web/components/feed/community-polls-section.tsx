@@ -41,6 +41,7 @@ export function CommunityPollsSection({
                 ...poll,
                 options: Array.isArray(poll.options) ? poll.options : [],
                 is_featured_podium: poll.is_featured_podium ?? false,
+                created_at: poll.created_at ?? '',
               }}
               userResponse={userResponses[poll.id]}
               voteCounts={voteCounts[poll.id] ?? {}}
