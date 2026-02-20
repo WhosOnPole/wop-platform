@@ -508,7 +508,7 @@ export function DiscussionSection({
     ? 'w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
     : 'w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
   const submitButtonClasses = isDark
-    ? 'mt-2 flex items-center space-x-2 rounded-md bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 disabled:opacity-50'
+    ? 'mt-2 flex items-center space-x-2 rounded-md bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 disabled:opacity-50 float-right'
     : 'mt-2 flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
   const emptyTextClasses = isDark
     ? 'text-center text-white/60'
@@ -538,7 +538,7 @@ export function DiscussionSection({
   return (
     <section className={sectionClasses}>
       {/* Create Post Form */}
-      <form onSubmit={handleCreatePost} className="mb-12">
+      <form onSubmit={handleCreatePost} className="mb-20">
         <textarea
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}

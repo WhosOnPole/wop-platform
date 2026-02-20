@@ -323,11 +323,11 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                         />
                         <div className="absolute inset-0 z-10 bg-black/30" aria-hidden />
                         <span
-                          className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none opacity-90 line-clamp-2"
+                          className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none opacity-90 line-clamp-2 text-center"
                           style={{
                             fontFamily: 'Inter, sans-serif',
                             fontWeight: 900,
-                            fontSize: 'clamp(0.6rem, 2.5vw, 1.1rem)',
+                            fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)',
                             color: 'white',
                             textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                           }}

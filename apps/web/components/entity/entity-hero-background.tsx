@@ -10,6 +10,7 @@ interface EntityHeroBackgroundProps {
   trackName?: string
   supabaseUrl?: string
   teamName?: string
+  teamOverviewText?: string | null
 }
 
 export function EntityHeroBackground({
@@ -21,6 +22,7 @@ export function EntityHeroBackground({
   trackName,
   supabaseUrl,
   teamName,
+  teamOverviewText,
 }: EntityHeroBackgroundProps) {
   const isTrack = entityType === 'track'
   const isTeam = entityType === 'team'
@@ -55,19 +57,24 @@ export function EntityHeroBackground({
         </div>
       )}
 
-      {/* Team: short code (first 3 letters) flush left to right, font-weight 900, opacity 30%; overflow-hidden so content does not leak */}
+      {/* Team: short code (first 3 letters) and overview text centered below */}
       {showTeamShortCode && (
-        <div className="absolute inset-0 z-[1] flex items-center pointer-events-none overflow-hidden px-0">
+        <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center pointer-events-none overflow-hidden">
           <span
-            className="font-sans font-black text-white/30 select-none block w-full text-left pl-0 pr-0"
+            className="font-sans font-black text-white/30 select-none text-center"
             style={{
-              letterSpacing: '-0.08em',
+              letterSpacing: '-.04em',
               fontSize: 'clamp(4rem, 55vw, 14rem)',
               lineHeight: 1,
             }}
           >
             {getTeamShortCode(teamName)}
           </span>
+          {teamOverviewText && (
+            <p className="font-sans text-center text-white/90 text-base leading-relaxed mt-4 max-w-2xl">
+              {teamOverviewText}
+            </p>
+          )}
         </div>
       )}
     </div>

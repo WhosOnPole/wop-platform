@@ -68,7 +68,7 @@ export function EntityTabs({ tabs, defaultTab }: EntityTabsProps) {
         </div>
       </div>
 
-      <div className="px-4 pb-8">
+      <div className="px-0 pb-8">
         {activeTabContent}
       </div>
     </div>

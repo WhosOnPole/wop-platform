@@ -12,7 +12,6 @@ import { TrackSubmissionsTab } from '@/components/entity/tabs/track-submissions-
 import { TrackTipsTab } from '@/components/entity/tabs/track-tips-tab'
 import { TrackScheduleTab } from '@/components/entity/tabs/track-schedule-tab'
 import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
-import { TeamQuotesTab } from '@/components/entity/tabs/team-quotes-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { CheckInSection } from '@/components/race/check-in-section'
 import { getTeamLogoUrl, getTeamBackgroundUrl, getTrackSlug } from '@/utils/storage-urls'
@@ -347,16 +346,6 @@ export default async function DynamicPage({ params }: PageProps) {
     })
   } else if (type === 'teams') {
     tabs.push({
-      id: 'drivers',
-      label: 'Drivers',
-      content: <TeamDriversTab drivers={relatedData || []} />,
-    })
-    tabs.push({
-      id: 'quotes',
-      label: 'Quotes',
-      content: <TeamQuotesTab teamId={entity.id} />,
-    })
-    tabs.push({
       id: 'discussion',
       label: 'Discussion',
       content: (
@@ -366,6 +355,11 @@ export default async function DynamicPage({ params }: PageProps) {
           parentPageId={entity.id}
         />
       ),
+    })
+    tabs.push({
+      id: 'drivers',
+      label: 'Drivers',
+      content: <TeamDriversTab drivers={relatedData || []} />,
     })
   } else {
     // Drivers: no tabs; only Discussions section is rendered below
@@ -385,6 +379,7 @@ export default async function DynamicPage({ params }: PageProps) {
           trackName={type === 'tracks' ? entity.name : undefined}
           supabaseUrl={type === 'tracks' || type === 'teams' ? supabaseUrl : undefined}
           teamName={type === 'teams' ? entity.name : undefined}
+          teamOverviewText={type === 'teams' ? (entity as { overview_text?: string | null }).overview_text : undefined}
         />
         
         {/* Content over background */}
