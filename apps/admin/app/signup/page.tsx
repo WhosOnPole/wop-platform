@@ -1,7 +1,5 @@
 'use client'
 
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -15,6 +13,7 @@ export default function AdminSignupPage() {
     supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   })
   const [redirectUrl, setRedirectUrl] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -57,7 +56,8 @@ export default function AdminSignupPage() {
         if (isAdminEmail || isAdminRole) {
           router.push('/dashboard')
         } else {
-          const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ||
+          const mainSiteUrl =
+            process.env.NEXT_PUBLIC_SITE_URL ||
             (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
           window.location.href = mainSiteUrl
         }
@@ -68,6 +68,16 @@ export default function AdminSignupPage() {
       subscription.unsubscribe()
     }
   }, [router, supabase])
+
+  async function handleGoogleSignIn() {
+    if (!redirectUrl) return
+    setIsLoading(true)
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: redirectUrl },
+    })
+    setIsLoading(false)
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black px-4">
@@ -91,37 +101,39 @@ export default function AdminSignupPage() {
           </p>
         </div>
         {redirectUrl && (
-          <Auth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#25B4B1',
-                    brandAccent: '#1e9e9b',
-                    inputBackground: '#0B0B0B',
-                    inputBorder: '#1f1f1f',
-                    inputBorderFocus: '#25B4B1',
-                    inputText: '#ffffff',
-                    inputPlaceholder: '#6b7280',
-                    anchorTextColor: '#e5e7eb',
-                    messageText: '#d1d5db',
-                    messageTextDanger: '#fca5a5',
-                  },
-                },
-              },
-            }}
-            providers={['google', 'apple']}
-            redirectTo={redirectUrl}
-            view="sign_up"
-            onlyThirdPartyProviders={false}
-          />
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  fill="currentColor"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              {isLoading ? 'Signing up…' : 'Sign up with Google'}
+            </button>
+          </div>
         )}
         <p className="text-center text-sm text-white/70">
           Already have an account?{' '}
           <Link href="/login" className="font-medium text-[#25B4B1] hover:text-[#3BEFEB]">
-            Sign in
+            Sign in with Google
           </Link>
         </p>
       </div>
