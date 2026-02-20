@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Send } from 'lucide-react'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
-import { getAvatarUrl } from '@/utils/avatar'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 interface CommentUser {
   id: string
@@ -180,17 +180,23 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
         {isLoading ? (
           <p className="text-sm text-white/70">Loading comments...</p>
         ) : topLevel.length > 0 ? (
-          <div className="w-full space-y-3 border-l-2 border-white/10 pl-3">
+          <div className="w-full space-y-3">
             {topLevel.map((comment) => {
             const commentReplies = repliesByParent[comment.id] || []
             return (
               <div key={comment.id} className="py-1">
                 <div className="mb-0.5 flex items-center gap-2">
-                  <img
-                    src={getAvatarUrl(comment.user?.profile_image_url)}
-                    alt={comment.user?.username ?? ''}
-                    className="h-6 w-6 rounded-full object-cover"
-                  />
+                  <div
+                    className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
+                      isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                    }`}
+                  >
+                    <img
+                      src={getAvatarUrl(comment.user?.profile_image_url)}
+                      alt={comment.user?.username ?? ''}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
                   <Link
                     href={`/u/${comment.user?.username ?? 'unknown'}`}
                     className="text-sm font-medium text-white/90 hover:text-white"
@@ -241,11 +247,17 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
                     {commentReplies.map((reply) => (
                       <div key={reply.id}>
                         <div className="mb-0.5 flex items-center gap-2">
-                          <img
-                            src={getAvatarUrl(reply.user?.profile_image_url)}
-                            alt={reply.user?.username ?? ''}
-                            className="h-5 w-5 rounded-full object-cover"
-                          />
+                          <div
+                            className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
+                              isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                            }`}
+                          >
+                            <img
+                              src={getAvatarUrl(reply.user?.profile_image_url)}
+                              alt={reply.user?.username ?? ''}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          </div>
                           <Link
                             href={`/u/${reply.user?.username ?? 'unknown'}`}
                             className="text-xs font-medium text-white/90 hover:text-white"

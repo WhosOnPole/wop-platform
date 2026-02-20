@@ -30,6 +30,8 @@ function getSpotlightFeaturedGrid(params: { grid: unknown }) {
     type,
     comment: typeof maybeGrid.blurb === 'string' ? maybeGrid.blurb : null,
     ranked_items: Array.isArray(maybeGrid.ranked_items) ? maybeGrid.ranked_items : [],
+    updated_at: maybeGrid.updated_at != null ? String(maybeGrid.updated_at) : null,
+    created_at: maybeGrid.created_at != null ? String(maybeGrid.created_at) : null,
     user: user
       ? {
           id: String(user.id),
@@ -190,6 +192,61 @@ export default async function PodiumsPage() {
     : null
   const featuredGrid = getSpotlightFeaturedGrid({ grid: highlights?.highlighted_fan_grid })
 
+  // Enrich featured grid ranked_items for GridDisplayCard
+  let enrichedFeaturedGrid = featuredGrid
+  if (featuredGrid) {
+    const fgRanked = featuredGrid.ranked_items || []
+    const fgIds = fgRanked.map((i: { id?: string }) => i.id).filter(Boolean) as string[]
+    if (featuredGrid.type === 'driver' && fgIds.length > 0) {
+      const { data: fgDrivers } = await supabase
+        .from('drivers')
+        .select('id, name, headshot_url, image_url')
+        .in('id', fgIds)
+      const fgDriversById = new Map((fgDrivers || []).map((d: { id: string }) => [d.id, d]))
+      enrichedFeaturedGrid = {
+        ...featuredGrid,
+        ranked_items: fgRanked.map((item: { id: string; name?: string }) => {
+          const d = fgDriversById.get(item.id) as { headshot_url?: string | null; image_url?: string | null; name?: string } | undefined
+          return {
+            ...item,
+            name: item.name ?? d?.name ?? '',
+            headshot_url: d?.headshot_url ?? null,
+            image_url: d?.headshot_url ?? d?.image_url ?? null,
+          }
+        }),
+      }
+    } else if (featuredGrid.type === 'track' && fgIds.length > 0) {
+      const { data: fgTracks } = await supabase
+        .from('tracks')
+        .select('id, name, location, country, circuit_ref')
+        .in('id', fgIds)
+      const fgTracksById = new Map((fgTracks || []).map((t: { id: string }) => [t.id, t]))
+      enrichedFeaturedGrid = {
+        ...featuredGrid,
+        ranked_items: fgRanked.map((item: { id: string; name?: string }) => {
+          const t = fgTracksById.get(item.id) as { location?: string | null; country?: string | null; circuit_ref?: string | null; name?: string } | undefined
+          return {
+            ...item,
+            name: item.name ?? t?.name ?? '',
+            location: t?.location ?? null,
+            country: t?.country ?? null,
+            circuit_ref: t?.circuit_ref ?? null,
+          }
+        }),
+      }
+    } else if (featuredGrid.type === 'team' && fgIds.length > 0) {
+      const { data: fgTeams } = await supabase.from('teams').select('id, name').in('id', fgIds)
+      const fgTeamsById = new Map((fgTeams || []).map((t: { id: string }) => [t.id, t]))
+      enrichedFeaturedGrid = {
+        ...featuredGrid,
+        ranked_items: fgRanked.map((item: { id: string; name?: string }) => {
+          const t = fgTeamsById.get(item.id) as { name?: string } | undefined
+          return { ...item, name: item.name ?? t?.name ?? '' }
+        }),
+      }
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 pt-4">
       <div className="space-y-1">
@@ -205,7 +262,8 @@ export default async function PodiumsPage() {
         stories={stories}
         sponsors={sponsors}
         highlightedFan={highlightedFanNormalized}
-        featuredGrid={featuredGrid}
+        featuredGrid={enrichedFeaturedGrid}
+        supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
       />
     </div>
   )

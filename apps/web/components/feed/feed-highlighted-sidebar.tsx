@@ -8,7 +8,8 @@ import { Radio, Star } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { FeaturedNewsCard } from './featured-news-card'
-import { getAvatarUrl } from '@/utils/avatar'
+import { FeaturedGridPostBlock, type FeaturedGridForBlock } from './featured-grid-post-block'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 interface SpotlightHotTake {
   id: string
@@ -28,9 +29,14 @@ interface HighlightedFan {
 interface FeaturedGrid {
   id: string
   type: 'driver' | 'team' | 'track'
-  comment: string | null
-  ranked_items: Array<{ id?: string; name?: string; title?: string }>
+  comment?: string | null
+  blurb?: string | null
+  ranked_items: Array<{ id?: string; name?: string; title?: string; headshot_url?: string | null; image_url?: string | null; location?: string | null; country?: string | null; circuit_ref?: string | null }>
   user: { id: string; username: string; profile_image_url: string | null } | null
+  updated_at?: string | null
+  created_at?: string | null
+  like_count?: number
+  comment_count?: number
 }
 
 interface Poll {
@@ -54,6 +60,7 @@ interface FeedHighlightedSidebarProps {
   spotlight: SpotlightData | null
   highlightedFan: HighlightedFan | null
   featuredGrid: FeaturedGrid | null
+  supabaseUrl?: string
   polls: Poll[]
   userResponses?: Record<string, string>
   voteCounts?: Record<string, Record<string, number>>
@@ -65,6 +72,7 @@ export function FeedHighlightedSidebar({
   spotlight,
   highlightedFan,
   featuredGrid,
+  supabaseUrl,
   polls,
   userResponses = {},
   voteCounts = {},
@@ -106,7 +114,11 @@ export function FeedHighlightedSidebar({
             href={`/u/${highlightedFan.username}`}
             className="flex w-full items-center gap-4 rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm transition-colors hover:bg-white/5"
           >
-            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10">
+            <div
+              className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
+                isDefaultAvatar(highlightedFan.profile_image_url) ? 'bg-white p-0.5' : 'bg-white/10'
+              }`}
+            >
               <Image
                 src={getAvatarUrl(highlightedFan.profile_image_url)}
                 alt={highlightedFan.username}
@@ -126,44 +138,11 @@ export function FeedHighlightedSidebar({
         )}
 
         {hasFeaturedGrid && featuredGrid && (
-          <div className="flex flex-col rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm">
-            <div className="text-sm font-medium text-white/90">Featured Fan Grid</div>
-            {featuredGrid.user && (
-              <Link
-                href={`/u/${featuredGrid.user.username}`}
-                className="mt-1 text-white/90 hover:text-white text-sm"
-              >
-                @{featuredGrid.user.username}
-              </Link>
-            )}
-            {featuredGrid.comment && (
-              <p className="mt-2 text-sm text-white/80 italic">&quot;{featuredGrid.comment}&quot;</p>
-            )}
-            <div className="mt-4 space-y-2">
-              {Array.isArray(featuredGrid.ranked_items) &&
-                featuredGrid.ranked_items.slice(0, 5).map((item: { id?: string; name?: string; title?: string }, i: number) => (
-                  <div
-                    key={item?.id ?? i}
-                    className="flex items-center space-x-3 rounded-md bg-white/10 px-3 py-2"
-                  >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
-                      {i + 1}
-                    </span>
-                    <span className="min-w-0 truncate text-sm text-white/90">
-                      {item?.name ?? item?.title ?? 'Unknown'}
-                    </span>
-                  </div>
-                ))}
-            </div>
-            {featuredGrid.user && (
-              <Link
-                href={`/u/${featuredGrid.user.username}`}
-                className="mt-4 inline-block text-sm font-medium text-[#25B4B1] hover:underline"
-              >
-                View full grid →
-              </Link>
-            )}
-          </div>
+          <FeaturedGridPostBlock
+            grid={featuredGrid as FeaturedGridForBlock}
+            user={featuredGrid.user}
+            supabaseUrl={supabaseUrl}
+          />
         )}
 
         {hasPolls &&

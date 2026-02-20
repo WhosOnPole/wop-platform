@@ -7,7 +7,6 @@ import { GridHeartButton } from './grid-heart-button'
 import { CommentIcon } from '@/components/ui/comment-icon'
 import { GridSnapshot } from './grid-snapshot'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
-import { getTeamShortCode } from '@/utils/team-colors'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface GridItem {
@@ -91,18 +90,19 @@ export function GridDisplayCard({
     return lastName.substring(0, 3).toUpperCase()
   }
 
-  // Track label: circuit_ref (e.g. MON, SPA) or location/name fallback
+  // Track label: circuit_ref (e.g. MON, SPA) or location/name fallback; strip " / sprint" if present
   function getTrackLabel(item: GridItem): string {
     if (grid.type !== 'track') return ''
-    const raw = item.circuit_ref || item.location || item.name || ''
-    return raw.toString().trim().toUpperCase()
+    let raw = item.circuit_ref || item.location || item.name || ''
+    raw = raw.toString().trim().replace(/\s*\/\s*sprint$/i, '').trim()
+    return raw.toUpperCase()
   }
 
-  // Overlay text: driver shortcode, team shortcode, or track circuit_ref name
+  // Overlay text: driver shortcode, team full name (match pitlane), or track circuit_ref/location
   function getOverlayText(item: GridItem, gridType: 'driver' | 'team' | 'track'): string {
     if (item.is_placeholder || !item.name) return ''
     if (gridType === 'driver') return getDriverCode(item)
-    if (gridType === 'team') return getTeamShortCode(item.name)
+    if (gridType === 'team') return item.name
     if (gridType === 'track') return getTrackLabel(item)
     return ''
   }
@@ -241,13 +241,16 @@ export function GridDisplayCard({
                 {/* Overlay: vertical for driver/track (shortcode / circuit_ref), centered horizontal for team */}
                 {getOverlayText(firstItem, grid.type) && (
                   grid.type === 'team' ? (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center px-2 pointer-events-none">
+                    <div className="absolute inset-0 z-20 flex items-center justify-center px-2 pointer-events-none opacity-90">
                       <span
-                        className="font-sans font-black text-white select-none block w-full text-center leading-none"
+                        className="font-semibold uppercase leading-none line-clamp-2 text-center text-white select-none block w-full"
                         style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 900,
+                          fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)',
                           letterSpacing: 0,
-                          fontSize: 'clamp(1.25rem, 8vw, 3rem)',
                           lineHeight: 1,
+                          textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                         }}
                       >
                         {getOverlayText(firstItem, grid.type)}
@@ -262,10 +265,12 @@ export function GridDisplayCard({
                       }`}
                     >
                       <span
-                        className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none select-none"
+                        className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none select-none tracking-widest"
                         style={{
-                          fontSize: grid.type === 'track' ? 'clamp(1rem, 3vw, 1.75rem)' : 'clamp(1rem, 2.5vw, 1.75rem)',
-                          letterSpacing: grid.type === 'track' ? 0 : '0.05em',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 900,
+                          fontSize: grid.type === 'track' ? 'clamp(1rem, 3vw, 1.5rem)' : 'clamp(12px, 4vw, 25px)',
+                          letterSpacing: '0',
                           transform: 'rotate(-90deg)',
                           transformOrigin: 'center center',
                         }}
@@ -385,13 +390,16 @@ export function GridDisplayCard({
                 {/* Overlay: vertical for driver/track, centered horizontal for team (small tiles) */}
                 {getOverlayText(item, grid.type) && (
                   grid.type === 'team' ? (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center px-0.5 pointer-events-none">
+                    <div className="absolute inset-0 z-20 flex items-center justify-center px-0.5 pointer-events-none opacity-90">
                       <span
-                        className="font-sans font-black text-white select-none block w-full text-center leading-none"
+                        className="font-semibold uppercase leading-none line-clamp-2 text-center text-white select-none block w-full"
                         style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 900,
+                          fontSize: 'clamp(0.5rem, 2vw, 0.75rem)',
                           letterSpacing: 0,
-                          fontSize: 'clamp(0.55rem, 3.5vw, 0.95rem)',
                           lineHeight: 1,
+                          textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                         }}
                       >
                         {getOverlayText(item, grid.type)}
@@ -402,14 +410,16 @@ export function GridDisplayCard({
                       className={`absolute z-20 flex items-center justify-center overflow-visible pointer-events-none ${
                         grid.type === 'track'
                           ? 'left-0.5 top-1/2 h-full w-[12px] -translate-y-1/2'
-                          : 'left-0.5 top-0.5 h-[44px] w-3'
+                          : 'left-0.5 top-2 h-[44px] w-3'
                       }`}
                     >
                       <span
-                        className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none select-none"
+                        className="shrink-0 whitespace-nowrap text-white font-bold tracking-widest uppercase leading-none select-none"
                         style={{
-                          fontSize: grid.type === 'track' ? 'clamp(0.4rem, 2vw, 0.7rem)' : 'clamp(0.45rem, 2.5vw, 0.75rem)',
-                          letterSpacing: grid.type === 'track' ? 0 : '0.05em',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: grid.type === 'track' ? 700 : 900,
+                          fontSize: grid.type === 'track' ? 'clamp(8px, 2vw, 15px)' : 'clamp(0.5rem, 2vw, 0.75rem)',
+                          letterSpacing: '0',
                           transform: 'rotate(-90deg)',
                           transformOrigin: 'center center',
                         }}

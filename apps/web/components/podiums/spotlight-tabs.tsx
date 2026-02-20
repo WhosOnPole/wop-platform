@@ -8,7 +8,8 @@ import { Star, PenLine } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { SponsorCard } from '@/components/feed/sponsor-card'
-import { getAvatarUrl } from '@/utils/avatar'
+import { FeaturedGridPostBlock, type FeaturedGridForBlock } from '@/components/feed/featured-grid-post-block'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 interface Poll {
   id: string
@@ -45,9 +46,14 @@ interface HighlightedFan {
 interface FeaturedGrid {
   id: string
   type: 'driver' | 'team' | 'track'
-  comment: string | null
-  ranked_items: Array<{ id?: string; name?: string; title?: string }>
+  comment?: string | null
+  blurb?: string | null
+  ranked_items: Array<{ id?: string; name?: string; title?: string; headshot_url?: string | null; image_url?: string | null; location?: string | null; country?: string | null; circuit_ref?: string | null }>
   user: { id: string; username: string; profile_image_url: string | null } | null
+  updated_at?: string | null
+  created_at?: string | null
+  like_count?: number
+  comment_count?: number
 }
 
 interface SpotlightTabsProps {
@@ -59,6 +65,7 @@ interface SpotlightTabsProps {
   sponsors: Sponsor[]
   highlightedFan: HighlightedFan | null
   featuredGrid: FeaturedGrid | null
+  supabaseUrl?: string
 }
 
 interface TabButtonProps {
@@ -96,6 +103,7 @@ export function SpotlightTabs({
   sponsors,
   highlightedFan,
   featuredGrid,
+  supabaseUrl,
 }: SpotlightTabsProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'polls' | 'stories' | 'our-picks'>('polls')
@@ -141,7 +149,7 @@ export function SpotlightTabs({
             <h2 className="text-xl font-semibold text-white">Admin polls</h2>
             {adminPollsWithFeatured.length > 0 ? (
               <div
-                className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0"
+                className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 pb-2"
                 style={{ scrollSnapType: 'x mandatory' }}
               >
                 {adminPollsWithFeatured.map((poll) => (
@@ -243,7 +251,11 @@ export function SpotlightTabs({
                 href={`/u/${highlightedFan.username}`}
                 className="flex w-full items-center gap-4 rounded-lg border border-white/20 bg-white/5 p-4 transition-colors hover:bg-white/10"
               >
-                <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
+                    isDefaultAvatar(highlightedFan.profile_image_url) ? 'bg-white p-0.5' : 'bg-white/10'
+                  }`}
+                >
                   <Image
                     src={getAvatarUrl(highlightedFan.profile_image_url)}
                     alt={highlightedFan.username}
@@ -266,43 +278,11 @@ export function SpotlightTabs({
           {featuredGrid && (
             <section className="space-y-4">
               <h2 className="text-xl font-semibold text-white">Featured Fan Grid</h2>
-              <div className="flex flex-col rounded-lg border border-white/20 bg-white/5 p-6">
-                {featuredGrid.user && (
-                  <Link
-                    href={`/u/${featuredGrid.user.username}`}
-                    className="text-sm text-white/90 hover:text-white"
-                  >
-                    @{featuredGrid.user.username}
-                  </Link>
-                )}
-                {featuredGrid.comment && (
-                  <p className="mt-2 text-sm italic text-white/80">&quot;{featuredGrid.comment}&quot;</p>
-                )}
-                <div className="mt-4 space-y-2">
-                  {Array.isArray(featuredGrid.ranked_items) &&
-                    featuredGrid.ranked_items.slice(0, 5).map((item, i) => (
-                      <div
-                        key={item?.id ?? i}
-                        className="flex items-center space-x-3 rounded-md bg-white/10 px-3 py-2"
-                      >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
-                          {i + 1}
-                        </span>
-                        <span className="min-w-0 truncate text-sm text-white/90">
-                          {item?.name ?? item?.title ?? 'Unknown'}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-                {featuredGrid.user && (
-                  <Link
-                    href={`/u/${featuredGrid.user.username}`}
-                    className="mt-4 inline-block text-sm font-medium text-[#25B4B1] hover:underline"
-                  >
-                    View full grid →
-                  </Link>
-                )}
-              </div>
+              <FeaturedGridPostBlock
+                grid={featuredGrid as FeaturedGridForBlock}
+                user={featuredGrid.user}
+                supabaseUrl={supabaseUrl}
+              />
             </section>
           )}
 

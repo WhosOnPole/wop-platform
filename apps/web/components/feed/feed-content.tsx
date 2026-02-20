@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LikeButton } from '@/components/discussion/like-button'
-import { getAvatarUrl } from '@/utils/avatar'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 import { FeedPostCommentSection } from './feed-post-comment-section'
 import { FeedPostActionsMenu } from './feed-post-actions-menu'
+import { FeedDiscoverGridActionsMenu } from './feed-discover-grid-actions-menu'
 import { GridDisplayCard } from '@/components/profile/grid-display-card'
 import { PollCard } from '@/components/polls/poll-card'
 import { createClientComponentClient } from '@/utils/supabase-client'
@@ -62,6 +63,16 @@ interface Poll {
   created_at: string
 }
 
+interface StandalonePoll {
+  id: string
+  question: string
+  options?: unknown[]
+  is_featured_podium?: boolean
+  created_at: string
+  ends_at?: string | null
+  admin_id?: string | null
+}
+
 interface NewsStory {
   id: string
   title: string
@@ -88,7 +99,11 @@ interface FeedContentProps {
   grids: Grid[]
   gridComments?: GridCommentItem[]
   embeddedPollsByPollId?: Record<string, EmbeddedPollData>
+  parentPageByKey?: Record<string, { name: string; href: string; type: string }>
   featuredNews: NewsStory[]
+  communityPolls?: StandalonePoll[]
+  pollUserResponses?: Record<string, string>
+  pollVoteCounts?: Record<string, Record<string, number>>
   supabaseUrl?: string
   currentUserId?: string
   isNewUser?: boolean
@@ -99,6 +114,7 @@ type FeedItem =
   | (Grid & { contentType: 'grid' })
   | (GridCommentItem & { contentType: 'grid_comment' })
   | (NewsStory & { contentType: 'news' })
+  | (StandalonePoll & { contentType: 'poll' })
 
 const DISCOVERY_LIMIT = 15
 
@@ -117,7 +133,11 @@ export function FeedContent({
   grids,
   gridComments = [],
   embeddedPollsByPollId = {},
+  parentPageByKey = {},
   featuredNews,
+  communityPolls = [],
+  pollUserResponses = {},
+  pollVoteCounts = {},
   supabaseUrl,
   currentUserId,
   isNewUser = false,
@@ -297,12 +317,13 @@ export function FeedContent({
     return () => observer.disconnect()
   }, [fetchDiscovery])
 
-  // Combine and sort all non-poll content (needed early so hasContent is available for effects)
+  // Combine and sort all content (posts, grids, grid comments, news, community polls) chronologically
   const allContent: FeedItem[] = [
     ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
     ...grids.map((g) => ({ ...g, contentType: 'grid' as const })),
     ...gridComments.map((c) => ({ ...c, contentType: 'grid_comment' as const })),
     ...featuredNews.map((n) => ({ ...n, contentType: 'news' as const })),
+    ...communityPolls.map((p) => ({ ...p, contentType: 'poll' as const })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   const hasContent = allContent.length > 0
@@ -347,10 +368,10 @@ export function FeedContent({
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center space-x-3">
                   <div
-                    className={`h-10 w-10 shrink-0 rounded-full ${
-                      post.user?.profile_image_url
-                        ? 'overflow-hidden'
-                        : 'bg-white border border-gray-200 p-1'
+                    className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
+                      isDefaultAvatar(post.user?.profile_image_url)
+                        ? 'bg-white border border-gray-200'
+                        : ''
                     }`}
                   >
                     <img
@@ -376,6 +397,19 @@ export function FeedContent({
                   postAuthorId={post.user?.id ?? null}
                 />
               </div>
+              {post.parent_page_type &&
+                post.parent_page_id &&
+                parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] && (
+                  <p className="mb-2 text-xs text-white/70">
+                    Discussion on{' '}
+                    <Link
+                      href={parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].href}
+                      className="text-[#25B4B1] hover:underline"
+                    >
+                      {parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].name}
+                    </Link>
+                  </p>
+                )}
               {post.content ? <p className="text-white/90">{post.content}</p> : null}
               {post.image_url && (
                 <div className="mt-3 overflow-hidden rounded-lg">
@@ -455,7 +489,7 @@ export function FeedContent({
                   className={`h-10 w-10 rounded-full ${
                     grid.user?.profile_image_url
                       ? 'overflow-hidden'
-                      : 'bg-white border border-gray-200 p-1'
+                      : 'bg-white border border-gray-200'
                   }`}
                 >
                   <img
@@ -480,6 +514,30 @@ export function FeedContent({
                 grid={gridForDisplay}
                 isOwnProfile={currentUserId ? grid.user_id === currentUserId : false}
                 supabaseUrl={supabaseUrl}
+              />
+            </div>
+          )
+        }
+
+        if (item.contentType === 'poll') {
+          const poll = item
+          return (
+            <div
+              key={`poll-${poll.id}`}
+              className="rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm"
+            >
+              <PollCard
+                poll={{
+                  ...poll,
+                  options: Array.isArray(poll.options) ? poll.options : [],
+                  is_featured_podium: poll.is_featured_podium ?? false,
+                  ends_at: poll.ends_at ?? undefined,
+                }}
+                userResponse={pollUserResponses[poll.id]}
+                voteCounts={pollVoteCounts[poll.id] ?? {}}
+                onVote={() => router.refresh()}
+                variant="dark"
+                className="min-h-0 border-0 bg-transparent p-0 shadow-none backdrop-blur-none"
               />
             </div>
           )
@@ -581,8 +639,10 @@ export function FeedContent({
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <div className="flex min-w-0 flex-1 items-center space-x-3">
                           <div
-                            className={`h-10 w-10 shrink-0 rounded-full ${
-                              post.user?.profile_image_url ? 'overflow-hidden' : 'bg-white border border-gray-200 p-1'
+                            className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
+                              isDefaultAvatar(post.user?.profile_image_url)
+                                ? 'bg-white border border-gray-200'
+                                : ''
                             }`}
                           >
                             <img
@@ -603,8 +663,27 @@ export function FeedContent({
                             </p>
                           </div>
                         </div>
-                        <FeedPostActionsMenu postId={post.id} postAuthorId={post.user?.id ?? null} />
+                        <FeedPostActionsMenu
+                          postId={post.id}
+                          postAuthorId={post.user?.id ?? null}
+                          showFollowButton
+                        />
                       </div>
+                      {post.parent_page_type &&
+                        post.parent_page_id &&
+                        parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] && (
+                          <p className="mb-2 text-xs text-white/70">
+                            Discussion on{' '}
+                            <Link
+                              href={
+                                parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].href
+                              }
+                              className="text-[#25B4B1] hover:underline"
+                            >
+                              {parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].name}
+                            </Link>
+                          </p>
+                        )}
                       {post.content ? <p className="text-white/90">{post.content}</p> : null}
                       {post.image_url && (
                         <div className="mt-3 overflow-hidden rounded-lg">
@@ -654,29 +733,37 @@ export function FeedContent({
                       key={`discover-grid-${grid.id}`}
                       className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
                     >
-                      <div className="mb-4 flex items-center space-x-3">
-                        <div
-                          className={`h-10 w-10 rounded-full ${
-                            grid.user?.profile_image_url ? 'overflow-hidden' : 'bg-white border border-gray-200 p-1'
-                          }`}
-                        >
-                          <img
-                            src={getAvatarUrl(grid.user?.profile_image_url)}
-                            alt={grid.user?.username ?? ''}
-                            className="h-full w-full rounded-full object-cover"
-                          />
-                        </div>
-                        <div>
-                          <Link
-                            href={`/u/${grid.user?.username || 'unknown'}`}
-                            className="font-medium text-white/90 hover:text-white"
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 items-center space-x-3">
+                          <div
+                            className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
+                              isDefaultAvatar(grid.user?.profile_image_url)
+                                ? 'bg-white border border-gray-200'
+                                : ''
+                            }`}
                           >
-                            {grid.user?.username || 'Unknown'}
-                          </Link>
-                          <p className="text-xs text-white/70">
-                            Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
-                          </p>
+                            <img
+                              src={getAvatarUrl(grid.user?.profile_image_url)}
+                              alt={grid.user?.username ?? ''}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/u/${grid.user?.username || 'unknown'}`}
+                              className="font-medium text-white/90 hover:text-white"
+                            >
+                              {grid.user?.username || 'Unknown'}
+                            </Link>
+                            <p className="text-xs text-white/70">
+                              Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
+                        <FeedDiscoverGridActionsMenu
+                          gridId={grid.id}
+                          authorId={grid.user?.id ?? null}
+                        />
                       </div>
                       <GridDisplayCard
                         grid={gridForDisplay}

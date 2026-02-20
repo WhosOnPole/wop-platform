@@ -64,9 +64,9 @@ export function GridHeartButton({
 
   const isDark = variant === 'dark'
   const buttonClass = isDark
-    ? `inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-2 py-2 lg:px-3 text-sm font-medium hover:bg-white/30 transition-colors disabled:opacity-50 ${isLiked ? 'text-sunset-end' : 'text-white'}`
+    ? `inline-flex items-center gap-1.5 rounded-full backdrop-blur-sm px-2 py-2 lg:px-3 text-sm font-medium hover:text-sunset-end transition-colors disabled:opacity-50 ${isLiked ? 'text-sunset-end' : 'text-white'}`
     : `inline-flex items-center gap-1 align-middle rounded-full px-3 py-1.5 text-sm leading-none transition-colors ${
-        isLiked ? 'text-sunset-end hover:opacity-90' : 'text-gray-600 hover:bg-gray-200'
+        isLiked ? 'text-sunset-end hover:opacity-90' : 'text-white hover:text-sunset-end'
       } disabled:opacity-50`
 
   return (

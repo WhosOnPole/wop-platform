@@ -5,12 +5,13 @@ import { parseDateOnly } from '@/utils/date-utils'
 import { FeedContent, type Post, type Grid, type GridCommentItem } from '@/components/feed/feed-content'
 import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 import { FeedHighlightedSidebar } from '@/components/feed/feed-highlighted-sidebar'
-import { CommunityPollsSection } from '@/components/feed/community-polls-section'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { BannerPollCard } from '@/components/feed/banner-poll-card'
-import { BannerFeaturedGridCard } from '@/components/feed/banner-featured-grid-card'
 import { BannerHighlightedFanCard } from '@/components/feed/banner-highlighted-fan-card'
+import { FeaturedGridPostBlock } from '@/components/feed/featured-grid-post-block'
+import { toEntitySlug } from '@/utils/url-slug'
+import { getTrackSlug } from '@/utils/storage-urls'
 
 export const revalidate = 60
 export const runtime = 'nodejs'
@@ -137,6 +138,8 @@ function getSpotlightFeaturedGrid(params: { grid: unknown }) {
     type,
     comment: typeof maybeGrid.blurb === 'string' ? maybeGrid.blurb : null,
     ranked_items: Array.isArray(maybeGrid.ranked_items) ? maybeGrid.ranked_items : [],
+    updated_at: maybeGrid.updated_at != null ? String(maybeGrid.updated_at) : null,
+    created_at: maybeGrid.created_at != null ? String(maybeGrid.created_at) : null,
     user: user
       ? {
           id: String(user.id),
@@ -549,6 +552,58 @@ export default async function FeedPage() {
     })
   }
 
+  // Resolve entity parent pages for posts (driver/team/track) so feed can show "Discussion on [Entity]"
+  const entityTypes = ['driver', 'team', 'track'] as const
+  const entityRefs = followingPostsList
+    .filter(
+      (p: Record<string, unknown>) =>
+        entityTypes.includes(p.parent_page_type as (typeof entityTypes)[number]) &&
+        typeof p.parent_page_id === 'string'
+    )
+    .map((p: Record<string, unknown>) => ({
+      type: p.parent_page_type as (typeof entityTypes)[number],
+      id: p.parent_page_id as string,
+    }))
+  const uniqueRefs = Array.from(
+    new Map(entityRefs.map((r) => [`${r.type}:${r.id}`, r])).values()
+  )
+  const driverEntityIds = uniqueRefs.filter((r) => r.type === 'driver').map((r) => r.id)
+  const teamEntityIds = uniqueRefs.filter((r) => r.type === 'team').map((r) => r.id)
+  const trackEntityIds = uniqueRefs.filter((r) => r.type === 'track').map((r) => r.id)
+  const [driverEntities, teamEntities, trackEntities] = await Promise.all([
+    driverEntityIds.length > 0
+      ? supabase.from('drivers').select('id, name').in('id', driverEntityIds)
+      : Promise.resolve({ data: [] }),
+    teamEntityIds.length > 0
+      ? supabase.from('teams').select('id, name').in('id', teamEntityIds)
+      : Promise.resolve({ data: [] }),
+    trackEntityIds.length > 0
+      ? supabase.from('tracks').select('id, name').in('id', trackEntityIds)
+      : Promise.resolve({ data: [] }),
+  ])
+  const parentPageByKey: Record<string, { name: string; href: string; type: string }> = {}
+  ;(driverEntities.data || []).forEach((d: { id: string; name: string }) => {
+    parentPageByKey[`driver:${d.id}`] = {
+      name: d.name,
+      href: `/drivers/${encodeURIComponent(toEntitySlug(d.name))}`,
+      type: 'driver',
+    }
+  })
+  ;(teamEntities.data || []).forEach((t: { id: string; name: string }) => {
+    parentPageByKey[`team:${t.id}`] = {
+      name: t.name,
+      href: `/teams/${encodeURIComponent(toEntitySlug(t.name))}`,
+      type: 'team',
+    }
+  })
+  ;(trackEntities.data || []).forEach((t: { id: string; name: string }) => {
+    parentPageByKey[`track:${t.id}`] = {
+      name: t.name,
+      href: `/tracks/${encodeURIComponent(getTrackSlug(t.name))}`,
+      type: 'track',
+    }
+  })
+
   // Enrich feed grids: ranked_items with images/location, like/comment counts
   const feedGridsRaw = followingGrids.data || []
   const feedGridIds = feedGridsRaw.map((grid: { id: string }) => grid.id)
@@ -705,13 +760,14 @@ export default async function FeedPage() {
     options?: unknown[]
     is_featured_podium?: boolean
     admin_id?: string | null
+    created_at: string
+    ends_at?: string | null
   }>
   const allActivePolls = [...adminPollsList, ...communityPollsList]
-  // Banner uses active admin polls only (expired hidden), featured first
-  const featuredAdminPoll =
-    adminPollsForBannerList.find((p) => p.is_featured_podium) ??
-    adminPollsForBannerList[0] ??
-    null
+  // Banner shows only an admin poll that is explicitly marked as featured. No other polls in the spotlight banner (carousel/sidebar).
+  const featuredAdminPoll = adminPollsForBannerList.find((p) => p.is_featured_podium) ?? null
+  // Carousel and sidebar: only the single featured admin poll (or none). Never community polls or non-featured admin polls.
+  const pollsForSpotlightBanner = featuredAdminPoll ? [featuredAdminPoll] : []
 
   const allFeedPollIds = [
     ...new Set([
@@ -763,6 +819,62 @@ export default async function FeedPage() {
   const featuredGrid = getSpotlightFeaturedGrid({
     grid: weeklyHighlights.data?.highlighted_fan_grid,
   })
+
+  // Enrich featured grid ranked_items (drivers/tracks/teams) for GridDisplayCard
+  let enrichedFeaturedGrid = featuredGrid
+  if (featuredGrid) {
+    const fgRanked = featuredGrid.ranked_items || []
+    const fgIds = fgRanked.map((i: { id?: string }) => i.id).filter(Boolean) as string[]
+    if (featuredGrid.type === 'driver' && fgIds.length > 0) {
+      const { data: fgDrivers } = await supabase
+        .from('drivers')
+        .select('id, name, headshot_url, image_url')
+        .in('id', fgIds)
+      const fgDriversById = new Map((fgDrivers || []).map((d: { id: string }) => [d.id, d]))
+      enrichedFeaturedGrid = {
+        ...featuredGrid,
+        ranked_items: fgRanked.map((item: { id: string; name?: string }) => {
+          const d = fgDriversById.get(item.id) as { headshot_url?: string | null; image_url?: string | null; name?: string } | undefined
+          return {
+            ...item,
+            name: item.name ?? d?.name ?? '',
+            headshot_url: d?.headshot_url ?? null,
+            image_url: d?.headshot_url ?? d?.image_url ?? null,
+          }
+        }),
+      }
+    } else if (featuredGrid.type === 'track' && fgIds.length > 0) {
+      const { data: fgTracks } = await supabase
+        .from('tracks')
+        .select('id, name, location, country, circuit_ref')
+        .in('id', fgIds)
+      const fgTracksById = new Map((fgTracks || []).map((t: { id: string }) => [t.id, t]))
+      enrichedFeaturedGrid = {
+        ...featuredGrid,
+        ranked_items: fgRanked.map((item: { id: string; name?: string }) => {
+          const t = fgTracksById.get(item.id) as { location?: string | null; country?: string | null; circuit_ref?: string | null; name?: string } | undefined
+          return {
+            ...item,
+            name: item.name ?? t?.name ?? '',
+            location: t?.location ?? null,
+            country: t?.country ?? null,
+            circuit_ref: t?.circuit_ref ?? null,
+          }
+        }),
+      }
+    } else if (featuredGrid.type === 'team' && fgIds.length > 0) {
+      const { data: fgTeams } = await supabase.from('teams').select('id, name').in('id', fgIds)
+      const fgTeamsById = new Map((fgTeams || []).map((t: { id: string }) => [t.id, t]))
+      enrichedFeaturedGrid = {
+        ...featuredGrid,
+        ranked_items: fgRanked.map((item: { id: string; name?: string }) => {
+          const t = fgTeamsById.get(item.id) as { name?: string } | undefined
+          return { ...item, name: item.name ?? t?.name ?? '' }
+        }),
+      }
+    }
+  }
+
   const highlightedFanRaw = weeklyHighlights.data?.highlighted_fan
   const highlightedFanProfile = Array.isArray(highlightedFanRaw)
     ? highlightedFanRaw[0]
@@ -782,13 +894,16 @@ export default async function FeedPage() {
     | { type: 'sponsor'; data: (typeof sponsorsList)[number] }
     | { type: 'featured_poll'; data: NonNullable<typeof featuredAdminPoll> }
     | { type: 'featured_story'; data: NonNullable<typeof featuredStory> }
-    | { type: 'featured_grid'; data: NonNullable<typeof featuredGrid> }
+    | { type: 'featured_grid'; data: NonNullable<typeof enrichedFeaturedGrid> }
     | { type: 'featured_user'; data: NonNullable<typeof highlightedFan> }
   const bannerItems: BannerItem[] = []
   sponsorsList.forEach((sponsor) => bannerItems.push({ type: 'sponsor', data: sponsor }))
-  if (featuredAdminPoll) bannerItems.push({ type: 'featured_poll', data: featuredAdminPoll })
+  // Only admin polls in banner; never user-submitted (community) polls
+  if (featuredAdminPoll && featuredAdminPoll.admin_id != null) {
+    bannerItems.push({ type: 'featured_poll', data: featuredAdminPoll })
+  }
   if (featuredStory) bannerItems.push({ type: 'featured_story', data: featuredStory })
-  if (featuredGrid) bannerItems.push({ type: 'featured_grid', data: featuredGrid })
+  if (enrichedFeaturedGrid) bannerItems.push({ type: 'featured_grid', data: enrichedFeaturedGrid })
   if (highlightedFan) bannerItems.push({ type: 'featured_user', data: highlightedFan })
 
   // Desktop banner: sponsors + featured grid + highlighted fan only (no news, no featured poll — those live in the left sidebar)
@@ -815,13 +930,21 @@ export default async function FeedPage() {
                       ? `grid-${item.data.id}`
                       : `fan-${item.data.id}`
                 }
-                className="min-h-[140px] min-w-[200px] max-w-[240px] flex-shrink-0"
+                className={
+                  item.type === 'featured_grid'
+                    ? 'min-h-[140px] min-w-[380px] max-w-[420px] flex-shrink-0'
+                    : 'min-h-[140px] min-w-[200px] max-w-[240px] flex-shrink-0'
+                }
               >
                 {item.type === 'sponsor' && (
                   <SponsorCard sponsor={item.data} variant="banner" />
                 )}
                 {item.type === 'featured_grid' && (
-                  <BannerFeaturedGridCard grid={item.data} />
+                  <FeaturedGridPostBlock
+                    grid={item.data}
+                    user={item.data.user}
+                    supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
+                  />
                 )}
                 {item.type === 'featured_user' && (
                   <BannerHighlightedFanCard fan={item.data} />
@@ -848,10 +971,9 @@ export default async function FeedPage() {
                   typeof profile.profile_image_url === 'string' ? profile.profile_image_url : null,
               }
             })()}
-            featuredGrid={getSpotlightFeaturedGrid({
-              grid: weeklyHighlights.data?.highlighted_fan_grid,
-            })}
-            polls={adminPolls.data || []}
+            featuredGrid={enrichedFeaturedGrid}
+            supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
+            polls={pollsForSpotlightBanner}
             userResponses={feedPollUserResponses}
             voteCounts={feedPollVoteCounts}
             featuredNews={featuredNewsList}
@@ -863,9 +985,10 @@ export default async function FeedPage() {
             <SpotlightCarousel
               spotlight={{
                 hot_take: activeHotTake.data || null,
-                featured_grid: getSpotlightFeaturedGrid({ grid: weeklyHighlights.data?.highlighted_fan_grid }),
+                featured_grid: enrichedFeaturedGrid,
               }}
-              polls={adminPolls.data || []}
+              supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
+              polls={pollsForSpotlightBanner}
               userResponses={feedPollUserResponses}
               voteCounts={feedPollVoteCounts}
               discussionPosts={hotTakePosts}
@@ -874,20 +997,15 @@ export default async function FeedPage() {
               featuredNews={featuredNewsList}
             />
           </div>
-          {communityPollsList.length > 0 && (
-            <div className="mb-6">
-              <CommunityPollsSection
-                polls={communityPollsList}
-                userResponses={feedPollUserResponses}
-                voteCounts={feedPollVoteCounts}
-              />
-            </div>
-          )}
           <FeedContent
             posts={enrichedFeedPosts}
             grids={enrichedFeedGrids as Grid[]}
             gridComments={normalizeGridComments(gridCommentsOnMyGrids.data || [])}
             embeddedPollsByPollId={embeddedPollsByPollId}
+            parentPageByKey={parentPageByKey}
+            communityPolls={communityPollsList}
+            pollUserResponses={feedPollUserResponses}
+            pollVoteCounts={feedPollVoteCounts}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}
             featuredNews={[]}

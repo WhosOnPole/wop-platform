@@ -5,7 +5,7 @@ import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
-import { getAvatarUrl } from '@/utils/avatar'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 interface User {
   id: string
@@ -120,11 +120,17 @@ export function ProfileDiscussionSection({
           posts.map((post) => (
             <div key={post.id} className="border-b border-gray-200 pb-6 last:border-0">
               <div className="mb-3 flex items-center space-x-3">
-                <img
-                  src={getAvatarUrl(post.user?.profile_image_url)}
-                  alt={post.user?.username ?? ''}
-                  className="h-8 w-8 rounded-full object-cover"
-                />
+                <div
+                  className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
+                    isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                  }`}
+                >
+                  <img
+                    src={getAvatarUrl(post.user?.profile_image_url)}
+                    alt={post.user?.username ?? ''}
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </div>
                 <div>
                   <Link
                     href={`/u/${post.user?.username || 'unknown'}`}

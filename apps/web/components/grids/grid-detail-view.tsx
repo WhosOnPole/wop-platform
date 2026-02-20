@@ -16,7 +16,7 @@ import { StepperBar } from '@/components/stepper-bar'
 import { PageBackButton } from '@/components/page-back-button'
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Send } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
-import { getAvatarUrl } from '@/utils/avatar'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 export type GridType = 'driver' | 'team' | 'track'
 
@@ -143,13 +143,19 @@ function OwnProfileBlurbBlock({
   if (readOnly) {
     return (
       <div className="mb-6 flex items-start gap-3">
-        <Image
-          src={getAvatarUrl(owner.profile_image_url)}
-          alt={owner.username}
-          width={48}
-          height={48}
-          className="h-12 w-12 shrink-0 rounded-full object-cover"
-        />
+        <div
+          className={`h-12 w-12 shrink-0 rounded-full overflow-hidden ${
+            isDefaultAvatar(owner.profile_image_url) ? 'bg-white p-0.5' : ''
+          }`}
+        >
+          <Image
+            src={getAvatarUrl(owner.profile_image_url)}
+            alt={owner.username}
+            width={48}
+            height={48}
+            className="h-full w-full rounded-full object-cover"
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-white">{owner.username}</p>
           <p className="mt-1 text-sm text-white/80 leading-snug">{ownBlurbDisplay}</p>
@@ -160,13 +166,19 @@ function OwnProfileBlurbBlock({
 
   return (
     <div className="mb-6 flex items-start gap-3">
-      <Image
-        src={getAvatarUrl(owner.profile_image_url)}
-        alt={owner.username}
-        width={48}
-        height={48}
-        className="h-12 w-12 shrink-0 rounded-full object-cover"
-      />
+      <div
+        className={`h-12 w-12 shrink-0 rounded-full overflow-hidden ${
+          isDefaultAvatar(owner.profile_image_url) ? 'bg-white p-0.5' : ''
+        }`}
+      >
+        <Image
+          src={getAvatarUrl(owner.profile_image_url)}
+          alt={owner.username}
+          width={48}
+          height={48}
+          className="h-full w-full rounded-full object-cover"
+        />
+      </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-white">{owner.username}</p>
         {showInput ? (
@@ -426,13 +438,19 @@ function GridBlurbDisplay({
     return (
       <div className="mb-6 flex items-start gap-3">
         <Link href={`/u/${owner.username}`} className="flex-shrink-0">
-          <Image
-            src={getAvatarUrl(owner.profile_image_url)}
-            alt={owner.username}
-            width={48}
-            height={48}
-            className="h-12 w-12 rounded-full object-cover"
-          />
+          <div
+            className={`h-12 w-12 rounded-full overflow-hidden ${
+              isDefaultAvatar(owner.profile_image_url) ? 'bg-white p-0.5' : ''
+            }`}
+          >
+            <Image
+              src={getAvatarUrl(owner.profile_image_url)}
+              alt={owner.username}
+              width={48}
+              height={48}
+              className="h-full w-full rounded-full object-cover"
+            />
+          </div>
         </Link>
         <div className="min-w-0 flex-1">
           <Link href={`/u/${owner.username}`} className="text-sm font-medium text-white hover:text-white/90">
@@ -722,18 +740,18 @@ export function GridDetailView({
             />
             <PageBackButton variant="dark" />
           </div>
-          {/* Background + vertical label: behind hero */}
+          {/* Background: behind hero */}
           <div className="absolute inset-0 top-0 left-0 right-0 pointer-events-none" aria-hidden>
             <GridHeroBackground heroBackground={heroBackground} isDriverOrTrack={isDriverOrTrack} />
+            <div className="absolute left-0 right-0 bottom-0 top-[65vh] lg:top-[60vh] bg-black z-0" />
+          </div>
+          {/* Hero wrapper: relative so rank number + vertical label can sit in stable positions */}
+          <div className="relative h-[40vh] lg:h-[60vh] shrink-0 z-10">
             {type !== 'team' && (
-              <div className="absolute left-[-3px] bottom-[48%] lg:top-auto lg:bottom-4 flex pl-0 w-12 z-20">
+              <div className="absolute left-[-3px] bottom-4 flex pl-0 w-12 z-20 pointer-events-none" aria-hidden>
                 <GridVerticalLabel type={type} />
               </div>
             )}
-            <div className="absolute left-0 right-0 bottom-0 top-[65vh] lg:top-[60vh] bg-black z-0" />
-          </div>
-          {/* Hero wrapper: relative so rank number can sit bottom-right on desktop */}
-          <div className="relative h-[40vh] lg:h-[60vh] shrink-0 z-10">
             {/* Rank number: fixed on mobile, absolute in hero on desktop; hidden for team (shown below name in content); color by team (driver) or white (track) */}
             {type !== 'team' && (
               <div

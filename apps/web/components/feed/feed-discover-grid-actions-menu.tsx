@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { MoreVertical, Trash2, Flag, UserPlus, UserCheck } from 'lucide-react'
+import { MoreVertical, UserPlus, UserCheck, Flag } from 'lucide-react'
 
 const REPORT_REASONS = [
   'Spam',
@@ -14,14 +14,12 @@ const REPORT_REASONS = [
   'Other',
 ]
 
-interface FeedPostActionsMenuProps {
-  postId: string
-  postAuthorId: string | null
-  /** When true (e.g. in discover section), show Follow option to follow the post author */
-  showFollowButton?: boolean
+interface FeedDiscoverGridActionsMenuProps {
+  gridId: string
+  authorId: string | null
 }
 
-export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = false }: FeedPostActionsMenuProps) {
+export function FeedDiscoverGridActionsMenu({ gridId, authorId }: FeedDiscoverGridActionsMenuProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -30,10 +28,9 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [selectedReason, setSelectedReason] = useState('')
   const [reportOtherText, setReportOtherText] = useState('')
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
   const [isFollowingLoading, setIsFollowingLoading] = useState(false)
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,16 +47,15 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [menuOpen])
 
-  const isOwner = !!currentUserId && !!postAuthorId && currentUserId === postAuthorId
-  const isDark = true
-  const showFollow = showFollowButton && !isOwner && !!postAuthorId && !!currentUserId
+  const isOwner = !!currentUserId && !!authorId && currentUserId === authorId
+  const showFollow = !isOwner && !!authorId && !!currentUserId
 
   async function handleFollow() {
-    if (!currentUserId || !postAuthorId) return
+    if (!currentUserId || !authorId) return
     setIsFollowingLoading(true)
     const { error } = await supabase.from('follows').insert({
       follower_id: currentUserId,
-      following_id: postAuthorId,
+      following_id: authorId,
     })
     setIsFollowingLoading(false)
     setMenuOpen(false)
@@ -68,22 +64,6 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
       return
     }
     setIsFollowing(true)
-    router.refresh()
-  }
-
-  async function handleDelete() {
-    if (!currentUserId) {
-      router.push('/login')
-      return
-    }
-    setIsDeleting(true)
-    const { error } = await supabase.from('posts').delete().eq('id', postId)
-    setIsDeleting(false)
-    setMenuOpen(false)
-    if (error) {
-      console.error('Error deleting post:', error)
-      return
-    }
     router.refresh()
   }
 
@@ -100,8 +80,8 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
     setIsSubmittingReport(true)
     const { error } = await supabase.from('reports').insert({
       reporter_id: session.user.id,
-      target_id: postId,
-      target_type: 'post',
+      target_id: gridId,
+      target_type: 'grid',
       reason,
     })
     setIsSubmittingReport(false)
@@ -129,7 +109,7 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
         type="button"
         onClick={() => setMenuOpen((o) => !o)}
         className="rounded p-0.5 text-white/70 transition-colors hover:text-white"
-        aria-label="Post actions"
+        aria-label="Grid actions"
         aria-expanded={menuOpen}
       >
         <MoreVertical className="h-4 w-4" />
@@ -140,18 +120,6 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
           className="absolute right-full top-0 z-50 mr-1 min-w-[140px] rounded-lg border border-white/10 bg-[#1D1D1D] py-1 shadow-xl"
           role="menu"
         >
-          {isOwner && (
-            <button
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/90 transition-colors hover:bg-white/10"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              <Trash2 className="h-4 w-4 shrink-0" />
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </button>
-          )}
           {showFollow && (
             <button
               type="button"

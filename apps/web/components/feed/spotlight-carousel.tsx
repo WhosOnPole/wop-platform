@@ -9,6 +9,7 @@ import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { UpcomingRaceCard } from './upcoming-race-card'
 import { SponsorCard } from './sponsor-card'
 import { FeaturedNewsCard } from './featured-news-card'
+import { FeaturedGridPostBlock } from './featured-grid-post-block'
 
 interface SpotlightProfile {
   id: string
@@ -19,9 +20,14 @@ interface SpotlightProfile {
 interface SpotlightGrid {
   id: string
   type: 'driver' | 'team' | 'track'
-  comment: string | null
+  comment?: string | null
+  blurb?: string | null
   ranked_items: any[]
   user: SpotlightProfile | null
+  updated_at?: string | null
+  created_at?: string | null
+  like_count?: number
+  comment_count?: number
 }
 
 interface SpotlightHotTake {
@@ -74,6 +80,7 @@ interface NewsStory {
 
 interface SpotlightCarouselProps {
   spotlight: SpotlightData | null
+  supabaseUrl?: string
   polls: Poll[]
   userResponses?: Record<string, string>
   voteCounts?: Record<string, Record<string, number>>
@@ -85,6 +92,7 @@ interface SpotlightCarouselProps {
 
 export function SpotlightCarousel({
   spotlight,
+  supabaseUrl,
   polls,
   userResponses = {},
   voteCounts = {},
@@ -214,29 +222,13 @@ export function SpotlightCarousel({
     }
     if (card.type === 'grid') {
       return (
-        <div className="flex h-full w-full flex-col rounded-lg border border-white/10 bg-black/40 backdrop-blur-sm p-6 shadow">
-          <div className="text-sm font-medium text-white/90">Featured Fan Grid</div>
-          {card.data.user && (
-            <Link
-              href={`/u/${card.data.user.username}`}
-              className="text-white/90 hover:text-white text-sm"
-            >
-              {card.data.user.username}
-            </Link>
-          )}
-          <div className="mt-4 flex-1 space-y-2 overflow-auto">
-            {Array.isArray(card.data.ranked_items) &&
-              card.data.ranked_items.slice(0, 3).map((item: any, i: number) => (
-                <div key={i} className="flex items-center space-x-3 rounded-md bg-white/10 p-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
-                    {i + 1}
-                  </span>
-                  <span className="text-sm text-white/90 truncate">
-                    {item?.name || item?.title || 'Unknown'}
-                  </span>
-                </div>
-              ))}
-          </div>
+        <div className="flex h-full min-h-[200px] w-full flex-col">
+          <FeaturedGridPostBlock
+            grid={card.data}
+            user={card.data.user}
+            supabaseUrl={supabaseUrl}
+            className="h-full min-h-0 flex-1"
+          />
         </div>
       )
     }

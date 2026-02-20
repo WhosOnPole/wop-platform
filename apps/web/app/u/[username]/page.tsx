@@ -242,7 +242,7 @@ export default async function UserProfilePage({ params }: PageProps) {
     }
   }
 
-  // Grid slot comments on this user's grids (owner sees when someone comments on their grid)
+  // Grid slot comments this user made on their own grids (user-initiated only)
   const myGridIds = (grids || []).map((g: { id: string }) => g.id)
   if (myGridIds.length > 0) {
     const { data: gridComments } = await supabase
@@ -266,6 +266,7 @@ export default async function UserProfilePage({ params }: PageProps) {
       `
       )
       .in('grid_id', myGridIds)
+      .eq('user_id', profile.id)
       .is('parent_comment_id', null)
       .order('created_at', { ascending: false })
       .limit(30)

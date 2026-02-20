@@ -292,43 +292,42 @@ export default function SettingsPage() {
         <p className="mt-2 text-white/80">Manage your profile and account settings</p>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-        {/* Tab nav: Profile, Settings, Info; Log out at bottom */}
-        <nav className="flex flex-row flex-wrap gap-2 border-b border-white/20 pb-4 lg:flex-col lg:w-52 lg:flex-shrink-0 lg:border-b-0 lg:border-r lg:border-white/20 lg:pr-6 lg:pb-0">
+      {/* Tab nav: Profile, Settings, Info - pitlane style */}
+      <div className="mb-6 flex w-full overflow-hidden rounded-full">
+        <div className="flex w-full">
           {(
             [
               { id: 'profile' as const, label: 'Profile', icon: User },
               { id: 'settings' as const, label: 'Settings', icon: Bell },
               { id: 'info' as const, label: 'Info', icon: Info },
             ] as const
-          ).map(({ id, label, icon: Icon }) => (
+          ).map(({ id, label, icon: Icon }, index) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`relative flex flex-1 items-center justify-center gap-2 px-4 py-2.5 text-xs tracking-wide uppercase transition ${
                 activeTab === id
-                  ? 'bg-white/10 text-white'
-                  : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  ? 'bg-white/30 text-white'
+                  : 'bg-white/[19%] text-[#FFFFFF50] hover:text-white'
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
+              {index < 2 && (
+                <span
+                  className={`pointer-events-none absolute right-0 top-1 bottom-1 w-[.5px] ${
+                    activeTab === id ? 'bg-white/10' : 'bg-white/20'
+                  }`}
+                />
+              )}
             </button>
           ))}
-          <div className="mt-auto hidden lg:block lg:pt-4" />
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors lg:mt-6"
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            Log out
-          </button>
-        </nav>
+        </div>
+      </div>
 
-        {/* Content */}
-        <div className="min-w-0 flex-1">
+      {/* Content */}
+      <div className="min-w-0 flex-1">
           {activeTab === 'profile' && (
         <section className="rounded-lg border border-white/20 bg-white/5 p-6">
           <h2 className="mb-6 text-xl font-semibold text-white">Profile</h2>
@@ -571,8 +570,17 @@ export default function SettingsPage() {
               </div>
             </section>
           )}
-        </div>
       </div>
+
+      {/* Log out - full-width red button at bottom */}
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-8 flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+      >
+        <LogOut className="h-4 w-4 shrink-0" />
+        Log out
+      </button>
     </div>
   )
 }

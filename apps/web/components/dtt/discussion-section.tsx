@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { DiscussionReportButton } from '@/components/discussion/report-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
-import { getAvatarUrl } from '@/utils/avatar'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 interface User {
   id: string
@@ -565,11 +565,17 @@ export function DiscussionSection({
             return (
               <div key={post.id} className={`${postBorderClasses} pb-6 last:border-0`}>
                 <div className="mb-3 flex items-center space-x-3">
-                  <img
-                    src={getAvatarUrl(post.user?.profile_image_url)}
-                    alt={post.user?.username ?? ''}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
+                  <div
+                    className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
+                      isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                    }`}
+                  >
+                    <img
+                      src={getAvatarUrl(post.user?.profile_image_url)}
+                      alt={post.user?.username ?? ''}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
                   <div>
                     <Link
                       href={`/u/${post.user?.username || 'unknown'}`}
@@ -634,11 +640,17 @@ export function DiscussionSection({
                       return (
                         <div key={comment.id} className="py-2">
                           <div className="mb-2 flex items-center space-x-2">
-                            <img
-                              src={getAvatarUrl(comment.user?.profile_image_url)}
-                              alt={comment.user?.username ?? ''}
-                              className="h-6 w-6 rounded-full object-cover"
-                            />
+                            <div
+                              className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
+                                isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                              }`}
+                            >
+                              <img
+                                src={getAvatarUrl(comment.user?.profile_image_url)}
+                                alt={comment.user?.username ?? ''}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            </div>
                             <div>
                               <Link
                                 href={`/u/${comment.user?.username || 'unknown'}`}
@@ -730,11 +742,17 @@ export function DiscussionSection({
                               {commentReplies.map((reply) => (
                                 <div key={reply.id} className="py-1">
                                   <div className="mb-1 flex items-center space-x-2">
-                                    <img
-                                      src={getAvatarUrl(reply.user?.profile_image_url)}
-                                      alt={reply.user?.username ?? ''}
-                                      className="h-5 w-5 rounded-full object-cover"
-                                    />
+                                    <div
+                                      className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
+                                        isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                                      }`}
+                                    >
+                                      <img
+                                        src={getAvatarUrl(reply.user?.profile_image_url)}
+                                        alt={reply.user?.username ?? ''}
+                                        className="h-full w-full rounded-full object-cover"
+                                      />
+                                    </div>
                                     <div>
                                       <Link
                                         href={`/u/${reply.user?.username || 'unknown'}`}
