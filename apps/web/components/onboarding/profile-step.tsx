@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
-import { Save, Upload, X } from 'lucide-react'
+import { Pencil, Save } from 'lucide-react'
 
 interface OnboardingProfileStepProps {
   onComplete: () => void
@@ -198,7 +198,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-12">
       <div>
         <h2 className="font-display text-2xl font-normal text-white">Set Up Your Profile</h2>
         <p className="mt-1 text-sm text-white/70">
@@ -208,87 +208,78 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         {/* Profile Image - left 1/3 */}
-        <div className="sm:col-span-1 rounded-lg border border-white/10 bg-black/40 p-8 backdrop-blur-sm">
+        <div className="flex flex-col items-center">
           <label className={labelClass}>Profile Picture</label>
-          {profileImagePreview ? (
-            <div className="relative my-4">
+          <div className="relative">
+            {profileImagePreview ? (
               <img
                 src={profileImagePreview}
                 alt="Profile preview"
-                className="h-40 w-40 rounded-full object-cover mx-auto"
+                className="h-40 w-40 rounded-full object-cover"
               />
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileImage(null)
-                  setProfileImagePreview(null)
-                }}
-                className="mt-2 w-full rounded-full bg-red-500 p-1 text-white hover:bg-red-600 flex items-center justify-center"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white/10 mx-auto my-6">
-              <span className="text-2xl text-white/40">?</span>
-            </div>
-          )}
-          <label className="cursor-pointer rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 mx-auto block text-center mt-2">
-            <Upload className="mr-2 inline h-4 w-4" />
-            Upload Photo
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </label>
+            ) : (
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white/10">
+                <span className="text-2xl text-white/40">+</span>
+              </div>
+            )}
+            {/* Pencil button overlapping bottom-right of avatar circle */}
+            <label className="absolute bottom-0 right-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-black bg-[#25B4B1] text-white shadow-lg hover:bg-[#25B4B1]/90 transition-colors">
+              <Pencil className="h-4 w-4" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
+          </div>
           {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
         </div>
 
-        {/* Username + Date of Birth - right 2/3, stacked */}
-        <div className="sm:col-span-2 space-y-6">
-          <div className="p-8 backdrop-blur-sm">
-            <label htmlFor="username" className={labelClass}>
-              Username <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              id="username"
-              required
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className={inputClass}
-              placeholder="Choose a username"
-            />
-            {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
+        {/* Username + Date of Birth + Show age - right 2/3, stacked */}
+        <div className="sm:col-span-2 flex flex-col">
+          <div className="p-8 backdrop-blur-sm space-y-6">
+            <div>
+              <label htmlFor="username" className={labelClass}>
+                Username <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                id="username"
+                required
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className={inputClass}
+                placeholder="Choose a username"
+              />
+              {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
+            </div>
 
-            <label htmlFor="dateOfBirth" className={labelClass}>
-              Date of Birth <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="date"
-              id="dateOfBirth"
-              required
-              value={formData.dateOfBirth}
-              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-              max={maxDob}
-              className={inputClass}
-            />
-            {errors.dateOfBirth && <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>}
+            <div>
+              <label htmlFor="dateOfBirth" className={labelClass}>
+                Date of Birth <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                required
+                value={formData.dateOfBirth}
+                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                max={maxDob}
+                className={inputClass}
+              />
+              {errors.dateOfBirth && <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>}
+            </div>
 
             <label className="flex items-start gap-3">
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
                 checked={doesShowAgeOnProfile}
                 onChange={(e) => setDoesShowAgeOnProfile(e.target.checked)}
               />
               <span>
-                <span className="block text-sm font-medium text-white">Show my age on my profile</span>
-                <span className="block text-sm text-white/60">
-                  If enabled, your age may be visible to other users on your public profile.
-                </span>
+                <span className="block text-sm font-medium pt-1 text-white">Show my age on my profile</span>
               </span>
             </label>
           </div>
@@ -301,11 +292,11 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-center">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex items-center space-x-2 rounded-lg bg-[#25B4B1] px-6 py-2 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
+          className="w-full max-w-md flex items-center justify-center gap-2 rounded-lg bg-[#25B4B1] px-6 py-3 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
           <span>Hop In!</span>
