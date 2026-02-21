@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MessageSquare, MapPin, Grid3x3 } from 'lucide-react'
+import { getViewGridLabel } from '@/utils/grid-labels'
 
 interface ActivityItem {
   id: string
@@ -141,7 +142,7 @@ export function ActivityTab({
                     </div>
                     {link && (
                       <span className="shrink-0 text-sm font-medium text-[#25B4B1] hover:text-[#25B4B1]/90">
-                        View Grid →
+                        {getViewGridLabel(item.target_type)} →
                       </span>
                     )}
                   </div>

@@ -520,6 +520,7 @@ export function GridDetailView({
   const ownBlurbDisplay = ownBlurbLocal !== null ? ownBlurbLocal : currentSlotBlurbFromData
   const [isEditingEditBlurb, setIsEditingEditBlurb] = useState(false)
   const [editBlurbDraft, setEditBlurbDraft] = useState('')
+  const [editBlurbJustSaved, setEditBlurbJustSaved] = useState(false)
 
   useEffect(() => {
     setOwnBlurbLocal(null)
@@ -900,29 +901,59 @@ export function GridDetailView({
                 <label className="block text-sm font-medium text-white/90 mb-2">
                   Your comment for: <span className="font-bold pl-2 font-display">{rankIndex} – {selectedItem?.name}</span>
                 </label>
-                <div className="flex w-full items-stretch">
-                  <textarea
-                    value={editBlurbDraft}
-                    onChange={(e) => setEditBlurbDraft(e.target.value.slice(0, 140))}
-                    placeholder="Add a comment..."
-                    rows={2}
-                    className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
-                  />
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const value = editBlurbDraft.trim().slice(0, 140)
-                      onSlotBlurbChange(rankIndex, editBlurbDraft)
-                      setIsEditingEditBlurb(false)
-                      if (grid.id && onSlotBlurbSave) await onSlotBlurbSave(rankIndex, value)
-                    }}
-                    className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1]"
-                  >
-                    <Send className="h-4 w-4" />
-                    Done
-                  </button>
-                </div>
-                <p className="mt-1 text-xs text-white/60">{editBlurbDraft.length}/140</p>
+                {currentSlotBlurbFromData.trim().length > 0 && !isEditingEditBlurb ? (
+                  <div className="flex w-full items-center gap-3 rounded-md border border-white/20 bg-white/10 px-3 py-2">
+                    <p className="min-w-0 flex-1 text-sm text-white">{currentSlotBlurbFromData}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditBlurbDraft(currentSlotBlurbFromData)
+                        setIsEditingEditBlurb(true)
+                      }}
+                      className="shrink-0 rounded p-1.5 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                      aria-label="Edit comment"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex w-full items-stretch">
+                    <textarea
+                      value={editBlurbDraft}
+                      onChange={(e) => setEditBlurbDraft(e.target.value.slice(0, 140))}
+                      placeholder="Add a comment..."
+                      rows={2}
+                      className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const value = editBlurbDraft.trim().slice(0, 140)
+                        onSlotBlurbChange(rankIndex, value)
+                        setSlotBlurbsLocal((prev) => ({ ...(prev ?? {}), [rankIndex]: value }))
+                        setEditBlurbJustSaved(true)
+                        if (grid.id && onSlotBlurbSave) await onSlotBlurbSave(rankIndex, value)
+                        setTimeout(() => {
+                          setEditBlurbJustSaved(false)
+                          setIsEditingEditBlurb(false)
+                        }, 1200)
+                      }}
+                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] min-w-[4.5rem]"
+                    >
+                      {editBlurbJustSaved ? (
+                        'Saved!'
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4" />
+                          Done
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+                {isEditingEditBlurb && (
+                  <p className="mt-1 text-xs text-white/60">{editBlurbDraft.length}/140</p>
+                )}
               </div>
             )}
 

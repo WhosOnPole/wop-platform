@@ -185,125 +185,129 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
             const commentReplies = repliesByParent[comment.id] || []
             return (
               <div key={comment.id} className="py-1">
-                <div className="mb-0.5 flex items-center gap-2">
-                  <div
-                    className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                      isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
-                    }`}
-                  >
-                    <img
-                      src={getAvatarUrl(comment.user?.profile_image_url)}
-                      alt={comment.user?.username ?? ''}
-                      className="h-full w-full rounded-full object-cover"
+                <div className="mb-0.5 flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <div
+                      className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
+                        isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                      }`}
+                    >
+                      <img
+                        src={getAvatarUrl(comment.user?.profile_image_url)}
+                        alt={comment.user?.username ?? ''}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    </div>
+                    <Link
+                      href={`/u/${comment.user?.username ?? 'unknown'}`}
+                      className="text-sm font-medium text-white/90 hover:text-white"
+                    >
+                      {comment.user?.username ?? 'Unknown'}
+                    </Link>
+                    <span className="text-xs text-white/70">
+                      {new Date(comment.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <LikeButton
+                      targetId={comment.id}
+                      targetType="grid_slot_comment"
+                      initialLikeCount={comment.like_count ?? 0}
+                      initialIsLiked={userLikes[comment.id] ?? false}
+                      onLikeChange={(targetId, isLiked) => {
+                        setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
+                      }}
+                      variant="dark"
+                    />
+                    <CommentActionsMenu
+                      commentId={comment.id}
+                      commentAuthorId={comment.user?.id ?? null}
+                      currentUserId={currentUserId}
+                      targetType="grid_slot_comment"
+                      variant="dark"
+                      initialContent={comment.content}
+                      onDeleted={(deletedId) => {
+                        setComments((prev) =>
+                          prev.filter(
+                            (c) => c.id !== deletedId && c.parent_comment_id !== deletedId
+                          )
+                        )
+                      }}
+                      onEdited={(editedId, newContent) => {
+                        setComments((prev) =>
+                          prev.map((c) =>
+                            c.id === editedId ? { ...c, content: newContent } : c
+                          )
+                        )
+                      }}
                     />
                   </div>
-                  <Link
-                    href={`/u/${comment.user?.username ?? 'unknown'}`}
-                    className="text-sm font-medium text-white/90 hover:text-white"
-                  >
-                    {comment.user?.username ?? 'Unknown'}
-                  </Link>
-                  <span className="text-xs text-white/70">
-                    {new Date(comment.created_at).toLocaleString()}
-                  </span>
                 </div>
                 <p className="text-sm text-white/90 pl-8">{comment.content}</p>
-                <div className="mt-1 flex items-center justify-end gap-2">
-                  <LikeButton
-                    targetId={comment.id}
-                    targetType="grid_slot_comment"
-                    initialLikeCount={comment.like_count ?? 0}
-                    initialIsLiked={userLikes[comment.id] ?? false}
-                    onLikeChange={(targetId, isLiked) => {
-                      setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
-                    }}
-                    variant="dark"
-                  />
-                  <CommentActionsMenu
-                    commentId={comment.id}
-                    commentAuthorId={comment.user?.id ?? null}
-                    currentUserId={currentUserId}
-                    targetType="grid_slot_comment"
-                    variant="dark"
-                    initialContent={comment.content}
-                    onDeleted={(deletedId) => {
-                      setComments((prev) =>
-                        prev.filter(
-                          (c) => c.id !== deletedId && c.parent_comment_id !== deletedId
-                        )
-                      )
-                    }}
-                    onEdited={(editedId, newContent) => {
-                      setComments((prev) =>
-                        prev.map((c) =>
-                          c.id === editedId ? { ...c, content: newContent } : c
-                        )
-                      )
-                    }}
-                  />
-                </div>
                 {commentReplies.length > 0 && (
                   <div className="mt-2 ml-4 space-y-2 border-l border-white/10 pl-3">
                     {commentReplies.map((reply) => (
                       <div key={reply.id}>
-                        <div className="mb-0.5 flex items-center gap-2">
-                          <div
-                            className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                              isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
-                            }`}
-                          >
-                            <img
-                              src={getAvatarUrl(reply.user?.profile_image_url)}
-                              alt={reply.user?.username ?? ''}
-                              className="h-full w-full rounded-full object-cover"
+                        <div className="mb-0.5 flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <div
+                              className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
+                                isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                              }`}
+                            >
+                              <img
+                                src={getAvatarUrl(reply.user?.profile_image_url)}
+                                alt={reply.user?.username ?? ''}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            </div>
+                            <Link
+                              href={`/u/${reply.user?.username ?? 'unknown'}`}
+                              className="text-xs font-medium text-white/90 hover:text-white"
+                            >
+                              {reply.user?.username ?? 'Unknown'}
+                            </Link>
+                            <span className="text-xs text-white/70">
+                              {new Date(reply.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <LikeButton
+                              targetId={reply.id}
+                              targetType="grid_slot_comment"
+                              initialLikeCount={reply.like_count ?? 0}
+                              initialIsLiked={userLikes[reply.id] ?? false}
+                              onLikeChange={(targetId, isLiked) => {
+                                setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
+                              }}
+                              variant="dark"
+                            />
+                            <CommentActionsMenu
+                              commentId={reply.id}
+                              commentAuthorId={reply.user?.id ?? null}
+                              currentUserId={currentUserId}
+                              targetType="grid_slot_comment"
+                              variant="dark"
+                              initialContent={reply.content}
+                              onDeleted={(deletedId) => {
+                                setComments((prev) =>
+                                  prev.filter(
+                                    (c) =>
+                                      c.id !== deletedId && c.parent_comment_id !== deletedId
+                                  )
+                                )
+                              }}
+                              onEdited={(editedId, newContent) => {
+                                setComments((prev) =>
+                                  prev.map((c) =>
+                                    c.id === editedId ? { ...c, content: newContent } : c
+                                  )
+                                )
+                              }}
                             />
                           </div>
-                          <Link
-                            href={`/u/${reply.user?.username ?? 'unknown'}`}
-                            className="text-xs font-medium text-white/90 hover:text-white"
-                          >
-                            {reply.user?.username ?? 'Unknown'}
-                          </Link>
-                          <span className="text-xs text-white/70">
-                            {new Date(reply.created_at).toLocaleString()}
-                          </span>
                         </div>
                         <p className="text-sm text-white/90">{reply.content}</p>
-                        <div className="flex items-center justify-end gap-2">
-                          <LikeButton
-                            targetId={reply.id}
-                            targetType="grid_slot_comment"
-                            initialLikeCount={reply.like_count ?? 0}
-                            initialIsLiked={userLikes[reply.id] ?? false}
-                            onLikeChange={(targetId, isLiked) => {
-                              setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
-                            }}
-                            variant="dark"
-                          />
-                          <CommentActionsMenu
-                            commentId={reply.id}
-                            commentAuthorId={reply.user?.id ?? null}
-                            currentUserId={currentUserId}
-                            targetType="grid_slot_comment"
-                            variant="dark"
-                            initialContent={reply.content}
-                            onDeleted={(deletedId) => {
-                              setComments((prev) =>
-                                prev.filter(
-                                  (c) =>
-                                    c.id !== deletedId && c.parent_comment_id !== deletedId
-                                )
-                              )
-                            }}
-                            onEdited={(editedId, newContent) => {
-                              setComments((prev) =>
-                                prev.map((c) =>
-                                  c.id === editedId ? { ...c, content: newContent } : c
-                                )
-                              )
-                            }}
-                          />
-                        </div>
                       </div>
                     ))}
                   </div>

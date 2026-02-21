@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { LayoutGrid } from 'lucide-react'
+import { getViewGridLabel } from '@/utils/grid-labels'
 
 interface FeaturedGrid {
   id: string
@@ -41,7 +42,7 @@ export function BannerFeaturedGridCard({ grid }: BannerFeaturedGridCardProps) {
           #1 {topItem.name ?? topItem.title ?? '—'}
         </p>
       )}
-      <span className="mt-auto pt-2 text-xs text-[#25B4B1]">View grid →</span>
+      <span className="mt-auto pt-2 text-xs text-[#25B4B1]">{getViewGridLabel(grid.type)} →</span>
     </Link>
   )
 }

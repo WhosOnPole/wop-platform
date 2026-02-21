@@ -7,6 +7,7 @@ import { GridHeartButton } from './grid-heart-button'
 import { CommentIcon } from '@/components/ui/comment-icon'
 import { GridSnapshot } from './grid-snapshot'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { getViewGridLabel } from '@/utils/grid-labels'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface GridItem {
@@ -258,10 +259,10 @@ export function GridDisplayCard({
                     </div>
                   ) : (
                     <div
-                      className={`absolute z-20 flex items-center justify-center overflow-visible pointer-events-none ${
+                      className={`absolute z-20 flex justify-center overflow-visible pointer-events-none ${
                         grid.type === 'track'
-                          ? 'left-1 top-1/2 h-[70%] w-5 md:w-6 -translate-y-1/2'
-                          : 'left-1 bottom-0 h-[100%] w-5 md:w-6'
+                          ? 'left-1 top-1/2 h-[70%] items-center w-5 md:w-6 -translate-y-1/2'
+                          : 'left-1 bottom-0 h-[100%] items-end pb-4 text-left w-5 md:w-6'
                       }`}
                     >
                       <span
@@ -471,7 +472,7 @@ export function GridDisplayCard({
           href={`/grid/${grid.id}`}
           className="flex items-center gap-1 text-sm hover:text-sunset-start float-right justify-end ml-auto self-end"
         >
-          View Grid <ChevronRight className="h-4 w-4" />
+          {getViewGridLabel(grid.type)} <ChevronRight className="h-4 w-4" />
         </Link>
         </div>
       )}

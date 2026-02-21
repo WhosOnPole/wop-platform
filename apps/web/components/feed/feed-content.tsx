@@ -11,6 +11,7 @@ import { FeedDiscoverGridActionsMenu } from './feed-discover-grid-actions-menu'
 import { GridDisplayCard } from '@/components/profile/grid-display-card'
 import { PollCard } from '@/components/polls/poll-card'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { getViewGridLabel } from '@/utils/grid-labels'
 
 interface User {
   id: string
@@ -328,15 +329,15 @@ export function FeedContent({
 
   const hasContent = allContent.length > 0
 
-  // New user with empty feed: load discover on mount so it appears below empty state
+  // Empty feed: load discover on mount so it's always visible (new users or anyone with empty feed)
   useEffect(() => {
-    if (isNewUser && !hasContent) fetchDiscovery()
-  }, [isNewUser, hasContent, fetchDiscovery])
+    if (!hasContent) fetchDiscovery()
+  }, [hasContent, fetchDiscovery])
 
   const emptyStateBlock = (
     <div className="rounded-lg border border-white/10 bg-black/40 p-12 text-center shadow backdrop-blur-sm">
       <p className="text-white/90">
-        Start creating grids to see more content here!
+        Start your journey by exploring drivers, teams and tracks!
       </p>
       <Link
         href="/pitlane"
@@ -347,13 +348,9 @@ export function FeedContent({
     </div>
   )
 
-  if (!hasContent && !isNewUser) {
-    return emptyStateBlock
-  }
-
   return (
     <div className="space-y-6">
-      {!hasContent && isNewUser && emptyStateBlock}
+      {!hasContent && emptyStateBlock}
       {hasContent && (
         <>
           {/* Vertical feed for other content */}
@@ -575,7 +572,7 @@ export function FeedContent({
                   href={`/grid/${comment.grid_id}`}
                   className="shrink-0 text-sm font-medium text-[#25B4B1] hover:text-[#25B4B1]/90"
                 >
-                  View Grid →
+                  {getViewGridLabel(comment.grid?.type)} →
                 </Link>
               </div>
             </div>
@@ -618,7 +615,7 @@ export function FeedContent({
         </>
       )}
 
-      {/* Discover section: after feed (when hasContent) or below empty state (when !hasContent && isNewUser) */}
+      {/* Discover section: after feed when scrolled to bottom, or below empty state when feed is empty */}
       {(hasLoadedDiscovery || isLoadingDiscovery) && (
         <>
           <DiscoverDivider />

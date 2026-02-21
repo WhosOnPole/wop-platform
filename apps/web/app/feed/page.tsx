@@ -925,34 +925,13 @@ export default async function FeedPage() {
 
       {desktopBannerItems.length > 0 && (
         <div className="relative z-10 hidden w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:block lg:px-8">
-          <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-auto lg:gap-8">
+          <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-hidden justify-center items-center">
             {desktopBannerItems.map((item) => (
               <div
-                key={
-                  item.type === 'sponsor'
-                    ? `sponsor-${item.data.id}`
-                    : item.type === 'featured_grid'
-                      ? `grid-${item.data.id}`
-                      : `fan-${item.data.id}`
-                }
-                className={
-                  item.type === 'featured_grid'
-                    ? 'min-h-[140px] min-w-[380px] max-w-[420px] flex-shrink-0'
-                    : 'min-h-[140px] min-w-[200px] max-w-[240px] flex-shrink-0'
-                }
-              >
+                key={`sponsor-${item.data.id}`}
+                className={' flex-shrink-0'}>
                 {item.type === 'sponsor' && (
                   <SponsorCard sponsor={item.data} variant="banner" />
-                )}
-                {item.type === 'featured_grid' && (
-                  <FeaturedGridPostBlock
-                    grid={item.data}
-                    user={item.data.user}
-                    supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
-                  />
-                )}
-                {item.type === 'featured_user' && (
-                  <BannerHighlightedFanCard fan={item.data} />
                 )}
               </div>
             ))}
