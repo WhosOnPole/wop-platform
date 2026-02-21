@@ -71,7 +71,7 @@ export function EntityHeroBackground({
             {getTeamShortCode(teamName)}
           </span>
           {teamOverviewText && (
-            <p className="font-sans text-center text-white/90 text-base leading-relaxed mt-4 max-w-2xl">
+            <p className="font-sans font-light text-center text-white/90 text-base leading-relaxed tracking-wide mt-4 max-w-2xl">
               {teamOverviewText}
             </p>
           )}
