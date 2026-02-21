@@ -70,12 +70,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold text-white">Complete your profile</h1>
-          <p className="mt-1 text-sm text-white/70">Add your details to get started.</p>
-        </div>
-
-        <div className="rounded-lg border border-white/10 bg-black/40 p-8 backdrop-blur-sm">
+        <div className="backdrop-blur-sm">
           <OnboardingProfileStep onComplete={handleProfileComplete} />
         </div>
       </div>

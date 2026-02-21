@@ -13,12 +13,8 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
   const [formData, setFormData] = useState({
     username: '',
     dateOfBirth: '',
-    city: '',
-    state: '',
-    country: '',
   })
-  const [doesShowStateOnProfile, setDoesShowStateOnProfile] = useState(false)
-  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([])
+  const [doesShowAgeOnProfile, setDoesShowAgeOnProfile] = useState(true)
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -39,7 +35,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     return input
       .toLowerCase()
       .trim()
-      .replace(/['’]/g, '')
+      .replace(/['']/g, '')
       .replace(/[^a-z0-9_]+/g, '_')
       .replace(/_{2,}/g, '_')
       .replace(/^_+|_+$/g, '')
@@ -55,7 +51,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('*')
+      .select('username, date_of_birth, profile_image_url, show_age_on_profile')
       .eq('id', session.user.id)
       .maybeSingle()
 
@@ -63,24 +59,11 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       setFormData({
         username: profile.username || '',
         dateOfBirth: profile.date_of_birth || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        country: profile.country || '',
       })
-      setDoesShowStateOnProfile(Boolean(profile.show_state_on_profile))
+      setDoesShowAgeOnProfile(profile.show_age_on_profile !== false)
       setProfileImagePreview(profile.profile_image_url)
-      if (profile.social_links && typeof profile.social_links === 'object') {
-        setSocialLinks(
-          Object.entries(profile.social_links as Record<string, string>).map(([platform, url]) => ({
-            platform,
-            url,
-          }))
-        )
-      }
     }
 
-    // If username isn't set in profile yet, prefill from social provider metadata.
-    // TikTok: user_metadata.preferred_username (set during TikTok OAuth) or display_name.
     const userMeta = session.user.user_metadata as Record<string, unknown>
     const preferred =
       (typeof userMeta.preferred_username === 'string' && userMeta.preferred_username) ||
@@ -110,20 +93,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     }
   }
 
-  function addSocialLink() {
-    setSocialLinks([...socialLinks, { platform: '', url: '' }])
-  }
-
-  function removeSocialLink(index: number) {
-    setSocialLinks(socialLinks.filter((_, i) => i !== index))
-  }
-
-  function updateSocialLink(index: number, field: 'platform' | 'url', value: string) {
-    const updated = [...socialLinks]
-    updated[index][field] = value
-    setSocialLinks(updated)
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsSubmitting(true)
@@ -135,7 +104,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     if (!session) return
 
-    // Validate required fields and age >= 13
     if (!formData.username.trim()) {
       setErrors({ username: 'Username is required' })
       setIsSubmitting(false)
@@ -160,7 +128,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       return
     }
 
-    // Check username uniqueness
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -175,7 +142,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     let imageUrl = profileImagePreview
 
-    // Upload image if changed
     if (profileImage) {
       const fileExt = profileImage.name.split('.').pop()
       const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
@@ -198,27 +164,14 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       imageUrl = publicUrl
     }
 
-    // Convert social links array to object
-    const socialLinksObj: Record<string, string> = {}
-    socialLinks.forEach((link) => {
-      if (link.platform.trim() && link.url.trim()) {
-        socialLinksObj[link.platform.trim().toLowerCase()] = link.url.trim()
-      }
-    })
-
-    // Upsert profile
     const profileData = {
       id: session.user.id,
       username: formData.username.trim(),
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,
-      age: age,
-      city: formData.city.trim() || null,
-      state: formData.state.trim() || null,
-      country: formData.country.trim() || null,
-      show_state_on_profile: doesShowStateOnProfile,
-      social_links: Object.keys(socialLinksObj).length > 0 ? socialLinksObj : null,
+      age,
+      show_age_on_profile: doesShowAgeOnProfile,
     }
 
     const { error } = await supabase.from('profiles').upsert(profileData, { onConflict: 'id' })
@@ -233,8 +186,8 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
   }
 
   const inputClass =
-    'mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]'
-  const labelClass = 'block text-sm font-medium text-white/90'
+    'mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] mb-8'
+  const labelClass = 'block text-sm font-medium text-white/90 mb-2'
 
   if (loading) {
     return (
@@ -249,20 +202,20 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       <div>
         <h2 className="font-display text-2xl font-normal text-white">Set Up Your Profile</h2>
         <p className="mt-1 text-sm text-white/70">
-          Tell us about yourself. Username and date of birth are required.
+          One step away from your journey!
         </p>
       </div>
 
-      {/* Profile Image */}
-      <div>
-        <label className={labelClass}>Profile Picture</label>
-        <div className="mt-2 flex items-center space-x-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        {/* Profile Image - left 1/3 */}
+        <div className="sm:col-span-1 rounded-lg border border-white/10 bg-black/40 p-8 backdrop-blur-sm">
+          <label className={labelClass}>Profile Picture</label>
           {profileImagePreview ? (
-            <div className="relative">
+            <div className="relative my-4">
               <img
                 src={profileImagePreview}
                 alt="Profile preview"
-                className="h-24 w-24 rounded-full object-cover"
+                className="h-40 w-40 rounded-full object-cover mx-auto"
               />
               <button
                 type="button"
@@ -270,17 +223,17 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
                   setProfileImage(null)
                   setProfileImagePreview(null)
                 }}
-                className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                className="mt-2 w-full rounded-full bg-red-500 p-1 text-white hover:bg-red-600 flex items-center justify-center"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/10">
+            <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white/10 mx-auto my-6">
               <span className="text-2xl text-white/40">?</span>
             </div>
           )}
-          <label className="cursor-pointer rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10">
+          <label className="cursor-pointer rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 mx-auto block text-center mt-2">
             <Upload className="mr-2 inline h-4 w-4" />
             Upload Photo
             <input
@@ -290,141 +243,55 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
               className="hidden"
             />
           </label>
+          {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
         </div>
-        {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
-      </div>
 
-      {/* Username */}
-      <div>
-        <label htmlFor="username" className={labelClass}>
-          Username <span className="text-red-400">*</span>
-        </label>
-        <input
-          type="text"
-          id="username"
-          required
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-          className={inputClass}
-          placeholder="Choose a username"
-        />
-        {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
-      </div>
+        {/* Username + Date of Birth - right 2/3, stacked */}
+        <div className="sm:col-span-2 space-y-6">
+          <div className="p-8 backdrop-blur-sm">
+            <label htmlFor="username" className={labelClass}>
+              Username <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              id="username"
+              required
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              className={inputClass}
+              placeholder="Choose a username"
+            />
+            {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
 
-      {/* Date of Birth */}
-      <div>
-        <label htmlFor="dateOfBirth" className={labelClass}>
-          Date of Birth <span className="text-red-400">*</span>
-        </label>
-        <input
-          type="date"
-          id="dateOfBirth"
-          required
-          value={formData.dateOfBirth}
-          onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-          max={maxDob}
-          className={inputClass}
-        />
-        {errors.dateOfBirth && <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>}
-      </div>
+            <label htmlFor="dateOfBirth" className={labelClass}>
+              Date of Birth <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              required
+              value={formData.dateOfBirth}
+              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+              max={maxDob}
+              className={inputClass}
+            />
+            {errors.dateOfBirth && <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>}
 
-      {/* Location */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div>
-          <label htmlFor="city" className={labelClass}>
-            City <span className="text-white/50">(optional)</span>
-          </label>
-          <input
-            type="text"
-            id="city"
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className={inputClass}
-            placeholder="City"
-          />
-        </div>
-        <div>
-          <label htmlFor="state" className={labelClass}>
-            State <span className="text-white/50">(optional)</span>
-          </label>
-          <input
-            type="text"
-            id="state"
-            value={formData.state}
-            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            className={inputClass}
-            placeholder="State"
-          />
-        </div>
-        <div>
-          <label htmlFor="country" className={labelClass}>
-            Country <span className="text-white/50">(optional)</span>
-          </label>
-          <input
-            type="text"
-            id="country"
-            value={formData.country}
-            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            className={inputClass}
-            placeholder="Country"
-          />
-        </div>
-      </div>
-
-      {/* Privacy */}
-      <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
-            checked={doesShowStateOnProfile}
-            onChange={(e) => setDoesShowStateOnProfile(e.target.checked)}
-          />
-          <span>
-            <span className="block text-sm font-medium text-white">Show my state on my profile</span>
-            <span className="block text-sm text-white/60">
-              If enabled, your state may be visible to other users on your public profile.
-            </span>
-          </span>
-        </label>
-      </div>
-
-      {/* Social Links */}
-      <div>
-        <label className={labelClass}>Social Links (Optional)</label>
-        <div className="mt-2 space-y-2">
-          {socialLinks.map((link, index) => (
-            <div key={index} className="flex space-x-2">
+            <label className="flex items-start gap-3">
               <input
-                type="text"
-                placeholder="Platform (e.g., Twitter, Instagram)"
-                value={link.platform}
-                onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                className={`flex-1 ${inputClass}`}
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+                checked={doesShowAgeOnProfile}
+                onChange={(e) => setDoesShowAgeOnProfile(e.target.checked)}
               />
-              <input
-                type="url"
-                placeholder="URL"
-                value={link.url}
-                onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                className={`flex-1 ${inputClass}`}
-              />
-              <button
-                type="button"
-                onClick={() => removeSocialLink(index)}
-                className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-red-400 hover:bg-white/10"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addSocialLink}
-            className="text-sm text-[#25B4B1] hover:text-[#25B4B1]/90"
-          >
-            + Add Social Link
-          </button>
+              <span>
+                <span className="block text-sm font-medium text-white">Show my age on my profile</span>
+                <span className="block text-sm text-white/60">
+                  If enabled, your age may be visible to other users on your public profile.
+                </span>
+              </span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -434,7 +301,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         </div>
       )}
 
-      {/* Submit Button */}
       <div className="flex justify-end">
         <button
           type="submit"
@@ -442,10 +308,9 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           className="flex items-center space-x-2 rounded-lg bg-[#25B4B1] px-6 py-2 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
-          <span>Continue</span>
+          <span>Hop In!</span>
         </button>
       </div>
     </form>
   )
 }
-
