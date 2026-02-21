@@ -384,7 +384,7 @@ export default async function DynamicPage({ params }: PageProps) {
         
         {/* Content over background */}
         <div className="relative z-10 h-full flex flex-col">
-          <div className="shrink-0 pt-4 px-4">
+          <div className="shrink-0 pt-2 px-4">
             
             {/* Track title at top: Title, under -> Flag, City, Country */}
             {type === 'tracks' && (
@@ -462,7 +462,7 @@ export default async function DynamicPage({ params }: PageProps) {
           )}
           {type === 'drivers' ? (
             <div className="sticky top-[10vh] z-30 bg-black pt-8">
-              <h2 className="mb-6 px-4 text-xl font-semibold capitalize text-white">Discussions</h2>
+              <h2 className="mb-6 px-4 text-2xl text-right font-semibold capitalize text-white font-sageva tracking-wider">Discussions</h2>
               <DiscussionTab
                 posts={posts || []}
                 parentPageType="driver"

@@ -158,7 +158,7 @@ export function TopNav() {
       }`}
     >
       <div className="flex items-center justify-between px-4 py-2.5">
-        <Logo variant="white" href={isAuthed ? '/feed' : '/'} className="h-9"/>
+        <Logo variant="white" href={isAuthed ? '/feed' : '/'} className="h-10"/>
 
         {/* Desktop nav - regular text links, right-aligned */}
         <div className="hidden md:flex items-center gap-8 ml-auto mr-8">
