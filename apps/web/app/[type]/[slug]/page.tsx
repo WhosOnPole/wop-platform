@@ -322,7 +322,13 @@ export default async function DynamicPage({ params }: PageProps) {
     tabs.push({
       id: 'meetups',
       label: 'Meetups',
-      content: <TrackSubmissionsTab submissions={trackMeetups} typeLabel="Meetups" />,
+      content: (
+        <DiscussionTab
+          posts={posts || []}
+          parentPageType="track"
+          parentPageId={entity.id}
+        />
+      ),
     })
     tabs.push({
       id: 'schedule',

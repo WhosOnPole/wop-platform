@@ -47,12 +47,12 @@ export function EntityHeroBackground({
 
       {/* Track SVG from storage (track pages) */}
       {showTrackSvg && (
-        <div className="absolute inset-0 flex items-center justify-center z-[1] pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-[1] pointer-events-none w-full h-full mt-20 p-10">
           <TrackHeroMedia
             trackSlug={trackSlug}
             trackName={trackName ?? alt}
             supabaseUrl={supabaseUrl}
-            className="h-full min-h-[400px] w-full max-h-full mt-[37vh] md:mt-[18vh]"
+            className=""
           />
         </div>
       )}

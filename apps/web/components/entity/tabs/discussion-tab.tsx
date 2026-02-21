@@ -12,7 +12,7 @@ interface DiscussionTabProps {
       profile_image_url: string | null
     } | null
   }>
-  parentPageType: 'driver' | 'team'
+  parentPageType: 'driver' | 'team' | 'track'
   parentPageId: string
 }
 
