@@ -209,8 +209,8 @@ export function SpotlightCarousel({
               <Radio className="h-5 w-5 text-white/90" />
               <h2 className="text-lg font-bold text-white">Hot Take</h2>
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <p className="text-white/90 text-base leading-relaxed line-clamp-5">
+            <div className="min-h-[3.3em] flex-1 overflow-hidden">
+              <p className="text-white/90 text-base leading-relaxed line-clamp-5 pb-2">
                 {card.data.hot_take?.content_text || 'Hot take unavailable'}
               </p>
             </div>
@@ -301,7 +301,7 @@ export function SpotlightCarousel({
       <div className="relative z-10 mb-0 flex flex-col lg:block lg:h-auto lg:min-h-0 lg:max-h-none">
         <div
           ref={scrollContainerRef}
-          className="flex flex-shrink-0 flex-row lg:h-auto lg:min-h-0 lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pr-2 w-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory lg:snap-none"
+          className="flex flex-shrink-0 flex-row lg:h-auto lg:min-h-0 lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pr-2 w-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory lg:snap-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollSnapType: 'x mandatory', height: bannerCardHeight }}
         >
           <div className="flex w-full h-full gap-4 lg:flex-col lg:gap-0">

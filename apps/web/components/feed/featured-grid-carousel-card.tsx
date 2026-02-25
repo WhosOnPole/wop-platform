@@ -76,7 +76,7 @@ export function FeaturedGridCarouselCard({
             aria-label={user?.username ? `View ${user.username}'s profile` : undefined}
           >
             <div
-              className={`h-28 w-28 shrink-0 overflow-hidden rounded-full ${
+              className={`h-24 w-24 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-full ${
                 isDefaultAvatar(user?.profile_image_url) ? 'border border-gray-200 bg-white' : ''
               }`}
             >
@@ -162,7 +162,7 @@ export function FeaturedGridCarouselCard({
                     <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
                   )}
                   {/* Position (rank) top right - matches profile/feed grid cards */}
-                  <div className="absolute top-0.5 right-0.5 z-30">
+                  <div className="absolute top-0 right-0.5 z-30">
                     <span className="text-[clamp(0.4rem,2.5vw,0.75rem)] font-bold leading-none tabular-nums text-white">
                       {rank}
                     </span>
@@ -191,7 +191,7 @@ export function FeaturedGridCarouselCard({
               )
             })}
           </div>
-          <div className="mt-2 flex justify-end">
+          <div className="mt-5 sm:mt-2 flex justify-end">
             <Link
               href={`/grid/${grid.id}`}
               className="text-xs font-medium text-white hover:text-sunset-start"

@@ -611,6 +611,44 @@ export default async function FeedPage() {
     }
   })
 
+  // Hot take context for "Replied to: [title]" on feed posts
+  const hotTakePostIds = [
+    ...new Set(
+      followingPostsList
+        .filter(
+          (p: Record<string, unknown>) =>
+            p.parent_page_type === 'hot_take' && p.parent_page_id && typeof p.parent_page_id === 'string'
+        )
+        .map((p: Record<string, unknown>) => p.parent_page_id as string)
+    ),
+  ]
+  if (hotTakePostIds.length > 0) {
+    const { data: hotTakes } = await supabase
+      .from('hot_takes')
+      .select('id, content_text')
+      .in('id', hotTakePostIds)
+    const truncate = (s: string, len: number) =>
+      s.length <= len ? s : s.slice(0, len).trimEnd() + '…'
+    ;(hotTakes || []).forEach((ht: { id: string; content_text: string }) => {
+      parentPageByKey[`hot_take:${ht.id}`] = {
+        name: truncate(ht.content_text || 'Hot take', 80),
+        href: '/feed',
+        type: 'hot_take',
+      }
+    })
+  }
+
+  // Poll context for "Replied to: [question]" on feed posts
+  const truncatePoll = (s: string, len: number) =>
+    s.length <= len ? s : s.slice(0, len).trimEnd() + '…'
+  Object.entries(embeddedPollsByPollId).forEach(([pollId, { poll }]) => {
+    parentPageByKey[`poll:${pollId}`] = {
+      name: truncatePoll(poll.question || 'Poll', 80),
+      href: `/podiums?poll=${encodeURIComponent(pollId)}`,
+      type: 'poll',
+    }
+  })
+
   // Enrich feed grids: only completed driver grids (no team/track in main feed)
   const feedGridsRawAll = followingGrids.data || []
   const feedGridsRaw = feedGridsRawAll.filter(

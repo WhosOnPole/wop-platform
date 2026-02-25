@@ -408,17 +408,22 @@ export function FeedContent({
               </div>
               {post.parent_page_type &&
                 post.parent_page_id &&
-                parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] && (
-                  <p className="mb-2 text-xs text-white/70">
-                    Discussion on{' '}
-                    <Link
-                      href={parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].href}
-                      className="text-[#25B4B1] hover:underline"
-                    >
-                      {parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].name}
-                    </Link>
-                  </p>
-                )}
+                parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] &&
+                (() => {
+                  const ctx = parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
+                  const isRepliedTo = ctx.type === 'hot_take' || ctx.type === 'poll'
+                  return (
+                    <p className="mb-2 text-xs text-white/70">
+                      {isRepliedTo ? 'Replied to: ' : 'Discussion on '}
+                      <Link
+                        href={ctx.href}
+                        className="text-[#25B4B1] hover:underline"
+                      >
+                        {ctx.name}
+                      </Link>
+                    </p>
+                  )
+                })()}
               {post.content ? <p className="text-white/90">{post.content}</p> : null}
               {post.image_url && (
                 <div className="mt-3 overflow-hidden rounded-lg">
