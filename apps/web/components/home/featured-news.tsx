@@ -35,7 +35,7 @@ export function FeaturedNews({ newsStory }: FeaturedNewsProps) {
             {new Date(newsStory.created_at).toLocaleDateString()}
           </span>
           <Link
-            href={`/news/${newsStory.id}`}
+            href={`/story/${newsStory.id}`}
             className="text-bright-teal hover:text-racing-orange font-medium"
           >
             Read more →

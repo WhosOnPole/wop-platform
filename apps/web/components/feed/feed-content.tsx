@@ -677,7 +677,7 @@ export function FeedContent({
                 <h3 className="mb-2 text-xl font-bold text-white">{news.title}</h3>
                 <p className="mb-4 text-white/90 line-clamp-2">{news.content}</p>
                 <Link
-                  href={`/news/${news.id}`}
+                  href={`/story/${news.id}`}
                   className="font-medium text-[#25B4B1] hover:text-[#25B4B1]/90"
                 >
                   Read more →
