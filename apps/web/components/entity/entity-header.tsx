@@ -171,8 +171,8 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
 
   return (
     <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
-      <div>
-      <h1 className="mb-4 text-3xl font-display tracking-wider md:text-6xl">
+      <div className="justify-end flex flex-col">
+      <h1 className="mb-0.5 text-3xl font-display tracking-wider md:text-6xl">
         {driver.name}
       </h1>
       <div className="space-y-2 pb-4">

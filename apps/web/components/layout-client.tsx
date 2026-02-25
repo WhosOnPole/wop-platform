@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { CreateModalProvider } from '@/components/providers/create-modal-provider'
 import { TopNav } from '@/components/navbar/top-nav'
@@ -20,11 +20,20 @@ function isAuthPath(path: string | null) {
 export function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const prevPathnameRef = useRef<string | null>(null)
   const isComingSoon = pathname === '/coming-soon'
   const { session, isLoading } = useAuthSession()
   const supabase = createClientComponentClient()
   const [isDesktop, setIsDesktop] = useState(false)
   const isAuthenticated = !!session
+
+  // Scroll to top on route change so the nav gradient isn’t active (except in-feed interactions, which don’t change pathname)
+  useEffect(() => {
+    if (prevPathnameRef.current !== null && prevPathnameRef.current !== pathname) {
+      window.scrollTo(0, 0)
+    }
+    prevPathnameRef.current = pathname
+  }, [pathname])
 
   useEffect(() => {
     let isMounted = true

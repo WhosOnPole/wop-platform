@@ -2,17 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { OnboardingProfileStep } from '@/components/onboarding/profile-step'
 
 export default function OnboardingPage() {
   const supabase = createClientComponentClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
+
+  const forceProfileStep = searchParams.get('test') === '1' || searchParams.get('profile') === '1'
 
   useEffect(() => {
     checkOnboardingStatus()
-  }, [])
+  }, [forceProfileStep])
 
   async function checkOnboardingStatus() {
     const {
@@ -21,6 +24,12 @@ export default function OnboardingPage() {
 
     if (!session) {
       router.push('/login')
+      return
+    }
+
+    // Allow ?test=1 or ?profile=1 to force the profile step for testing
+    if (forceProfileStep) {
+      setLoading(false)
       return
     }
 

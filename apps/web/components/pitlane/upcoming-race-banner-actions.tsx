@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { useRouter } from 'next/navigation'
 import { Heart } from 'lucide-react'
-import Link from 'next/link'
 import { CommentIcon } from '@/components/ui/comment-icon'
 
 interface UpcomingRaceBannerActionsProps {
@@ -18,6 +18,7 @@ export function UpcomingRaceBannerActions({
   isLive,
 }: UpcomingRaceBannerActionsProps) {
   const supabase = createClientComponentClient()
+  const router = useRouter()
   const [isLiked, setIsLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [chatCount, setChatCount] = useState(0)
@@ -129,21 +130,27 @@ export function UpcomingRaceBannerActions({
     setIsLoading(false)
   }
 
-  // Determine chat link
+  // Determine chat link (use button + router to avoid nested <a> inside parent Link)
   const chatHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}#meetups`
+
+  function handleChatClick(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    router.push(chatHref)
+  }
 
   return (
     <div className="absolute top-2 right-2 flex items-center gap-3 z-20">
-      {/* Chat Button with Count */}
-      <Link
-        href={chatHref}
-        onClick={(e) => e.stopPropagation()}
-        className="flex items-center gap-1.5"
+      {/* Chat Button with Count - button to avoid <a> inside parent <a> */}
+      <button
+        type="button"
+        onClick={handleChatClick}
+        className="flex items-center gap-1.5 text-white hover:opacity-90"
         aria-label={isLive ? 'Join live chat' : 'View meetups'}
       >
         <CommentIcon className="h-4 w-4 text-white" />
         <span className="text-white text-sm">{chatCount}</span>
-      </Link>
+      </button>
 
       {/* Like Button with Count */}
       {/* <button

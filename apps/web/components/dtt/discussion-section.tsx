@@ -542,7 +542,6 @@ export function DiscussionSection({
 
   return (
     <section className={sectionClasses}>
-      <h3 className={headingClasses}>Discussions</h3>
 
       {/* Posts list - scrollable, same layout as grid detail comment section */}
       <div

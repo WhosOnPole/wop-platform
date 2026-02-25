@@ -39,18 +39,21 @@ export function formatDateShort(
 /**
  * Format weekend range from start_date and end_date.
  * Same month: "Mar 7-8". Different months: "Mar 7 - Apr 2".
+ * Pass opts.year: false to omit the year (e.g. "Mar 7 - Apr 2" instead of "Mar 7, 2025 - Apr 2, 2025").
  */
 export function formatWeekendRange(
   startDate: string | null,
-  endDate: string | null
+  endDate: string | null,
+  opts?: { year?: boolean }
 ): string | null {
   const start = startDate?.includes('T') ? new Date(startDate) : parseDateOnly(startDate ?? null)
   const end = endDate?.includes('T') ? new Date(endDate) : parseDateOnly(endDate ?? null)
+  const noYear = opts?.year === false
   if (!start || isNaN(start.getTime())) {
-    return endDate ? formatDateShort(endDate) : null
+    return endDate ? formatDateShort(endDate, { year: noYear ? false : undefined }) : null
   }
   if (!end || isNaN(end.getTime())) {
-    return formatDateShort(startDate)
+    return formatDateShort(startDate, { year: noYear ? false : undefined })
   }
   const sameMonth =
     start.getUTCMonth() === end.getUTCMonth() &&
@@ -59,7 +62,7 @@ export function formatWeekendRange(
     const monthShort = end.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
     return `${monthShort} ${start.getUTCDate()}-${end.getUTCDate()}`
   }
-  return `${formatDateShort(startDate)} - ${formatDateShort(endDate)}`
+  return `${formatDateShort(startDate, { year: noYear ? false : undefined })} - ${formatDateShort(endDate, { year: noYear ? false : undefined })}`
 }
 
 /**

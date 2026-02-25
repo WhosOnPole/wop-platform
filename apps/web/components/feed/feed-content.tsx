@@ -8,6 +8,7 @@ import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 import { FeedPostCommentSection } from './feed-post-comment-section'
 import { FeedPostActionsMenu } from './feed-post-actions-menu'
 import { FeedDiscoverGridActionsMenu } from './feed-discover-grid-actions-menu'
+import { FeedGridOwnerActionsMenu } from './feed-grid-owner-actions-menu'
 import { GridDisplayCard } from '@/components/profile/grid-display-card'
 import { PollCard } from '@/components/polls/poll-card'
 import { createClientComponentClient } from '@/utils/supabase-client'
@@ -535,6 +536,7 @@ export function FeedContent({
           const grid = item
           const typeLabel = grid.type === 'driver' ? 'Drivers' : grid.type === 'team' ? 'Teams' : 'Tracks'
           const gridType = grid.type as 'driver' | 'team' | 'track'
+          const isOwnGrid = !!currentUserId && !!grid.user_id && currentUserId === grid.user_id
           const gridForDisplay = {
             id: grid.id,
             type: gridType,
@@ -551,31 +553,39 @@ export function FeedContent({
               key={`grid-${grid.id}`}
               className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
-              <div className="mb-4 flex items-center space-x-3">
-                <div
-                  className={`h-10 w-10 rounded-full ${
-                    grid.user?.profile_image_url
-                      ? 'overflow-hidden'
-                      : 'bg-white border border-gray-200'
-                  }`}
-                >
-                  <img
-                    src={getAvatarUrl(grid.user?.profile_image_url)}
-                    alt={grid.user?.username ?? ''}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                </div>
-                <div>
-                  <Link
-                    href={`/u/${grid.user?.username || 'unknown'}`}
-                    className="font-medium text-white/90 hover:text-white"
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center space-x-3">
+                  <div
+                    className={`h-10 w-10 shrink-0 rounded-full ${
+                      grid.user?.profile_image_url
+                        ? 'overflow-hidden'
+                        : 'bg-white border border-gray-200'
+                    }`}
                   >
-                    {grid.user?.username || 'Unknown'}
-                  </Link>
-                  <p className="text-xs text-white/70">
-                    Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
-                  </p>
+                    <img
+                      src={getAvatarUrl(grid.user?.profile_image_url)}
+                      alt={grid.user?.username ?? ''}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <Link
+                      href={`/u/${grid.user?.username || 'unknown'}`}
+                      className="font-medium text-white/90 hover:text-white"
+                    >
+                      {grid.user?.username || 'Unknown'}
+                    </Link>
+                    <p className="text-xs text-white/70">
+                      Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
+                {isOwnGrid && (
+                  <FeedGridOwnerActionsMenu
+                    gridUserId={grid.user_id!}
+                    gridType={gridType}
+                  />
+                )}
               </div>
               <GridDisplayCard
                 grid={gridForDisplay}

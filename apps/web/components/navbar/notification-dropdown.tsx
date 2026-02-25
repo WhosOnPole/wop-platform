@@ -121,7 +121,7 @@ export function NotificationDropdown({ onClose, currentUsername }: NotificationD
 
   if (isLoading) {
     return (
-      <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
+      <div className="absolute right-[-10vw] top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
         <div className="p-4">
           <div className="text-sm text-white/60">Loading notifications...</div>
         </div>
@@ -130,7 +130,7 @@ export function NotificationDropdown({ onClose, currentUsername }: NotificationD
   }
 
   return (
-    <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
+    <div className="absolute right-[-10vw] top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/20 px-4 py-3">
         <h3 className="text-sm font-semibold text-white">Notifications</h3>

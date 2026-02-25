@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { Pencil, Save } from 'lucide-react'
 
@@ -15,8 +16,11 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     dateOfBirth: '',
   })
   const [doesShowAgeOnProfile, setDoesShowAgeOnProfile] = useState(true)
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false)
+  const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
+  const [imageScale, setImageScale] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
@@ -85,12 +89,46 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     const file = e.target.files?.[0]
     if (file) {
       setProfileImage(file)
+      setImageScale(1)
       const reader = new FileReader()
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  async function cropImageToBlob(dataUrl: string, zoom: number): Promise<Blob> {
+    const size = 512
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('No canvas context'))
+          return
+        }
+        const w = img.naturalWidth
+        const h = img.naturalHeight
+        const coverScale = size / Math.min(w, h)
+        const drawW = w * coverScale * zoom
+        const drawH = h * coverScale * zoom
+        const dx = (size - drawW) / 2
+        const dy = (size - drawH) / 2
+        ctx.drawImage(img, 0, 0, w, h, dx, dy, drawW, drawH)
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+          'image/jpeg',
+          0.92
+        )
+      }
+      img.onerror = () => reject(new Error('Image load failed'))
+      img.src = dataUrl
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -112,6 +150,14 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     if (!formData.dateOfBirth) {
       setErrors({ dateOfBirth: 'Date of birth is required' })
+      setIsSubmitting(false)
+      return
+    }
+
+    if (!agreeToPrivacy || !agreeToTerms) {
+      setErrors({
+        legal: 'You must agree to the Privacy Policy and Terms and Conditions to continue',
+      })
       setIsSubmitting(false)
       return
     }
@@ -142,26 +188,33 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     let imageUrl = profileImagePreview
 
-    if (profileImage) {
-      const fileExt = profileImage.name.split('.').pop()
-      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
-      const filePath = `profile-images/${fileName}`
+    if (profileImage && profileImagePreview) {
+      try {
+        const blob = await cropImageToBlob(profileImagePreview, imageScale)
+        const fileName = `${session.user.id}-${Date.now()}.jpg`
+        const filePath = `profile-images/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, profileImage, { upsert: true })
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, blob, { upsert: true, contentType: 'image/jpeg' })
 
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError)
-        setErrors({ image: 'Failed to upload image' })
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError)
+          setErrors({ image: 'Failed to upload image' })
+          setIsSubmitting(false)
+          return
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('avatars').getPublicUrl(filePath)
+        imageUrl = publicUrl
+      } catch (err) {
+        console.error('Error cropping image:', err)
+        setErrors({ image: 'Failed to process image' })
         setIsSubmitting(false)
         return
       }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('avatars').getPublicUrl(filePath)
-      imageUrl = publicUrl
     }
 
     const profileData = {
@@ -212,11 +265,14 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           <label className={labelClass}>Profile Picture</label>
           <div className="relative">
             {profileImagePreview ? (
-              <img
-                src={profileImagePreview}
-                alt="Profile preview"
-                className="h-40 w-40 rounded-full object-cover"
-              />
+              <div className="h-40 w-40 overflow-hidden rounded-full">
+                <img
+                  src={profileImagePreview}
+                  alt="Profile preview"
+                  className="h-full w-full object-cover transition-transform duration-150"
+                  style={{ transform: `scale(${imageScale})` }}
+                />
+              </div>
             ) : (
               <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white/10">
                 <span className="text-2xl text-white/40">+</span>
@@ -233,6 +289,20 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
               />
             </label>
           </div>
+          {profileImagePreview && (
+            <div className="mt-3 w-full max-w-[10rem]">
+              <p className="mb-1 text-xs text-white/70">Adjust zoom</p>
+              <input
+                type="range"
+                min={0.5}
+                max={2}
+                step={0.05}
+                value={imageScale}
+                onChange={(e) => setImageScale(Number(e.target.value))}
+                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-[#25B4B1] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#25B4B1] [&::-webkit-slider-thumb]:shadow"
+              />
+            </div>
+          )}
           {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
         </div>
 
@@ -282,9 +352,45 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
                 <span className="block text-sm font-medium pt-1 text-white">Show my age on my profile</span>
               </span>
             </label>
+
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+                checked={agreeToPrivacy}
+                onChange={(e) => setAgreeToPrivacy(e.target.checked)}
+              />
+              <span className="block pt-1 text-sm text-white/90">
+                I agree to the{' '}
+                <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-[#25B4B1] hover:underline">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+                checked={agreeToTerms}
+                onChange={(e) => setAgreeToTerms(e.target.checked)}
+              />
+              <span className="block pt-1 text-sm text-white/90">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-[#25B4B1] hover:underline">
+                  Terms and Conditions
+                </Link>
+              </span>
+            </label>
           </div>
         </div>
       </div>
+
+      {errors.legal && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+          <p className="text-sm text-red-400">{errors.legal}</p>
+        </div>
+      )}
 
       {errors.submit && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
@@ -295,7 +401,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       <div className="flex justify-center">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !agreeToPrivacy || !agreeToTerms}
           className="w-full max-w-md flex items-center justify-center gap-2 rounded-lg bg-[#25B4B1] px-6 py-3 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />

@@ -59,20 +59,20 @@ export function EntityHeroBackground({
 
       {/* Team: short code (first 3 letters) and overview text centered below */}
       {showTeamShortCode && (
-        <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center pointer-events-none overflow-hidden w-full box-border">
           <span
-            className="font-sans font-black text-white/30 select-none text-center"
+            className="font-sans font-black text-white/30 select-none text-center block w-full min-w-0 max-w-full overflow-hidden"
             style={{
               letterSpacing: '-.04em',
-              fontSize: 'clamp(4rem, 55vw, 14rem)',
+              fontSize: 'clamp(5.5rem, 47vw, 16rem)',
               lineHeight: 1,
             }}
           >
             {getTeamShortCode(teamName)}
           </span>
           {teamOverviewText && (
-            <p className="font-sans font-light text-center text-white/90 text-base leading-relaxed tracking-wide mt-4 max-w-2xl">
-              {teamOverviewText}
+            <p className="font-sans font-black text-center text-white/50 text-base leading-relaxed tracking-wide mt-0 max-w-2xl px-2">
+              "{teamOverviewText}"
             </p>
           )}
         </div>

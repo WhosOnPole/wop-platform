@@ -45,7 +45,7 @@ function eventTypeLabel(eventType: string): string {
 
 export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
   const weekendRange = track
-    ? formatWeekendRange(track.start_date ?? null, track.end_date ?? null)
+    ? formatWeekendRange(track.start_date ?? null, track.end_date ?? null, { year: false })
     : null
 
   if (events.length === 0 && !weekendRange) {
@@ -60,8 +60,9 @@ export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
     <div className="space-y-4">
       <div className="rounded-lg border border-white/20 bg-white/5 p-6">
         {weekendRange && (
-          <p className="mb-4 text-sm font-medium text-white">
-            Weekend: {weekendRange} 
+          <p className="mb-4 flex justify-between items-baseline gap-6 text-sm font-medium text-white">
+            <span className="shrink-0">Weekend:</span>
+            <span className="text-right">{weekendRange}</span>
           </p>
         )}
         {events.length === 0 ? (

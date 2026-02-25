@@ -86,15 +86,12 @@ export function FeaturedGridCarouselCard({
                 className="h-full w-full rounded-full object-cover"
               />
             </div>
-            <span className="mt-2 text-center text-md font-black font-sans text-[#25B4B1] line-clamp-2">
-              {user?.username ?? 'Unknown'}
-            </span>
           </Link>
         </div>
 
         {/* Right 2/3: 3 equal squares + View more */}
         <div className="flex min-w-0 flex-1 flex-col">
-        <h2 className="mb-2 shrink-0 text-sm font-bold text-white text-center">Featured Driver Grid</h2>
+        <h2 className="mb-2 shrink-0 text-sm font-bold text-white text-center">{user?.username ?? 'Unknown'} Driver Grid</h2>
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {[0, 1, 2].map((index) => {
               const rank = index + 1

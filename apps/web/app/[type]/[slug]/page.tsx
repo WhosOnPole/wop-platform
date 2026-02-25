@@ -390,7 +390,7 @@ export default async function DynamicPage({ params }: PageProps) {
         
         {/* Content over background */}
         <div className="relative z-10 h-full flex flex-col">
-          <div className="shrink-0 pt-2 px-4">
+          <div className="shrink-0 pt-4 px-4 sm:px-6 md:px-8">
             
             {/* Track title at top: Title, under -> Flag, City, Country */}
             {type === 'tracks' && (
