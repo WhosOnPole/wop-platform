@@ -86,7 +86,7 @@ export function FeaturedGridCarouselCard({
                 className="h-full w-full rounded-full object-cover"
               />
             </div>
-            <span className="mt-2 text-center text-md font-black font-sans text-sunset-gradient line-clamp-2">
+            <span className="mt-2 text-center text-md font-black font-sans text-[#25B4B1] line-clamp-2">
               {user?.username ?? 'Unknown'}
             </span>
           </Link>
