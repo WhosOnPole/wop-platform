@@ -64,7 +64,7 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
 
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Failed to save sponsor')
+      setError(err.message || 'Failed to save endorsement')
     } finally {
       setLoading(false)
     }
@@ -75,7 +75,7 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
       <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {sponsor ? 'Edit Sponsor' : 'Create Sponsor'}
+            {sponsor ? 'Edit Endorsement' : 'Create Endorsement'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />
@@ -135,7 +135,7 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              placeholder="Enter sponsor description..."
+              placeholder="Enter endorsement description..."
             />
           </div>
 

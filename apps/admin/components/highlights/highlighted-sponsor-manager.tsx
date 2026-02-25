@@ -54,7 +54,7 @@ export function HighlightedSponsorManager({
 
     try {
       if (!selectedSponsor) {
-        throw new Error('Please select a sponsor')
+        throw new Error('Please select an endorsement')
       }
 
       // Get existing highlights for this week
@@ -82,7 +82,7 @@ export function HighlightedSponsorManager({
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (err: any) {
-      setError(err.message || 'Failed to save highlighted sponsor')
+      setError(err.message || 'Failed to save highlighted endorsement')
     } finally {
       setLoading(false)
     }
@@ -97,13 +97,13 @@ export function HighlightedSponsorManager({
 
         {success && (
           <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800">
-            Highlighted sponsor saved successfully!
+            Highlighted endorsement saved successfully!
           </div>
         )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Highlighted Sponsor
+            Highlighted Endorsement
           </label>
           {selectedSponsor ? (
             <div className="mb-2 flex items-center space-x-3 rounded-md border border-gray-300 bg-gray-50 p-3">
@@ -136,7 +136,7 @@ export function HighlightedSponsorManager({
                   type="text"
                   value={sponsorSearch}
                   onChange={(e) => setSponsorSearch(e.target.value)}
-                  placeholder="Search for a sponsor by name..."
+                  placeholder="Search for an endorsement by name..."
                   className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 />
               </div>
@@ -181,7 +181,7 @@ export function HighlightedSponsorManager({
             <strong>Week Start Date:</strong> {new Date(currentWeekStart).toLocaleDateString()}
           </p>
           <p className="mt-1 text-xs text-blue-700">
-            This will update or create the highlighted sponsor for the week starting on this Monday.
+            This will update or create the highlighted endorsement for the week starting on this Monday.
           </p>
         </div>
 
@@ -197,7 +197,7 @@ export function HighlightedSponsorManager({
                 Saving...
               </span>
             ) : (
-              'Save Highlighted Sponsor'
+              'Save Highlighted Endorsement'
             )}
           </button>
         </div>

@@ -81,7 +81,7 @@ export function WeeklyHighlightsManager({
     setLoading(true)
 
     try {
-      if (!selectedFan || !selectedSponsor) throw new Error('Please select both a fan and a sponsor')
+      if (!selectedFan || !selectedSponsor) throw new Error('Please select both a fan and an endorsement')
 
       const payload = {
         week_start_date: currentWeekStart,
@@ -198,7 +198,7 @@ export function WeeklyHighlightsManager({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Highlighted Sponsor *
+            Highlighted Endorsement *
           </label>
           {selectedSponsor ? (
             <div className="mb-2 flex items-center space-x-3 rounded-md border border-gray-300 bg-gray-50 p-3">
@@ -231,7 +231,7 @@ export function WeeklyHighlightsManager({
                   type="text"
                   value={sponsorSearch}
                   onChange={(e) => setSponsorSearch(e.target.value)}
-                  placeholder="Search for a sponsor by name..."
+                  placeholder="Search for an endorsement by name..."
                   className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 />
               </div>

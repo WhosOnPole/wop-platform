@@ -184,7 +184,7 @@ export default async function DashboardPage() {
           >
             <h3 className="font-semibold text-gray-900">Create Content</h3>
             <p className="mt-2 text-sm text-gray-600">
-              Create news stories, polls, articles, and more
+              Create stories, polls, articles, and more
             </p>
           </Link>
           <Link
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
           >
             <h3 className="font-semibold text-gray-900">Set Weekly Highlights</h3>
             <p className="mt-2 text-sm text-gray-600">
-              Highlight a fan and sponsor for the week
+              Highlight a fan and endorsement for the week
             </p>
           </Link>
         </div>

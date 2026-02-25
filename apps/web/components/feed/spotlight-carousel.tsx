@@ -210,7 +210,7 @@ export function SpotlightCarousel({
               </p>
             </div>
             {card.data.hot_take?.id && (
-              <p className="mt-4 shrink-0 text-sm text-white/70">Tap to join the discussion</p>
+              <p className="mt-4 shrink-0 text-sm text-white/70 flex justify-end">Tap to join the discussion</p>
             )}
           </button>
         </div>
@@ -253,7 +253,7 @@ export function SpotlightCarousel({
                 {poll.question || 'Poll'}
               </p>
             </div>
-            <p className="mt-4 shrink-0 text-sm text-white/70">
+            <p className="mt-4 shrink-0 text-sm text-white/70 flex justify-end">
               {hasVoted ? 'View results →' : 'Tap to vote →'}
             </p>
           </Link>

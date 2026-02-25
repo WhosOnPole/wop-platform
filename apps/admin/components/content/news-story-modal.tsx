@@ -82,7 +82,7 @@ export function NewsStoryModal({ story, onClose }: NewsStoryModalProps) {
       <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {story ? 'Edit News Story' : 'Create News Story'}
+            {story ? 'Edit Story' : 'Create Story'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />

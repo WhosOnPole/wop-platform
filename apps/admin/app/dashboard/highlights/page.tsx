@@ -72,7 +72,7 @@ export default async function HighlightsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Weekly Highlights</h1>
           <p className="mt-2 text-gray-600">
-            Set the highlighted fan and sponsor for the current week. The week starts on Monday.
+            Set the highlighted fan and endorsement for the current week. The week starts on Monday.
           </p>
         </div>
         <AutoCalculateButton weekStart={weekStart} />
@@ -145,7 +145,7 @@ export default async function HighlightsPage() {
         </div>
 
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Sponsor</h2>
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Endorsement</h2>
           <HighlightedSponsorManager
             currentWeekStart={weekStart}
             existingSponsor={currentHighlights?.highlighted_sponsor || null}

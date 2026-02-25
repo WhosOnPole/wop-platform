@@ -61,7 +61,7 @@ export function NewsStoriesTab() {
           className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          <span>Create News Story</span>
+          <span>Create New Story</span>
         </button>
       </div>
 

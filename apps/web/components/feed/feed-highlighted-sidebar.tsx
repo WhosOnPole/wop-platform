@@ -105,7 +105,7 @@ export function FeedHighlightedSidebar({
             <p className="mt-2 text-white/90 text-sm leading-relaxed line-clamp-4">
               {spotlight.hot_take.content_text}
             </p>
-            <p className="mt-3 text-xs text-white/70">Tap to join the discussion</p>
+            <p className="mt-3 text-xs text-white/70 ">Tap to join the discussion</p>
           </button>
         )}
 
