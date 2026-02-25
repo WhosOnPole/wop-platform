@@ -150,7 +150,7 @@ export function TopNav() {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 text-white z-50 transition-[background] ease-in-out duration-800 ${
+      className={`fixed top-0 left-0 right-0 text-white z-50 transition-[background] ease-in-out duration-800 pt-[env(safe-area-inset-top)] ${
         showNavBg
           ? 'bg-[linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)]'
           : 'bg-transparent'
