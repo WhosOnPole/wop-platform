@@ -543,7 +543,7 @@ export function DiscussionSection({
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}
           placeholder="Start a discussion..."
-          rows={4}
+          rows={2}
           className={textareaClasses}
           required
         />
@@ -553,8 +553,9 @@ export function DiscussionSection({
         </button>
       </form>
 
-      {/* Posts List */}
-      <div className="space-y-6">
+      {/* Posts List - fixed height, scrollable overflow */}
+      <div className="max-h-[50vh] min-h-0 overflow-y-auto">
+        <div className="space-y-6">
         {posts.length === 0 ? (
           <p className={emptyTextClasses}>No discussions yet. Be the first to post!</p>
         ) : (
@@ -839,6 +840,7 @@ export function DiscussionSection({
             )
           })
         )}
+        </div>
       </div>
     </section>
   )

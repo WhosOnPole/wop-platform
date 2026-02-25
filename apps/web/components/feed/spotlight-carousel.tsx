@@ -351,7 +351,7 @@ export function SpotlightCarousel({
 
       {isDiscussionOpen && spotlight?.hot_take?.id && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl mt-16 backdrop-blur-sm text-white">
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <div className="flex items-center space-x-2 text-white/90">
@@ -363,9 +363,9 @@ export function SpotlightCarousel({
               <button
                 type="button"
                 onClick={() => setIsDiscussionOpen(false)}
-                className="rounded-md border border-white/30 bg-transparent px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                className="rounded-md text-sm font-black text-sunset-end transition-colors hover:bg-white/10"
               >
-                Close
+                X
               </button>
             </div>
             <DiscussionSection

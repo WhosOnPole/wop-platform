@@ -132,19 +132,12 @@ export function PollCard({
           {poll.question}
         </h2>
         <div className="flex shrink-0 items-center gap-2">
-          {showResults && (
-            <p className={`text-sm ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
-              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
-            </p>
-          )}
           {poll.is_featured_podium && !compact && (
             <div
               className="flex items-center space-x-1 rounded-full px-3 py-1 bg-sunset-gradient"
             >
-              <Trophy className="h-4 w-4 " />
-              <span className="text-xs font-medium">
-                Featured
-              </span>
+              <Trophy className="h-4 w-4" />
+              <span className="text-xs font-medium">Featured</span>
             </div>
           )}
         </div>
@@ -218,8 +211,15 @@ export function PollCard({
 
       {createModal && showRepost && (
         <div
-          className={`border-t ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} ${isDark ? 'border-white/10' : 'border-gray-200'}`}
+          className={`flex items-center justify-between border-t ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} ${isDark ? 'border-white/10' : 'border-gray-200'}`}
         >
+          {showResults ? (
+            <p className={`text-sm ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
+              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
+            </p>
+          ) : (
+            <span />
+          )}
           <button
             type="button"
             onClick={handleRepost}
