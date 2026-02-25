@@ -16,8 +16,8 @@ export function ContentTabs({ defaultTab = 'news' }: ContentTabsProps) {
   return (
     <Tabs defaultValue={defaultTab} className="w-full">
       <TabsList>
-        <TabsTrigger value="news">News Stories</TabsTrigger>
-        <TabsTrigger value="stories">Submitted Stories</TabsTrigger>
+        <TabsTrigger value="news">Published Stories</TabsTrigger>
+        <TabsTrigger value="stories">Pending Stories</TabsTrigger>
         <TabsTrigger value="polls">Polls</TabsTrigger>
         <TabsTrigger value="hot-takes">Hot Takes</TabsTrigger>
         <TabsTrigger value="articles">Articles</TabsTrigger>

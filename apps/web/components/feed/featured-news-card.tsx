@@ -19,7 +19,7 @@ export function FeaturedNewsCard({ newsStory }: FeaturedNewsCardProps) {
   return (
     <Link
       href={href}
-      className="flex h-full w-full flex-col overflow-hidden rounded-lg border border-white/10 bg-black/40 shadow backdrop-blur-sm transition-shadow hover:shadow-lg"
+      className="flex h-full w-full flex-col overflow-hidden"
     >
       {newsStory.image_url && (
         <div className="relative h-32 w-full flex-shrink-0">
@@ -32,12 +32,12 @@ export function FeaturedNewsCard({ newsStory }: FeaturedNewsCardProps) {
           />
         </div>
       )}
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="mb-2 text-lg font-bold text-white line-clamp-2">{newsStory.title}</h3>
-        <p className="mb-4 flex-1 text-sm text-white/90 line-clamp-3">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <h3 className="mb-2 shrink-0 text-lg font-bold text-white line-clamp-2">{newsStory.title}</h3>
+        <p className="min-h-0 shrink overflow-hidden text-sm text-white/90 line-clamp-3">
           {newsStory.content}
         </p>
-        <div className="mt-auto flex items-center justify-between">
+        <div className="mt-auto shrink-0 flex items-center justify-between pt-3">
           <span className="text-xs text-white/70">
             {new Date(newsStory.created_at).toLocaleDateString()}
           </span>

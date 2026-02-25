@@ -63,15 +63,15 @@ export function UpcomingRaceBannerActions({
 
         setChatCount(chatCountResult || 0)
       } else {
-        // Count meetup posts for this track
-        const { count: meetupCount } = await supabase
+        // Count meetups for this track - same criteria as track page meetups tab (approved, type = meetups)
+        const { data: meetupRows } = await supabase
           .from('track_tips')
-          .select('*', { count: 'exact', head: true })
+          .select('id')
           .eq('track_id', trackId)
           .eq('type', 'meetups')
           .eq('status', 'approved')
 
-        setChatCount(meetupCount || 0)
+        setChatCount(meetupRows?.length ?? 0)
       }
     }
 

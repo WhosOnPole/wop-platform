@@ -116,7 +116,7 @@ export default async function DashboardPage() {
       color: 'bg-purple-500',
     },
     {
-      name: 'News Stories',
+      name: 'Published Stories',
       value: recentNews.count || 0,
       icon: FileText,
       href: '/dashboard/content',

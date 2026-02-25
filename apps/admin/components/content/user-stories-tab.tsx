@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Check, X, Loader2, Trash2 } from 'lucide-react'
+import { Check, X, Loader2, Trash2, Pencil } from 'lucide-react'
+import { UserStoryEditModal } from './user-story-edit-modal'
 
 interface UserStorySubmission {
   id: string
@@ -25,6 +26,7 @@ export function UserStoriesTab() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState<string | null>(null)
   const [filter, setFilter] = useState<'pending' | 'all'>('pending')
+  const [editingSubmission, setEditingSubmission] = useState<UserStorySubmission | null>(null)
 
   useEffect(() => {
     loadSubmissions()
@@ -229,35 +231,42 @@ export function UserStoriesTab() {
                 </div>
               </div>
 
-              {sub.status === 'pending_approval' ? (
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => handleReject(sub.id)}
-                    disabled={processing === sub.id}
-                    className="flex items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    {processing === sub.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <X className="h-4 w-4" />
-                    )}
-                    <span>Reject</span>
-                  </button>
-                  <button
-                    onClick={() => handleApprove(sub.id)}
-                    disabled={processing === sub.id}
-                    className="flex items-center space-x-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {processing === sub.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Check className="h-4 w-4" />
-                    )}
-                    <span>Approve</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="flex space-x-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setEditingSubmission(sub)}
+                  className="flex items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                >
+                  <Pencil className="h-4 w-4" />
+                  <span>Edit</span>
+                </button>
+                {sub.status === 'pending_approval' ? (
+                  <>
+                    <button
+                      onClick={() => handleReject(sub.id)}
+                      disabled={processing === sub.id}
+                      className="flex items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {processing === sub.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                      <span>Reject</span>
+                    </button>
+                    <button
+                      onClick={() => handleApprove(sub.id)}
+                      disabled={processing === sub.id}
+                      className="flex items-center space-x-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {processing === sub.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4" />
+                      )}
+                      <span>Approve</span>
+                    </button>
+                  </>
+                ) : (
                   <button
                     onClick={() => handleDelete(sub.id)}
                     disabled={processing === sub.id}
@@ -270,11 +279,19 @@ export function UserStoriesTab() {
                     )}
                     <span>Delete</span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))}
         </div>
+      )}
+
+      {editingSubmission && (
+        <UserStoryEditModal
+          submission={editingSubmission}
+          onClose={() => setEditingSubmission(null)}
+          onSaved={() => loadSubmissions()}
+        />
       )}
     </div>
   )
