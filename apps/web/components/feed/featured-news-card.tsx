@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { Trophy } from 'lucide-react'
 
 interface NewsStory {
   id: string
@@ -34,12 +35,13 @@ export function FeaturedNewsCard({ newsStory }: FeaturedNewsCardProps) {
         </div>
       )}
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <h3 className="text-lg font-bold text-white line-clamp-2">{newsStory.title}</h3>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="min-w-0 flex-1 text-lg font-bold text-white line-clamp-2">{newsStory.title}</h3>
           {newsStory.is_featured && (
-            <span className="shrink-0 rounded-full bg-[#25B4B1]/20 px-2 py-0.5 text-xs font-medium text-[#25B4B1]">
-              Featured
-            </span>
+            <div className="flex shrink-0 items-center space-x-1 rounded-full bg-sunset-gradient px-3 py-1">
+              <Trophy className="h-4 w-4 text-white" />
+              <span className="text-xs font-medium text-white">Featured</span>
+            </div>
           )}
         </div>
         <p className="min-h-0 shrink overflow-hidden text-sm text-white/90 line-clamp-3">

@@ -230,7 +230,7 @@ export function SpotlightTabs({
           <div className="grid gap-4 sm:grid-cols-2">
             {stories.length > 0 ? (
               stories.map((story) => (
-                <div key={story.id} className="min-h-[200px]">
+                <div key={story.id} className="min-h-[200px] border border-white/20 bg-white/5 p-4 rounded-lg">
                   <FeaturedNewsCard newsStory={story} />
                 </div>
               ))
