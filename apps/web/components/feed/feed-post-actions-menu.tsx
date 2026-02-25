@@ -20,9 +20,12 @@ interface FeedPostActionsMenuProps {
   postAuthorId: string | null
   /** When true (e.g. in discover section), show Follow option to follow the post author */
   showFollowButton?: boolean
+  /** When provided, called after successful delete (e.g. to remove from local state); if not provided, router.refresh() is used */
+  onDeleted?: (postId: string) => void
+  variant?: 'light' | 'dark'
 }
 
-export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = false }: FeedPostActionsMenuProps) {
+export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = false, onDeleted, variant = 'dark' }: FeedPostActionsMenuProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -52,7 +55,7 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
   }, [menuOpen])
 
   const isOwner = !!currentUserId && !!postAuthorId && currentUserId === postAuthorId
-  const isDark = true
+  const isDark = variant === 'dark'
   const showFollow = showFollowButton && !isOwner && !!postAuthorId && !!currentUserId
 
   async function handleFollow() {
@@ -85,7 +88,8 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
       console.error('Error deleting post:', error)
       return
     }
-    router.refresh()
+    if (onDeleted) onDeleted(postId)
+    else router.refresh()
   }
 
   async function handleSubmitReport() {
@@ -124,12 +128,22 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
 
   if (!currentUserId) return null
 
+  const buttonClass = isDark
+    ? 'rounded p-0.5 text-white/70 transition-colors hover:text-white'
+    : 'rounded p-0.5 text-gray-500 transition-colors hover:text-gray-800'
+  const menuClass = isDark
+    ? 'min-w-[140px] rounded-lg border border-white/10 bg-[#1D1D1D] py-1 shadow-xl'
+    : 'min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg'
+  const itemClass = isDark
+    ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/90 transition-colors hover:bg-white/10'
+    : 'flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50'
+
   return (
     <div ref={menuRef} className="relative inline-block">
       <button
         type="button"
         onClick={() => setMenuOpen((o) => !o)}
-        className="rounded p-0.5 text-white/70 transition-colors hover:text-white"
+        className={buttonClass}
         aria-label="Post actions"
         aria-expanded={menuOpen}
       >
@@ -138,14 +152,14 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
 
       {menuOpen && (
         <div
-          className="absolute right-full top-0 z-50 mr-1 min-w-[140px] rounded-lg border border-white/10 bg-[#1D1D1D] py-1 shadow-xl"
+          className={`absolute right-full top-0 z-50 mr-1 ${menuClass}`}
           role="menu"
         >
           {isOwner && (
             <button
               type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/90 transition-colors hover:bg-white/10"
+              className={itemClass}
               onClick={handleDelete}
               disabled={isDeleting}
             >
@@ -157,7 +171,7 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
             <button
               type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/90 transition-colors hover:bg-white/10"
+              className={itemClass}
               onClick={handleFollow}
               disabled={isFollowingLoading || isFollowing}
             >
@@ -173,7 +187,7 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
             <button
               type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-white/90 transition-colors hover:bg-white/10"
+              className={itemClass}
               onClick={() => {
                 setMenuOpen(false)
                 setReportModalOpen(true)

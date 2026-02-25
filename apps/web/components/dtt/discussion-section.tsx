@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { MessageSquare, Send } from 'lucide-react'
+import { Send } from 'lucide-react'
+import { CommentIcon } from '@/components/ui/comment-icon'
 import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { DiscussionReportButton } from '@/components/discussion/report-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
+import { FeedPostActionsMenu } from '@/components/feed/feed-post-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 interface User {
@@ -504,8 +506,8 @@ export function DiscussionSection({
     ? 'text-sm font-medium text-white/90 text-right'
     : 'text-sm font-medium text-gray-900 text-right'
   const contentBoxClasses = isDark
-    ? 'flex flex-col overflow-y-auto rounded-md border border-white/20 bg-transparent p-4 max-h-[280px] min-h-[120px]'
-    : 'flex flex-col overflow-y-auto rounded-md border border-gray-200 bg-gray-50/50 p-4 max-h-[280px] min-h-[120px]'
+    ? 'mt-6 flex h-[50vh] flex-col overflow-y-auto rounded-md border border-white/20 bg-transparent p-4'
+    : 'mt-6 flex h-[50vh] flex-col overflow-y-auto rounded-md border border-gray-200 bg-gray-50/50 p-4'
   const contentBoxEmptyClasses = isDark
     ? 'items-center justify-center'
     : 'items-center justify-center'
@@ -557,31 +559,48 @@ export function DiscussionSection({
 
             return (
               <div key={post.id} className={`${postBorderClasses} pb-6 last:border-0`}>
-                <div className="mb-3 flex items-center space-x-3">
-                  <div
-                    className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
-                      isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white p-0.5' : ''
-                    }`}
-                  >
-                    <img
-                      src={getAvatarUrl(post.user?.profile_image_url)}
-                      alt={post.user?.username ?? ''}
-                      className="h-full w-full rounded-full object-cover"
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-start space-x-3">
+                    <div
+                      className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
+                        isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                      }`}
+                    >
+                      <img
+                        src={getAvatarUrl(post.user?.profile_image_url)}
+                        alt={post.user?.username ?? ''}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/u/${post.user?.username || 'unknown'}`}
+                        className={usernameClasses}
+                      >
+                        {post.user?.username || 'Unknown'}
+                      </Link>
+                      <p className={timestampClasses}>
+                        {new Date(post.created_at).toLocaleString()}
+                      </p>
+                      {post.content ? <p className={contentClasses}>{post.content}</p> : null}
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    <FeedPostActionsMenu
+                      postId={post.id}
+                      postAuthorId={post.user?.id ?? null}
+                      variant={variant}
+                      onDeleted={(deletedId) => {
+                        setPosts((prev) => prev.filter((p) => p.id !== deletedId))
+                        setComments((prev) => {
+                          const next = { ...prev }
+                          delete next[deletedId]
+                          return next
+                        })
+                      }}
                     />
                   </div>
-                  <div>
-                    <Link
-                      href={`/u/${post.user?.username || 'unknown'}`}
-                      className={usernameClasses}
-                    >
-                      {post.user?.username || 'Unknown'}
-                    </Link>
-                    <p className={timestampClasses}>
-                      {new Date(post.created_at).toLocaleString()}
-                    </p>
-                  </div>
                 </div>
-                {post.content ? <p className={contentClasses}>{post.content}</p> : null}
                 {'image_url' in post && typeof (post as { image_url?: string }).image_url === 'string' && (
                   <div className="mt-2 overflow-hidden rounded-lg">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -613,15 +632,12 @@ export function DiscussionSection({
                         loadCommentsForPost(post.id)
                       }
                     }}
-                    className={replyButtonClasses}
+                    className={`flex items-center gap-1.5 ${replyButtonClasses}`}
+                    aria-label={topLevel.length > 0 ? `Reply (${topLevel.length})` : 'Reply'}
                   >
-                    Reply {topLevel.length > 0 ? `(${topLevel.length})` : ''}
+                    <CommentIcon className="h-4 w-4 shrink-0" />
+                    {topLevel.length > 0 ? <span>{topLevel.length}</span> : null}
                   </button>
-                  <DiscussionReportButton
-                    targetId={post.id}
-                    targetType="post"
-                    initialIsReported={userReports[post.id] || false}
-                  />
                 </div>
 
                 {/* Comments List */}
@@ -632,34 +648,62 @@ export function DiscussionSection({
 
                       return (
                         <div key={comment.id} className="py-2">
-                          <div className="mb-2 flex items-center space-x-2">
-                            <div
-                              className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                                isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
-                              }`}
-                            >
-                              <img
-                                src={getAvatarUrl(comment.user?.profile_image_url)}
-                                alt={comment.user?.username ?? ''}
-                                className="h-full w-full rounded-full object-cover"
+                          <div className="mb-2 flex items-start justify-between gap-2">
+                            <div className="flex min-w-0 flex-1 items-start space-x-2">
+                              <div
+                                className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
+                                  isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                                }`}
+                              >
+                                <img
+                                  src={getAvatarUrl(comment.user?.profile_image_url)}
+                                  alt={comment.user?.username ?? ''}
+                                  className="h-full w-full rounded-full object-cover"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <Link
+                                  href={`/u/${comment.user?.username || 'unknown'}`}
+                                  className={`text-sm font-medium ${isDark ? 'text-white hover:text-white/80' : 'text-gray-900 hover:text-blue-600'}`}
+                                >
+                                  {comment.user?.username || 'Unknown'}
+                                </Link>
+                                <p className={timestampClasses}>
+                                  {new Date(comment.created_at).toLocaleString()}
+                                </p>
+                                <p className={commentTextClasses}>{comment.content}</p>
+                              </div>
+                            </div>
+                            <div className="shrink-0">
+                              <CommentActionsMenu
+                                commentId={comment.id}
+                                commentAuthorId={comment.user?.id ?? null}
+                                currentUserId={currentUserId}
+                                targetType="comment"
+                                variant={variant}
+                                initialContent={comment.content}
+                                onDeleted={(deletedId) => {
+                                  setComments((prev) => ({
+                                    ...prev,
+                                    [post.id]: (prev[post.id] || []).filter(
+                                      (c) => c.id !== deletedId && c.parent_comment_id !== deletedId
+                                    ),
+                                  }))
+                                }}
+                                onEdited={(editedId, newContent) => {
+                                  setComments((prev) => ({
+                                    ...prev,
+                                    [post.id]: (prev[post.id] || []).map((c) =>
+                                      c.id === editedId ? { ...c, content: newContent } : c
+                                    ),
+                                  }))
+                                }}
                               />
                             </div>
-                            <div>
-                              <Link
-                                href={`/u/${comment.user?.username || 'unknown'}`}
-                                className={`text-sm font-medium ${isDark ? 'text-white hover:text-white/80' : 'text-gray-900 hover:text-blue-600'}`}
-                              >
-                                {comment.user?.username || 'Unknown'}
-                              </Link>
-                              <p className={timestampClasses}>
-                                {new Date(comment.created_at).toLocaleString()}
-                              </p>
-                            </div>
                           </div>
-                          <p className={commentTextClasses}>{comment.content}</p>
 
                           {/* Comment Actions */}
-                          <div className="mb-2 flex items-center space-x-4">
+                          <div className="mb-2 ml-8 flex items-center space-x-4">
                             <LikeButton
                               targetId={comment.id}
                               targetType="comment"
@@ -675,34 +719,11 @@ export function DiscussionSection({
                                   showReplyToComment === comment.id ? null : comment.id
                                 setShowReplyToComment(newShowReply)
                               }}
-                              className={replyTextClasses}
+                              className={`flex items-center gap-1.5 ${replyTextClasses}`}
+                              aria-label="Reply"
                             >
-                              Reply
+                              <CommentIcon className="h-4 w-4 shrink-0" />
                             </button>
-                            <CommentActionsMenu
-                              commentId={comment.id}
-                              commentAuthorId={comment.user?.id ?? null}
-                              currentUserId={currentUserId}
-                              targetType="comment"
-                              variant={variant}
-                              initialContent={comment.content}
-                              onDeleted={(deletedId) => {
-                                setComments((prev) => ({
-                                  ...prev,
-                                  [post.id]: (prev[post.id] || []).filter(
-                                    (c) => c.id !== deletedId && c.parent_comment_id !== deletedId
-                                  ),
-                                }))
-                              }}
-                              onEdited={(editedId, newContent) => {
-                                setComments((prev) => ({
-                                  ...prev,
-                                  [post.id]: (prev[post.id] || []).map((c) =>
-                                    c.id === editedId ? { ...c, content: newContent } : c
-                                  ),
-                                }))
-                              }}
-                            />
                           </div>
 
                           {/* Reply to Comment Form */}
@@ -734,32 +755,62 @@ export function DiscussionSection({
                             <div className={`mt-2 ml-4 space-y-2 ${commentBorderClasses} pl-3`}>
                               {commentReplies.map((reply) => (
                                 <div key={reply.id} className="py-1">
-                                  <div className="mb-1 flex items-center space-x-2">
-                                    <div
-                                      className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                                        isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
-                                      }`}
-                                    >
-                                      <img
-                                        src={getAvatarUrl(reply.user?.profile_image_url)}
-                                        alt={reply.user?.username ?? ''}
-                                        className="h-full w-full rounded-full object-cover"
+                                  <div className="mb-1 flex items-start justify-between gap-2">
+                                    <div className="flex min-w-0 flex-1 items-start space-x-2">
+                                      <div
+                                        className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
+                                          isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                                        }`}
+                                      >
+                                        <img
+                                          src={getAvatarUrl(reply.user?.profile_image_url)}
+                                          alt={reply.user?.username ?? ''}
+                                          className="h-full w-full rounded-full object-cover"
+                                        />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <Link
+                                          href={`/u/${reply.user?.username || 'unknown'}`}
+                                          className={`text-xs font-medium ${isDark ? 'text-white hover:text-white/80' : 'text-gray-900 hover:text-blue-600'}`}
+                                        >
+                                          {reply.user?.username || 'Unknown'}
+                                        </Link>
+                                        <p className={timestampClasses}>
+                                          {new Date(reply.created_at).toLocaleString()}
+                                        </p>
+                                        <p className={replyContentClasses}>{reply.content}</p>
+                                      </div>
+                                    </div>
+                                    <div className="shrink-0">
+                                      <CommentActionsMenu
+                                        commentId={reply.id}
+                                        commentAuthorId={reply.user?.id ?? null}
+                                        currentUserId={currentUserId}
+                                        targetType="comment"
+                                        variant={variant}
+                                        initialContent={reply.content}
+                                        onDeleted={(deletedId) => {
+                                          setComments((prev) => ({
+                                            ...prev,
+                                            [post.id]: (prev[post.id] || []).filter(
+                                              (c) =>
+                                                c.id !== deletedId &&
+                                                c.parent_comment_id !== deletedId
+                                            ),
+                                          }))
+                                        }}
+                                        onEdited={(editedId, newContent) => {
+                                          setComments((prev) => ({
+                                            ...prev,
+                                            [post.id]: (prev[post.id] || []).map((c) =>
+                                              c.id === editedId ? { ...c, content: newContent } : c
+                                            ),
+                                          }))
+                                        }}
                                       />
                                     </div>
-                                    <div>
-                                      <Link
-                                        href={`/u/${reply.user?.username || 'unknown'}`}
-                                        className={`text-xs font-medium ${isDark ? 'text-white hover:text-white/80' : 'text-gray-900 hover:text-blue-600'}`}
-                                      >
-                                        {reply.user?.username || 'Unknown'}
-                                      </Link>
-                                      <p className={timestampClasses}>
-                                        {new Date(reply.created_at).toLocaleString()}
-                                      </p>
-                                    </div>
                                   </div>
-                                  <p className={replyContentClasses}>{reply.content}</p>
-                                  <div className="flex items-center space-x-3">
+                                  <div className="ml-7 flex items-center space-x-3">
                                     <LikeButton
                                       targetId={reply.id}
                                       targetType="comment"
@@ -767,32 +818,6 @@ export function DiscussionSection({
                                       initialIsLiked={userLikes[reply.id] || false}
                                       onLikeChange={(targetId, isLiked) => {
                                         setUserLikes({ ...userLikes, [targetId]: isLiked })
-                                      }}
-                                    />
-                                    <CommentActionsMenu
-                                      commentId={reply.id}
-                                      commentAuthorId={reply.user?.id ?? null}
-                                      currentUserId={currentUserId}
-                                      targetType="comment"
-                                      variant={variant}
-                                      initialContent={reply.content}
-                                      onDeleted={(deletedId) => {
-                                        setComments((prev) => ({
-                                          ...prev,
-                                          [post.id]: (prev[post.id] || []).filter(
-                                            (c) =>
-                                              c.id !== deletedId &&
-                                              c.parent_comment_id !== deletedId
-                                          ),
-                                        }))
-                                      }}
-                                      onEdited={(editedId, newContent) => {
-                                        setComments((prev) => ({
-                                          ...prev,
-                                          [post.id]: (prev[post.id] || []).map((c) =>
-                                            c.id === editedId ? { ...c, content: newContent } : c
-                                          ),
-                                        }))
                                       }}
                                     />
                                   </div>

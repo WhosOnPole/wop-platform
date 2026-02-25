@@ -336,20 +336,20 @@ export function SpotlightCarousel({
       </div>
 
       {isDiscussionOpen && spotlight?.hot_take?.id && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl mt-16 backdrop-blur-sm text-white">
-            <div className="mb-4 flex items-start justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+          <div className="h-[80vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
+            <div className="mb-3 flex items-start justify-between">
               <div>
                 <div className="flex items-center space-x-2 text-white/90">
                   <Radio className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold text-white">Hot Take Discussion</h3>
+                  <h3 className="text-xl font-semibold text-white">Hot Take Discussion</h3>
                 </div>
-                <p className="mt-2 text-white/90">{spotlight.hot_take.content_text}</p>
+                <p className="mt-4 text-white/90">{spotlight.hot_take.content_text}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsDiscussionOpen(false)}
-                className="rounded-md text-sm font-black text-sunset-end transition-colors hover:bg-white/10"
+                className="rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
               >
                 X
               </button>
