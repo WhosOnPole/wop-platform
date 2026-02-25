@@ -356,12 +356,12 @@ export function TopNav() {
                     <Link
                       href={profileHref}
                       onClick={() => setIsMenuOpen(false)}
-                      className={`block w-full py-3 text-center text-sm font-medium text-white transition-colors hover:text-white/90 ${
+                      className={`block w-full py-1 text-center text-sm font-semibold tracking-wide text-white transition-colors hover:text-white/90 ${
                         isActive(profileHref) ? 'text-[#25B4B1]' : ''
                       }`}
                       aria-label="Profile"
                     >
-                      Profile
+                     View Profile
                     </Link>
                   </div>
                 </div>

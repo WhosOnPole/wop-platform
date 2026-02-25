@@ -782,8 +782,12 @@ export function GridDetailView({
             {/* Single hero scroll container: swipe/drag on all viewports; scrollbar hidden; track: taller on desktop so track art fits above bottom section */}
             <div
               ref={mobileScrollRef}
-              className={`w-full overflow-x-auto snap-x snap-mandatory relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${type === 'track' ? 'h-[43vh] lg:h-[54vh] overflow-y-hidden' : 'h-[43vh] overflow-y-hidden'}`}
-              style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+              className={`w-full overflow-x-auto snap-x snap-mandatory relative touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${type === 'track' ? 'h-[43vh] lg:h-[54vh] overflow-y-hidden' : 'h-[43vh] overflow-y-hidden'}`}
+              style={{
+                scrollSnapType: 'x mandatory',
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehaviorX: 'contain',
+              }}
               role="region"
               aria-label="Grid ranking - swipe left or right"
             >
@@ -794,7 +798,7 @@ export function GridDetailView({
                   ref={(el) => {
                     slideRefs.current[idx] = el
                   }}
-                  className={`w-full min-w-full flex-shrink-0 snap-start flex justify-center h-full overflow-hidden ${type === 'track' ? 'items-start' : 'items-end'}`}
+                  className={`w-full min-w-full flex-shrink-0 snap-start snap-always flex justify-center h-full overflow-hidden ${type === 'track' ? 'items-start' : 'items-end'}`}
                 >
                   {renderHeroSlot(item ?? undefined, idx + 1)}
                 </div>

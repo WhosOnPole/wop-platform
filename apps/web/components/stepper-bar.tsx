@@ -158,7 +158,7 @@ export function StepperBar({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
-      className="relative flex h-2 w-full cursor-pointer select-none items-center"
+      className="relative flex min-h-12 w-full cursor-pointer select-none items-center justify-center py-5"
       style={{ touchAction: 'none' }}
     >
       <div className="pointer-events-none h-0.5 w-full rounded-full bg-white/30" aria-hidden />
