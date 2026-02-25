@@ -101,7 +101,10 @@ interface FeedContentProps {
   grids: Grid[]
   gridComments?: GridCommentItem[]
   embeddedPollsByPollId?: Record<string, EmbeddedPollData>
-  parentPageByKey?: Record<string, { name: string; href: string; type: string }>
+  parentPageByKey?: Record<
+    string,
+    { name: string; href: string; type: string; content_text?: string }
+  >
   featuredNews: NewsStory[]
   communityPolls?: StandalonePoll[]
   pollUserResponses?: Record<string, string>
@@ -147,6 +150,9 @@ export function FeedContent({
   const searchParams = useSearchParams()
   const hasLoadedDiscoveryRef = useRef(false)
   const [discoveryItems, setDiscoveryItems] = useState<FeedItem[]>([])
+  const [discoveryParentPageByKey, setDiscoveryParentPageByKey] = useState<
+    Record<string, { name: string; href: string; type: string; content_text?: string }>
+  >({})
   const [isLoadingDiscovery, setIsLoadingDiscovery] = useState(false)
   const [hasLoadedDiscovery, setHasLoadedDiscovery] = useState(false)
 
@@ -228,6 +234,41 @@ export function FeedContent({
             g.ranked_items.length > 0
         )
         .slice(0, DISCOVERY_LIMIT)
+
+      // Fetch hot take context for hot take posts (existing posts from any user)
+      const hotTakeIds = [
+        ...new Set(
+          postsList
+            .filter(
+              (p) =>
+                p.parent_page_type === 'hot_take' &&
+                p.parent_page_id &&
+                typeof p.parent_page_id === 'string'
+            )
+            .map((p) => p.parent_page_id as string)
+        ),
+      ]
+      let discoveryParentPageByKey: Record<
+        string,
+        { name: string; href: string; type: string; content_text?: string }
+      > = {}
+      if (hotTakeIds.length > 0) {
+        const { data: hotTakes } = await supabase
+          .from('hot_takes')
+          .select('id, content_text')
+          .in('id', hotTakeIds)
+        const truncate = (s: string, len: number) =>
+          s.length <= len ? s : s.slice(0, len).trimEnd() + '…'
+        ;(hotTakes || []).forEach((ht: { id: string; content_text: string }) => {
+          discoveryParentPageByKey[`hot_take:${ht.id}`] = {
+            name: truncate(ht.content_text || 'Hot take', 80),
+            href: '/feed',
+            type: 'hot_take',
+            content_text: ht.content_text || 'Hot take',
+          }
+        })
+      }
+      setDiscoveryParentPageByKey(discoveryParentPageByKey)
 
       // Enrich grids with driver/track data
       const driverIds = Array.from(
@@ -463,12 +504,11 @@ export function FeedContent({
                 parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] &&
                 (() => {
                   const ctx = parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
-                  // Reposts to polls don't need "Replied to" — the embedded poll card is enough
-                  if (ctx.type === 'poll') return null
-                  const isRepliedTo = ctx.type === 'hot_take'
+                  // Poll and hot take show embedded context; no "Replied to" line needed
+                  if (ctx.type === 'poll' || ctx.type === 'hot_take') return null
                   return (
                     <p className="mb-2 text-xs text-white/70">
-                      {isRepliedTo ? 'Replied to: ' : 'Discussion on '}
+                      Discussion on{' '}
                       <Link
                         href={ctx.href}
                         className="text-[#25B4B1] hover:underline"
@@ -476,6 +516,24 @@ export function FeedContent({
                         {ctx.name}
                       </Link>
                     </p>
+                  )
+                })()}
+              {post.parent_page_type === 'hot_take' &&
+                post.parent_page_id &&
+                (() => {
+                  const ctx = parentPageByKey[`hot_take:${post.parent_page_id}`]
+                  if (!ctx) return null
+                  const contentText = ctx.content_text || 'Hot take'
+                  return (
+                    <Link
+                      href="/feed"
+                      className="mb-4 block rounded-md border border-white/10 bg-black/30 p-4 text-left transition-colors hover:bg-black/40"
+                    >
+                      <p className="text-xs font-medium uppercase tracking-wide text-white/60">
+                        Replying to Hot Take
+                      </p>
+                      <p className="mt-2 text-white/90">{contentText}</p>
+                    </Link>
                   )
                 })()}
               {post.content ? <p className="text-white/90">{post.content}</p> : null}
@@ -747,19 +805,39 @@ export function FeedContent({
                       </div>
                       {post.parent_page_type &&
                         post.parent_page_id &&
-                        parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] && (
-                          <p className="mb-2 text-xs text-white/70">
-                            Discussion on{' '}
+                        (() => {
+                          const ctx =
+                            discoveryParentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] ??
+                            parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
+                          if (!ctx) return null
+                          if (ctx.type === 'hot_take') return null
+                          return (
+                            <p className="mb-2 text-xs text-white/70">
+                              Discussion on{' '}
+                              <Link href={ctx.href} className="text-[#25B4B1] hover:underline">
+                                {ctx.name}
+                              </Link>
+                            </p>
+                          )
+                        })()}
+                      {post.parent_page_type === 'hot_take' &&
+                        post.parent_page_id &&
+                        (() => {
+                          const ctx = discoveryParentPageByKey[`hot_take:${post.parent_page_id}`]
+                          if (!ctx) return null
+                          const contentText = ctx.content_text || 'Hot take'
+                          return (
                             <Link
-                              href={
-                                parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].href
-                              }
-                              className="text-[#25B4B1] hover:underline"
+                              href="/feed"
+                              className="mb-4 block rounded-md border border-white/10 bg-black/30 p-4 text-left transition-colors hover:bg-black/40"
                             >
-                              {parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`].name}
+                              <p className="text-xs font-medium uppercase tracking-wide text-white/60">
+                                Replying to Hot Take
+                              </p>
+                              <p className="mt-2 text-white/90">{contentText}</p>
                             </Link>
-                          </p>
-                        )}
+                          )
+                        })()}
                       {post.content ? <p className="text-white/90">{post.content}</p> : null}
                       {post.image_url && (
                         <div className="mt-3 overflow-hidden rounded-lg">

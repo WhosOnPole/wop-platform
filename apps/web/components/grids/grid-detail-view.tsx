@@ -560,6 +560,50 @@ export function GridDetailView({
   const mobileScrollRef = useRef<HTMLDivElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  // Touch handlers: mirror StepperBar so finger position directly selects slide (position→index, same as bar)
+  useEffect(() => {
+    const raw = mobileScrollRef.current
+    if (!raw || items.length <= 0 || mode !== 'view') return
+    const container: HTMLDivElement = raw
+
+    function positionToIdx(clientX: number): number {
+      const rect = container.getBoundingClientRect()
+      const x = clientX - rect.left
+      const percent = (x / rect.width) * 100
+      return Math.min(items.length - 1, Math.max(0, Math.floor((percent / 100) * items.length)))
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      const idx = positionToIdx(e.touches[0].clientX)
+      setSelectedIndex(idx)
+      container.scrollTo({ left: idx * container.clientWidth, behavior: 'auto' })
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      e.preventDefault()
+      const idx = positionToIdx(e.touches[0].clientX)
+      setSelectedIndex(idx)
+      container.scrollTo({ left: idx * container.clientWidth, behavior: 'auto' })
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      const idx = positionToIdx(e.changedTouches[0].clientX)
+      setSelectedIndex(idx)
+      container.scrollTo({ left: idx * container.clientWidth, behavior: 'smooth' })
+    }
+
+    container.addEventListener('touchstart', onTouchStart)
+    container.addEventListener('touchmove', onTouchMove, { passive: false })
+    container.addEventListener('touchend', onTouchEnd)
+    container.addEventListener('touchcancel', onTouchEnd)
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart)
+      container.removeEventListener('touchmove', onTouchMove)
+      container.removeEventListener('touchend', onTouchEnd)
+      container.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [mode, items.length])
+
   // Sync selectedIndex from scroll position (view mode)
   useEffect(() => {
     const el = mobileScrollRef.current
@@ -779,14 +823,15 @@ export function GridDetailView({
                 </span>
               </div>
             )}
-            {/* Single hero scroll container: swipe/drag on all viewports; scrollbar hidden; track: taller on desktop so track art fits above bottom section */}
+            {/* Single hero scroll container: touch handlers mirror StepperBar (position→index) so finger swipe = bar behavior */}
             <div
               ref={mobileScrollRef}
-              className={`w-full overflow-x-auto snap-x snap-mandatory relative touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${type === 'track' ? 'h-[43vh] lg:h-[54vh] overflow-y-hidden' : 'h-[43vh] overflow-y-hidden'}`}
+              className={`w-full overflow-x-auto snap-x snap-mandatory relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:touch-pan-x ${type === 'track' ? 'h-[43vh] lg:h-[54vh] overflow-y-hidden' : 'h-[43vh] overflow-y-hidden'}`}
               style={{
                 scrollSnapType: 'x mandatory',
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehaviorX: 'contain',
+                touchAction: 'none', // capture touch so we drive scroll (matches StepperBar)
               }}
               role="region"
               aria-label="Grid ranking - swipe left or right"

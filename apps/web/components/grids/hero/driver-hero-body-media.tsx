@@ -32,7 +32,7 @@ export function DriverHeroBodyMedia({
   const showFallback = (useFallback && fallbackSrc) || (!bodyUrl && fallbackSrc)
 
   return (
-    <div className={`relative overflow-y-hidden overflow-x-visible ${className}`}>
+    <div className={`relative overflow-hidden ${className}`}>
       {showBody && bodyUrl && (
         <Image
           src={bodyUrl}

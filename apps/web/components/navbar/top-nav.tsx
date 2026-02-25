@@ -259,6 +259,7 @@ export function TopNav() {
                     src={getAvatarUrl(profile?.profile_image_url)}
                     alt={profile?.username ?? 'User'}
                     className="h-full w-full rounded-full object-cover"
+                    loading="eager"
                   />
                 </button>
               </span>

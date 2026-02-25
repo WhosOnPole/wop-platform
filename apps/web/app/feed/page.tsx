@@ -588,7 +588,10 @@ export default async function FeedPage() {
       ? supabase.from('tracks').select('id, name').in('id', trackEntityIds)
       : Promise.resolve({ data: [] }),
   ])
-  const parentPageByKey: Record<string, { name: string; href: string; type: string }> = {}
+  const parentPageByKey: Record<
+    string,
+    { name: string; href: string; type: string; content_text?: string }
+  > = {}
   ;(driverEntities.data || []).forEach((d: { id: string; name: string }) => {
     parentPageByKey[`driver:${d.id}`] = {
       name: d.name,
@@ -634,6 +637,7 @@ export default async function FeedPage() {
         name: truncate(ht.content_text || 'Hot take', 80),
         href: '/feed',
         type: 'hot_take',
+        content_text: ht.content_text || 'Hot take',
       }
     })
   }
