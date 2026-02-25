@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { LikeButton } from '@/components/discussion/like-button'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 import { FeedPostCommentSection } from './feed-post-comment-section'
@@ -118,15 +118,14 @@ type FeedItem =
   | (StandalonePoll & { contentType: 'poll' })
 
 const DISCOVERY_LIMIT = 15
+const FEED_TAB_STORAGE_KEY = 'feed-active-tab'
 
-function DiscoverDivider() {
-  return (
-    <div className="flex items-center gap-4 py-4">
-      <hr className="flex-1 border-white/20" />
-      <span className="text-sm font-medium text-white/70">Discover</span>
-      <hr className="flex-1 border-white/20" />
-    </div>
-  )
+type FeedTab = 'following' | 'discovery'
+
+function getStoredFeedTab(): FeedTab {
+  if (typeof window === 'undefined') return 'following'
+  const stored = window.localStorage.getItem(FEED_TAB_STORAGE_KEY)
+  return stored === 'discovery' ? 'discovery' : 'following'
 }
 
 export function FeedContent({
@@ -144,11 +143,25 @@ export function FeedContent({
   isNewUser = false,
 }: FeedContentProps) {
   const router = useRouter()
-  const endSentinelRef = useRef<HTMLDivElement>(null)
+  const searchParams = useSearchParams()
   const hasLoadedDiscoveryRef = useRef(false)
   const [discoveryItems, setDiscoveryItems] = useState<FeedItem[]>([])
   const [isLoadingDiscovery, setIsLoadingDiscovery] = useState(false)
   const [hasLoadedDiscovery, setHasLoadedDiscovery] = useState(false)
+
+  const [activeTab, setActiveTab] = useState<FeedTab>(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam === 'discovery' || tabParam === 'following') return tabParam
+    return getStoredFeedTab()
+  })
+
+  const setFeedTab = useCallback((tab: FeedTab) => {
+    setActiveTab(tab)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(FEED_TAB_STORAGE_KEY, tab)
+    }
+    router.replace(`/feed?tab=${tab}`, { scroll: false })
+  }, [router])
 
   const excludePostIds = useMemo(() => posts.map((p) => p.id), [posts])
   const excludeGridIds = useMemo(() => grids.map((g) => g.id), [grids])
@@ -317,18 +330,18 @@ export function FeedContent({
     }
   }, [excludePostIds, excludeGridIds])
 
+  // Sync tab from URL (e.g. back/forward or shared link)
   useEffect(() => {
-    const el = endSentinelRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) fetchDiscovery()
-      },
-      { rootMargin: '200px', threshold: 0 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [fetchDiscovery])
+    const tabParam = searchParams.get('tab')
+    if (tabParam === 'discovery' || tabParam === 'following') {
+      setActiveTab(tabParam)
+    }
+  }, [searchParams])
+
+  // Load discovery when user switches to Discovery tab
+  useEffect(() => {
+    if (activeTab === 'discovery') fetchDiscovery()
+  }, [activeTab, fetchDiscovery])
 
   // Combine and sort all content (posts, grids, grid comments, news, community polls) chronologically
   const allContent: FeedItem[] = [
@@ -341,11 +354,6 @@ export function FeedContent({
 
   const hasContent = allContent.length > 0
 
-  // Empty feed: load discover on mount so it's always visible (new users or anyone with empty feed)
-  useEffect(() => {
-    if (!hasContent) fetchDiscovery()
-  }, [hasContent, fetchDiscovery])
-
   const emptyStateBlock = (
     <div className="rounded-lg border border-white/10 bg-black/40 p-12 text-center shadow backdrop-blur-sm">
       <p className="text-white/90">
@@ -357,16 +365,59 @@ export function FeedContent({
       >
         Explore Drivers, Teams & Tracks →
       </Link>
+      <p className="mt-4 text-sm text-white/70">
+        Or try Discovery to see posts and grids from everyone.
+      </p>
+      <button
+        type="button"
+        onClick={() => setFeedTab('discovery')}
+        className="mt-2 text-[#25B4B1] hover:underline"
+      >
+        Switch to Discovery →
+      </button>
     </div>
   )
 
   return (
     <div className="space-y-6">
-      {!hasContent && emptyStateBlock}
-      {hasContent && (
+      <nav
+        className="flex w-full overflow-hidden rounded-full border border-white/10 bg-black/20"
+        role="tablist"
+        aria-label="Feed tabs"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'following'}
+          onClick={() => setFeedTab('following')}
+          className={`relative flex flex-1 items-center justify-center px-4 py-2.5 text-xs uppercase tracking-wide transition ${
+            activeTab === 'following'
+              ? 'bg-white/20 text-white'
+              : 'bg-transparent text-white/60 hover:text-white/80'
+          }`}
+        >
+          Following
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'discovery'}
+          onClick={() => setFeedTab('discovery')}
+          className={`relative flex flex-1 items-center justify-center border-l border-white/10 px-4 py-2.5 text-xs uppercase tracking-wide transition ${
+            activeTab === 'discovery'
+              ? 'bg-white/20 text-white'
+              : 'bg-transparent text-white/60 hover:text-white/80'
+          }`}
+        >
+          Discovery
+        </button>
+      </nav>
+
+      {activeTab === 'following' && (
         <>
-          {/* Vertical feed for other content */}
-          {allContent.map((item) => {
+          {!hasContent && emptyStateBlock}
+          {hasContent &&
+            allContent.map((item) => {
         if (item.contentType === 'post') {
           const post = item
           return (
@@ -628,17 +679,16 @@ export function FeedContent({
 
         return null
       })}
-
-          {/* Sentinel: when scrolled into view, load discovery */}
-          <div ref={endSentinelRef} className="h-1" aria-hidden="true" />
         </>
       )}
 
-      {/* Discover section: after feed when scrolled to bottom, or below empty state when feed is empty */}
-      {(hasLoadedDiscovery || isLoadingDiscovery) && (
+      {activeTab === 'discovery' && (
         <>
-          <DiscoverDivider />
-          {isLoadingDiscovery ? (
+          {!hasLoadedDiscovery && !isLoadingDiscovery ? (
+            <div className="flex justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#25B4B1]" />
+            </div>
+          ) : isLoadingDiscovery ? (
             <div className="flex justify-center py-8">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[#25B4B1]" />
             </div>

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { ArrowLeft } from 'lucide-react'
 import { getAvatarUrl } from '@/utils/avatar'
 
 export const runtime = 'nodejs'
@@ -93,6 +94,13 @@ export default async function StoryPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <Link
+        href="/podiums?tab=stories"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-white/80 transition-colors hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Spotlight · Stories
+      </Link>
       <article className="rounded-lg border border-white/10 bg-black/40 shadow-lg backdrop-blur-sm">
         {story.image_url && (
           <div className="relative h-64 w-full md:h-96">

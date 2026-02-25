@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { MoreVertical, Pencil, Trash2, Flag } from 'lucide-react'
@@ -247,11 +248,19 @@ export function CommentActionsMenu({
         </div>
       )}
 
-      {/* Report modal */}
-      {reportModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-          <div className={`w-full max-w-md rounded-lg p-6 shadow-xl ${isDark ? 'bg-[#1D1D1D]' : 'bg-white'}`}>
-            <h3 className={`mb-4 text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      {/* Report modal - portaled to body so it sits above all other content */}
+      {reportModalOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 isolate flex items-center justify-center bg-black/60 p-4"
+            style={{ zIndex: 2147483647 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-modal-title"
+          >
+            <div className={`w-full max-w-md rounded-lg p-6 shadow-xl ${isDark ? 'bg-[#1D1D1D]' : 'bg-white'}`}>
+            <h3 id="report-modal-title" className={`mb-4 text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Report Content
             </h3>
             <p className={`mb-4 text-sm ${isDark ? 'text-white/80' : 'text-gray-600'}`}>
@@ -314,8 +323,9 @@ export function CommentActionsMenu({
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body
+        )}
     </div>
   )
 }

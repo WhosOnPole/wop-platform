@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Star, PenLine } from 'lucide-react'
@@ -106,7 +106,17 @@ export function SpotlightTabs({
   supabaseUrl,
 }: SpotlightTabsProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'polls' | 'stories' | 'our-picks'>('polls')
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get('tab')
+  const validTab =
+    tabFromUrl === 'polls' || tabFromUrl === 'stories' || tabFromUrl === 'our-picks'
+      ? tabFromUrl
+      : null
+  const [activeTab, setActiveTab] = useState<'polls' | 'stories' | 'our-picks'>(validTab ?? 'polls')
+
+  useEffect(() => {
+    if (validTab) setActiveTab(validTab)
+  }, [validTab])
 
   const adminPollsWithFeatured = adminPolls.map((p) => ({
     ...p,
@@ -127,19 +137,28 @@ export function SpotlightTabs({
         <TabButton
           label="Polls"
           active={activeTab === 'polls'}
-          onClick={() => setActiveTab('polls')}
+          onClick={() => {
+            setActiveTab('polls')
+            router.replace('/podiums?tab=polls', { scroll: false })
+          }}
           showDivider
         />
         <TabButton
           label="Stories"
           active={activeTab === 'stories'}
-          onClick={() => setActiveTab('stories')}
+          onClick={() => {
+            setActiveTab('stories')
+            router.replace('/podiums?tab=stories', { scroll: false })
+          }}
           showDivider
         />
         <TabButton
           label="Our Picks"
           active={activeTab === 'our-picks'}
-          onClick={() => setActiveTab('our-picks')}
+          onClick={() => {
+            setActiveTab('our-picks')
+            router.replace('/podiums?tab=our-picks', { scroll: false })
+          }}
         />
       </nav>
 
