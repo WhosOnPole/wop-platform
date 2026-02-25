@@ -27,6 +27,7 @@ interface NewsStory {
   content: string
   created_at: string
   href?: string
+  is_featured?: boolean
 }
 
 interface Sponsor {

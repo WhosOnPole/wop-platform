@@ -154,24 +154,17 @@ export default async function PodiumsPage() {
     created_at: string
   }>
 
-  const stories = [
-    ...newsStories.map((n) => ({
-      id: n.id,
-      title: n.title,
-      image_url: n.image_url,
-      content: n.content,
-      created_at: n.created_at,
-      href: `/story/${n.id}`,
-    })),
-    ...approvedUserStories.map((u) => ({
+  // Stories tab: only approved user stories (no featured news slot to avoid duplicates)
+  const stories = approvedUserStories
+    .map((u) => ({
       id: u.id,
       title: u.title,
       image_url: u.image_url,
       content: u.summary ? `${u.summary}\n\n${u.content}` : u.content,
       created_at: u.created_at,
       href: `/story/${u.id}`,
-    })),
-  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    }))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   const sponsors = (sponsorsResult.data || []) as Array<{
     id: string
     name: string

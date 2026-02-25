@@ -7,7 +7,6 @@ import { Radio, BarChart3, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { UpcomingRaceCard } from './upcoming-race-card'
 import { SponsorCard } from './sponsor-card'
-import { FeaturedNewsCard } from './featured-news-card'
 import { FeaturedGridCarouselCard } from './featured-grid-carousel-card'
 
 interface SpotlightProfile {
@@ -106,15 +105,14 @@ export function SpotlightCarousel({
   const hasAdminPolls = polls.length > 0
   const hasUpcomingRace = Boolean(upcomingRace)
   const hasSponsors = sponsors.length > 0
-  const hasFeaturedNews = featuredNews.length > 0
 
-  if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors && !hasFeaturedNews) return null
+  if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors) return null
 
   // Rectangular banner cards (desktop scroll / mobile carousel) — no min height, content-sized like hot take
   const bannerCardHeight = 160
 
   const cards = useMemo(() => {
-    const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor' | 'news'; data: any }> = []
+    const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor'; data: any }> = []
     
     // 1. Upcoming race banner (when live) - FIRST
     if (upcomingRace) {
@@ -140,14 +138,11 @@ export function SpotlightCarousel({
     sponsors.forEach((sponsor) => {
       list.push({ type: 'sponsor', data: sponsor })
     })
-    
-    // 6. Featured news stories
-    featuredNews.forEach((news) => {
-      list.push({ type: 'news', data: news })
-    })
+
+    // Featured stories are shown only in Podiums > Stories tab with a Featured pill (no duplicate in carousel)
     
     return list
-  }, [spotlight, polls, upcomingRace, sponsors, featuredNews])
+  }, [spotlight, polls, upcomingRace, sponsors])
 
   const [activeIndex, setActiveIndex] = useState(0)
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
@@ -279,15 +274,6 @@ export function SpotlightCarousel({
         <div className={gradientCardOuter} style={gradientCardStyle}>
           <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black p-6">
             <SponsorCard sponsor={card.data} />
-          </div>
-        </div>
-      )
-    }
-    if (card.type === 'news') {
-      return (
-        <div className={gradientCardOuter} style={gradientCardStyle}>
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black p-6">
-            <FeaturedNewsCard newsStory={card.data} />
           </div>
         </div>
       )

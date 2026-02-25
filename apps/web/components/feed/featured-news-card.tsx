@@ -8,6 +8,7 @@ interface NewsStory {
   content: string
   created_at: string
   href?: string
+  is_featured?: boolean
 }
 
 interface FeaturedNewsCardProps {
@@ -33,7 +34,14 @@ export function FeaturedNewsCard({ newsStory }: FeaturedNewsCardProps) {
         </div>
       )}
       <div className="flex min-h-0 flex-1 flex-col">
-        <h3 className="mb-2 shrink-0 text-lg font-bold text-white line-clamp-2">{newsStory.title}</h3>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <h3 className="text-lg font-bold text-white line-clamp-2">{newsStory.title}</h3>
+          {newsStory.is_featured && (
+            <span className="shrink-0 rounded-full bg-[#25B4B1]/20 px-2 py-0.5 text-xs font-medium text-[#25B4B1]">
+              Featured
+            </span>
+          )}
+        </div>
         <p className="min-h-0 shrink overflow-hidden text-sm text-white/90 line-clamp-3">
           {newsStory.content}
         </p>
