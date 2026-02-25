@@ -6,6 +6,7 @@ import { CreateModalProvider } from '@/components/providers/create-modal-provide
 import { TopNav } from '@/components/navbar/top-nav'
 import { Footer } from '@/components/footer'
 import { LiveRaceBanner } from '@/components/live-race-banner'
+import { AddToHomeScreenPrompt } from '@/components/add-to-home-screen-prompt'
 import { FullscreenHandler } from '@/components/fullscreen-handler'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useAuthSession } from '@/components/providers/auth-session-provider'
@@ -89,6 +90,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
       </main>
       {showFooter ? <Footer /> : null}
       <LiveRaceBanner />
+      <AddToHomeScreenPrompt pathname={pathname} isAuthenticated={isAuthenticated} />
     </CreateModalProvider>
   )
 }

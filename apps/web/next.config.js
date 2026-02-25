@@ -1,5 +1,9 @@
 const path = require('path')
 const { withBotId } = require('botid/next/config')
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+})
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -45,5 +49,5 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUB
   }
 }
 
-module.exports = withBotId(nextConfig)
+module.exports = withPWA(withBotId(nextConfig))
 
