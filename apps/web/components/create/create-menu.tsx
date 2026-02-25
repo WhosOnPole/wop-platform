@@ -11,10 +11,10 @@ interface CreateMenuProps {
 }
 
 const menuItems: Array<{ key: CreateMenuKey; label: string; icon: string }> = [
-  { key: 'story', label: 'submit a story', icon: '/images/flame.svg' },
-  { key: 'poll', label: 'create a poll', icon: '/images/poll.svg' },
-  { key: 'tip', label: 'track tip', icon: '/images/bulb.svg' },
-  { key: 'post', label: 'post', icon: '/images/chat.svg' },
+  { key: 'post', label: 'Post Your Thoughts', icon: '/images/chat.svg' },
+  { key: 'poll', label: 'Create a Poll', icon: '/images/poll.svg' },
+  { key: 'tip', label: 'Track Tip', icon: '/images/bulb.svg' },
+  { key: 'story', label: 'Submit a Story', icon: '/images/flame.svg' },
 ]
 
 export function CreateMenu({ onClose, onSelect, variant = 'dropdown' }: CreateMenuProps) {

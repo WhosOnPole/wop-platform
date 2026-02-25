@@ -382,8 +382,8 @@ export function TopNav() {
           />
           <div className="absolute inset-x-0 bottom-0 animate-create-sheet-in" data-create-menu>
             <div className="max-h-[80vh] overflow-y-auto rounded-t-3xl border border-white/10 bg-[#1D1D1D]">
-              <div className="px-6 pt-5 pb-4 text-center text-sm font-semibold text-white">
-                Create
+              <div className="px-6 pt-5 pb-4 text-center text-sm font-semibold text-white border-b border-white/10 bg-sunset-gradient">
+                Share with the Community
               </div>
               <div className="px-3 pb-[calc(env(safe-area-inset-bottom)+24px)]">
                 <CreateMenu

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { MoreVertical, UserPlus, UserCheck, Flag } from 'lucide-react'
@@ -153,68 +154,79 @@ export function FeedDiscoverGridActionsMenu({ gridId, authorId }: FeedDiscoverGr
         </div>
       )}
 
-      {reportModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg bg-[#1D1D1D] p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-semibold text-white">Report Content</h3>
-            <p className="mb-4 text-sm text-white/80">
-              Please select a reason for reporting this content.
-            </p>
-            <div className="mb-4 space-y-2">
-              {REPORT_REASONS.map((r) => (
-                <label
-                  key={r}
-                  className="flex cursor-pointer items-center gap-2 rounded-md border border-white/20 p-2 transition-colors hover:bg-white/10"
+      {reportModalOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 isolate flex items-center justify-center bg-black/60 p-4"
+            style={{ zIndex: 2147483647 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discover-grid-report-modal-title"
+          >
+            <div className="w-full max-w-md rounded-lg bg-[#1D1D1D] p-6 shadow-xl">
+              <h3 id="discover-grid-report-modal-title" className="mb-4 text-lg font-semibold text-white">
+                Report Content
+              </h3>
+              <p className="mb-4 text-sm text-white/80">
+                Please select a reason for reporting this content.
+              </p>
+              <div className="mb-4 space-y-2">
+                {REPORT_REASONS.map((r) => (
+                  <label
+                    key={r}
+                    className="flex cursor-pointer items-center gap-2 rounded-md border border-white/20 p-2 transition-colors hover:bg-white/10"
+                  >
+                    <input
+                      type="radio"
+                      name="reason"
+                      value={r}
+                      checked={selectedReason === r}
+                      onChange={(e) => setSelectedReason(e.target.value)}
+                      className="h-4 w-4"
+                    />
+                    <span className="text-sm text-white/90">{r}</span>
+                  </label>
+                ))}
+              </div>
+              {selectedReason === 'Other' && (
+                <textarea
+                  value={reportOtherText}
+                  onChange={(e) => setReportOtherText(e.target.value)}
+                  placeholder="Please provide details..."
+                  rows={3}
+                  className="mb-4 w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
+                />
+              )}
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportModalOpen(false)
+                    setSelectedReason('')
+                    setReportOtherText('')
+                  }}
+                  className="rounded-md px-4 py-2 text-sm text-white/90 transition-colors hover:bg-white/10"
                 >
-                  <input
-                    type="radio"
-                    name="reason"
-                    value={r}
-                    checked={selectedReason === r}
-                    onChange={(e) => setSelectedReason(e.target.value)}
-                    className="h-4 w-4"
-                  />
-                  <span className="text-sm text-white/90">{r}</span>
-                </label>
-              ))}
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmitReport}
+                  disabled={
+                    isSubmittingReport ||
+                    !selectedReason ||
+                    (selectedReason === 'Other' && !reportOtherText.trim())
+                  }
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                >
+                  {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </div>
             </div>
-            {selectedReason === 'Other' && (
-              <textarea
-                value={reportOtherText}
-                onChange={(e) => setReportOtherText(e.target.value)}
-                placeholder="Please provide details..."
-                rows={3}
-                className="mb-4 w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
-              />
-            )}
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setReportModalOpen(false)
-                  setSelectedReason('')
-                  setReportOtherText('')
-                }}
-                className="rounded-md px-4 py-2 text-sm text-white/90 transition-colors hover:bg-white/10"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmitReport}
-                disabled={
-                  isSubmittingReport ||
-                  !selectedReason ||
-                  (selectedReason === 'Other' && !reportOtherText.trim())
-                }
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
-              >
-                {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
