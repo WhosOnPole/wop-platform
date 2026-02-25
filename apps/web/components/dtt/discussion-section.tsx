@@ -498,21 +498,26 @@ export function DiscussionSection({
   }
 
   const sectionClasses = isDark
-    ? ''
-    : 'rounded-lg border border-gray-200 bg-white p-2 shadow'
-  const headingIconClasses = isDark ? 'h-5 w-5 text-white/80' : 'h-5 w-5 text-blue-500'
-  const headingTextClasses = isDark
-    ? 'text-xl font-semibold text-white'
-    : 'text-xl font-semibold text-gray-900'
+    ? 'flex flex-col gap-4'
+    : 'flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow'
+  const headingClasses = isDark
+    ? 'text-sm font-medium text-white/90 text-right'
+    : 'text-sm font-medium text-gray-900 text-right'
+  const contentBoxClasses = isDark
+    ? 'flex flex-col overflow-y-auto rounded-md border border-white/20 bg-transparent p-4 max-h-[280px] min-h-[120px]'
+    : 'flex flex-col overflow-y-auto rounded-md border border-gray-200 bg-gray-50/50 p-4 max-h-[280px] min-h-[120px]'
+  const contentBoxEmptyClasses = isDark
+    ? 'items-center justify-center'
+    : 'items-center justify-center'
   const textareaClasses = isDark
-    ? 'w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
-    : 'w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
+    ? 'min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset'
+    : 'min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-gray-300 px-3 py-2 text-sm text-black placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
   const submitButtonClasses = isDark
-    ? 'mt-2 flex items-center space-x-2 rounded-md bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 disabled:opacity-50 float-right'
-    : 'mt-2 flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
+    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
+    : 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
   const emptyTextClasses = isDark
-    ? 'text-center text-white/60'
-    : 'text-center text-gray-500'
+    ? 'text-sm text-white/60 text-center'
+    : 'text-sm text-gray-500 text-center'
   const postBorderClasses = isDark ? 'border-b border-white/20' : 'border-b border-gray-200'
   const avatarBgClasses = isDark ? 'bg-white/20' : 'bg-gray-300'
   const avatarTextClasses = isDark ? 'text-white' : 'text-gray-600'
@@ -537,29 +542,17 @@ export function DiscussionSection({
 
   return (
     <section className={sectionClasses}>
-      {/* Create Post Form */}
-      <form onSubmit={handleCreatePost} className="mb-20">
-        <textarea
-          value={newPostContent}
-          onChange={(e) => setNewPostContent(e.target.value)}
-          placeholder="Start a discussion..."
-          rows={2}
-          className={textareaClasses}
-          required
-        />
-        <button type="submit" disabled={isSubmitting} className={submitButtonClasses}>
-          <Send className="h-4 w-4" />
-          <span>Post</span>
-        </button>
-      </form>
+      <h3 className={headingClasses}>Discussions</h3>
 
-      {/* Posts List - fixed height, scrollable overflow */}
-      <div className="max-h-[50vh] min-h-0 overflow-y-auto">
-        <div className="space-y-6">
+      {/* Posts list - scrollable, same layout as grid detail comment section */}
+      <div
+        className={`${contentBoxClasses} ${posts.length === 0 ? contentBoxEmptyClasses : ''}`}
+      >
         {posts.length === 0 ? (
           <p className={emptyTextClasses}>No discussions yet. Be the first to post!</p>
         ) : (
-          posts.map((post) => {
+          <div className="w-full space-y-6">
+          {posts.map((post) => {
             const postComments = comments[post.id] || []
             const { topLevel, repliesByParent } = groupComments(postComments)
 
@@ -621,7 +614,7 @@ export function DiscussionSection({
                         loadCommentsForPost(post.id)
                       }
                     }}
-                    className="text-sm text-white/80 hover:text-white"
+                    className={replyButtonClasses}
                   >
                     Reply {topLevel.length > 0 ? `(${topLevel.length})` : ''}
                   </button>
@@ -838,10 +831,29 @@ export function DiscussionSection({
                 )}
               </div>
             )
-          })
+          })}
+          </div>
         )}
-        </div>
       </div>
+
+      {/* Create post form - same order and style as grid detail (input at bottom) */}
+      <form onSubmit={handleCreatePost} className="flex w-full items-stretch">
+        <textarea
+          value={newPostContent}
+          onChange={(e) => setNewPostContent(e.target.value)}
+          placeholder="Add a comment..."
+          rows={2}
+          className={textareaClasses}
+        />
+        <button
+          type="submit"
+          disabled={isSubmitting || !newPostContent.trim()}
+          className={submitButtonClasses}
+        >
+          <Send className="h-4 w-4" />
+          Post
+        </button>
+      </form>
     </section>
   )
 }

@@ -124,7 +124,6 @@ export function TopNav() {
     { href: '/podiums', label: 'Spotlight' },
   ]
   const mobileDropdownItems = [
-    { href: profileHref, label: 'Profile', type: 'profile' as const },
     { href: '/feed', label: 'Feed', type: 'feed' as const },
     { href: '/pitlane', label: 'Pit Lane', type: 'pitlane' as const },
     { href: '/podiums', label: 'Spotlight', type: 'podiums' as const },
@@ -331,7 +330,7 @@ export function TopNav() {
                         >
                           <NavIcon type={item.type} active={active} variant="circular" />
                         </span>
-                        <span className="text-sm font-medium  text-white">{item.label}</span>
+                        <span className="text-sm font-medium text-white">{item.label}</span>
                       </Link>
                     )
                   })}
@@ -352,6 +351,18 @@ export function TopNav() {
                       <PlusCircle className="h-6 w-6" strokeWidth={0.9} />
                     </button>
                     <span className="text-sm font-medium text-white">Create</span>
+                  </div>
+                  <div className="w-full border-t border-white/10 pt-4 mt-2">
+                    <Link
+                      href={profileHref}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`block w-full py-3 text-center text-sm font-medium text-white transition-colors hover:text-white/90 ${
+                        isActive(profileHref) ? 'text-[#25B4B1]' : ''
+                      }`}
+                      aria-label="Profile"
+                    >
+                      Profile
+                    </Link>
                   </div>
                 </div>
               </div>
