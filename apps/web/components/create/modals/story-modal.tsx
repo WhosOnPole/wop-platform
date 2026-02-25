@@ -19,6 +19,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isAnonymous, setIsAnonymous] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
     setImage(null)
     setImagePreview(null)
     setError(null)
+    setIsAnonymous(true)
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -78,6 +80,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
       content: body.trim(),
       image_url: imageUrl,
       status: 'pending_approval',
+      is_anonymous: isAnonymous,
     })
 
     if (insertError) {
@@ -172,6 +175,15 @@ export function StoryModal({ onClose }: StoryModalProps) {
             </button>
           </div>
 
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAnonymous}
+              onChange={(e) => setIsAnonymous(e.target.checked)}
+              className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+            />
+            <span className="text-sm text-white/90">Submit anonymously</span>
+          </label>
 
           <div className="flex justify-end gap-2 pt-2">
             <button

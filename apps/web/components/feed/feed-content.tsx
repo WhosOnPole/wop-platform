@@ -411,7 +411,9 @@ export function FeedContent({
                 parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] &&
                 (() => {
                   const ctx = parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
-                  const isRepliedTo = ctx.type === 'hot_take' || ctx.type === 'poll'
+                  // Reposts to polls don't need "Replied to" — the embedded poll card is enough
+                  if (ctx.type === 'poll') return null
+                  const isRepliedTo = ctx.type === 'hot_take'
                   return (
                     <p className="mb-2 text-xs text-white/70">
                       {isRepliedTo ? 'Replied to: ' : 'Discussion on '}

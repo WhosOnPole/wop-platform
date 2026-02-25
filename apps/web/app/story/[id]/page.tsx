@@ -3,7 +3,9 @@ import { cookies } from 'next/headers'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { Metadata } from 'next'
+import { getAvatarUrl } from '@/utils/avatar'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600
@@ -28,7 +30,16 @@ const getStory = cache(async (id: string) => {
     supabase.from('news_stories').select('*').eq('id', id).maybeSingle(),
     supabase
       .from('user_story_submissions')
-      .select('*')
+      .select(
+        `
+        *,
+        author:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
       .eq('id', id)
       .eq('status', 'approved')
       .maybeSingle(),
@@ -63,6 +74,23 @@ export default async function StoryPage({ params }: PageProps) {
     ? `${story.summary}\n\n${story.content}`
     : story.content
 
+  type AuthorRow = { id: string; username: string; profile_image_url: string | null }
+  const rawAuthor =
+    'author' in story && story.author != null
+      ? Array.isArray(story.author)
+        ? (story.author as AuthorRow[])[0]
+        : (story.author as AuthorRow)
+      : null
+
+  const isUserStory =
+    'user_id' in story &&
+    'is_anonymous' in story &&
+    !story.is_anonymous &&
+    rawAuthor &&
+    typeof rawAuthor.username === 'string'
+
+  const author = isUserStory ? rawAuthor : null
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <article className="rounded-lg border border-white/10 bg-black/40 shadow-lg backdrop-blur-sm">
@@ -88,6 +116,26 @@ export default async function StoryPage({ params }: PageProps) {
           <h1 className="mb-6 text-3xl font-bold text-white md:text-4xl">{story.title}</h1>
           <div className="prose prose-invert max-w-none">
             <p className="whitespace-pre-wrap text-white/90">{content}</p>
+            {author && (
+              <div className="mt-6 flex items-center justify-end gap-2">
+                <span className="text-white/70">—</span>
+                <Link
+                  href={`/u/${author.username}`}
+                  className="flex items-center gap-2 text-white/90 transition-colors hover:text-white"
+                >
+                  <span className="font-medium">{author.username}</span>
+                  <span className="relative block h-8 w-8 shrink-0 overflow-hidden rounded-full bg-white/10">
+                    <Image
+                      src={getAvatarUrl(author.profile_image_url)}
+                      alt={author.username}
+                      fill
+                      sizes="32px"
+                      className="object-cover"
+                    />
+                  </span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </article>
