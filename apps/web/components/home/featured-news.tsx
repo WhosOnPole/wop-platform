@@ -36,7 +36,7 @@ export function FeaturedNews({ newsStory }: FeaturedNewsProps) {
           </span>
           <Link
             href={`/story/${newsStory.id}`}
-            className="text-bright-teal hover:text-racing-orange font-medium"
+            className="text-white hover:text-racing-orange font-medium"
           >
             Read more →
           </Link>

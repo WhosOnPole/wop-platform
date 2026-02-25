@@ -423,7 +423,7 @@ export function FeedContent({
   return (
     <div className="space-y-6">
       <nav
-        className="flex w-full overflow-hidden rounded-full border border-white/10 bg-black/20"
+        className="flex w-full overflow-hidden rounded-full mt-12 border border-white/10 bg-black/20"
         role="tablist"
         aria-label="Feed tabs"
       >
@@ -724,6 +724,7 @@ export function FeedContent({
               key={`news-${news.id}`}
               className="overflow-hidden rounded-lg border border-white/10 bg-black/40 shadow backdrop-blur-sm"
             >
+            
               {news.image_url && (
                 <img
                   src={news.image_url}
@@ -732,11 +733,12 @@ export function FeedContent({
                 />
               )}
               <div className="p-6">
+              <p className="text-white/90 text-sm mb-2">Featured Story</p>
                 <h3 className="mb-2 text-xl font-bold text-white">{news.title}</h3>
                 <p className="mb-4 text-white/90 line-clamp-2">{news.content}</p>
                 <Link
                   href={`/story/${news.id}`}
-                  className="font-medium text-[#25B4B1] hover:text-[#25B4B1]/90"
+                  className="font-medium flex justify-end text-white hover:text-[#25B4B1]/90"
                 >
                   Read more →
                 </Link>

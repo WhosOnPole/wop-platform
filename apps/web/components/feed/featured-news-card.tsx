@@ -51,7 +51,7 @@ export function FeaturedNewsCard({ newsStory }: FeaturedNewsCardProps) {
           <span className="text-xs text-white/70">
             {new Date(newsStory.created_at).toLocaleDateString()}
           </span>
-          <span className="text-sm font-medium text-[#25B4B1] hover:text-[#25B4B1]/90">
+          <span className="text-sm font-medium text-white hover:text-[#25B4B1]/90">
             Read more →
           </span>
         </div>
