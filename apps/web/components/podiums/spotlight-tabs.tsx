@@ -118,7 +118,7 @@ export function SpotlightTabs({
   }))
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       <nav
         className="flex w-full overflow-hidden rounded-full"
         role="tablist"
@@ -144,18 +144,18 @@ export function SpotlightTabs({
       </nav>
 
       {activeTab === 'polls' && (
-        <div className="space-y-8">
-          <section className="space-y-4">
+        <div className="w-full min-w-0 space-y-8">
+          <section className="w-full min-w-0 space-y-4">
             <h2 className="text-xl font-semibold text-white">Admin polls</h2>
             {adminPollsWithFeatured.length > 0 ? (
               <div
-                className="flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 pb-2"
+                className="flex w-full min-w-0 overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 pb-2"
                 style={{ scrollSnapType: 'x mandatory' }}
               >
                 {adminPollsWithFeatured.map((poll) => (
                   <div
                     key={poll.id}
-                    className="min-w-full flex-shrink-0 snap-start rounded-xl border border-white/20 bg-white/5 p-4"
+                    className="w-full min-w-full max-w-full flex-shrink-0 snap-start rounded-xl border border-white/20 bg-white/5 p-4"
                     style={{ minHeight: 200 }}
                   >
                     <PollCard
