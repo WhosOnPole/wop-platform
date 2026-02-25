@@ -207,16 +207,6 @@ export function SpotlightTabs({
 
       {activeTab === 'stories' && (
         <div className="space-y-8">
-                    <div className="rounded-xl border border-white/20 bg-white/5 p-6 text-center">
-            <p className="mb-4 text-white/90">Have a story? Submit it for our team to consider.</p>
-            <Link
-              href="/submit-story"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1]/90"
-            >
-              <PenLine className="h-4 w-4" />
-              Submit a story
-            </Link>
-          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {stories.length > 0 ? (
               stories.map((story) => (
@@ -227,6 +217,16 @@ export function SpotlightTabs({
             ) : (
               <p className="col-span-full py-8 text-center text-white/60">No stories yet.</p>
             )}
+          </div>
+          <div className="rounded-xl border border-white/20 bg-white/5 p-6 text-center">
+            <p className="mb-4 text-white/90">Have a story? Submit it for our team to consider.</p>
+            <Link
+              href="/submit-story"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1]/90"
+            >
+              <PenLine className="h-4 w-4" />
+              Submit a story
+            </Link>
           </div>
         </div>
       )}

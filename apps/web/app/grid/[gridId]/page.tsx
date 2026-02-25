@@ -121,6 +121,31 @@ export default async function GridPage({ params }: PageProps) {
     if (rank >= 1 && rank <= 10) slotBlurbs[rank] = row.content ?? ''
   })
 
+  // Existing accounts: owner's "set comment" may exist only in grid_slot_comments (before grid_slot_blurbs). Use it as slot blurb when missing so it shows above and is excluded from the comment list.
+  const { data: ownerTopLevelComments } = await supabase
+    .from('grid_slot_comments')
+    .select('rank_index, content, created_at')
+    .eq('grid_id', grid.id)
+    .eq('user_id', owner.id)
+    .is('parent_comment_id', null)
+    .order('created_at', { ascending: true })
+
+  if (ownerTopLevelComments && ownerTopLevelComments.length > 0) {
+    const firstByRank = new Map<number, { content: string }>()
+    for (const row of ownerTopLevelComments as { rank_index: number; content: string }[]) {
+      const rank = Number(row.rank_index)
+      if (rank >= 1 && rank <= 10 && !firstByRank.has(rank)) {
+        firstByRank.set(rank, { content: (row.content ?? '').trim() })
+      }
+    }
+    for (let r = 1; r <= 10; r++) {
+      const fallback = firstByRank.get(r)
+      if (fallback && fallback.content && !slotBlurbs[r]?.trim()) {
+        slotBlurbs[r] = fallback.content
+      }
+    }
+  }
+
   const gridWithLikes = {
     ...grid,
     ranked_items: enrichedItems,

@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Radio } from 'lucide-react'
-import { PollCard } from '@/components/polls/poll-card'
+import { Radio, BarChart3, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { UpcomingRaceCard } from './upcoming-race-card'
 import { SponsorCard } from './sponsor-card'
 import { FeaturedNewsCard } from './featured-news-card'
-import { FeaturedGridPostBlock } from './featured-grid-post-block'
+import { FeaturedGridCarouselCard } from './featured-grid-carousel-card'
 
 interface SpotlightProfile {
   id: string
@@ -111,8 +110,8 @@ export function SpotlightCarousel({
 
   if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors && !hasFeaturedNews) return null
 
-  // Full-height banner cards (desktop scroll / mobile carousel)
-  const bannerCardHeight = 200
+  // Rectangular banner cards (desktop scroll / mobile carousel) — no min height, content-sized like hot take
+  const bannerCardHeight = 160
 
   const cards = useMemo(() => {
     const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor' | 'news'; data: any }> = []
@@ -190,31 +189,33 @@ export function SpotlightCarousel({
 
   type CardItem = (typeof cards)[number]
 
+  const gradientCardStyle = {
+    background: 'linear-gradient(90deg, #EC6D00 0%, #FF006F 50%, #25B4B1 100%)',
+  }
+  const gradientCardOuter = 'h-full rounded-lg p-[2px]'
+  const gradientCardInner =
+    'flex h-full min-h-0 flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1]'
+
   function renderCard(card: CardItem) {
     if (card.type === 'hot_take') {
       return (
-        <div
-          className="h-full w-full rounded-lg p-[2px]"
-          style={{
-            background: 'linear-gradient(90deg, #EC6D00 0%, #FF006F 50%, #25B4B1 100%)',
-          }}
-        >
+        <div className={gradientCardOuter} style={gradientCardStyle}>
           <button
             type="button"
             onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
-            className="flex h-full w-full flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1] cursor-pointer"
+            className={gradientCardInner + ' cursor-pointer'}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex shrink-0 items-center space-x-2">
               <Radio className="h-5 w-5 text-white/90" />
               <h2 className="text-lg font-bold text-white">Hot Take</h2>
             </div>
-            <div className="flex-1 overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-hidden">
               <p className="text-white/90 text-base leading-relaxed line-clamp-5">
                 {card.data.hot_take?.content_text || 'Hot take unavailable'}
               </p>
             </div>
             {card.data.hot_take?.id && (
-              <p className="mt-4 text-sm text-white/70">Tap to join the discussion</p>
+              <p className="mt-4 shrink-0 text-sm text-white/70">Tap to join the discussion</p>
             )}
           </button>
         </div>
@@ -222,38 +223,74 @@ export function SpotlightCarousel({
     }
     if (card.type === 'grid') {
       return (
-        <div className="flex h-full min-h-[200px] w-full flex-col">
-          <FeaturedGridPostBlock
-            grid={card.data}
-            user={card.data.user}
-            supabaseUrl={supabaseUrl}
-            className="h-full min-h-0 flex-1"
-          />
+        <div className={gradientCardOuter} style={gradientCardStyle}>
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black px-4 py-2">
+            <FeaturedGridCarouselCard
+              grid={card.data}
+              user={card.data.user}
+              supabaseUrl={supabaseUrl}
+            />
+          </div>
         </div>
       )
     }
     if (card.type === 'poll') {
+      const poll = card.data as Poll
+      const hasVoted = !!userResponses[poll.id]
       return (
-        <div className="flex h-full w-full min-w-0 flex-col overflow-hidden rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm">
-          <PollCard
-            poll={card.data}
-            userResponse={userResponses[card.data.id]}
-            voteCounts={voteCounts[card.data.id] ?? {}}
-            onVote={() => router.refresh()}
-            variant="dark"
-            className="min-h-0 flex-1 overflow-auto border-0 bg-transparent p-0 shadow-none backdrop-blur-none"
-          />
+        <div className={gradientCardOuter} style={gradientCardStyle}>
+          <Link
+            href={`/podiums?poll=${poll.id}`}
+            className={gradientCardInner}
+          >
+            <div className="flex shrink-0 items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-white/90 shrink-0" />
+              <h2 className="text-lg font-bold text-white">Featured Poll</h2>
+              {hasVoted && (
+                <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-xs text-white/90">
+                  <Check className="h-3 w-3" />
+                  Voted
+                </span>
+              )}
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <p className="text-white/90 text-base leading-relaxed line-clamp-5">
+                {poll.question || 'Poll'}
+              </p>
+            </div>
+            <p className="mt-4 shrink-0 text-sm text-white/70">
+              {hasVoted ? 'View results →' : 'Tap to vote →'}
+            </p>
+          </Link>
         </div>
       )
     }
     if (card.type === 'upcoming_race') {
-      return <UpcomingRaceCard race={card.data} />
+      return (
+        <div className={gradientCardOuter} style={gradientCardStyle}>
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black p-6">
+            <UpcomingRaceCard race={card.data} />
+          </div>
+        </div>
+      )
     }
     if (card.type === 'sponsor') {
-      return <SponsorCard sponsor={card.data} />
+      return (
+        <div className={gradientCardOuter} style={gradientCardStyle}>
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black p-6">
+            <SponsorCard sponsor={card.data} />
+          </div>
+        </div>
+      )
     }
     if (card.type === 'news') {
-      return <FeaturedNewsCard newsStory={card.data} />
+      return (
+        <div className={gradientCardOuter} style={gradientCardStyle}>
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black p-6">
+            <FeaturedNewsCard newsStory={card.data} />
+          </div>
+        </div>
+      )
     }
     return null
   }
@@ -264,8 +301,8 @@ export function SpotlightCarousel({
       <div className="relative z-10 mb-0 flex flex-col lg:block lg:h-auto lg:min-h-0 lg:max-h-none">
         <div
           ref={scrollContainerRef}
-          className="flex h-[200px] min-h-[200px] flex-shrink-0 flex-row lg:h-auto lg:min-h-0 lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pr-2 w-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory lg:snap-none"
-          style={{ scrollSnapType: 'x mandatory' }}
+          className="flex flex-shrink-0 flex-row lg:h-auto lg:min-h-0 lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pr-2 w-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory lg:snap-none"
+          style={{ scrollSnapType: 'x mandatory', height: bannerCardHeight }}
         >
           <div className="flex w-full h-full gap-4 lg:flex-col lg:gap-0">
             {cards.map((card, idx) => (
@@ -274,9 +311,9 @@ export function SpotlightCarousel({
                 ref={(el) => {
                   if (el) cardRefs.current[idx] = el
                 }}
-                className="w-full min-w-full lg:min-w-0 flex-shrink-0 snap-start lg:snap-align-none overflow-hidden flex-none"
+                className="w-full min-w-full lg:min-w-0 flex-shrink-0 snap-start lg:snap-align-none overflow-hidden flex-none h-full"
                 style={{
-                  height: bannerCardHeight,
+                  minHeight: bannerCardHeight,
                   marginBottom: idx < cards.length - 1 ? 24 : 0,
                 }}
               >

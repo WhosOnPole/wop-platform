@@ -31,7 +31,9 @@ export function ActivityTab({
   activities,
   profileUsername,
 }: ActivityTabProps) {
-  const filteredActivities = activities.filter((item) => item.type !== 'like')
+  const filteredActivities = activities.filter(
+    (item) => item.type !== 'like' && item.type !== 'comment'
+  )
 
   function getActivityIcon(item: ActivityItem) {
     switch (item.type) {

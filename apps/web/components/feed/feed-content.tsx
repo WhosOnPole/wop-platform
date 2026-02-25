@@ -196,11 +196,23 @@ export function FeedContent({
         .order('updated_at', { ascending: false, nullsFirst: false })
         .limit(DISCOVERY_LIMIT * 2)
 
+      const allowedPostParentTypes = ['hot_take', 'poll', 'profile', 'driver', 'team'] as const
       const postsList = ((discoverPosts || []) as Array<Record<string, unknown> & { id: string; like_count?: number | null; user_id?: string }>)
         .filter((p) => !excludePostIds.includes(p.id))
+        .filter(
+          (p) =>
+            p.parent_page_type == null ||
+            allowedPostParentTypes.includes(p.parent_page_type as (typeof allowedPostParentTypes)[number])
+        )
         .slice(0, DISCOVERY_LIMIT)
       const gridsList = ((discoverGrids || []) as Array<Record<string, unknown> & { id: string; type: string; ranked_items: any[]; user_id?: string }>)
         .filter((g) => !excludeGridIds.includes(g.id))
+        .filter(
+          (g) =>
+            g.type === 'driver' &&
+            Array.isArray(g.ranked_items) &&
+            g.ranked_items.length > 0
+        )
         .slice(0, DISCOVERY_LIMIT)
 
       // Enrich grids with driver/track data

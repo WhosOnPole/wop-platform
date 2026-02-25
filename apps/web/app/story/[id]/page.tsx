@@ -1,6 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+import { cache } from 'react'
+import { cookies } from 'next/headers'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600
@@ -9,27 +12,51 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
-export default async function StoryPage({ params }: PageProps) {
-  const { id } = await params
+const getStory = cache(async (id: string) => {
+  const cookieStore = await cookies()
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-  if (!supabaseUrl || !supabaseKey) {
-    notFound()
-  }
+  if (!supabaseUrl || !supabaseKey) return null
 
-  const supabase = createClient(supabaseUrl, supabaseKey)
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore as any },
+    { supabaseUrl, supabaseKey }
+  )
 
   const [newsResult, userStoryResult] = await Promise.all([
-    supabase.from('news_stories').select('*').eq('id', id).single(),
-    supabase.from('user_story_submissions').select('*').eq('id', id).eq('status', 'approved').single(),
+    supabase.from('news_stories').select('*').eq('id', id).maybeSingle(),
+    supabase
+      .from('user_story_submissions')
+      .select('*')
+      .eq('id', id)
+      .eq('status', 'approved')
+      .maybeSingle(),
   ])
 
-  const newsStory = newsResult.data
-  const userStory = userStoryResult.data
+  return newsResult.data ?? userStoryResult.data ?? null
+})
 
-  const story = newsStory ?? userStory
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params
+  const story = await getStory(id)
+  if (!story) return { title: 'Story not found' }
+  const title = story.title ?? 'Story'
+  const rawDesc =
+    ('summary' in story && typeof story.summary === 'string' && story.summary) ||
+    (typeof story.content === 'string' && story.content) ||
+    ''
+  const description = rawDesc.length > 160 ? `${rawDesc.slice(0, 157)}...` : rawDesc || undefined
+  return {
+    title: `${title} | Who's on Pole?`,
+    description,
+    openGraph: { title, description },
+  }
+}
+
+export default async function StoryPage({ params }: PageProps) {
+  const { id } = await params
+  const story = await getStory(id)
   if (!story) notFound()
 
   const content = 'summary' in story && story.summary

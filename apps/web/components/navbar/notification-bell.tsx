@@ -35,7 +35,7 @@ export function NotificationBell({ currentUsername }: NotificationBellProps) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-sunset-gradient`} aria-label="Notifications"
+        className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-transparent hover:border-white`} aria-label="Notifications"
       >
         <Bell
           className={`h-5 w-5 ${

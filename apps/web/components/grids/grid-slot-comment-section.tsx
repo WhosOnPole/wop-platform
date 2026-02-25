@@ -29,9 +29,18 @@ interface GridSlotComment {
 interface GridSlotCommentSectionProps {
   gridId: string
   rankIndex: number
+  /** Grid owner's user id – when set, any top-level comment by them that matches ownerSlotBlurbContent is excluded (it belongs above as the owner's set comment, not in the comment section). */
+  gridOwnerId?: string | null
+  /** Owner's comment for this slot from the edit grid (slot blurb). Excluded from the comment list so it only shows above. */
+  ownerSlotBlurbContent?: string | null
 }
 
-export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSectionProps) {
+export function GridSlotCommentSection({
+  gridId,
+  rankIndex,
+  gridOwnerId,
+  ownerSlotBlurbContent,
+}: GridSlotCommentSectionProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const [comments, setComments] = useState<GridSlotComment[]>([])
@@ -143,7 +152,20 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
     setIsSubmitting(false)
   }
 
-  const topLevel = comments.filter((c) => !c.parent_comment_id)
+  // Exclude the owner's "set comment" from the edit grid (slot blurb) so it only appears above; their replies stay in the comment section.
+  const ownerBlurbTrimmed = (ownerSlotBlurbContent ?? '').trim()
+  const topLevel = comments.filter((c) => {
+    if (c.parent_comment_id) return false
+    if (
+      gridOwnerId &&
+      ownerBlurbTrimmed &&
+      c.user?.id === gridOwnerId &&
+      c.content.trim() === ownerBlurbTrimmed
+    ) {
+      return false
+    }
+    return true
+  })
   const repliesByParent: Record<string, GridSlotComment[]> = {}
   comments.forEach((c) => {
     if (c.parent_comment_id) {
@@ -153,29 +175,11 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
   })
 
   return (
-    <div className="mt-6 space-y-4 px-4 bg-black">
-      <h3 className="text-sm font-medium text-white/90">Comments</h3>
-
-      <form onSubmit={handleAddComment} className="flex w-full items-stretch">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Add a comment..."
-          rows={2}
-          className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting || !content.trim()}
-          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50"
-        >
-          <Send className="h-4 w-4" />
-          Post
-        </button>
-      </form>
+    <div className="mt-6 flex flex-col gap-4 px-4 bg-black">
+      <h3 className="text-sm font-medium text-white/90 text-right">Comments</h3>
 
       <div
-        className={`rounded-md border border-white/20 bg-transparent p-4 min-h-[120px] flex flex-col ${isLoading || topLevel.length === 0 ? 'items-center justify-center' : ''}`}
+        className={`flex flex-col overflow-y-auto rounded-md border border-white/20 bg-transparent p-4 max-h-[280px] min-h-[120px] ${isLoading || topLevel.length === 0 ? 'items-center justify-center' : ''}`}
       >
         {isLoading ? (
           <p className="text-sm text-white/70">Loading comments...</p>
@@ -320,6 +324,24 @@ export function GridSlotCommentSection({ gridId, rankIndex }: GridSlotCommentSec
           <p className="text-sm text-white/60 text-center">No comments yet. Be the first to comment.</p>
         )}
       </div>
+
+      <form onSubmit={handleAddComment} className="flex w-full items-stretch">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Add a comment..."
+          rows={2}
+          className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
+        />
+        <button
+          type="submit"
+          disabled={isSubmitting || !content.trim()}
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50"
+        >
+          <Send className="h-4 w-4" />
+          Post
+        </button>
+      </form>
     </div>
   )
 }

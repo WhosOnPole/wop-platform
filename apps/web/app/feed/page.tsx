@@ -450,8 +450,15 @@ export default async function FeedPage() {
     hotTakePosts = htPosts || []
   }
 
+  // Filter posts: only hot_take, poll, profile, driver, team (exclude track entity comments)
+  const allowedPostParentTypes = ['hot_take', 'poll', 'profile', 'driver', 'team'] as const
+  const followingPostsListRaw = followingPosts.data || []
+  const followingPostsList = followingPostsListRaw.filter(
+    (p: Record<string, unknown>) =>
+      p.parent_page_type == null || allowedPostParentTypes.includes(p.parent_page_type as (typeof allowedPostParentTypes)[number])
+  )
+
   // Current user's like state for feed posts (for LikeButton initialIsLiked)
-  const followingPostsList = followingPosts.data || []
   const feedPostIds = followingPostsList.map((p: { id: string }) => p.id)
   let userLikedPostIds = new Set<string>()
   if (feedPostIds.length > 0) {
@@ -604,27 +611,23 @@ export default async function FeedPage() {
     }
   })
 
-  // Enrich feed grids: ranked_items with images/location, like/comment counts
-  const feedGridsRaw = followingGrids.data || []
+  // Enrich feed grids: only completed driver grids (no team/track in main feed)
+  const feedGridsRawAll = followingGrids.data || []
+  const feedGridsRaw = feedGridsRawAll.filter(
+    (grid: { type: string; ranked_items?: unknown[] }) =>
+      grid.type === 'driver' &&
+      Array.isArray(grid.ranked_items) &&
+      grid.ranked_items.length > 0
+  )
   const feedGridIds = feedGridsRaw.map((grid: { id: string }) => grid.id)
   const driverIds = Array.from(
     new Set(
-      feedGridsRaw
-        .filter((grid: { type: string }) => grid.type === 'driver')
-        .flatMap((grid: { ranked_items: Array<{ id: string }> }) =>
-          Array.isArray(grid.ranked_items) ? grid.ranked_items.map((item) => item.id) : []
-        )
+      feedGridsRaw.flatMap((grid: { ranked_items: Array<{ id: string }> }) =>
+        Array.isArray(grid.ranked_items) ? grid.ranked_items.map((item) => item.id) : []
+      )
     )
   )
-  const trackIds = Array.from(
-    new Set(
-      feedGridsRaw
-        .filter((grid: { type: string }) => grid.type === 'track')
-        .flatMap((grid: { ranked_items: Array<{ id: string }> }) =>
-          Array.isArray(grid.ranked_items) ? grid.ranked_items.map((item) => item.id) : []
-        )
-    )
-  )
+  const trackIds: string[] = []
 
   const [
     { data: driversData },
@@ -984,7 +987,7 @@ export default async function FeedPage() {
           <FeedContent
             posts={enrichedFeedPosts}
             grids={enrichedFeedGrids as Grid[]}
-            gridComments={normalizeGridComments(gridCommentsOnMyGrids.data || [])}
+            gridComments={[]}
             embeddedPollsByPollId={embeddedPollsByPollId}
             parentPageByKey={parentPageByKey}
             communityPolls={communityPollsList}
@@ -992,7 +995,7 @@ export default async function FeedPage() {
             pollVoteCounts={feedPollVoteCounts}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}
-            featuredNews={[]}
+            featuredNews={featuredNewsList}
             isNewUser={isNewUser}
           />
         </div>

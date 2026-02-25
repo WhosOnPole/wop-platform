@@ -856,6 +856,12 @@ export function GridDetailView({
                   </button>
                 </div>
               )}
+              {/* Owner's set comment (from edit grid) — above the comment box, not part of the comment section */}
+              {doesHaveBlurb && (
+                <p className="mb-2 text-xs font-medium text-white/60 uppercase tracking-wide">
+                  Owner&apos;s note
+                </p>
+              )}
               <GridBlurbDisplay
                 isThirdPartyView={isThirdPartyView}
                 doesHaveBlurb={doesHaveBlurb}
@@ -875,7 +881,12 @@ export function GridDetailView({
                 readOnly
               />
               {shouldShowBlurbPanel && <hr className="mb-6 border-white/20" />}
-              <GridSlotCommentSection gridId={grid.id} rankIndex={rankIndex} />
+              <GridSlotCommentSection
+                gridId={grid.id}
+                rankIndex={rankIndex}
+                gridOwnerId={owner.id}
+                ownerSlotBlurbContent={currentSlotBlurbFromData || null}
+              />
             </div>
           )}
         </div>
@@ -899,7 +910,7 @@ export function GridDetailView({
             {onSlotBlurbChange && (
               <div className="mb-6 mt-12">
                 <label className="block text-sm font-medium text-white/90 mb-2">
-                  Your comment for: <span className="font-bold pl-2 font-display">{rankIndex} – {selectedItem?.name}</span>
+                  Your comment for: <span className="font-bold pl-2 font-sans">{rankIndex} – {selectedItem?.name}</span>
                 </label>
                 {currentSlotBlurbFromData.trim().length > 0 && !isEditingEditBlurb ? (
                   <div className="flex w-full items-center gap-3 rounded-md border border-white/20 bg-white/10 px-3 py-2">
@@ -923,7 +934,7 @@ export function GridDetailView({
                       onChange={(e) => setEditBlurbDraft(e.target.value.slice(0, 140))}
                       placeholder="Add a comment..."
                       rows={2}
-                      className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
+                      className="min-w-0 max-h-16 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 p-1.5 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
                     />
                     <button
                       type="button"
@@ -938,14 +949,14 @@ export function GridDetailView({
                           setIsEditingEditBlurb(false)
                         }, 1200)
                       }}
-                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] min-w-[4.5rem]"
+                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent p-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] min-w-[4.5rem]"
                     >
                       {editBlurbJustSaved ? (
                         'Saved!'
                       ) : (
                         <>
                           <Send className="h-4 w-4" />
-                          Done
+                          Save
                         </>
                       )}
                     </button>
