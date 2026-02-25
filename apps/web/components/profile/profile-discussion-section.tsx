@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
@@ -41,6 +42,15 @@ export function ProfileDiscussionSection({
     e.preventDefault()
     if (!newPostContent.trim()) return
 
+    const result = sanitizeUserContent(newPostContent, {
+      maxLength: CONTENT_MAX_LENGTHS.post,
+      fieldName: 'Post',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     setIsSubmitting(true)
     const {
       data: { session },
@@ -54,7 +64,7 @@ export function ProfileDiscussionSection({
     const { data, error } = await supabase
       .from('posts')
       .insert({
-        content: newPostContent.trim(),
+        content: result.value,
         user_id: session.user.id,
         parent_page_type: 'profile',
         parent_page_id: profileId,

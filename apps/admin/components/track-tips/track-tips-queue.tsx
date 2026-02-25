@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Check, X, Loader2 } from 'lucide-react'
+import { Check, X, Loader2, Pencil } from 'lucide-react'
+import { sanitizeTipContent } from '@/utils/sanitize'
 
 type TrackTipType = 'tips' | 'stays' | 'meetups' | 'transit'
 
@@ -41,6 +42,8 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
   const supabase = createClientComponentClient()
   const [tips, setTips] = useState<TrackTip[]>(initialTips)
   const [processing, setProcessing] = useState<string | null>(null)
+  const [editingTipId, setEditingTipId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState('')
 
   async function handleTypeChange(tipId: string, newType: TrackTipType) {
     setProcessing(tipId)
@@ -70,6 +73,39 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
       alert('Failed to approve tip')
     } else {
       setTips(tips.filter((t) => t.id !== tipId))
+    }
+    setProcessing(null)
+  }
+
+  function startEditing(tip: TrackTip) {
+    setEditingTipId(tip.id)
+    setEditDraft(tip.tip_content)
+  }
+
+  function cancelEditing() {
+    setEditingTipId(null)
+    setEditDraft('')
+  }
+
+  async function handleSaveEdit(tipId: string) {
+    const result = sanitizeTipContent(editDraft)
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
+    setProcessing(tipId)
+    const { error } = await supabase
+      .from('track_tips')
+      .update({ tip_content: result.value })
+      .eq('id', tipId)
+
+    if (error) {
+      console.error('Error updating tip content:', error)
+      alert('Failed to update tip content')
+    } else {
+      setTips(tips.map((t) => (t.id === tipId ? { ...t, tip_content: result.value } : t)))
+      cancelEditing()
     }
     setProcessing(null)
   }
@@ -134,7 +170,51 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
               </select>
             </div>
             <div className="rounded-md bg-gray-50 p-4">
-              <p className="text-sm text-gray-900">{tip.tip_content}</p>
+              {editingTipId === tip.id ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editDraft}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    rows={4}
+                    maxLength={2000}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Tip content..."
+                  />
+                  <p className="text-xs text-gray-500">{editDraft.length}/2000</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSaveEdit(tip.id)}
+                      disabled={processing === tip.id}
+                      className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {processing === tip.id ? (
+                        <Loader2 className="inline h-4 w-4 animate-spin" />
+                      ) : (
+                        'Save'
+                      )}
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      disabled={processing === tip.id}
+                      className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start justify-between gap-2">
+                  <p className="flex-1 text-sm text-gray-900">{tip.tip_content}</p>
+                  <button
+                    onClick={() => startEditing(tip)}
+                    disabled={processing === tip.id}
+                    className="shrink-0 rounded p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-700 disabled:opacity-50"
+                    aria-label="Edit tip content"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
             {tip.image_url && (
               <div className="mt-3">

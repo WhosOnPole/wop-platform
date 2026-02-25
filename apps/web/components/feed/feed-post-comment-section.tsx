@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter } from 'next/navigation'
 import { Send } from 'lucide-react'
 import { CommentIcon } from '@/components/ui/comment-icon'
@@ -127,6 +128,15 @@ export function FeedPostCommentSection({
     e.preventDefault()
     if (!replyContent.trim()) return
 
+    const result = sanitizeUserContent(replyContent, {
+      maxLength: CONTENT_MAX_LENGTHS.comment,
+      fieldName: 'Comment',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -139,7 +149,7 @@ export function FeedPostCommentSection({
     const { data, error } = await supabase
       .from('comments')
       .insert({
-        content: replyContent.trim(),
+        content: result.value,
         user_id: session.user.id,
         post_id: postId,
         parent_comment_id: null,

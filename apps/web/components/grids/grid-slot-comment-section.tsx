@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Send } from 'lucide-react'
@@ -111,6 +112,15 @@ export function GridSlotCommentSection({
     e.preventDefault()
     if (!content.trim()) return
 
+    const result = sanitizeUserContent(content, {
+      maxLength: CONTENT_MAX_LENGTHS.comment,
+      fieldName: 'Comment',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -123,7 +133,7 @@ export function GridSlotCommentSection({
     const { data, error } = await supabase
       .from('grid_slot_comments')
       .insert({
-        content: content.trim(),
+        content: result.value,
         user_id: session.user.id,
         grid_id: gridId,
         rank_index: rankIndex,

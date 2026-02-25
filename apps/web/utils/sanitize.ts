@@ -11,7 +11,6 @@ const INJECTION_PATTERNS = [
   /drop\s+table/i,
   /insert\s+into/i,
   /delete\s+from/i,
-  /['";]/,
   /<\s*iframe/i,
   /<\s*object/i,
   /<\s*embed/i,
@@ -62,6 +61,42 @@ export function sanitizeTipContent(
   for (const pattern of INJECTION_PATTERNS) {
     if (pattern.test(trimmed)) {
       return { ok: false, error: 'Tip contains invalid characters or patterns.' }
+    }
+  }
+  return { ok: true, value: trimmed }
+}
+
+/** Max lengths for user content (from schema) */
+export const CONTENT_MAX_LENGTHS = {
+  post: 10_000,
+  comment: 5_000,
+  blurb: 140,
+  storyTitle: 200,
+  storySummary: 500,
+  storyBody: 10_000,
+} as const
+
+/**
+ * Sanitizes user-generated content (posts, comments, blurbs, stories).
+ * - Trims whitespace
+ * - Enforces max length
+ * - Rejects content matching XSS/injection patterns
+ */
+export function sanitizeUserContent(
+  raw: string,
+  options: { maxLength: number; fieldName?: string }
+): { ok: true; value: string } | { ok: false; error: string } {
+  if (typeof raw !== 'string') {
+    return { ok: false, error: 'Invalid content.' }
+  }
+  const trimmed = raw.trim()
+  const { maxLength, fieldName = 'Content' } = options
+  if (trimmed.length > maxLength) {
+    return { ok: false, error: `${fieldName} must be ${maxLength} characters or less.` }
+  }
+  for (const pattern of INJECTION_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return { ok: false, error: 'Content contains invalid characters or patterns.' }
     }
   }
   return { ok: true, value: trimmed }

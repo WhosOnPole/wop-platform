@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter } from 'next/navigation'
 import { Send } from 'lucide-react'
 import { CommentIcon } from '@/components/ui/comment-icon'
@@ -344,6 +345,15 @@ export function DiscussionSection({
     e.preventDefault()
     if (!newPostContent.trim()) return
 
+    const result = sanitizeUserContent(newPostContent, {
+      maxLength: CONTENT_MAX_LENGTHS.post,
+      fieldName: 'Post',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     setIsSubmitting(true)
     const {
       data: { session },
@@ -357,7 +367,7 @@ export function DiscussionSection({
     const { data, error } = await supabase
       .from('posts')
       .insert({
-        content: newPostContent.trim(),
+        content: result.value,
         user_id: session.user.id,
         parent_page_type: parentPageType,
         parent_page_id: parentPageId,
@@ -388,6 +398,15 @@ export function DiscussionSection({
     const content = replyContent[postId]
     if (!content?.trim()) return
 
+    const result = sanitizeUserContent(content, {
+      maxLength: CONTENT_MAX_LENGTHS.comment,
+      fieldName: 'Comment',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -400,7 +419,7 @@ export function DiscussionSection({
     const { data, error } = await supabase
       .from('comments')
       .insert({
-        content: content.trim(),
+        content: result.value,
         user_id: session.user.id,
         post_id: postId,
         parent_comment_id: null, // Top-level comment
@@ -436,6 +455,15 @@ export function DiscussionSection({
     const content = replyContent[commentId]
     if (!content?.trim()) return
 
+    const result = sanitizeUserContent(content, {
+      maxLength: CONTENT_MAX_LENGTHS.comment,
+      fieldName: 'Reply',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -448,7 +476,7 @@ export function DiscussionSection({
     const { data, error } = await supabase
       .from('comments')
       .insert({
-        content: content.trim(),
+        content: result.value,
         user_id: session.user.id,
         post_id: postId,
         parent_comment_id: commentId, // Reply to comment

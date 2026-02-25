@@ -4,6 +4,7 @@ import { useState, FormEvent, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Plus } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 
 interface StoryModalProps {
   onClose: () => void
@@ -56,6 +57,26 @@ export function StoryModal({ onClose }: StoryModalProps) {
       return
     }
 
+    const titleResult = sanitizeUserContent(title, {
+      maxLength: CONTENT_MAX_LENGTHS.storyTitle,
+      fieldName: 'Title',
+    })
+    if (!titleResult.ok) {
+      setError(titleResult.error)
+      setSubmitting(false)
+      return
+    }
+
+    const bodyResult = sanitizeUserContent(body, {
+      maxLength: CONTENT_MAX_LENGTHS.storyBody,
+      fieldName: 'Story',
+    })
+    if (!bodyResult.ok) {
+      setError(bodyResult.error)
+      setSubmitting(false)
+      return
+    }
+
     let imageUrl: string | null = null
     if (image) {
       const fileExt = image.name.split('.').pop() || 'jpg'
@@ -73,11 +94,25 @@ export function StoryModal({ onClose }: StoryModalProps) {
       imageUrl = urlData.publicUrl
     }
 
+    let safeSummary: string | null = null
+    if (summary.trim()) {
+      const summaryResult = sanitizeUserContent(summary, {
+        maxLength: CONTENT_MAX_LENGTHS.storySummary,
+        fieldName: 'Summary',
+      })
+      if (!summaryResult.ok) {
+        setError(summaryResult.error)
+        setSubmitting(false)
+        return
+      }
+      safeSummary = summaryResult.value
+    }
+
     const { error: insertError } = await supabase.from('user_story_submissions').insert({
       user_id: session.user.id,
-      title: title.trim(),
-      summary: summary.trim() || null,
-      content: body.trim(),
+      title: titleResult.value,
+      summary: safeSummary,
+      content: bodyResult.value,
       image_url: imageUrl,
       status: 'pending_approval',
       is_anonymous: isAnonymous,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter, useParams } from 'next/navigation'
 import { GridDetailView } from '@/components/grids/grid-detail-view'
 import { getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
@@ -177,6 +178,20 @@ export default function EditGridPage() {
       .eq('id', session.user.id)
       .single()
 
+    const sanitizedBlurbs: Record<number, string> = {}
+    for (let i = 1; i <= 10; i++) {
+      const result = sanitizeUserContent(slotBlurbs[i] ?? '', {
+        maxLength: CONTENT_MAX_LENGTHS.blurb,
+        fieldName: `Slot ${i} comment`,
+      })
+      if (!result.ok) {
+        alert(result.error)
+        setIsSubmitting(false)
+        return
+      }
+      sanitizedBlurbs[i] = result.value
+    }
+
     const gridTypeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'
     let gridId: string
 
@@ -191,7 +206,7 @@ export default function EditGridPage() {
         .from('grids')
         .update({
           ranked_items: rankedItemIds,
-          blurb: (slotBlurbs[1] ?? '').trim() || null,
+          blurb: sanitizedBlurbs[1] || null,
           previous_state: previousState,
           updated_at: new Date().toISOString(),
         })
@@ -204,7 +219,7 @@ export default function EditGridPage() {
         return
       }
       gridId = existingGridId
-      const postContent = (slotBlurbs[1] ?? '').trim() || `Updated their Top ${gridTypeLabel} grid`
+      const postContent = sanitizedBlurbs[1] || `Updated their Top ${gridTypeLabel} grid`
       const defaultContent = `Updated their Top ${gridTypeLabel} grid`
       const { data: newPost } = await supabase
         .from('posts')
@@ -234,7 +249,7 @@ export default function EditGridPage() {
           user_id: session.user.id,
           type,
           ranked_items: rankedItemIds,
-          blurb: (slotBlurbs[1] ?? '').trim() || null,
+          blurb: sanitizedBlurbs[1] || null,
           updated_at: nowIso,
         })
         .select('id')
@@ -251,7 +266,7 @@ export default function EditGridPage() {
     const slotBlurbsRows = Array.from({ length: 10 }, (_, i) => ({
       grid_id: gridId,
       rank_index: i + 1,
-      content: (slotBlurbs[i + 1] ?? '').trim().slice(0, 140),
+      content: sanitizedBlurbs[i + 1] ?? '',
     }))
     const { error: slotBlurbsError } = await supabase
       .from('grid_slot_blurbs')

@@ -16,6 +16,7 @@ import { StepperBar } from '@/components/stepper-bar'
 import { PageBackButton } from '@/components/page-back-button'
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Send } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 export type GridType = 'driver' | 'team' | 'track'
@@ -121,7 +122,15 @@ function OwnProfileBlurbBlock({
   }, [rankIndex, ownBlurbDisplay])
 
   async function handleSave() {
-    const value = draft.trim().slice(0, 140)
+    const result = sanitizeUserContent(draft, {
+      maxLength: CONTENT_MAX_LENGTHS.blurb,
+      fieldName: 'Blurb',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+    const value = result.value
     setOwnBlurbSaving(true)
     const { error } = await supabase
       .from('grid_slot_blurbs')
@@ -943,7 +952,15 @@ export function GridDetailView({
                     <button
                       type="button"
                       onClick={async () => {
-                        const value = editBlurbDraft.trim().slice(0, 140)
+                        const result = sanitizeUserContent(editBlurbDraft, {
+                          maxLength: CONTENT_MAX_LENGTHS.blurb,
+                          fieldName: 'Comment',
+                        })
+                        if (!result.ok) {
+                          alert(result.error)
+                          return
+                        }
+                        const value = result.value
                         onSlotBlurbChange(rankIndex, value)
                         setSlotBlurbsLocal((prev) => ({ ...(prev ?? {}), [rankIndex]: value }))
                         setEditBlurbJustSaved(true)

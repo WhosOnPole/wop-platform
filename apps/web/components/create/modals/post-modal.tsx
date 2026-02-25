@@ -4,6 +4,7 @@ import { useState, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
@@ -52,6 +53,20 @@ export function PostModal({ onClose, referencePollId, referencePollQuestion }: P
       return
     }
 
+    let safeContent = ''
+    if (trimmedContent) {
+      const result = sanitizeUserContent(trimmedContent, {
+        maxLength: CONTENT_MAX_LENGTHS.post,
+        fieldName: 'Content',
+      })
+      if (!result.ok) {
+        setError(result.error)
+        setSubmitting(false)
+        return
+      }
+      safeContent = result.value
+    }
+
     if (image) {
       if (image.size > MAX_IMAGE_SIZE_BYTES) {
         setError('Image must be 5MB or smaller.')
@@ -94,7 +109,7 @@ export function PostModal({ onClose, referencePollId, referencePollQuestion }: P
       parent_page_type?: string
       parent_page_id?: string
     } = {
-      content: trimmedContent || '',
+      content: safeContent,
       user_id: session.user.id,
       image_url: imageUrl || null,
     }

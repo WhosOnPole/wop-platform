@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter } from 'next/navigation'
 import { MoreVertical, Pencil, Trash2, Flag } from 'lucide-react'
 
@@ -90,10 +91,20 @@ export function CommentActionsMenu({
 
   async function handleSaveEdit() {
     if (!editContent.trim()) return
+
+    const result = sanitizeUserContent(editContent, {
+      maxLength: CONTENT_MAX_LENGTHS.comment,
+      fieldName: 'Comment',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     setIsSavingEdit(true)
     const { error } = await supabase
       .from(table)
-      .update({ content: editContent.trim() })
+      .update({ content: result.value })
       .eq('id', commentId)
     setIsSavingEdit(false)
     setEditOpen(false)
@@ -102,7 +113,7 @@ export function CommentActionsMenu({
       console.error('Error updating comment:', error)
       return
     }
-    onEdited?.(commentId, editContent.trim())
+    onEdited?.(commentId, result.value)
   }
 
   async function handleSubmitReport() {
