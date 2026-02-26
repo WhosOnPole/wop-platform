@@ -271,12 +271,12 @@ export function TopNav() {
               {/* Desktop: Settings + Logout only */}
               <div className="hidden md:block p-2 min-w-[12rem]">
                 <Link
-                  href="/settings"
+                  href="/settings?tab=notifications"
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#6B6B6B] hover:bg-gray-100"
                 >
                   <Settings className="h-5 w-5 shrink-0" />
-                  <span>Settings</span>
+                  <span>Notifications</span>
                 </Link>
                 <button
                   type="button"
@@ -304,10 +304,10 @@ export function TopNav() {
                       <Search className="h-5 w-5 text-white" />
                     </button>
                     <Link
-                      href="/settings"
+                      href="/settings?tab=notifications"
                       onClick={() => setIsMenuOpen(false)}
                       className="relative flex h-8 w-8 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
-                      aria-label="Settings"
+                      aria-label="Notifications"
                     >
                       <Settings className="h-5 w-5 text-white" />
                     </Link>

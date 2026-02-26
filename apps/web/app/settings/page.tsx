@@ -4,13 +4,12 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Save, Upload, X, LogOut, User, Bell, Info } from 'lucide-react'
-import { NotificationSettings } from '@/components/notifications/notification-settings'
 
-const TABS = ['profile', 'settings', 'info'] as const
+const TABS = ['profile', 'notifications', 'info'] as const
 type TabId = (typeof TABS)[number]
 
 function isValidTab(t: string | null): t is TabId {
-  return t === 'profile' || t === 'settings' || t === 'info'
+  return t === 'profile' || t === 'notifications' || t === 'info'
 }
 
 interface Profile {
@@ -48,41 +47,22 @@ export default function SettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const searchParams = useSearchParams()
-  const tabFromUrl = searchParams.get('tab')
-  const [activeTab, setActiveTab] = useState<TabId>(isValidTab(tabFromUrl) ? tabFromUrl : 'profile')
-  const [notificationPreferences, setNotificationPreferences] = useState<Record<string, unknown> | null>(null)
-  const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const t = searchParams.get('tab')
+    if (t === 'settings') return 'notifications' // backwards compat
+    return isValidTab(t) ? t : 'profile'
+  })
 
-  // Sync activeTab from URL (e.g. /settings?tab=settings)
+  // Sync activeTab from URL (e.g. /settings?tab=notifications)
   useEffect(() => {
     const t = searchParams.get('tab')
-    if (isValidTab(t)) setActiveTab(t)
+    if (t === 'settings') setActiveTab('notifications')
+    else if (isValidTab(t)) setActiveTab(t)
   }, [searchParams])
 
   useEffect(() => {
     loadProfile()
   }, [])
-
-  // Fetch notification preferences when Settings tab is active
-  useEffect(() => {
-    if (activeTab !== 'settings') return
-    if (notificationPrefsLoaded) return
-
-    async function fetchPrefs() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session) return
-      const { data } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .single()
-      setNotificationPreferences(data ?? null)
-      setNotificationPrefsLoaded(true)
-    }
-    fetchPrefs()
-  }, [activeTab, notificationPrefsLoaded])
 
   async function loadProfile() {
     const {
@@ -288,17 +268,17 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold font-display text-white">Settings</h1>
-        <p className="mt-2 text-white/80">Manage your profile and account settings</p>
+        <h1 className="text-3xl font-bold font-display text-white">Notifications</h1>
+        <p className="mt-2 text-white/80">Manage your profile and notification preferences</p>
       </div>
 
-      {/* Tab nav: Profile, Settings, Info - pitlane style */}
+      {/* Tab nav: Profile, Notifications, Info - pitlane style */}
       <div className="mb-6 flex w-full overflow-hidden rounded-full">
         <div className="flex w-full">
           {(
             [
               { id: 'profile' as const, label: 'Profile', icon: User },
-              { id: 'settings' as const, label: 'Settings', icon: Bell },
+              { id: 'notifications' as const, label: 'Notifications', icon: Bell },
               { id: 'info' as const, label: 'Info', icon: Info },
             ] as const
           ).map(({ id, label, icon: Icon }, index) => (
@@ -527,19 +507,12 @@ export default function SettingsPage() {
         </section>
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === 'notifications' && (
             <section className="rounded-lg border border-white/20 bg-white/5 p-6">
-              <h2 className="mb-2 text-xl font-semibold text-white">Notifications</h2>
-              <p className="mb-6 text-sm text-white/70">
-                Manage how and when you receive notifications.
+              <h2 className="mb-6 text-2xl font-semibold text-white">Coming Soon!</h2>
+              <p className="text-white/70">
+                Notification preferences will be available here soon.
               </p>
-              {notificationPrefsLoaded ? (
-                <NotificationSettings initialPreferences={notificationPreferences} />
-              ) : (
-                <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
-                </div>
-              )}
             </section>
           )}
 
