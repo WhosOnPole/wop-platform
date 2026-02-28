@@ -482,12 +482,92 @@ export default async function FeedPage() {
     })
   }
 
-  const enrichedFeedPosts = followingPostsList.map((p: Record<string, unknown> & { id: string; like_count?: number | null }) => ({
+  let enrichedFeedPosts = followingPostsList.map((p: Record<string, unknown> & { id: string; like_count?: number | null }) => ({
     ...p,
     like_count: p.like_count ?? 0,
     is_liked: userLikedPostIds.has(p.id),
     comment_count: commentCountByPostId[p.id] ?? 0,
   })) as Post[]
+
+  // Enrich grid snapshot posts: fetch grid type and entity data for embedded GridDisplayCard
+  const gridSnapshotPostGridIds = enrichedFeedPosts
+    .filter((p) => p.grid_id && Array.isArray(p.grid_snapshot) && p.grid_snapshot.length > 0)
+    .map((p) => p.grid_id as string)
+  if (gridSnapshotPostGridIds.length > 0) {
+    const { data: snapshotGrids } = await supabase
+      .from('grids')
+      .select('id, type')
+      .in('id', [...new Set(gridSnapshotPostGridIds)])
+    const gridsById = new Map((snapshotGrids || []).map((g: { id: string; type: string }) => [g.id, g]))
+    const snapshotDriverIds = new Set<string>()
+    const snapshotTeamIds = new Set<string>()
+    const snapshotTrackIds = new Set<string>()
+    for (const post of enrichedFeedPosts) {
+      if (!post.grid_id || !Array.isArray(post.grid_snapshot)) continue
+      const grid = gridsById.get(post.grid_id) as { type: string } | undefined
+      if (!grid) continue
+      for (const item of post.grid_snapshot) {
+        if (grid.type === 'driver') snapshotDriverIds.add(item.id)
+        else if (grid.type === 'team') snapshotTeamIds.add(item.id)
+        else if (grid.type === 'track') snapshotTrackIds.add(item.id)
+      }
+    }
+    const [
+      { data: snapshotDrivers },
+      { data: snapshotTeams },
+      { data: snapshotTracks },
+    ] = await Promise.all([
+      snapshotDriverIds.size > 0
+        ? supabase.from('drivers').select('id, name, headshot_url, image_url').in('id', [...snapshotDriverIds])
+        : Promise.resolve({ data: [] }),
+      snapshotTeamIds.size > 0
+        ? supabase.from('teams').select('id, name').in('id', [...snapshotTeamIds])
+        : Promise.resolve({ data: [] }),
+      snapshotTrackIds.size > 0
+        ? supabase.from('tracks').select('id, name, location, country, circuit_ref').in('id', [...snapshotTrackIds])
+        : Promise.resolve({ data: [] }),
+    ])
+    const driversById = new Map((snapshotDrivers || []).map((d: { id: string }) => [d.id, d]))
+    const teamsById = new Map((snapshotTeams || []).map((t: { id: string }) => [t.id, t]))
+    const tracksById = new Map((snapshotTracks || []).map((t: { id: string }) => [t.id, t]))
+    enrichedFeedPosts = enrichedFeedPosts.map((p) => {
+      if (!p.grid_id || !Array.isArray(p.grid_snapshot)) return p
+      const grid = gridsById.get(p.grid_id) as { type: 'driver' | 'team' | 'track' } | undefined
+      if (!grid) return p
+      const enrichedItems = p.grid_snapshot.map((item: { id: string; name: string }) => {
+        if (grid.type === 'driver') {
+          const d = driversById.get(item.id) as { headshot_url?: string | null; image_url?: string | null } | undefined
+          return {
+            ...item,
+            headshot_url: d?.headshot_url ?? null,
+            image_url: d?.headshot_url ?? d?.image_url ?? null,
+          }
+        }
+        if (grid.type === 'team') {
+          return { ...item }
+        }
+        if (grid.type === 'track') {
+          const t = tracksById.get(item.id) as { location?: string | null; country?: string | null; circuit_ref?: string | null } | undefined
+          return {
+            ...item,
+            location: t?.location ?? null,
+            country: t?.country ?? null,
+            circuit_ref: t?.circuit_ref ?? null,
+          }
+        }
+        return item
+      })
+      return {
+        ...p,
+        embeddedGrid: {
+          id: p.grid_id,
+          type: grid.type,
+          ranked_items: enrichedItems,
+          blurb: null,
+        },
+      }
+    })
+  }
 
   // Repost poll IDs: posts with parent_page_type='poll' for embedded poll cards
   const repostPollIds = [
@@ -655,12 +735,27 @@ export default async function FeedPage() {
 
   // Enrich feed grids: only completed driver grids (no team/track in main feed)
   const feedGridsRawAll = followingGrids.data || []
-  const feedGridsRaw = feedGridsRawAll.filter(
+  let feedGridsRaw = feedGridsRawAll.filter(
     (grid: { type: string; ranked_items?: unknown[] }) =>
       grid.type === 'driver' &&
       Array.isArray(grid.ranked_items) &&
       grid.ranked_items.length > 0
   )
+  // Deduplication: exclude grids that have a post with grid_id within 1 min of grid.updated_at
+  const gridSnapshotPosts = enrichedFeedPosts.filter(
+    (p) => p.grid_id && p.created_at
+  ) as Array<{ grid_id: string; created_at: string }>
+  const gridIdToPostCreatedAt = new Map(
+    gridSnapshotPosts.map((p) => [p.grid_id, p.created_at])
+  )
+  feedGridsRaw = feedGridsRaw.filter((grid: { id: string; updated_at?: string | null }) => {
+    const postCreatedAt = gridIdToPostCreatedAt.get(grid.id)
+    if (!postCreatedAt || !grid.updated_at) return true
+    const postTime = new Date(postCreatedAt).getTime()
+    const gridTime = new Date(grid.updated_at).getTime()
+    // Exclude grid when a post with this grid_id exists within 1 min of grid update
+    return Math.abs(postTime - gridTime) > 60 * 1000
+  })
   const feedGridIds = feedGridsRaw.map((grid: { id: string }) => grid.id)
   const driverIds = Array.from(
     new Set(

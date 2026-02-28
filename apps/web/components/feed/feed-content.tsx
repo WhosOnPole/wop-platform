@@ -31,6 +31,22 @@ export interface Post {
   comment_count?: number
   parent_page_type?: string | null
   parent_page_id?: string | null
+  grid_id?: string | null
+  grid_snapshot?: Array<{ id: string; name: string }> | null
+  embeddedGrid?: {
+    id: string
+    type: 'driver' | 'team' | 'track'
+    ranked_items: Array<{
+      id: string
+      name: string
+      headshot_url?: string | null
+      image_url?: string | null
+      location?: string | null
+      country?: string | null
+      circuit_ref?: string | null
+    }>
+    blurb?: string | null
+  } | null
 }
 
 export interface Grid {
@@ -322,13 +338,83 @@ export function FeedContent({
       const userLikedPostIds = new Set((userPostLikes.data || []).map((r: { target_id: string }) => r.target_id))
       const userLikedGridIds = new Set((userGridLikes.data || []).map((r: { grid_id: string }) => r.grid_id))
 
-      const enrichedPosts: FeedItem[] = postsList.map((p) => ({
-        ...p,
-        contentType: 'post' as const,
-        like_count: p.like_count ?? 0,
-        is_liked: userLikedPostIds.has(p.id),
-        comment_count: commentCountByPostId[p.id] ?? 0,
-      })) as FeedItem[]
+      // Enrich grid snapshot posts for discovery
+      const snapshotPostGridIds = [...new Set(
+        postsList
+          .filter((p: Record<string, unknown>) => p.grid_id && Array.isArray(p.grid_snapshot) && (p.grid_snapshot as unknown[]).length > 0)
+          .map((p: Record<string, unknown>) => p.grid_id as string)
+      )]
+      let snapshotGridsById = new Map<string, { type: string }>()
+      let snapshotDriversById = new Map<string, { headshot_url?: string | null; image_url?: string | null }>()
+      let snapshotTeamsById = new Map<string, { name?: string }>()
+      let snapshotTracksById = new Map<string, { location?: string | null; country?: string | null; circuit_ref?: string | null }>()
+      if (snapshotPostGridIds.length > 0) {
+        const { data: snapGrids } = await supabase.from('grids').select('id, type').in('id', snapshotPostGridIds)
+        snapshotGridsById = new Map((snapGrids || []).map((g: { id: string; type: string }) => [g.id, g]))
+        const snapDriverIds = new Set<string>()
+        const snapTeamIds = new Set<string>()
+        const snapTrackIds = new Set<string>()
+        for (const p of postsList) {
+          const gridId = (p as Record<string, unknown>).grid_id as string | undefined
+          const snapshot = (p as Record<string, unknown>).grid_snapshot as Array<{ id: string }> | undefined
+          if (!gridId || !Array.isArray(snapshot)) continue
+          const g = snapshotGridsById.get(gridId)
+          if (!g) continue
+          for (const item of snapshot) {
+            if (g.type === 'driver') snapDriverIds.add(item.id)
+            else if (g.type === 'team') snapTeamIds.add(item.id)
+            else if (g.type === 'track') snapTrackIds.add(item.id)
+          }
+        }
+        const [sd, st, str] = await Promise.all([
+          snapDriverIds.size > 0 ? supabase.from('drivers').select('id, headshot_url, image_url').in('id', [...snapDriverIds]) : Promise.resolve({ data: [] }),
+          snapTeamIds.size > 0 ? supabase.from('teams').select('id, name').in('id', [...snapTeamIds]) : Promise.resolve({ data: [] }),
+          snapTrackIds.size > 0 ? supabase.from('tracks').select('id, location, country, circuit_ref').in('id', [...snapTrackIds]) : Promise.resolve({ data: [] }),
+        ])
+        snapshotDriversById = new Map(
+          (sd.data || []).map((d: { id: string; headshot_url?: string | null; image_url?: string | null }) => [
+            d.id,
+            { headshot_url: d.headshot_url ?? null, image_url: d.image_url ?? null },
+          ])
+        )
+        snapshotTeamsById = new Map((st.data || []).map((t: { id: string; name?: string }) => [t.id, { name: t.name }]))
+        snapshotTracksById = new Map(
+          (str.data || []).map((t: { id: string; location?: string | null; country?: string | null; circuit_ref?: string | null }) => [
+            t.id,
+            { location: t.location ?? null, country: t.country ?? null, circuit_ref: t.circuit_ref ?? null },
+          ])
+        )
+      }
+
+      const enrichedPosts: FeedItem[] = postsList.map((p) => {
+        const base = {
+          ...p,
+          contentType: 'post' as const,
+          like_count: p.like_count ?? 0,
+          is_liked: userLikedPostIds.has(p.id),
+          comment_count: commentCountByPostId[p.id] ?? 0,
+        }
+        const gridId = (p as Record<string, unknown>).grid_id as string | undefined
+        const snapshot = (p as Record<string, unknown>).grid_snapshot as Array<{ id: string; name: string }> | undefined
+        if (!gridId || !Array.isArray(snapshot) || snapshot.length === 0) return base as FeedItem
+        const grid = snapshotGridsById.get(gridId) as { type: 'driver' | 'team' | 'track' } | undefined
+        if (!grid) return base as FeedItem
+        const enrichedItems = snapshot.map((item) => {
+          if (grid.type === 'driver') {
+            const d = snapshotDriversById.get(item.id)
+            return { ...item, headshot_url: d?.headshot_url ?? null, image_url: d?.headshot_url ?? d?.image_url ?? null }
+          }
+          if (grid.type === 'track') {
+            const t = snapshotTracksById.get(item.id)
+            return { ...item, location: t?.location ?? null, country: t?.country ?? null, circuit_ref: t?.circuit_ref ?? null }
+          }
+          return item
+        })
+        return {
+          ...base,
+          embeddedGrid: { id: gridId, type: grid.type, ranked_items: enrichedItems, blurb: null },
+        } as FeedItem
+      })
 
       const enrichedGrids: FeedItem[] = gridsList.map((grid) => {
         const rankedItems = Array.isArray(grid.ranked_items) ? grid.ranked_items : []
@@ -571,6 +657,23 @@ export function FeedContent({
                     </div>
                   )
                 })()}
+              {post.embeddedGrid && (
+                <div className="mt-4">
+                  <GridDisplayCard
+                    grid={{
+                      id: post.embeddedGrid.id,
+                      type: post.embeddedGrid.type,
+                      ranked_items: post.embeddedGrid.ranked_items,
+                      blurb: post.embeddedGrid.blurb ?? null,
+                      like_count: 0,
+                      comment_count: 0,
+                      is_liked: false,
+                    }}
+                    isOwnProfile={false}
+                    supabaseUrl={supabaseUrl}
+                  />
+                </div>
+              )}
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
                 <LikeButton
                   targetId={post.id}
@@ -844,6 +947,23 @@ export function FeedContent({
                             src={post.image_url}
                             alt=""
                             className="max-h-96 w-full object-contain"
+                          />
+                        </div>
+                      )}
+                      {(post as Post).embeddedGrid && (
+                        <div className="mt-4">
+                          <GridDisplayCard
+                            grid={{
+                              id: (post as Post).embeddedGrid!.id,
+                              type: (post as Post).embeddedGrid!.type,
+                              ranked_items: (post as Post).embeddedGrid!.ranked_items,
+                              blurb: (post as Post).embeddedGrid!.blurb ?? null,
+                              like_count: 0,
+                              comment_count: 0,
+                              is_liked: false,
+                            }}
+                            isOwnProfile={false}
+                            supabaseUrl={supabaseUrl}
                           />
                         </div>
                       )}

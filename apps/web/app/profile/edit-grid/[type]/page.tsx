@@ -228,6 +228,8 @@ export default function EditGridPage() {
           content: postContent,
           parent_page_type: 'profile',
           parent_page_id: session.user.id,
+          grid_id: gridId,
+          grid_snapshot: rankedItemIds,
         })
         .select('id')
         .single()
