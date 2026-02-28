@@ -1,5 +1,5 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { LogOut, Mail, Bell, Image, Trash2, Trophy } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -37,7 +37,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const isAdminRole = profile?.role === 'admin'
 
   if (!isAdminEmail && !isAdminRole) {
-    redirect('https://www.whosonpole.org')
+    const headersList = await headers()
+    const host = headersList.get('host') || ''
+    const mainSiteUrl =
+      process.env.NEXT_PUBLIC_MAIN_SITE_URL ||
+      (host.startsWith('localhost') ? 'http://localhost:3000' : 'https://www.whosonpole.org')
+    redirect(mainSiteUrl)
   }
 
   const navItems = [

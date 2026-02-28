@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
           router.push('/dashboard')
         } else {
           const mainSiteUrl =
-            process.env.NEXT_PUBLIC_SITE_URL ||
+            process.env.NEXT_PUBLIC_MAIN_SITE_URL ||
             (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
           window.location.href = mainSiteUrl
         }

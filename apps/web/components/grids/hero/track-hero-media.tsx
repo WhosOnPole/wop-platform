@@ -31,13 +31,13 @@ export function TrackHeroMedia({
 
   return (
     <div
-      className={`flex items-center justify-center w-full ${className}`}
+      className={`flex items-center justify-center w-full min-h-0 ${className}`}
     >
       <img
         src={svgUrl}
         alt=""
-        className=""
-        style={{ objectPosition: 'center top' }}
+        className="w-full h-full max-w-full max-h-full object-contain"
+        style={{ objectPosition: 'center center' }}
         onError={() => setFailed(true)}
         aria-hidden
       />

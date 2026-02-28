@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, PenLine } from 'lucide-react'
 import { getAvatarUrl } from '@/utils/avatar'
 
 export const runtime = 'nodejs'
@@ -28,7 +28,20 @@ const getStory = cache(async (id: string) => {
   )
 
   const [newsResult, userStoryResult] = await Promise.all([
-    supabase.from('news_stories').select('*').eq('id', id).maybeSingle(),
+    supabase
+      .from('news_stories')
+      .select(
+        `
+        *,
+        author:profiles!admin_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .eq('id', id)
+      .maybeSingle(),
     supabase
       .from('user_story_submissions')
       .select(
@@ -83,14 +96,12 @@ export default async function StoryPage({ params }: PageProps) {
         : (story.author as AuthorRow)
       : null
 
-  const isUserStory =
-    'user_id' in story &&
-    'is_anonymous' in story &&
-    !story.is_anonymous &&
+  const author =
     rawAuthor &&
-    typeof rawAuthor.username === 'string'
-
-  const author = isUserStory ? rawAuthor : null
+    typeof rawAuthor.username === 'string' &&
+    !(story as { is_anonymous?: boolean }).is_anonymous
+      ? rawAuthor
+      : null
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -124,29 +135,43 @@ export default async function StoryPage({ params }: PageProps) {
           <h1 className="mb-6 text-3xl font-bold text-white md:text-4xl">{story.title}</h1>
           <div className="prose prose-invert max-w-none">
             <p className="whitespace-pre-wrap text-white/90">{content}</p>
-            {author && (
-              <div className="mt-6 flex items-center justify-end gap-2">
-                <span className="text-white/70">—</span>
-                <Link
-                  href={`/u/${author.username}`}
-                  className="flex items-center gap-2 text-white/90 transition-colors hover:text-white"
-                >
-                  <span className="font-medium">{author.username}</span>
-                  <span className="relative block h-8 w-8 shrink-0 overflow-hidden rounded-full bg-white/10">
-                    <Image
-                      src={getAvatarUrl(author.profile_image_url)}
-                      alt={author.username}
-                      fill
-                      sizes="32px"
-                      className="object-cover"
-                    />
-                  </span>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </article>
+
+      {author && (
+        <Link
+          href={`/u/${author.username}`}
+          className="mt-8 flex items-center gap-6 rounded-xl border border-white/20 bg-white/5 p-6 transition-colors hover:bg-white/10"
+        >
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-white/20 bg-white/10">
+            <Image
+              src={getAvatarUrl(author.profile_image_url)}
+              alt={author.username}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[0.6em] uppercase tracking-widest text-white/60 align-super">
+              Story By:
+            </span>
+            <span className="font-display text-2xl font-semibold text-white">@{author.username}</span>
+          </div>
+        </Link>
+      )}
+
+      <div className="mt-8 rounded-xl border border-white/20 bg-white/5 p-6 text-center">
+        <p className="mb-4 text-white/90">Have a story? Submit it for our team to consider.</p>
+        <Link
+          href="/submit-story"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1]/90"
+        >
+          <PenLine className="h-4 w-4" />
+          Submit a story
+        </Link>
+      </div>
     </div>
   )
 }

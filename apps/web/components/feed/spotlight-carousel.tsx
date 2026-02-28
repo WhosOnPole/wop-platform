@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Radio, BarChart3, Check } from 'lucide-react'
+import Image from 'next/image'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Radio, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
+import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { UpcomingRaceCard } from './upcoming-race-card'
 import { SponsorCard } from './sponsor-card'
 import { FeaturedGridCarouselCard } from './featured-grid-carousel-card'
@@ -74,6 +75,8 @@ interface NewsStory {
   image_url: string | null
   content: string
   created_at: string
+  username?: string | null
+  profile_image_url?: string | null
 }
 
 interface SpotlightCarouselProps {
@@ -83,6 +86,7 @@ interface SpotlightCarouselProps {
   userResponses?: Record<string, string>
   voteCounts?: Record<string, Record<string, number>>
   discussionPosts: any[]
+  pollDiscussionPostsByPollId?: Record<string, any[]>
   upcomingRace?: Race | null
   sponsors?: Sponsor[]
   featuredNews?: NewsStory[]
@@ -95,24 +99,25 @@ export function SpotlightCarousel({
   userResponses = {},
   voteCounts = {},
   discussionPosts,
+  pollDiscussionPostsByPollId = {},
   upcomingRace,
   sponsors = [],
   featuredNews = [],
 }: SpotlightCarouselProps) {
-  const router = useRouter()
   const hasHotTake = Boolean(spotlight?.hot_take)
   const hasFeaturedGrid = Boolean(spotlight?.featured_grid)
   const hasAdminPolls = polls.length > 0
   const hasUpcomingRace = Boolean(upcomingRace)
   const hasSponsors = sponsors.length > 0
+  const featuredStory = featuredNews?.[0] ?? null
 
-  if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors) return null
+  if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors && !featuredStory) return null
 
   // Rectangular banner cards (desktop scroll / mobile carousel) — no min height, content-sized like hot take
   const bannerCardHeight = 160
 
   const cards = useMemo(() => {
-    const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor'; data: any }> = []
+    const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor' | 'featured_story'; data: any }> = []
     
     // 1. Upcoming race banner (when live) - FIRST
     if (upcomingRace) {
@@ -129,23 +134,27 @@ export function SpotlightCarousel({
       list.push({ type: 'poll', data: poll })
     })
     
-    // 4. Featured grid (if exists)
+    // 4. Featured story (if exists)
+    if (featuredStory) {
+      list.push({ type: 'featured_story', data: featuredStory })
+    }
+    
+    // 5. Featured grid (if exists)
     if (spotlight?.featured_grid) {
       list.push({ type: 'grid', data: spotlight.featured_grid })
     }
     
-    // 5. Sponsors (all sponsors)
+    // 6. Sponsors (all sponsors)
     sponsors.forEach((sponsor) => {
       list.push({ type: 'sponsor', data: sponsor })
     })
-
-    // Featured stories are shown only in Podiums > Stories tab with a Featured pill (no duplicate in carousel)
     
     return list
-  }, [spotlight, polls, upcomingRace, sponsors])
+  }, [spotlight, polls, upcomingRace, sponsors, featuredStory])
 
   const [activeIndex, setActiveIndex] = useState(0)
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
+  const [activePollId, setActivePollId] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const cardRefs = useRef<HTMLDivElement[]>([])
 
@@ -234,29 +243,26 @@ export function SpotlightCarousel({
       const hasVoted = !!userResponses[poll.id]
       return (
         <div className={gradientCardOuter} style={gradientCardStyle}>
-          <Link
-            href={`/podiums?poll=${poll.id}`}
-            className={gradientCardInner}
+          <button
+            type="button"
+            onClick={() => setActivePollId(poll.id)}
+            className={gradientCardInner + ' cursor-pointer'}
           >
-            <div className="flex shrink-0 items-center space-x-2">
-              <BarChart3 className="h-5 w-5 text-white/90 shrink-0" />
-              <h2 className="text-lg font-bold text-white">Featured Poll</h2>
+            <div className="flex shrink-0 items-start justify-between gap-2">
+              <h2 className="text-xl font-bold text-white leading-snug line-clamp-5 min-h-0 flex-1">
+                {poll.question || 'Poll'}
+              </h2>
               {hasVoted && (
-                <span className="flex items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-xs text-white/90">
+                <span className="flex shrink-0 items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-xs text-white/90">
                   <Check className="h-3 w-3" />
                   Voted
                 </span>
               )}
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <p className="text-white/90 text-base leading-relaxed line-clamp-5">
-                {poll.question || 'Poll'}
-              </p>
-            </div>
-            <p className="mt-4 shrink-0 text-sm text-white/70 flex justify-end">
-              {hasVoted ? 'View results →' : 'Tap to vote →'}
+            <p className="mt-auto shrink-0 text-sm text-white/70 text-right">
+              {hasVoted ? 'Tap to join the discussion' : 'Tap to vote'}
             </p>
-          </Link>
+          </button>
         </div>
       )
     }
@@ -275,6 +281,44 @@ export function SpotlightCarousel({
           <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black p-6">
             <SponsorCard sponsor={card.data} />
           </div>
+        </div>
+      )
+    }
+    if (card.type === 'featured_story') {
+      const story = card.data as NewsStory
+      const href = `/story/${story.id}`
+      return (
+        <div className={gradientCardOuter + ' relative'} style={gradientCardStyle}>
+          <Link
+            href={href}
+            className={gradientCardInner + ' cursor-pointer relative'}
+          >
+            {story.profile_image_url && (
+              <div className="absolute right-4 top-4 z-10 h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/30">
+                <Image
+                  src={story.profile_image_url}
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div className="flex flex-1 flex-col min-h-0">
+              <span className="text-[0.6em] uppercase tracking-widest text-white/60 align-super">
+                Featured Story
+              </span>
+              <h2 className="text-xl font-bold text-white leading-snug line-clamp-3 mt-0.5">
+                {story.title || 'Story'}
+              </h2>
+              {story.username && (
+                <p className="mt-1 text-sm text-white/70">by @{story.username}</p>
+              )}
+            </div>
+            <p className="mt-auto shrink-0 text-sm text-white/70 text-right">
+              Read more →
+            </p>
+          </Link>
         </div>
       )
     }
@@ -359,10 +403,25 @@ export function SpotlightCarousel({
               parentPageType="hot_take"
               parentPageId={spotlight.hot_take.id}
               variant="dark"
+              compact
             />
           </div>
         </div>
       )}
+
+      {activePollId && (() => {
+        const poll = polls.find((p) => p.id === activePollId)
+        if (!poll) return null
+        return (
+          <PollDiscussionModal
+            poll={poll}
+            userResponse={userResponses[poll.id]}
+            voteCounts={voteCounts[poll.id] ?? {}}
+            discussionPosts={pollDiscussionPostsByPollId[poll.id] ?? []}
+            onClose={() => setActivePollId(null)}
+          />
+        )
+      })()}
     </>
   )
 }

@@ -70,7 +70,21 @@ export default async function PodiumsPage() {
     supabase.from('news_stories').select('*').order('created_at', { ascending: false }),
     supabase
       .from('user_story_submissions')
-      .select('id, title, summary, content, image_url, created_at')
+      .select(
+        `
+        id,
+        title,
+        summary,
+        content,
+        image_url,
+        created_at,
+        author:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
       .eq('status', 'approved')
       .order('created_at', { ascending: false }),
     supabase.from('sponsors').select('id, name, logo_url, website_url, description').order('name'),
@@ -138,6 +152,44 @@ export default async function PodiumsPage() {
 
   const adminPolls = polls.filter((p) => p.admin_id != null)
   const communityPolls = polls.filter((p) => p.admin_id == null)
+
+  // Fetch poll discussion posts for admin polls
+  let pollDiscussionPostsByPollId: Record<string, any[]> = {}
+  if (adminPolls.length > 0) {
+    const adminPollIds = adminPolls.map((p) => p.id)
+    const { data: pollPosts } = await supabase
+      .from('posts')
+      .select(
+        `
+        *,
+        like_count,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .eq('parent_page_type', 'poll')
+      .in('parent_page_id', adminPollIds)
+      .order('created_at', { ascending: false })
+
+    if (pollPosts) {
+      for (const post of pollPosts) {
+        const pid = post.parent_page_id as string
+        if (pid) {
+          if (!pollDiscussionPostsByPollId[pid]) pollDiscussionPostsByPollId[pid] = []
+          pollDiscussionPostsByPollId[pid].push(post)
+        }
+      }
+      for (const pid of Object.keys(pollDiscussionPostsByPollId)) {
+        pollDiscussionPostsByPollId[pid] = pollDiscussionPostsByPollId[pid]
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 20)
+      }
+    }
+  }
+
   const newsStories = (newsStoriesResult.data || []) as Array<{
     id: string
     title: string
@@ -146,6 +198,7 @@ export default async function PodiumsPage() {
     created_at: string
     is_featured?: boolean
   }>
+  type AuthorRow = { id: string; username: string; profile_image_url: string | null }
   const approvedUserStories = (approvedUserStoriesResult.data || []) as Array<{
     id: string
     title: string
@@ -153,18 +206,35 @@ export default async function PodiumsPage() {
     content: string
     image_url: string | null
     created_at: string
+    author?: AuthorRow | AuthorRow[] | null
   }>
 
-  // Stories tab: approved user stories + all admin-created news stories
-  const userStoriesForTab = approvedUserStories.map((u) => ({
-    id: u.id,
-    title: u.title,
-    image_url: u.image_url,
-    content: u.summary ? `${u.summary}\n\n${u.content}` : u.content,
-    created_at: u.created_at,
-    href: `/story/${u.id}`,
-    is_featured: false,
-  }))
+  // Stories tab: approved user stories + all admin-created news stories (deduplicated)
+  const newsTitles = new Set(newsStories.map((n) => n.title?.toLowerCase().trim()).filter(Boolean))
+  const userStoriesForTab = approvedUserStories
+    .filter((u) => {
+      // Exclude user story if a news story with same title exists (promoted story)
+      const titleKey = u.title?.toLowerCase().trim()
+      return !titleKey || !newsTitles.has(titleKey)
+    })
+    .map((u) => {
+      const rawAuthor = u.author
+        ? Array.isArray(u.author)
+          ? (u.author as AuthorRow[])[0]
+          : (u.author as AuthorRow)
+        : null
+      return {
+        id: u.id,
+        title: u.title,
+        image_url: u.image_url,
+        content: u.summary ? `${u.summary}\n\n${u.content}` : u.content,
+        created_at: u.created_at,
+        href: `/story/${u.id}`,
+        is_featured: false,
+        username: rawAuthor?.username ?? null,
+        profile_image_url: rawAuthor?.profile_image_url ?? null,
+      }
+    })
   const newsStoriesForTab = newsStories.map((n) => ({
     id: n.id,
     title: n.title,
@@ -173,6 +243,8 @@ export default async function PodiumsPage() {
     created_at: n.created_at,
     href: `/story/${n.id}`,
     is_featured: n.is_featured ?? false,
+    username: null as string | null,
+    profile_image_url: null as string | null,
   }))
   const stories = [...userStoriesForTab, ...newsStoriesForTab].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -269,6 +341,7 @@ export default async function PodiumsPage() {
         highlightedFan={highlightedFanNormalized}
         featuredGrid={enrichedFeaturedGrid}
         supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
+        pollDiscussionPostsByPollId={pollDiscussionPostsByPollId}
       />
     </div>
   )

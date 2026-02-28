@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Star, PenLine } from 'lucide-react'
+import { Star, PenLine, Check } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
+import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedGridPostBlock, type FeaturedGridForBlock } from '@/components/feed/featured-grid-post-block'
@@ -28,6 +29,8 @@ interface NewsStory {
   created_at: string
   href?: string
   is_featured?: boolean
+  username?: string | null
+  profile_image_url?: string | null
 }
 
 interface Sponsor {
@@ -67,6 +70,7 @@ interface SpotlightTabsProps {
   highlightedFan: HighlightedFan | null
   featuredGrid: FeaturedGrid | null
   supabaseUrl?: string
+  pollDiscussionPostsByPollId?: Record<string, any[]>
 }
 
 interface TabButtonProps {
@@ -95,6 +99,13 @@ function TabButton({ label, active, onClick, showDivider = false }: TabButtonPro
   )
 }
 
+const gradientCardStyle = {
+  background: 'linear-gradient(90deg, #EC6D00 0%, #FF006F 50%, #25B4B1 100%)',
+}
+const gradientCardOuter = 'h-full rounded-lg p-[2px]'
+const gradientCardInner =
+  'flex h-full min-h-0 flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1] cursor-pointer w-full'
+
 export function SpotlightTabs({
   adminPolls,
   communityPolls,
@@ -105,9 +116,11 @@ export function SpotlightTabs({
   highlightedFan,
   featuredGrid,
   supabaseUrl,
+  pollDiscussionPostsByPollId = {},
 }: SpotlightTabsProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [activePollId, setActivePollId] = useState<string | null>(null)
   const tabFromUrl = searchParams.get('tab')
   const validTab =
     tabFromUrl === 'polls' || tabFromUrl === 'stories' || tabFromUrl === 'our-picks'
@@ -172,22 +185,39 @@ export function SpotlightTabs({
                 className="flex w-full min-w-0 overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 pb-2"
                 style={{ scrollSnapType: 'x mandatory' }}
               >
-                {adminPollsWithFeatured.map((poll) => (
-                  <div
-                    key={poll.id}
-                    className="w-full min-w-full max-w-full flex-shrink-0 snap-start rounded-xl border border-white/20 bg-white/5 p-4"
-                    style={{ minHeight: 200 }}
-                  >
-                    <PollCard
-                      poll={poll}
-                      userResponse={userResponses[poll.id]}
-                      voteCounts={voteCounts[poll.id] ?? {}}
-                      onVote={() => router.refresh()}
-                      variant="dark"
-                      className="min-h-0 border-0 bg-transparent p-0 shadow-none"
-                    />
-                  </div>
-                ))}
+                {adminPollsWithFeatured.map((poll) => {
+                  const hasVoted = !!userResponses[poll.id]
+                  return (
+                    <div
+                      key={poll.id}
+                      className="w-full min-w-full max-w-full flex-shrink-0 snap-start"
+                      style={{ minHeight: 160 }}
+                    >
+                      <div className={gradientCardOuter} style={gradientCardStyle}>
+                        <button
+                          type="button"
+                          onClick={() => setActivePollId(poll.id)}
+                          className={gradientCardInner}
+                        >
+                          <div className="flex shrink-0 items-start justify-between gap-2">
+                            <h3 className="text-xl font-bold text-white leading-snug line-clamp-5 min-h-0 flex-1">
+                              {poll.question || 'Poll'}
+                            </h3>
+                            {hasVoted && (
+                              <span className="flex shrink-0 items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-xs text-white/90">
+                                <Check className="h-3 w-3" />
+                                Voted
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-auto shrink-0 text-sm text-white/70 text-right">
+                            {hasVoted ? 'Tap to join the discussion' : 'Tap to vote'}
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">
@@ -231,7 +261,7 @@ export function SpotlightTabs({
             {stories.length > 0 ? (
               stories.map((story) => (
                 <div key={story.id} className="min-h-[200px] border border-white/20 bg-white/5 p-4 rounded-lg">
-                  <FeaturedNewsCard newsStory={story} />
+                  <FeaturedNewsCard newsStory={story} variant="spotlight" />
                 </div>
               ))
             ) : (
@@ -311,6 +341,20 @@ export function SpotlightTabs({
           )}
         </div>
       )}
+
+      {activePollId && (() => {
+        const poll = adminPollsWithFeatured.find((p) => p.id === activePollId)
+        if (!poll) return null
+        return (
+          <PollDiscussionModal
+            poll={poll}
+            userResponse={userResponses[poll.id]}
+            voteCounts={voteCounts[poll.id] ?? {}}
+            discussionPosts={pollDiscussionPostsByPollId[poll.id] ?? []}
+            onClose={() => setActivePollId(null)}
+          />
+        )
+      })()}
     </div>
   )
 }

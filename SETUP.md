@@ -45,7 +45,8 @@
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` - Supabase publishable key (public)
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` - Google OAuth client ID
-- `NEXT_PUBLIC_SITE_URL` - Your admin site URL
+- `NEXT_PUBLIC_SITE_URL` - Your admin site URL (for OAuth callbacks)
+- `NEXT_PUBLIC_MAIN_SITE_URL` - Main web app URL (for redirecting non-admin users; defaults to localhost:3000 in dev)
 - `SUPABASE_SECRET_KEY` - **SECRET** - Supabase secret key (server-side only)
 
 ### Edge Functions

@@ -530,7 +530,7 @@ export function FeedContent({
                       className="mb-4 block rounded-md border border-white/10 bg-black/30 p-4 text-left transition-colors hover:bg-black/40"
                     >
                       <p className="text-xs font-medium uppercase tracking-wide text-white/60">
-                        Replying to Hot Take
+                        Hot Take
                       </p>
                       <p className="mt-2 text-white/90">{contentText}</p>
                     </Link>
@@ -722,27 +722,23 @@ export function FeedContent({
           return (
             <div
               key={`news-${news.id}`}
-              className="overflow-hidden rounded-lg border border-white/10 bg-black/40 shadow backdrop-blur-sm"
+              className="relative flex min-h-[140px] flex-col overflow-hidden rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
             >
-            
-              {news.image_url && (
-                <img
-                  src={news.image_url}
-                  alt={news.title}
-                  className="h-48 w-full object-cover"
-                />
+              <span className="text-[0.6em] uppercase tracking-widest text-white/60 align-super">
+                Featured Story
+              </span>
+              <h3 className="mt-0.5 text-xl font-bold text-white">{news.title}</h3>
+              {(news as { username?: string | null }).username && (
+                <p className="mt-1 text-sm text-white/70">
+                  by @{(news as { username?: string }).username}
+                </p>
               )}
-              <div className="p-6">
-              <p className="text-white/90 text-sm mb-2">Featured Story</p>
-                <h3 className="mb-2 text-xl font-bold text-white">{news.title}</h3>
-                <p className="mb-4 text-white/90 line-clamp-2">{news.content}</p>
-                <Link
-                  href={`/story/${news.id}`}
-                  className="font-medium flex justify-end text-white hover:text-[#25B4B1]/90"
-                >
-                  Read more →
-                </Link>
-              </div>
+              <Link
+                href={`/story/${news.id}`}
+                className="mt-auto pt-3 text-right font-medium text-white hover:text-[#25B4B1]/90"
+              >
+                Read more →
+              </Link>
             </div>
           )
         }
@@ -834,7 +830,7 @@ export function FeedContent({
                               className="mb-4 block rounded-md border border-white/10 bg-black/30 p-4 text-left transition-colors hover:bg-black/40"
                             >
                               <p className="text-xs font-medium uppercase tracking-wide text-white/60">
-                                Replying to Hot Take
+                                Hot Take
                               </p>
                               <p className="mt-2 text-white/90">{contentText}</p>
                             </Link>

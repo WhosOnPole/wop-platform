@@ -819,6 +819,44 @@ export default async function FeedPage() {
   // Carousel and sidebar: only the single featured admin poll (or none). Never community polls or non-featured admin polls.
   const pollsForSpotlightBanner = featuredAdminPoll ? [featuredAdminPoll] : []
 
+  // Fetch poll discussion posts for spotlight banner polls
+  let pollDiscussionPostsByPollId: Record<string, any[]> = {}
+  if (pollsForSpotlightBanner.length > 0) {
+    const bannerPollIds = pollsForSpotlightBanner.map((p) => p.id)
+    const { data: pollPosts } = await supabase
+      .from('posts')
+      .select(
+        `
+        *,
+        like_count,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .eq('parent_page_type', 'poll')
+      .in('parent_page_id', bannerPollIds)
+      .order('created_at', { ascending: false })
+
+    if (pollPosts) {
+      for (const post of pollPosts) {
+        const pid = post.parent_page_id as string
+        if (pid) {
+          if (!pollDiscussionPostsByPollId[pid]) pollDiscussionPostsByPollId[pid] = []
+          pollDiscussionPostsByPollId[pid].push(post)
+        }
+      }
+      // Sort each poll's posts by created_at desc and limit to 20
+      for (const pid of Object.keys(pollDiscussionPostsByPollId)) {
+        pollDiscussionPostsByPollId[pid] = pollDiscussionPostsByPollId[pid]
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 20)
+      }
+    }
+  }
+
   const allFeedPollIds = [
     ...new Set([
       ...adminPollsList.map((p) => p.id),
@@ -1007,6 +1045,7 @@ export default async function FeedPage() {
             voteCounts={feedPollVoteCounts}
             featuredNews={featuredNewsList}
             discussionPosts={hotTakePosts}
+            pollDiscussionPostsByPollId={pollDiscussionPostsByPollId}
           />
         </aside>
         <div className="lg:col-span-8 space-y-6 md:space-y-0">
@@ -1021,6 +1060,7 @@ export default async function FeedPage() {
               userResponses={feedPollUserResponses}
               voteCounts={feedPollVoteCounts}
               discussionPosts={hotTakePosts}
+              pollDiscussionPostsByPollId={pollDiscussionPostsByPollId}
               upcomingRace={upcomingRaceForCarousel}
               sponsors={sponsorsList}
               featuredNews={featuredNewsList}
@@ -1037,7 +1077,7 @@ export default async function FeedPage() {
             pollVoteCounts={feedPollVoteCounts}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}
-            featuredNews={featuredNewsList}
+            featuredNews={featuredStory ? featuredNewsList.slice(1) : featuredNewsList}
             isNewUser={isNewUser}
           />
         </div>

@@ -60,8 +60,11 @@ NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
 NEXT_PUBLIC_SITE_URL=http://localhost:3001
+NEXT_PUBLIC_MAIN_SITE_URL=http://localhost:3000
 SUPABASE_SECRET_KEY=sb_secret_your_key # server-side only, set via env/secret store
 ```
+
+**Note:** `NEXT_PUBLIC_SITE_URL` is the admin app's own URL (for OAuth callbacks). `NEXT_PUBLIC_MAIN_SITE_URL` is the main web app URL used when redirecting non-admin users away from admin.
 
 **Note:** Use Supabase's new API keys: publishable key for client-side access and secret key for server-only usage. Add them in your hosting env (e.g., Vercel) instead of committing to git.
 

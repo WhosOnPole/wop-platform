@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Radio, Star } from 'lucide-react'
-import { PollCard } from '@/components/polls/poll-card'
+import { Radio, Star, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
+import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { FeaturedNewsCard } from './featured-news-card'
 import { FeaturedGridPostBlock, type FeaturedGridForBlock } from './featured-grid-post-block'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
@@ -66,7 +65,15 @@ interface FeedHighlightedSidebarProps {
   voteCounts?: Record<string, Record<string, number>>
   featuredNews: NewsStory[]
   discussionPosts: any[]
+  pollDiscussionPostsByPollId?: Record<string, any[]>
 }
+
+const gradientCardStyle = {
+  background: 'linear-gradient(90deg, #EC6D00 0%, #FF006F 50%, #25B4B1 100%)',
+}
+const gradientCardOuter = 'h-full rounded-lg p-[2px]'
+const gradientCardInner =
+  'flex h-full min-h-0 flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1] cursor-pointer w-full'
 
 export function FeedHighlightedSidebar({
   spotlight,
@@ -78,9 +85,10 @@ export function FeedHighlightedSidebar({
   voteCounts = {},
   featuredNews,
   discussionPosts,
+  pollDiscussionPostsByPollId = {},
 }: FeedHighlightedSidebarProps) {
-  const router = useRouter()
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
+  const [activePollId, setActivePollId] = useState<string | null>(null)
   const hasHotTake = Boolean(spotlight?.hot_take)
   const hasHighlightedFan = Boolean(highlightedFan)
   const hasFeaturedGrid = Boolean(featuredGrid)
@@ -146,24 +154,33 @@ export function FeedHighlightedSidebar({
         )}
 
         {hasPolls &&
-          polls.map((poll) => (
-            <div
-              key={poll.id}
-              className="rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm min-h-[120px]"
-            >
-              <PollCard
-                poll={{
-                  ...poll,
-                  is_featured_podium: poll.is_featured_podium ?? false,
-                }}
-                userResponse={userResponses[poll.id]}
-                voteCounts={voteCounts[poll.id] ?? {}}
-                onVote={() => router.refresh()}
-                variant="dark"
-                className="min-h-0 border-0 bg-transparent p-0 shadow-none backdrop-blur-none"
-              />
-            </div>
-          ))}
+          polls.map((poll) => {
+            const hasVoted = !!userResponses[poll.id]
+            return (
+              <div key={poll.id} className={gradientCardOuter} style={gradientCardStyle}>
+                <button
+                  type="button"
+                  onClick={() => setActivePollId(poll.id)}
+                  className={gradientCardInner + ' min-h-[140px]'}
+                >
+                  <div className="flex shrink-0 items-start justify-between gap-2">
+                    <h2 className="text-xl font-bold text-white leading-snug line-clamp-4 min-h-0 flex-1">
+                      {poll.question || 'Poll'}
+                    </h2>
+                    {hasVoted && (
+                      <span className="flex shrink-0 items-center gap-1 rounded bg-white/10 px-1.5 py-0.5 text-xs text-white/90">
+                        <Check className="h-3 w-3" />
+                        Voted
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-auto shrink-0 text-xs text-white/70 text-right">
+                    {hasVoted ? 'Tap to join the discussion' : 'Tap to vote'}
+                  </p>
+                </button>
+              </div>
+            )
+          })}
 
         {hasNews &&
           featuredNews.map((news) => (
@@ -199,10 +216,25 @@ export function FeedHighlightedSidebar({
               parentPageType="hot_take"
               parentPageId={spotlight.hot_take.id}
               variant="dark"
+              compact
             />
           </div>
         </div>
       )}
+
+      {activePollId && (() => {
+        const poll = polls.find((p) => p.id === activePollId)
+        if (!poll) return null
+        return (
+          <PollDiscussionModal
+            poll={poll}
+            userResponse={userResponses[poll.id]}
+            voteCounts={voteCounts[poll.id] ?? {}}
+            discussionPosts={pollDiscussionPostsByPollId[poll.id] ?? []}
+            onClose={() => setActivePollId(null)}
+          />
+        )
+      })()}
     </>
   )
 }

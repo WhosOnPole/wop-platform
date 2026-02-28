@@ -645,14 +645,14 @@ export function GridDetailView({
     if (type === 'track') {
       return (
         <div
-          className="flex items-start justify-center transition-all duration-300 mt-4 opacity-100"
+          className="flex items-center justify-center transition-all duration-300 opacity-100 w-full min-h-0 flex-1"
           style={{ height: '100%', minHeight: 280 }}
         >
           <TrackHeroMedia
             trackSlug={(item as TrackRankItem).track_slug ?? ''}
             trackName={item.name}
             supabaseUrl={supabaseUrl}
-            className="h-full w-full max-w-full max-h-full"
+            className="h-full max-w-full max-h-full"
           />
         </div>
       )
@@ -807,7 +807,7 @@ export function GridDetailView({
                   ref={(el) => {
                     slideRefs.current[idx] = el
                   }}
-                  className={`w-full min-w-full flex-shrink-0 snap-start snap-always flex justify-center h-full overflow-hidden ${type === 'track' ? 'items-start' : 'items-end'}`}
+                  className={`w-full min-w-full flex-shrink-0 snap-start snap-always flex justify-center h-full overflow-hidden ${type === 'track' ? 'items-center' : 'items-end'}`}
                 >
                   {renderHeroSlot(item ?? undefined, idx + 1)}
                 </div>

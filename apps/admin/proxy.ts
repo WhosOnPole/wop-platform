@@ -52,8 +52,9 @@ export async function proxy(req: NextRequest) {
     const isAdminRole = profile?.role === 'admin'
 
     if (!isAdminEmail && !isAdminRole) {
-      // Not an admin, redirect to main site
-      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+      // Not an admin, redirect to main web app (never admin). NEXT_PUBLIC_SITE_URL is admin's own URL.
+      const mainSiteUrl =
+        process.env.NEXT_PUBLIC_MAIN_SITE_URL ||
         (req.nextUrl.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
       return NextResponse.redirect(new URL(mainSiteUrl))
     }
@@ -74,8 +75,9 @@ export async function proxy(req: NextRequest) {
       // Admin user, redirect to dashboard
       return NextResponse.redirect(new URL('/dashboard', req.url))
     } else {
-      // Non-admin user on login page, redirect to main site
-      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+      // Non-admin user on login page, redirect to main web app (never admin)
+      const mainSiteUrl =
+        process.env.NEXT_PUBLIC_MAIN_SITE_URL ||
         (req.nextUrl.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
       return NextResponse.redirect(new URL(mainSiteUrl))
     }
