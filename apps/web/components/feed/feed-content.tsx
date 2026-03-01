@@ -671,6 +671,7 @@ export function FeedContent({
                     }}
                     isOwnProfile={false}
                     supabaseUrl={supabaseUrl}
+                    hideActions
                   />
                 </div>
               )}
@@ -964,6 +965,7 @@ export function FeedContent({
                             }}
                             isOwnProfile={false}
                             supabaseUrl={supabaseUrl}
+                            hideActions
                           />
                         </div>
                       )}

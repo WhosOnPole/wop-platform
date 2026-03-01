@@ -36,6 +36,8 @@ interface GridDisplayCardProps {
   }
   isOwnProfile: boolean
   supabaseUrl?: string
+  /** When true, hide the like/comment row (e.g. when grid is embedded in a post that has its own actions) */
+  hideActions?: boolean
 }
 
 function buildFilledItems({
@@ -61,6 +63,7 @@ export function GridDisplayCard({
   grid,
   isOwnProfile,
   supabaseUrl,
+  hideActions = false,
 }: GridDisplayCardProps) {
   const rankedItems = Array.isArray(grid.ranked_items) ? grid.ranked_items : []
   const filledItems = buildFilledItems({ items: rankedItems, gridType: grid.type })
@@ -443,7 +446,7 @@ export function GridDisplayCard({
       )}
 
       {/* Actions: Like, Comment, View More - same order and size as feed posts */}
-      {!isPlaceholderGrid && (
+      {!isPlaceholderGrid && !hideActions && (
         <div className="flex items-center gap-4 w-full">
         {/* Like Heart - first to match feed post cards */}
         {!isOwnProfile ? (
