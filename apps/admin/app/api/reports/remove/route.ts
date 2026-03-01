@@ -44,11 +44,12 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from('profiles')
       .select('role, email')
       .eq('id', session.user.id)
       .single()
+    const profile = profileData as { role?: string; email?: string } | null
     const isAdmin =
       profile?.role === 'admin' || profile?.email?.endsWith('@whosonpole.org')
     if (!isAdmin) {
@@ -99,7 +100,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unsupported target type' }, { status: 400 })
     }
 
-    const { error: updateError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = (supabase as any)
       .from('reports')
       .update({ status: 'resolved_removed' })
       .eq('id', reportId)
