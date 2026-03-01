@@ -52,7 +52,7 @@
 
 3. **Entity page ([type]/[slug]) – extra work on critical path**  
    - For **teams**, the page does a `fetch(backgroundUrl, { method: 'HEAD' })` to decide between background and logo. That blocks rendering and can be slow or flaky. Prefer a convention (e.g. always use background if present) or move this to a non-blocking path.
-   - For **drivers** with `instagram_url`, `getRecentInstagramMedia()` runs during the request. External API calls in the main render path add latency and variability. Consider moving to client fetch after shell render, or a short-lived cache.
+   - For **drivers** with `instagram_username`, `getRecentInstagramMedia()` runs during the request. External API calls in the main render path add latency and variability. Consider moving to client fetch after shell render, or a short-lived cache.
 
 4. **Heavy client boundary at root**  
    Many providers and the global loading screen are client-side. The initial JS bundle includes QueryProvider, BotID, Auth, LayoutWrapper, etc. Any lazy-loading of below-the-fold or modal UI would reduce main-thread work.

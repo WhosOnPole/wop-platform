@@ -9,7 +9,12 @@ const teamSchema = z.object({
   name: z.string().min(1).max(200),
   image_url: z.string().url().optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
-  instagram_url: z.string().url().optional().or(z.literal('')),
+  instagram_username: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .transform((val) => (val ?? '').trim().toLowerCase() || undefined)
+    .refine((val) => !val || (val.length <= 30 && /^[a-z0-9._]+$/.test(val)), 'Invalid Instagram username'),
   active: z.boolean().optional(),
 })
 
@@ -19,7 +24,7 @@ interface TeamEditModalProps {
     name: string
     image_url: string | null
     overview_text: string | null
-    instagram_url: string | null
+    instagram_username: string | null
     active: boolean
   }
   onClose: () => void
@@ -33,7 +38,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
     name: team.name || '',
     image_url: team.image_url || '',
     overview_text: team.overview_text || '',
-    instagram_url: team.instagram_url || '',
+    instagram_username: team.instagram_username || '',
     active: team.active ?? true,
   })
 
@@ -47,7 +52,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
         name: formData.name.trim(),
         image_url: formData.image_url || undefined,
         overview_text: formData.overview_text || undefined,
-        instagram_url: formData.instagram_url || undefined,
+        instagram_username: formData.instagram_username || undefined,
         active: formData.active,
       })
 
@@ -58,7 +63,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
           name: validated.name,
           image_url: validated.image_url || null,
           overview_text: validated.overview_text || null,
-          instagram_url: validated.instagram_url || null,
+          instagram_username: validated.instagram_username || null,
           active: validated.active ?? true,
         })
         .eq('id', team.id)
@@ -120,11 +125,12 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Instagram URL</label>
+            <label className="block text-sm font-medium text-gray-700">Instagram Username</label>
             <input
-              type="url"
-              value={formData.instagram_url}
-              onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+              type="text"
+              value={formData.instagram_username}
+              onChange={(e) => setFormData({ ...formData, instagram_username: e.target.value })}
+              placeholder="mercedesamgf1"
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
           </div>

@@ -19,7 +19,7 @@ interface Driver {
   podiums_total: number
   current_standing: number | null
   world_championships: number
-  instagram_url: string | null
+  instagram_username: string | null
   teams?: { name: string } | null
 }
 

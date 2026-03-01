@@ -42,7 +42,12 @@ const driverSchema = z.object({
   age: z.number().int().positive().max(100).optional().or(z.null()),
   nationality: z.string().max(100).optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
-  instagram_url: z.string().url().optional().or(z.literal('')),
+  instagram_username: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .transform((val) => (val ?? '').trim().toLowerCase() || undefined)
+    .refine((val) => !val || (val.length <= 30 && /^[a-z0-9._]+$/.test(val)), 'Invalid Instagram username'),
 })
 
 interface Team {
@@ -65,7 +70,7 @@ interface DriverEditModalProps {
     podiums_total: number
     current_standing: number | null
     world_championships: number
-    instagram_url: string | null
+    instagram_username: string | null
   }
   onClose: () => void
 }
@@ -88,7 +93,7 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
       age: driver.age?.toString() || '',
       nationality,
       overview_text: driver.overview_text || '',
-      instagram_url: driver.instagram_url || '',
+      instagram_username: driver.instagram_username || '',
     }
   })
 
@@ -129,7 +134,7 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
         age: formData.age ? parseInt(formData.age) : null,
         nationality: formData.nationality || undefined,
         overview_text: formData.overview_text || undefined,
-        instagram_url: formData.instagram_url || undefined,
+        instagram_username: formData.instagram_username || undefined,
       })
 
       const { error: updateError } = await supabase
@@ -143,7 +148,7 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
           racing_number: validated.racing_number ?? null,
           age: validated.age ?? null,
           nationality: validated.nationality || null,
-          instagram_url: validated.instagram_url || null,
+          instagram_username: validated.instagram_username || null,
         })
         .eq('id', driver.id)
 
@@ -269,12 +274,13 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Instagram URL
+                Instagram Username
               </label>
               <input
-                type="url"
-                value={formData.instagram_url}
-                onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                type="text"
+                value={formData.instagram_username}
+                onChange={(e) => setFormData({ ...formData, instagram_username: e.target.value })}
+                placeholder="lewishamilton"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               />
             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -136,6 +136,27 @@ export function SpotlightTabs({
     ...p,
     is_featured_podium: p.is_featured_podium ?? false,
   }))
+  const adminPollsCount = adminPollsWithFeatured.length
+  const [adminPollsActiveIndex, setAdminPollsActiveIndex] = useState(0)
+  const adminPollsScrollRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const el = adminPollsScrollRef.current
+    if (!el || adminPollsCount < 2) return
+
+    function onScroll() {
+      const node = adminPollsScrollRef.current
+      if (!node) return
+      const width = node.clientWidth
+      if (!width) return
+      const idx = Math.round(node.scrollLeft / width)
+      setAdminPollsActiveIndex(Math.min(Math.max(idx, 0), adminPollsCount - 1))
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [adminPollsCount])
+
   const communityPollsWithFeatured = communityPolls.map((p) => ({
     ...p,
     is_featured_podium: p.is_featured_podium ?? false,
@@ -181,11 +202,13 @@ export function SpotlightTabs({
           <section className="w-full min-w-0 space-y-4">
             <h2 className="text-xl font-semibold text-white">Admin polls</h2>
             {adminPollsWithFeatured.length > 0 ? (
-              <div
-                className="flex w-full min-w-0 overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 pb-2"
-                style={{ scrollSnapType: 'x mandatory' }}
-              >
-                {adminPollsWithFeatured.map((poll) => {
+              <div className="space-y-3">
+                <div
+                  ref={adminPollsScrollRef}
+                  className="flex w-full min-w-0 overflow-x-auto overflow-y-hidden snap-x snap-mandatory gap-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollSnapType: 'x mandatory' }}
+                >
+                  {adminPollsWithFeatured.map((poll) => {
                   const hasVoted = !!userResponses[poll.id]
                   return (
                     <div
@@ -218,6 +241,36 @@ export function SpotlightTabs({
                     </div>
                   )
                 })}
+                </div>
+                {adminPollsCount >= 2 && (
+                  <nav
+                    className="flex justify-center gap-1.5"
+                    role="tablist"
+                    aria-label="Admin polls position"
+                  >
+                    {adminPollsWithFeatured.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        role="tab"
+                        aria-selected={adminPollsActiveIndex === idx}
+                        aria-label={`Poll ${idx + 1} of ${adminPollsCount}`}
+                        onClick={() => {
+                          const el = adminPollsScrollRef.current
+                          if (el) {
+                            const width = el.clientWidth
+                            el.scrollTo({ left: width * idx, behavior: 'smooth' })
+                          }
+                        }}
+                        className={`rounded-full transition-all ${
+                          adminPollsActiveIndex === idx
+                            ? 'w-2.5 h-2.5 bg-bright-teal'
+                            : 'w-2 h-2 bg-white/30 hover:bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </nav>
+                )}
               </div>
             ) : (
               <div className="flex min-h-[160px] items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">

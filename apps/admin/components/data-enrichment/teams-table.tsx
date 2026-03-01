@@ -10,7 +10,7 @@ interface Team {
   name: string
   image_url: string | null
   overview_text: string | null
-  instagram_url: string | null
+  instagram_username: string | null
   active: boolean
 }
 
