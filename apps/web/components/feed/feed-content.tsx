@@ -509,7 +509,7 @@ export function FeedContent({
   return (
     <div className="space-y-6">
       <nav
-        className="flex w-full overflow-hidden rounded-full mt-12 border border-white/10 bg-black/20"
+        className="flex w-full border-b border-white/20 mt-12"
         role="tablist"
         aria-label="Feed tabs"
       >
@@ -518,10 +518,10 @@ export function FeedContent({
           role="tab"
           aria-selected={activeTab === 'following'}
           onClick={() => setFeedTab('following')}
-          className={`relative flex flex-1 items-center justify-center px-4 py-2.5 text-xs uppercase tracking-wide transition ${
+          className={`flex flex-1 items-center justify-center px-4 py-2.5 text-xs uppercase tracking-wide transition border-b-2 -mb-px ${
             activeTab === 'following'
-              ? 'bg-white/20 text-white'
-              : 'bg-transparent text-white/60 hover:text-white/80'
+              ? 'border-bright-teal text-white'
+              : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/30'
           }`}
         >
           Following
@@ -531,10 +531,10 @@ export function FeedContent({
           role="tab"
           aria-selected={activeTab === 'discovery'}
           onClick={() => setFeedTab('discovery')}
-          className={`relative flex flex-1 items-center justify-center border-l border-white/10 px-4 py-2.5 text-xs uppercase tracking-wide transition ${
+          className={`flex flex-1 items-center justify-center px-4 py-2.5 text-xs uppercase tracking-wide transition border-b-2 -mb-px ${
             activeTab === 'discovery'
-              ? 'bg-white/20 text-white'
-              : 'bg-transparent text-white/60 hover:text-white/80'
+              ? 'border-bright-teal text-white'
+              : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/30'
           }`}
         >
           Discovery

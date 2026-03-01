@@ -292,10 +292,15 @@ export default async function FeedPage() {
       .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(20),
-    // Featured news
+    // Featured news (with author for spotlight story card)
     supabase
       .from('news_stories')
-      .select('*')
+      .select(
+        `
+        *,
+        author:profiles!admin_id (id, username, profile_image_url)
+      `
+      )
       .eq('is_featured', true)
       .order('created_at', { ascending: false })
       .limit(2),
@@ -872,13 +877,26 @@ export default async function FeedPage() {
     website_url: string | null
     description: string | null
   }>
-  const featuredNewsList = (featuredNews.data || []) as Array<{
+  const featuredNewsRaw = (featuredNews.data || []) as Array<{
     id: string
     title: string
     image_url: string | null
     content: string
     created_at: string
+    author?: { id: string; username: string; profile_image_url: string | null } | Array<{ id: string; username: string; profile_image_url: string | null }>
   }>
+  const featuredNewsList = featuredNewsRaw.map((n) => {
+    const author = Array.isArray(n.author) ? n.author[0] : n.author
+    return {
+      id: n.id,
+      title: n.title,
+      image_url: n.image_url,
+      content: n.content,
+      created_at: n.created_at,
+      username: author?.username ?? null,
+      profile_image_url: author?.profile_image_url ?? null,
+    }
+  })
 
   const adminPollsList = (adminPolls.data || []) as Array<{
     id: string

@@ -77,6 +77,7 @@ interface NewsStory {
   created_at: string
   username?: string | null
   profile_image_url?: string | null
+  is_anonymous?: boolean
 }
 
 interface SpotlightCarouselProps {
@@ -248,7 +249,10 @@ export function SpotlightCarousel({
             onClick={() => setActivePollId(poll.id)}
             className={gradientCardInner + ' cursor-pointer'}
           >
-            <div className="flex shrink-0 items-start justify-between gap-2">
+            <span className="text-[0.6em] uppercase tracking-widest text-white/60 align-super">
+              Admin Poll
+            </span>
+            <div className="flex shrink-0 items-start justify-between gap-2 mt-0.5">
               <h2 className="text-xl font-bold text-white leading-snug line-clamp-5 min-h-0 flex-1">
                 {poll.question || 'Poll'}
               </h2>
@@ -287,31 +291,40 @@ export function SpotlightCarousel({
     if (card.type === 'featured_story') {
       const story = card.data as NewsStory
       const href = `/story/${story.id}`
+      const firstLine = (() => {
+        const c = story.content?.trim() || ''
+        const lines = c.split(/\r?\n/).filter((l) => l.trim())
+        if (lines.length > 0) return lines[0].trim()
+        return c.length > 50 ? c.slice(0, 50).trim() + '…' : c
+      })()
+      const showAuthorAvatar = !story.is_anonymous && story.profile_image_url
+      const avatarSrc = showAuthorAvatar ? story.profile_image_url! : '/images/seal_white.png'
       return (
         <div className={gradientCardOuter + ' relative'} style={gradientCardStyle}>
           <Link
             href={href}
             className={gradientCardInner + ' cursor-pointer relative'}
           >
-            {story.profile_image_url && (
-              <div className="absolute right-4 top-4 z-10 h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/30">
-                <Image
-                  src={story.profile_image_url}
-                  alt=""
-                  fill
-                  sizes="40px"
-                  className="object-cover"
-                />
-              </div>
-            )}
+            <div className="absolute right-4 top-4 z-10 h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/30">
+              <Image
+                src={avatarSrc}
+                alt=""
+                fill
+                sizes="40px"
+                className="object-cover"
+              />
+            </div>
             <div className="flex flex-1 flex-col min-h-0">
               <span className="text-[0.6em] uppercase tracking-widest text-white/60 align-super">
                 Featured Story
               </span>
-              <h2 className="text-xl font-bold text-white leading-snug line-clamp-3 mt-0.5">
+              <h2 className="text-xl font-bold text-white leading-snug line-clamp-3 my-0.5">
                 {story.title || 'Story'}
               </h2>
-              {story.username && (
+              {firstLine && (
+                <p className=" text-sm text-white/90 line-clamp-1">{firstLine}</p>
+              )}
+              {story.username && !story.is_anonymous && (
                 <p className="mt-1 text-sm text-white/70">by @{story.username}</p>
               )}
             </div>
@@ -353,30 +366,28 @@ export function SpotlightCarousel({
           </div>
         </div>
 
-        {/* Indicator bar: flush under cards (mobile only) */}
-        <div className="w-full flex-shrink-0 border-b border-white/20 lg:hidden">
-          <nav
-            className="-mb-px flex w-full"
-            role="tablist"
-            aria-label="Featured banner position"
-          >
-            {cards.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                role="tab"
-                aria-selected={activeIndex === idx}
-                aria-label={`Slide ${idx + 1} of ${cards.length}`}
-                onClick={() => scrollToIndex(idx)}
-                className={`flex-1 min-w-0 border-b-2 py-3 transition-colors ${
-                  activeIndex === idx
-                    ? 'border-bright-teal'
-                    : 'border-transparent hover:border-white/30'
-                }`}
-              />
-            ))}
-          </nav>
-        </div>
+        {/* Dot indicators (mobile only) */}
+        <nav
+          className="flex justify-center gap-1.5 py-3 lg:hidden"
+          role="tablist"
+          aria-label="Featured banner position"
+        >
+          {cards.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              role="tab"
+              aria-selected={activeIndex === idx}
+              aria-label={`Slide ${idx + 1} of ${cards.length}`}
+              onClick={() => scrollToIndex(idx)}
+              className={`rounded-full transition-all ${
+                activeIndex === idx
+                  ? 'w-2.5 h-2.5 bg-bright-teal'
+                  : 'w-2 h-2 bg-white/30 hover:bg-white/50'
+              }`}
+            />
+          ))}
+        </nav>
       </div>
 
       {isDiscussionOpen && spotlight?.hot_take?.id && (
