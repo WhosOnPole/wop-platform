@@ -54,7 +54,7 @@ export function FeaturedGridCarouselCard({
         <div className="flex w-1/2 min-w-0 flex-col items-center justify-between">
           <div className="flex flex-col items-center">
             <div
-              className={`mt-2 h-20 w-20 shrink-0 overflow-hidden rounded-full ${
+              className={`mb-1 h-20 w-20 shrink-0 overflow-hidden rounded-full ${
                 isDefaultAvatar(user?.profile_image_url) ? 'border border-gray-200 bg-white' : ''
               }`}
             >
