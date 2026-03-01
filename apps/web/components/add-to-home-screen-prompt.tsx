@@ -132,7 +132,7 @@ export function AddToHomeScreenPrompt({
   if (!isVisible || !mode) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="fixed top-0 left-0 right-0 z-[100] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-md rounded-xl border border-white/10 bg-[#1a1a1a] p-4 shadow-xl">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-start gap-3">

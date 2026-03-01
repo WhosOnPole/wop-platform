@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 type TargetType = 'post' | 'comment' | 'grid' | 'profile' | 'grid_slot_comment'
 
@@ -14,16 +16,45 @@ const SECRET_KEY =
   process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
 export async function POST(request: Request) {
-  if (!SUPABASE_URL || !SECRET_KEY) {
-    return NextResponse.json(
-      {
-        error: 'Server configuration missing. Set SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY.',
-      },
-      { status: 500 }
-    )
+  if (!SUPABASE_URL) {
+    return NextResponse.json({ error: 'NEXT_PUBLIC_SUPABASE_URL is not set' }, { status: 500 })
   }
 
-  const supabase = createClient(SUPABASE_URL, SECRET_KEY)
+  // Prefer service role (bypasses RLS); fall back to session client (requires admin policies)
+  let supabase: ReturnType<typeof createClient>
+  if (SECRET_KEY) {
+    supabase = createClient(SUPABASE_URL, SECRET_KEY)
+  } else {
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    if (!anonKey) {
+      return NextResponse.json(
+        {
+          error:
+            'Set SUPABASE_SERVICE_ROLE_KEY for server-side delete, or ensure NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is set for session-based admin delete.',
+        },
+        { status: 500 }
+      )
+    }
+    const cookieStore = await cookies()
+    supabase = createRouteHandlerClient(
+      { cookies: () => cookieStore as any },
+      { supabaseUrl: SUPABASE_URL, supabaseKey: anonKey }
+    )
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, email')
+      .eq('id', session.user.id)
+      .single()
+    const isAdmin =
+      profile?.role === 'admin' || profile?.email?.endsWith('@whosonpole.org')
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+  }
 
   let payload: RemovePayload
   try {
@@ -77,7 +108,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to remove content' }, { status: 500 })
+    const message =
+      error?.message ||
+      error?.details ||
+      (typeof error === 'object' ? JSON.stringify(error) : String(error)) ||
+      'Failed to remove content'
+    console.error('[reports/remove] Error:', message, error)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 

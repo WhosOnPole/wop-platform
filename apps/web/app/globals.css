@@ -212,13 +212,26 @@ html:-ms-fullscreen {
 
 /* Top nav profile button: prominent sunset-end pink pulsating glow for new users */
 @keyframes nav-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(235, 14, 120, 0.7), 0 0 20px 4px rgba(235, 14, 120, 0.5);
+  0%, 100%{
+    box-shadow: 0 0 0 0 rgba(235, 14, 120, 0.7), 0 0 15px 8px rgba(235, 14, 120, 0.5);
   }
-  50% {
-    box-shadow: 0 0 0 16px rgba(235, 14, 120, 0), 0 0 32px 8px rgba(235, 14, 120, 0.65);
+  40% {
+    box-shadow: 0 0 0 0px rgba(235, 14, 120, 0), 0 0 30px 18px rgba(235, 14, 120, 0.65);
   }
 }
 .animate-nav-glow {
   animation: nav-glow 2.5s ease-in-out infinite;
+}
+
+/* Profile icon pulse: subtle shrink/expand in sync with nav glow */
+@keyframes nav-profile-pulse {
+  0%, 100% {
+    transform: scale(.62);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+.animate-nav-profile-pulse {
+  animation: nav-profile-pulse 2.5s ease-in-out infinite;
 }

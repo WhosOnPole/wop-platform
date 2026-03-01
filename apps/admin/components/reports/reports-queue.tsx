@@ -71,15 +71,17 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
         body: JSON.stringify({ reportId, targetType, targetId }),
       })
 
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Failed to remove content')
+        const msg = data?.error || res.statusText || 'Failed to remove content'
+        console.error('Remove content error:', res.status, msg, data)
+        throw new Error(msg)
       }
 
       setReports(reports.filter((r) => r.id !== reportId))
     } catch (error: any) {
       console.error('Error removing content:', error)
-      alert('Failed to remove content: ' + error.message)
+      alert('Failed to remove content: ' + (error?.message || 'Unknown error'))
     } finally {
       setProcessing(null)
     }
