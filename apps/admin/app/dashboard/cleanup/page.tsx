@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { CleanupDashboard } from '@/components/cleanup/cleanup-dashboard'
 
 export default async function CleanupPage() {

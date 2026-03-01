@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { TrackTipsQueue } from '@/components/track-tips/track-tips-queue'
 
 export default async function TrackTipsPage() {

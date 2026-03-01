@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { ReportsQueue } from '@/components/reports/reports-queue'
 
 export default async function ReportsPage() {

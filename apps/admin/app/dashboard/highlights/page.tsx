@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { WeeklyHighlightsManager } from '@/components/highlights/weekly-highlights-manager'
 import { AutoCalculateButton } from '@/components/highlights/auto-calculate-button'
 import { HighlightedFanManager } from '@/components/highlights/highlighted-fan-manager'

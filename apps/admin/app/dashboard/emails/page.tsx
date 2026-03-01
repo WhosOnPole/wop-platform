@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { EmailQueueDashboard } from '@/components/emails/email-queue-dashboard'
 
 export default async function EmailsPage() {

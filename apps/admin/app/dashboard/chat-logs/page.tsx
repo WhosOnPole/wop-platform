@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { ChatLogsViewer } from '@/components/chat-logs/chat-logs-viewer'
 
 export default async function ChatLogsPage() {

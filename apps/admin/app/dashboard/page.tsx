@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { Users, Flag, MessageSquare, FileText } from 'lucide-react'
 import { RaceWeekendWidget } from '@/components/dashboard/race-weekend-widget'
