@@ -7,6 +7,7 @@ import { TopNav } from '@/components/navbar/top-nav'
 import { Footer } from '@/components/footer'
 import { LiveRaceBanner } from '@/components/live-race-banner'
 import { AddToHomeScreenPrompt } from '@/components/add-to-home-screen-prompt'
+import { PullToRefreshFeed } from '@/components/feed/pull-to-refresh-feed'
 import { FullscreenHandler } from '@/components/fullscreen-handler'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useAuthSession } from '@/components/providers/auth-session-provider'
@@ -86,7 +87,13 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
       <FullscreenHandler autoRequest={true} />
       <TopNav />
       <main className={`min-h-screen ${mainPadTop}`}>
-        {children}
+        {pathname === '/feed' ? (
+          <PullToRefreshFeed onRefresh={() => router.refresh()} enabled={!isDesktop}>
+            {children}
+          </PullToRefreshFeed>
+        ) : (
+          <>{children}</>
+        )}
       </main>
       {showFooter ? <Footer /> : null}
       <LiveRaceBanner />
