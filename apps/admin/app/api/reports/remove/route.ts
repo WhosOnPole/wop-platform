@@ -12,8 +12,9 @@ interface RemovePayload {
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+// Prefer SUPABASE_SERVICE_ROLE_KEY (JWT); SUPABASE_SECRET_KEY may be used for other services
 const SECRET_KEY =
-  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
 
 export async function POST(request: Request) {
   if (!SUPABASE_URL) {
