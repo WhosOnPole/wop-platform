@@ -191,6 +191,9 @@ export function TopNav() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={(e) => {
+                      if (active) e.preventDefault()
+                    }}
                     className={`text-sm font-semibold transition-colors ${
                       active
                         ? 'text-[#25B4B1]'
@@ -272,7 +275,10 @@ export function TopNav() {
               <div className="hidden md:block p-2 min-w-[12rem]">
                 <Link
                   href="/settings?tab=notifications"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    if (pathname.startsWith('/settings')) e.preventDefault()
+                    setIsMenuOpen(false)
+                  }}
                   className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#6B6B6B] hover:bg-gray-100"
                 >
                   <Settings className="h-5 w-5 shrink-0" />
@@ -305,7 +311,10 @@ export function TopNav() {
                     </button>
                     <Link
                       href="/settings?tab=notifications"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={(e) => {
+                        if (pathname.startsWith('/settings')) e.preventDefault()
+                        setIsMenuOpen(false)
+                      }}
                       className="relative flex h-8 w-8 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
                       aria-label="Notifications"
                     >
@@ -318,7 +327,10 @@ export function TopNav() {
                       <Link
                         key={item.href}
                         href={item.href}
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={(e) => {
+                          if (active) e.preventDefault()
+                          setIsMenuOpen(false)
+                        }}
                         className="flex flex-row items-center gap-4"
                         aria-label={item.label}
                       >
@@ -356,7 +368,10 @@ export function TopNav() {
                   <div className="w-full border-t border-white/10 pt-4 mt-2">
                     <Link
                       href={profileHref}
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={(e) => {
+                        if (isActive(profileHref)) e.preventDefault()
+                        setIsMenuOpen(false)
+                      }}
                       className={`block w-full py-1 text-center text-sm font-semibold tracking-wide text-white transition-colors hover:text-white/90 ${
                         isActive(profileHref) ? 'text-[#25B4B1]' : ''
                       }`}
