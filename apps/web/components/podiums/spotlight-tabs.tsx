@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { Star, PenLine, Check } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
+import { useCreateModal } from '@/components/providers/create-modal-provider'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedGridPostBlock, type FeaturedGridForBlock } from '@/components/feed/featured-grid-post-block'
@@ -121,6 +122,8 @@ export function SpotlightTabs({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activePollId, setActivePollId] = useState<string | null>(null)
+  const createModal = useCreateModal()
+  const setActiveModal = createModal?.setActiveModal ?? (() => {})
   const tabFromUrl = searchParams.get('tab')
   const validTab =
     tabFromUrl === 'polls' || tabFromUrl === 'stories' || tabFromUrl === 'our-picks'
@@ -300,8 +303,15 @@ export function SpotlightTabs({
                 ))}
               </div>
             ) : (
-              <div className="flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">
-                No community polls yet.
+              <div className="flex min-h-[120px] flex-col items-center justify-center gap-6 rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm text-white/60">
+                <span>No community polls yet. Add one!</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('poll')}
+                  className="rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
+                >
+                  Create a poll
+                </button>
               </div>
             )}
           </section>
