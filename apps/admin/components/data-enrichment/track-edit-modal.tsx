@@ -136,6 +136,9 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Website URL</label>
+            <p className="mt-0.5 text-xs text-gray-500">
+              Shown under the overview section on the track page
+            </p>
             <input
               type="url"
               value={formData.website_url}

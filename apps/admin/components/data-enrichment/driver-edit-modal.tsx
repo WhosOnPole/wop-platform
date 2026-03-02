@@ -32,6 +32,7 @@ const DRIVER_NATIONALITIES = [
   'Saudi',
   'Singaporean',
   'Spanish',
+  'Thai',
 ] as const
 
 const driverSchema = z.object({
