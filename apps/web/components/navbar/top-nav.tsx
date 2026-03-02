@@ -117,6 +117,7 @@ export function TopNav() {
 
   const profileHref = profile?.username ? `/u/${profile.username}` : '/profile'
   const isAuthed = !!user
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
   const authedNavItems = [
     { href: profileHref, label: 'Profile' },
     { href: '/feed', label: 'Feed' },
@@ -135,9 +136,7 @@ export function TopNav() {
     router.push('/')
   }
   const unauthNavItems = [
-    { href: '/#who-we-are', label: 'About Us' },
-    { href: '/#features', label: 'Features' },
-    { href: '/login', label: 'Login/Signup' },
+    { href: '/login', label: 'Login / Signup' },
   ]
 
   function isActive(href?: string) {
@@ -205,15 +204,15 @@ export function TopNav() {
                 )
               })}
             </>
-          ) : (
+          ) : isAuthPage ? null : (
             unauthNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-semibold transition-colors ${
+                className={`text-md transition-colors rounded-full px-4 py-2 ${
                   pathname === item.href
-                    ? 'text-[#25B4B1]'
-                    : 'text-white hover:text-sunset-start'
+                    ? 'text-[#25B4B1] bg-sunset-start/55'
+                    : 'text-white hover:bg-sunset-start/55'
                 }`}
               >
                 {item.label}
@@ -229,7 +228,7 @@ export function TopNav() {
 
         {/* Right side: profile/menu (authenticated) or links (mobile unauth) */}
         <div className="flex items-center gap-3" data-top-nav-menu>
-          {!isAuthed ? (
+          {!isAuthed && !isAuthPage ? (
             <Link
               href="/login"
               className="rounded-full bg-black px-4 py-2 text-xs text-white transition-opacity hover:opacity-90 md:hidden"

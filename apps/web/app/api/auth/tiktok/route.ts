@@ -111,6 +111,15 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const state = requestUrl.searchParams.get('state')
+  const tiktokError = requestUrl.searchParams.get('error')
+
+  // TikTok can redirect back with error (e.g. user denied, Non_sandbox_target when app is in sandbox)
+  if (tiktokError) {
+    const loginUrl = new URL('/login', requestUrl.origin)
+    loginUrl.searchParams.set('error', 'tiktok_callback_error')
+    loginUrl.searchParams.set('tiktok_error', tiktokError)
+    return NextResponse.redirect(loginUrl.toString())
+  }
 
   // SECURITY: Never hardcode secrets - always use environment variables
   const clientKey = process.env.TIKTOK_CLIENT_KEY

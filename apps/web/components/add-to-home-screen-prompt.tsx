@@ -133,23 +133,23 @@ export function AddToHomeScreenPrompt({
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="mx-auto max-w-md rounded-xl border border-white/10 bg-[#1a1a1a] p-4 shadow-xl">
+      <div className="mx-auto max-w-md rounded-xl border border-white/10 bg-[#25B4B1] p-4 shadow-xl">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10">
-              <Smartphone className="h-5 w-5 text-white" />
+              <Smartphone className="h-5 w-5 text-black" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold text-white">
+              <h3 className="text-sm font-semibold text-black">
                 Add to Home Screen
               </h3>
               {mode === 'chrome' && (
-                <p className="mt-1 text-xs text-white/70">
+                <p className="mt-1 text-xs text-black/70">
                   Install the app for quick access and a better experience.
                 </p>
               )}
               {mode === 'ios' && (
-                <p className="mt-1 text-xs text-white/70">
+                <p className="mt-1 text-xs text-black/70">
                   Tap <Share2 className="inline h-3 w-3" /> Share, then &quot;Add
                   to Home Screen&quot; to install.
                 </p>

@@ -14,6 +14,7 @@ const trackSchema = z.object({
   end_date: z.string().optional().or(z.literal('')),
   circuit_ref: z.string().max(200).optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
+  website_url: z.string().url().optional().or(z.literal('')),
 })
 
 interface TrackEditModalProps {
@@ -27,6 +28,7 @@ interface TrackEditModalProps {
     end_date: string | null
     circuit_ref: string | null
     overview_text: string | null
+    website_url: string | null
   }
   onClose: () => void
   /** When true, start_date is derived from schedule (first event) and shown read-only. */
@@ -46,6 +48,7 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
     end_date: toDateInput(track.end_date),
     circuit_ref: track.circuit_ref || '',
     overview_text: track.overview_text || '',
+    website_url: track.website_url || '',
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -63,6 +66,7 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
         end_date: formData.end_date || undefined,
         circuit_ref: formData.circuit_ref || undefined,
         overview_text: formData.overview_text || undefined,
+        website_url: formData.website_url || undefined,
       })
 
       const updatePayload: Record<string, unknown> = {
@@ -73,6 +77,7 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
         end_date: validated.end_date || null,
         circuit_ref: validated.circuit_ref || null,
         overview_text: validated.overview_text || null,
+        website_url: validated.website_url || null,
       }
       if (!hasScheduleEvents) {
         updatePayload.start_date = validated.start_date || null
@@ -125,6 +130,17 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
               value={formData.overview_text}
               onChange={(e) => setFormData({ ...formData, overview_text: e.target.value })}
               rows={4}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Website URL</label>
+            <input
+              type="url"
+              value={formData.website_url}
+              onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
+              placeholder="https://..."
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             />
           </div>

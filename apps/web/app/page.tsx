@@ -70,14 +70,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Centered row: tagline, button, "or learn more", trio - hidden on mobile, visible from md up */}
-          <div className="flex w-full flex-col items-center gap-6 px-6 pb-12 lg:pb-16 pt-24 md:pt-0">
+          {/* Centered row: tagline, button, "or learn more", trio — section height shows only top half of a larger image */}
+          <div className="flex flex-1 w-full min-h-0 flex-col items-center gap-6 px-4 pb-0 pt-6 md:pt-0 lg:px-6">
             <p className="max-w-2xl text-center font-sans text-base text-white/90 md:text-lg">
               The Formula 1 fan platform built on passion, not performance metrics.
             </p>
             <Link
               href="/signup"
-              className="rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
               Sign Up
             </Link>
@@ -87,54 +87,19 @@ export default function HomePage() {
             >
               or learn more
             </Link>
-            <Image
-              src="/images/trio.png"
-              alt=""
-              width={500}
-              height={550}
-              className="h-auto w-full max-w-5xl object-contain px-4 relative md:top-[-10vh]"
-              sizes="(max-width: 768px) 100vw, 900px"
-              aria-hidden
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Who we are */}
-      <section
-        id="who-we-are"
-        className="scroll-mt-20 border-t border-white/10 px-6 py-16 lg:px-12"
-      >
-        <div className="mx-auto max-w-3xl">
-          <h2 className="font-display text-3xl font-normal text-white md:text-4xl text-center">
-            Who We Are
-          </h2>
-          <div className="mt-8 space-y-6 font-sans text-base text-white/90 md:text-lg leading-relaxed">
-            <p>Hello racing fans! ❤️</p>
-            <p>
-              We are so excited to welcome you to Who&apos;s On Pole - our passion project created to enhance the motorsport fan experience and give all fans, especially the new wave of supporters, a space to feel like an important part of the sport and its community. Because you are.
-            </p>
-            <p>
-              We&apos;re a mother-daughter team who dreamed up this site after attending our very first race, the 2025 Belgian Grand Prix. It was a life-changing experience that fundamentally changed the way we thought about the world of F1. A few things stood out most:
-            </p>
-            <ul className="list-disc pl-6 space-y-3">
-              <li>
-                <strong className="text-white">F1 fan passion is unmatched.</strong> From figuring out the Belgian bus system with zero French skills, to dragging our suitcases down rural dirt roads, to trekking to and from the track each hot day - we realized how much dedication it takes for the average fan to simply be there. Yet we were far from alone. Hundreds of thousands of people lined every inch of Spa&apos;s 7 km circuit - from the glamour of the paddock club balconies to hammocks strung up in the forest.
-              </li>
-              <li>
-                <strong className="text-white">A new type of fan is reshaping motorsport.</strong> Everywhere we went, it was clear: women have embraced Formula 1 with unstoppable energy. They are a driving force behind F1&apos;s rise in the U.S. and beyond, carving out unapologetic space in a world that wasn&apos;t originally built with them in mind. We love this type of fan, because we are this type of fan. Who&apos;s On Pole is our love letter to motorsport and the joy it&apos;s brought into our lives.
-              </li>
-              <li>
-                <strong className="text-white">F1 is expensive.</strong> This sport is expensive and inaccessible for many. While we can&apos;t change that, we hope to create expansion and give our passionate users experiences you might not otherwise have. This site is community-funded. Some donations will go toward gifting these experiences to those whose stories touch us and those whose contributions make this site a place other fans want to be.
-              </li>
-            </ul>
-            <p>
-              We hope you love this site as much as we do. We built it for you - the fan who looks forward to race day all week through long, hard days at work. The fan who found a passion for engineering, marketing, or hospitality through motorsport. The fan who cried when Danny Ric left (don&apos;t worry, we did too). The fan who never stops believing in their driver, no matter what other people think. The fan who&apos;s discovered true community and belonging in this sport.
-            </p>
-            <p className="italic text-white">
-              To borrow the words of the amazing Laura Winter: &ldquo;We are here to stay, and we are right where we belong.&rdquo;
-            </p>
-            <p>With love, D & M</p>
+            {/* Clipped so phones are centered; on mobile only 50% of screen height; flush to next section on desktop */}
+            <div className="relative w-full max-w-6xl overflow-hidden mx-auto flex-1
+              min-h-[22vh] max-h-[50vh] md:min-h-[45vh] md:max-h-none">
+              <Image
+                src="/images/trio.png"
+                alt=""
+                width={500}
+                height={550}
+                className="absolute inset-0 object-cover object-top w-full h-full"
+                sizes="(max-width: 768px) 100vw, 1024px"
+                aria-hidden
+              />
+            </div>
           </div>
         </div>
       </section>

@@ -20,6 +20,7 @@ interface Track {
   circuit_ref: string | null
   overview_text: string | null
   history_text: string | null
+  website_url: string | null
 }
 
 const CURRENT_SEASON = 2026

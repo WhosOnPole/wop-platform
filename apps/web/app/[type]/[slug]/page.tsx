@@ -452,6 +452,22 @@ export default async function DynamicPage({ params }: PageProps) {
         </div>
       )}
 
+      {/* Track website link: below overview, above tabs */}
+      {type === 'tracks' && entity?.website_url && (
+        <div className="relative z-20 w-full bg-black py-4">
+          <div className="mx-auto max-w-7xl px-6 text-center">
+            <a
+              href={entity.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-white/90 underline underline-offset-2 hover:text-white"
+            >
+              Visit website
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Tabs Section */}
       <div className="relative z-20 bg-[#000000] min-h-[30vh]">
         <div className="mx-auto max-w-7xl px-6">
