@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { stripSprintSuffix } from '@/utils/grid-labels'
 import { getTeamPrimaryColor } from '@/utils/team-colors'
 import { formatWeekendRange } from '@/utils/date-utils'
 import { DriverCardMedia } from '../drivers/driver-card-media'
@@ -29,6 +30,7 @@ interface Track {
   image_url?: string | null
   location?: string | null
   country?: string | null
+  circuit_ref?: string | null
 }
 
 interface ScheduleTrack {
@@ -253,9 +255,10 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
               items.map((item) => {
                 if (activeTab === 'drivers') {
                   const driver = item as Driver
-                  const slug = driver.name.toLowerCase().replace(/\s+/g, '-')
-                  const parts = driver.name.split(' ')
-                  const driverCode = (parts[parts.length - 1] || driver.name).substring(0, 3).toUpperCase()
+                  const displayName = stripSprintSuffix(driver.name)
+                  const slug = displayName.toLowerCase().replace(/\s+/g, '-')
+                  const parts = displayName.split(' ')
+                  const driverCode = (parts[parts.length - 1] || displayName).substring(0, 3).toUpperCase()
                   return (
                     <Link
                       key={driver.id}
@@ -264,7 +267,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                     >
                       <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
                         <DriverCardMedia
-                          driverName={driver.name}
+                          driverName={displayName}
                           supabaseUrl={supabaseUrl}
                           fallbackSrc={driver.headshot_url || driver.image_url}
                           sizes="100px"
@@ -305,8 +308,9 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
 
                 if (activeTab === 'teams') {
                   const team = item as Team
-                  const slug = team.name.toLowerCase().replace(/\s+/g, '-')
-                  const bgUrl = supabaseUrl ? getTeamBackgroundUrl(team.name, supabaseUrl) : null
+                  const displayName = stripSprintSuffix(team.name)
+                  const slug = displayName.toLowerCase().replace(/\s+/g, '-')
+                  const bgUrl = supabaseUrl ? getTeamBackgroundUrl(displayName, supabaseUrl) : null
                   return (
                     <Link
                       key={team.id}
@@ -332,7 +336,7 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                             textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
                           }}
                         >
-                          {team.name}
+                          {displayName}
                         </span>
                       </div>
                     </Link>
@@ -340,9 +344,10 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                 }
 
                 const track = item as Track
-                const slug = track.name.toLowerCase().replace(/\s+/g, '-')
-                const locationText = track.location ? track.location.toUpperCase() : ''
-                const trackSvgUrl = supabaseUrl ? getTrackSvgUrl(getTrackSlug(track.name), supabaseUrl) : null
+                const trackDisplayName = stripSprintSuffix(track.name)
+                const slug = trackDisplayName.toLowerCase().replace(/\s+/g, '-')
+                const overlayText = stripSprintSuffix(track.circuit_ref || track.location || track.name || '').toUpperCase()
+                const trackSvgUrl = supabaseUrl ? getTrackSvgUrl(getTrackSlug(trackDisplayName), supabaseUrl) : null
                 const showTrackSvg = trackSvgUrl && !failedTrackSvgIds.has(track.id)
                 return (
                   <Link
@@ -370,20 +375,20 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       )}
                       {/* Overlay gradient for text readability */}
                       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                      {/* Vertical location on left: full-height bar with rotated text centered */}
-                      {locationText && (
+                      {/* Vertical circuit_ref/location on left: full-height bar with rotated text centered */}
+                      {overlayText && (
                         <div className="absolute inset-y-0 left-0 z-30 flex w-4 items-center justify-center overflow-visible">
                           <span
                             className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                             style={{
-                              fontSize: 'clamp(8px, 2vw, 15px)',
+                              fontSize: 'clamp(11px, 2.5vw, 20px)',
                               fontFamily: 'Inter, sans-serif',
                               letterSpacing: '0',
                               transform: 'rotate(-90deg)',
                               transformOrigin: 'center center',
                             }}
                           >
-                            {locationText}
+                            {overlayText}
                           </span>
                         </div>
                       )}

@@ -7,6 +7,7 @@ import {
   getTrackSlug,
   getTrackSvgUrl,
 } from '@/utils/storage-urls'
+import { stripSprintSuffix } from '@/utils/grid-labels'
 
 export interface FeaturedGridTilesGrid {
   id: string
@@ -34,17 +35,18 @@ function getItemImageUrl(
   supabaseUrl?: string
 ): string | null {
   if (type === 'driver') return item.headshot_url || item.image_url || null
-  if (type === 'team') return supabaseUrl ? getTeamBackgroundUrl(item.name, supabaseUrl) : null
+  if (type === 'team') return supabaseUrl ? getTeamBackgroundUrl(stripSprintSuffix(item.name), supabaseUrl) : null
   if (type === 'track') {
-    const slug = getTrackSlug(item.name)
+    const slug = getTrackSlug(stripSprintSuffix(item.name))
     return supabaseUrl ? getTrackSvgUrl(slug, supabaseUrl) : null
   }
   return null
 }
 
 function getDriverCode(name: string): string {
-  const parts = name.split(' ')
-  const lastName = parts[parts.length - 1] || name
+  const n = stripSprintSuffix(name)
+  const parts = n.split(' ')
+  const lastName = parts[parts.length - 1] || n
   return lastName.substring(0, 3).toUpperCase()
 }
 
@@ -70,7 +72,7 @@ function getOverlayText(
 ): string {
   if (item.is_placeholder || !item.name) return ''
   if (gridType === 'driver') return getDriverCode(item.name)
-  if (gridType === 'team') return item.name
+  if (gridType === 'team') return stripSprintSuffix(item.name)
   if (gridType === 'track') return getTrackLabel(item)
   return ''
 }
@@ -128,7 +130,7 @@ function GridTile({
       {type === 'driver' && (
         <div className="absolute inset-0 z-0">
           <DriverCardMedia
-            driverName={item.name}
+            driverName={stripSprintSuffix(item.name)}
             supabaseUrl={supabaseUrl}
             fallbackSrc={item.headshot_url || item.image_url}
             sizes={size === 'large' ? '(max-width: 768px) 40vw, 120px' : '(max-width: 768px) 20vw, 60px'}

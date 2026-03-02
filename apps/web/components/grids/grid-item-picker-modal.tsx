@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { X } from 'lucide-react'
 import type { GridType } from './grid-rank-pills'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { stripSprintSuffix } from '@/utils/grid-labels'
 import { DriverCardMedia } from '@/components/drivers/driver-card-media'
 
 interface GridItemPickerModalProps {
@@ -105,7 +106,7 @@ export function GridItemPickerModal({
                     <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-black/30 border border-white/10">
                       {type === 'driver' ? (
                         <DriverCardMedia
-                          driverName={item.name}
+                          driverName={stripSprintSuffix(item.name)}
                           supabaseUrl={supabaseUrl}
                           fallbackSrc={item.headshot_url || item.image_url}
                           sizes="240px"
@@ -117,7 +118,7 @@ export function GridItemPickerModal({
                             className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
                             style={{
                               backgroundImage: supabaseUrl
-                                ? `url(${getTeamBackgroundUrl(item.name, supabaseUrl)})`
+                                ? `url(${getTeamBackgroundUrl(stripSprintSuffix(item.name), supabaseUrl)})`
                                 : 'url(/images/pit_bg.jpg)',
                             }}
                             aria-hidden
@@ -130,12 +131,12 @@ export function GridItemPickerModal({
                               fontSize: 'clamp(10px, 2.5vw, 14px)',
                             }}
                           >
-                            {item.name}
+                            {stripSprintSuffix(item.name)}
                           </span>
                         </>
                       ) : (
                         <TrackCardMedia
-                          trackName={item.name}
+                          trackName={stripSprintSuffix(item.name)}
                           trackSlug={item.track_slug ?? null}
                           supabaseUrl={supabaseUrl}
                         />
@@ -143,14 +144,14 @@ export function GridItemPickerModal({
                     </div>
                     <div className="mt-2 space-y-0.5">
                       <p className="text-sm text-white group-hover:text-gray-300 lowercase leading-tight">
-                        {item.name}
+                        {stripSprintSuffix(item.name)}
                       </p>
                       {type === 'driver' && item.team_name ? (
                         <p className="text-xs text-white/60 truncate">{item.team_name}</p>
                       ) : null}
                       {type === 'track' && (item.location || item.country) ? (
                         <p className="text-xs text-white/60 truncate">
-                          {item.location ? `${item.location}${item.country ? ', ' : ''}` : ''}
+                          {item.location ? `${stripSprintSuffix(item.location)}${item.country ? ', ' : ''}` : ''}
                           {item.country ?? ''}
                         </p>
                       ) : null}

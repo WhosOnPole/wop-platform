@@ -7,7 +7,7 @@ import { GridHeartButton } from './grid-heart-button'
 import { CommentIcon } from '@/components/ui/comment-icon'
 import { GridSnapshot } from './grid-snapshot'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
-import { getViewGridLabel } from '@/utils/grid-labels'
+import { getViewGridLabel, stripSprintSuffix } from '@/utils/grid-labels'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 interface GridItem {
@@ -79,9 +79,9 @@ export function GridDisplayCard({
     if (grid.type === 'driver') {
       return item.headshot_url || item.image_url || null
     } else if (grid.type === 'team') {
-      return supabaseUrl ? getTeamBackgroundUrl(item.name, supabaseUrl) : null
+      return supabaseUrl ? getTeamBackgroundUrl(stripSprintSuffix(item.name), supabaseUrl) : null
     } else if (grid.type === 'track') {
-      return supabaseUrl ? getTrackSvgUrl(getTrackSlug(item.name), supabaseUrl) : null
+      return supabaseUrl ? getTrackSvgUrl(getTrackSlug(stripSprintSuffix(item.name)), supabaseUrl) : null
     }
     return null
   }
@@ -89,8 +89,9 @@ export function GridDisplayCard({
   // Driver short code: last name first 3 letters, uppercase
   function getDriverCode(item: GridItem): string {
     if (grid.type !== 'driver') return ''
-    const parts = item.name.split(' ')
-    const lastName = parts[parts.length - 1] || item.name
+    const name = stripSprintSuffix(item.name)
+    const parts = name.split(' ')
+    const lastName = parts[parts.length - 1] || name
     return lastName.substring(0, 3).toUpperCase()
   }
 
@@ -106,7 +107,7 @@ export function GridDisplayCard({
   function getOverlayText(item: GridItem, gridType: 'driver' | 'team' | 'track'): string {
     if (item.is_placeholder || !item.name) return ''
     if (gridType === 'driver') return getDriverCode(item)
-    if (gridType === 'team') return item.name
+    if (gridType === 'team') return stripSprintSuffix(item.name)
     if (gridType === 'track') return getTrackLabel(item)
     return ''
   }
@@ -212,7 +213,7 @@ export function GridDisplayCard({
                 {grid.type === 'driver' && (
                   <div className="absolute inset-0 z-0">
                     <DriverCardMedia
-                      driverName={firstItem.name}
+                      driverName={stripSprintSuffix(firstItem.name)}
                       supabaseUrl={supabaseUrl}
                       fallbackSrc={firstItem.headshot_url || firstItem.image_url}
                       sizes="(max-width: 868px) 50vw, 300px"
@@ -293,7 +294,7 @@ export function GridDisplayCard({
                 {grid.type !== 'track' && grid.type !== 'team' && !getItemImageUrl(firstItem) && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-4xl font-bold text-gray-600">
-                      {firstItem.name.charAt(0)}
+                      {stripSprintSuffix(firstItem.name).charAt(0)}
                     </span>
                   </div>
                 )}
@@ -358,7 +359,7 @@ export function GridDisplayCard({
                 {grid.type === 'driver' && (
                   <div className="absolute inset-0 z-0">
                     <DriverCardMedia
-                      driverName={item.name}
+                      driverName={stripSprintSuffix(item.name)}
                       supabaseUrl={supabaseUrl}
                       fallbackSrc={item.headshot_url || item.image_url}
                       sizes="(max-width: 768px) 28vw, 80px"

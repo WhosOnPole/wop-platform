@@ -38,7 +38,7 @@ export default async function PitlanePage() {
       .order('name', { ascending: true }),
     supabase
       .from('tracks')
-      .select('id, name, location, country')
+      .select('id, name, location, country, circuit_ref')
       .order('name', { ascending: true }),
   ])
 
@@ -52,7 +52,7 @@ export default async function PitlanePage() {
 
   // Weekend range (e.g. "Mar 7-8") then track name
   const weekendRange = formatWeekendRange(nextRace?.start_date ?? null, nextRace?.end_date ?? null)
-  const trackName = nextRace?.name || nextRace?.location || nextRace?.country
+  const trackName = nextRace?.circuit_ref || nextRace?.name || nextRace?.location || nextRace?.country
   let dateDisplay = 'Date TBA'
   if (weekendRange && trackName) {
     dateDisplay = `${weekendRange} - ${trackName}`

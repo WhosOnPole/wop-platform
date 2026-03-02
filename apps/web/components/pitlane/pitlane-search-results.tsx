@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { X } from 'lucide-react'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { stripSprintSuffix } from '@/utils/grid-labels'
 import { formatWeekendRange } from '@/utils/date-utils'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
@@ -29,6 +30,7 @@ interface Track {
   image_url?: string | null
   location?: string | null
   country?: string | null
+  circuit_ref?: string | null
 }
 
 interface ScheduleTrack {
@@ -152,10 +154,11 @@ export function PitlaneSearchResults({
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredDrivers.map((driver) => {
-                    const slug = driver.name.toLowerCase().replace(/\s+/g, '-')
+                    const displayName = stripSprintSuffix(driver.name)
+                    const slug = displayName.toLowerCase().replace(/\s+/g, '-')
                     const flag = getNationalityFlag(driver.nationality)
-                    const parts = driver.name.split(' ')
-                    const driverCode = (parts[parts.length - 1] || driver.name).substring(0, 3).toUpperCase()
+                    const parts = displayName.split(' ')
+                    const driverCode = (parts[parts.length - 1] || displayName).substring(0, 3).toUpperCase()
                     return (
                       <Link
                         key={driver.id}
@@ -165,7 +168,7 @@ export function PitlaneSearchResults({
                       >
                         <div className="relative w-full aspect-square overflow-hidden rounded-lg">
                           <DriverCardMedia
-                            driverName={driver.name}
+                            driverName={displayName}
                             supabaseUrl={supabaseUrl}
                             fallbackSrc={driver.headshot_url || driver.image_url}
                             sizes="240px"
@@ -206,7 +209,7 @@ export function PitlaneSearchResults({
                             </span>
                           ) : null}
                           <p className="text-sm text-white group-hover:text-gray-400 lowercase leading-tight">
-                            {formatNameWithBreak(driver.name)}
+                            {formatNameWithBreak(displayName)}
                           </p>
                         </div>
                       </Link>
@@ -224,8 +227,9 @@ export function PitlaneSearchResults({
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredTeams.map((team) => {
-                    const slug = team.name.toLowerCase().replace(/\s+/g, '-')
-                    const bgUrl = supabaseUrl ? getTeamBackgroundUrl(team.name, supabaseUrl) : null
+                    const displayName = stripSprintSuffix(team.name)
+                    const slug = displayName.toLowerCase().replace(/\s+/g, '-')
+                    const bgUrl = supabaseUrl ? getTeamBackgroundUrl(displayName, supabaseUrl) : null
                     return (
                       <Link
                         key={team.id}
@@ -249,12 +253,12 @@ export function PitlaneSearchResults({
                               fontSize: 'clamp(8px, 2vw, 12px)',
                             }}
                           >
-                            {team.name}
+                            {displayName}
                           </span>
                         </div>
                         <div className="mt-2">
                           <p className="text-sm text-white group-hover:text-gray-400 lowercase leading-tight">
-                            {team.name}
+                            {displayName}
                           </p>
                         </div>
                       </Link>
@@ -272,9 +276,10 @@ export function PitlaneSearchResults({
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {filteredTracks.map((track) => {
-                    const slug = track.name.toLowerCase().replace(/\s+/g, '-')
-                    const locationText = track.location ? track.location.toUpperCase() : ''
-                    const trackSvgUrl = supabaseUrl ? getTrackSvgUrl(getTrackSlug(track.name), supabaseUrl) : null
+                    const trackDisplayName = stripSprintSuffix(track.name)
+                    const slug = trackDisplayName.toLowerCase().replace(/\s+/g, '-')
+                    const overlayText = stripSprintSuffix(track.circuit_ref || track.location || track.name || '').toUpperCase()
+                    const trackSvgUrl = supabaseUrl ? getTrackSvgUrl(getTrackSlug(trackDisplayName), supabaseUrl) : null
                     const showTrackSvg = trackSvgUrl && !failedTrackSvgIds.has(track.id)
                     return (
                       <Link
@@ -302,26 +307,26 @@ export function PitlaneSearchResults({
                             </div>
                           )}
                           <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                          {locationText && (
+                          {overlayText && (
                             <div className="absolute left-1 top-1 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
                               <span
                                 className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                                 style={{
-                                  fontSize: 'clamp(6px, 1.5vw, 10px)',
+                                  fontSize: 'clamp(9px, 2vw, 14px)',
                                   fontFamily: 'Inter, sans-serif',
                                   letterSpacing: '0',
                                   transform: 'rotate(-90deg)',
                                   transformOrigin: 'center center',
                                 }}
                               >
-                                {locationText}
+                                {overlayText}
                               </span>
                             </div>
                           )}
                         </div>
                         <div className="mt-2 flex items-start gap-2">
-                          <p className="text-sm text-white group-hover:text-gray-400 lowercase leading-tight">
-                            {track.name}
+                          <p className="text-base text-white group-hover:text-gray-400 lowercase leading-tight">
+                            {track.circuit_ref || trackDisplayName}
                           </p>
                         </div>
                       </Link>

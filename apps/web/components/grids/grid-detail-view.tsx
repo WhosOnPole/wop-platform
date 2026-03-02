@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getTeamBackgroundUrl } from '@/utils/storage-urls'
+import { stripSprintSuffix } from '@/utils/grid-labels'
 import { getTeamPrimaryColor, getTeamShortCode } from '@/utils/team-colors'
 import { getTeamSecondaryColor } from '@/utils/team-colors'
 import { DriverHeroBodyMedia } from './hero/driver-hero-body-media'
@@ -341,14 +342,15 @@ function GridNameNationality({
       : 'font-serif text-white font-normal font-display transition-opacity duration-200'
   const titleStyle = variant === 'view' ? { fontSize: 'clamp(1.125rem, 5.5vw, 1.5rem)' } : undefined
 
+  const displayName = selectedItem ? stripSprintSuffix(selectedItem.name) : ''
   const entityHref =
     !isPlaceholderSelected && selectedItem
       ? type === 'driver'
-        ? `/drivers/${(selectedItem as DriverRankItem).driver_slug ?? slugify(selectedItem.name)}`
+        ? `/drivers/${(selectedItem as DriverRankItem).driver_slug ?? slugify(displayName)}`
         : type === 'team'
-          ? `/teams/${slugify(selectedItem.name)}`
+          ? `/teams/${slugify(displayName)}`
           : type === 'track'
-            ? `/tracks/${(selectedItem as TrackRankItem).track_slug ?? slugify(selectedItem.name)}`
+            ? `/tracks/${(selectedItem as TrackRankItem).track_slug ?? slugify(displayName)}`
             : null
       : null
 
@@ -372,11 +374,11 @@ function GridNameNationality({
             href={entityHref}
             className="inline-flex items-center gap-1.5 no-underline text-inherit hover:text-inherit"
           >
-            {selectedItem?.name ?? ''}
+            {displayName}
             <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
           </Link>
         ) : (
-          selectedItem?.name ?? ''
+          displayName
         )}
       </h2>
       {(type === 'driver' &&
@@ -402,7 +404,7 @@ function GridNameNationality({
             (selectedItem as TrackRankItem).country && (
               <span className="text-white/90 text-sm">
                 {(selectedItem as TrackRankItem).location &&
-                  `${(selectedItem as TrackRankItem).location}, `}
+                  `${stripSprintSuffix((selectedItem as TrackRankItem).location ?? '')}, `}
                 {(selectedItem as TrackRankItem).country}
               </span>
             )}
@@ -545,7 +547,7 @@ export function GridDetailView({
   const heroBackground =
     type === 'team' && selectedItem
       ? supabaseUrl
-        ? getTeamBackgroundUrl(selectedItem.name, supabaseUrl)
+        ? getTeamBackgroundUrl(stripSprintSuffix(selectedItem.name), supabaseUrl)
         : '/images/grid_bg.png'
       : '/images/grid_bg.png'
 
@@ -610,7 +612,7 @@ export function GridDetailView({
   function getHeroBackgroundForItem(item: RankItem | undefined) {
     if (!item || item.is_placeholder) return '/images/grid_bg.png'
     if (type === 'team')
-      return supabaseUrl ? getTeamBackgroundUrl(item.name, supabaseUrl) : '/images/grid_bg.png'
+      return supabaseUrl ? getTeamBackgroundUrl(stripSprintSuffix(item.name), supabaseUrl) : '/images/grid_bg.png'
     return '/images/grid_bg.png'
   }
 
@@ -631,7 +633,7 @@ export function GridDetailView({
             }}
           >
             <DriverHeroBodyMedia
-              driverName={item.name}
+              driverName={stripSprintSuffix(item.name)}
               supabaseUrl={supabaseUrl}
               fallbackSrc={
                 (item as DriverRankItem).headshot_url || (item as DriverRankItem).image_url
@@ -650,7 +652,7 @@ export function GridDetailView({
         >
           <TrackHeroMedia
             trackSlug={(item as TrackRankItem).track_slug ?? ''}
-            trackName={item.name}
+            trackName={stripSprintSuffix(item.name)}
             supabaseUrl={supabaseUrl}
             className="h-full max-w-full max-h-full"
           />
@@ -671,7 +673,7 @@ export function GridDetailView({
               lineHeight: 1,
             }}
           >
-            {getTeamShortCode(item.name)}
+            {getTeamShortCode(stripSprintSuffix(item.name))}
           </span>
           <span
             className="font-sans font-normal text-white shrink-0 mt-2 text-center w-full text-xl"
@@ -923,7 +925,7 @@ export function GridDetailView({
             {onSlotBlurbChange && (
               <div className="mb-6 mt-12">
                 <label className="block text-sm font-medium text-white/90 mb-2">
-                  Your comment for: <span className="font-bold pl-2 font-sans">{rankIndex} – {selectedItem?.name}</span>
+                  Your comment for: <span className="font-bold pl-2 font-sans">{rankIndex} – {selectedItem ? stripSprintSuffix(selectedItem.name) : ''}</span>
                 </label>
                 {currentSlotBlurbFromData.trim().length > 0 && !isEditingEditBlurb ? (
                   <div className="flex w-full items-center gap-3 rounded-md border border-white/20 bg-white/10 px-3 py-2">

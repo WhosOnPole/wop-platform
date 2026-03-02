@@ -119,12 +119,12 @@ function getNationalityFlagPath(nationality?: string | null): string | null {
     argentinian: 'argentina',
     argentina: 'argentina',
     brazilian: 'brazil',
-    thai: 'uk', // No Thai flag, fallback to UK
+    thai: 'thailand', // No Thai flag, fallback to UK
     danish: 'uk', // No Danish flag, fallback to UK
     belgian: 'belgium',
     swiss: 'uk', // No Swiss flag, fallback to UK
-    new_zealander: 'uk', // No NZ flag, fallback to UK
-    'new zealander': 'uk',
+    new_zealander: 'new_zealand', // No NZ flag, fallback to UK
+    'new zealander': 'new_zealand',
     'south african': 'uk', // No SA flag, fallback to UK
     swedish: 'uk', // No Swedish flag, fallback to UK
     austrian: 'austria',

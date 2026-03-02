@@ -16,6 +16,7 @@ type RankItem = {
   team_name?: string | null
   location?: string | null
   country?: string | null
+  circuit_ref?: string | null
   track_slug?: string
   is_placeholder?: boolean
 }
@@ -145,12 +146,13 @@ export default function EditGridPage() {
       }))
     }
     if (t === 'track') {
-      const { data } = await supabase.from('tracks').select('id, name, location, country').order('name')
+      const { data } = await supabase.from('tracks').select('id, name, location, country, circuit_ref').order('name')
       return (data || []).map((t: any) => ({
         id: t.id,
         name: t.name,
         location: t.location ?? null,
         country: t.country ?? null,
+        circuit_ref: t.circuit_ref ?? null,
         track_slug: getTrackSlug(t.name),
       }))
     }

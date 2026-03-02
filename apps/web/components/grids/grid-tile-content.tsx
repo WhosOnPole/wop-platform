@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { stripSprintSuffix } from '@/utils/grid-labels'
 import { DriverCardMedia } from '../drivers/driver-card-media'
 
 export interface GridTileItem {
@@ -36,9 +37,9 @@ function getItemImageUrl(
   supabaseUrl?: string
 ): string | null {
   if (type === 'driver') return item.headshot_url || item.image_url || null
-  if (type === 'team') return supabaseUrl ? getTeamBackgroundUrl(item.name, supabaseUrl) : null
+  if (type === 'team') return supabaseUrl ? getTeamBackgroundUrl(stripSprintSuffix(item.name), supabaseUrl) : null
   if (type === 'track') {
-    const slug = item.track_slug ?? getTrackSlug(item.name)
+    const slug = item.track_slug ?? getTrackSlug(stripSprintSuffix(item.name))
     return supabaseUrl ? getTrackSvgUrl(slug, supabaseUrl) : null
   }
   return null
@@ -46,12 +47,14 @@ function getItemImageUrl(
 
 function getVerticalText(type: 'driver' | 'team' | 'track', item: GridTileItem): string {
   if (type === 'driver') {
-    const parts = item.name.split(' ')
-    const lastName = parts[parts.length - 1] || item.name
+    const name = stripSprintSuffix(item.name)
+    const parts = name.split(' ')
+    const lastName = parts[parts.length - 1] || name
     return lastName.substring(0, 3).toUpperCase()
   }
   if (type === 'team') return ''
-  return (item.circuit_ref || item.location || '').toUpperCase()
+  const raw = item.circuit_ref || item.location || item.name || ''
+  return stripSprintSuffix(raw).toUpperCase()
 }
 
 export function GridTileContent({
@@ -116,7 +119,7 @@ export function GridTileContent({
       {type === 'driver' && (
         <div className="absolute inset-0 z-0">
           <DriverCardMedia
-            driverName={item.name}
+            driverName={stripSprintSuffix(item.name)}
             supabaseUrl={supabaseUrl}
             fallbackSrc={item.headshot_url || item.image_url}
             sizes={isLarge ? '(max-width: 768px) 50vw, 200px' : '(max-width: 768px) 28vw, 80px'}
@@ -148,7 +151,7 @@ export function GridTileContent({
           className={`absolute inset-0 z-10 flex items-center justify-center px-2 text-center text-white font-semibold uppercase leading-tight line-clamp-2 ${isLarge ? 'text-[clamp(12px,2vw,18px)]' : 'px-0.5 text-[10px]'}`}
           style={isLarge ? { fontFamily: 'Inter, sans-serif' } : { fontFamily: 'Inter, sans-serif' }}
         >
-          {item.name}
+          {stripSprintSuffix(item.name)}
         </span>
       )}
       {type !== 'team' && (
@@ -198,7 +201,7 @@ export function GridTileContent({
       )}
       {type !== 'track' && type !== 'team' && !imageUrl && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-4xl font-bold text-gray-600">{item.name.charAt(0)}</span>
+          <span className="text-4xl font-bold text-gray-600">{stripSprintSuffix(item.name).charAt(0)}</span>
         </div>
       )}
     </div>
