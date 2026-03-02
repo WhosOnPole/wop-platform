@@ -57,9 +57,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-gray-400 hover:text-white">
-                  Terms of Service
+                <Link href="/delete-data" className="text-sm text-gray-400 hover:text-white">
+                  Delete Your Data
                 </Link>
+              </li>
+              <li>
+                <a href="https://www.whosonpole.org/terms" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-white">
+                  Terms of Service
+                </a>
               </li>
               <li>
                 <Link href="/sitemap" className="text-sm text-gray-400 hover:text-white">

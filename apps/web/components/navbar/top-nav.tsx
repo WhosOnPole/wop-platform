@@ -241,6 +241,7 @@ export function TopNav() {
           {isAuthed ? (
             <>
               <NotificationBell currentUsername={profile?.username} />
+              <div className="relative">
               <span
                 className={`inline-flex rounded-full bg-sunset-start/55 ${showNavGlow ? 'animate-nav-glow' : ''}`}
               >
@@ -266,11 +267,8 @@ export function TopNav() {
                   />
                 </button>
               </span>
-            </>
-          ) : null}
-
-          {isMenuOpen && isAuthed ? (
-            <div className="absolute right-4 top-14 rounded-xl border border-gray-200/20 bg-black/80 backdrop-blur-sm text-white z-50 overflow-visible" data-top-nav-dropdown>
+              {isMenuOpen ? (
+            <div className="absolute right-0 top-full mt-2 rounded-xl border border-gray-200/20 bg-black/80 backdrop-blur-sm text-white z-50 overflow-visible min-w-[16rem]" data-top-nav-dropdown>
               {/* Desktop: Settings + Logout only */}
               <div className="hidden md:block p-2 min-w-[12rem]">
                 <Link
@@ -321,6 +319,24 @@ export function TopNav() {
                       <Settings className="h-5 w-5 text-white" />
                     </Link>
                   </div>
+                  <div className="flex flex-row items-center gap-3 relative" data-create-menu>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsCreateOpen((prev) => !prev)
+                      }}
+                      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none shadow-lg ${
+                        isCreateOpen
+                          ? 'bg-gradient-to-r from-[#EC553E] to-[#EB0E78] text-white'
+                          : 'border border-white/20 text-white/30'
+                      }`}
+                      aria-label="Create"
+                    >
+                      <PlusCircle className="h-6 w-6" strokeWidth={0.9} />
+                    </button>
+                    <span className="text-sm font-medium text-white">Create</span>
+                  </div>
                   {mobileDropdownItems.map((item) => {
                     const active = isActive(item.href)
                     return (
@@ -347,24 +363,6 @@ export function TopNav() {
                       </Link>
                     )
                   })}
-                  <div className="flex flex-row items-center gap-3 relative" data-create-menu>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false)
-                        setIsCreateOpen((prev) => !prev)
-                      }}
-                      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none shadow-lg ${
-                        isCreateOpen
-                          ? 'bg-gradient-to-r from-[#EC553E] to-[#EB0E78] text-white'
-                          : 'border border-white/20 text-white/30'
-                      }`}
-                      aria-label="Create"
-                    >
-                      <PlusCircle className="h-6 w-6" strokeWidth={0.9} />
-                    </button>
-                    <span className="text-sm font-medium text-white">Create</span>
-                  </div>
                   <div className="w-full border-t border-white/10 pt-4 mt-2">
                     <Link
                       href={profileHref}
@@ -383,6 +381,9 @@ export function TopNav() {
                 </div>
               </div>
             </div>
+          ) : null}
+              </div>
+            </>
           ) : null}
         </div>
       </div>

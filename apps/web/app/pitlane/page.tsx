@@ -217,7 +217,7 @@ export default async function PitlanePage() {
             />
           </div>
           <div className="relative px-6 py-10 sm:px-10 space-y-2">
-            <p className="text-sm uppercase tracking-[0.2em] text-xl">New to F1?</p>
+            <p className="text-md uppercase tracking-[0.2em] text-xl font-display">New to F1?</p>
             <p className="max-w-2xl text-white">
               Learn the essentials of Formula 1, the teams, drivers, and the racing calendar before
               you dive into the action.
