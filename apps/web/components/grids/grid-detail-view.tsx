@@ -767,7 +767,7 @@ export function GridDetailView({
             {/* Rank number: fixed on mobile, absolute in hero on desktop; hidden for team (shown below name in content); color by team (driver) or white (track) */}
             {type !== 'team' && (
               <div
-                className="fixed right-9 top-28 z-5 opacity-25 tracking-[-3px] pointer-events-none flex items-end justify-end px-2"
+                className="fixed right-9 top-32 z-5 opacity-25 tracking-[-3px] pointer-events-none flex items-end justify-end px-2"
                 style={{
                   fontSize: type === 'track' ? 'clamp(12rem, 12vw, 12rem)' : 'clamp(18.5rem, 18.5vw, 18.5rem)',
                   lineHeight: 1,
