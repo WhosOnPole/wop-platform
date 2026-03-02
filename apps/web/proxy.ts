@@ -24,6 +24,7 @@ export async function proxy(req: NextRequest) {
       '/api/contact-form-handler',
       '/privacy',
       '/terms',
+      '/delete-data',
       '/tiktokUltdht23ChFllaZO9MnLlgSt7HMHnZzl.txt',
     ]
     const isPublic = publicPaths.some((path) => pathname.startsWith(path))
