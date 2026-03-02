@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@/utils/supabase-client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Mail } from 'lucide-react'
 
 export default function DeleteDataPage() {
