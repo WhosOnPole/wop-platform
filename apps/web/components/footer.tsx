@@ -56,6 +56,10 @@ export function Footer() {
               Privacy Policy
             </Link>
             <span className="inline-block text-gray-500">|</span>
+            <Link href="/delete-data" className="text-gray-400 hover:text-white">
+              Delete Your Data
+            </Link>
+            <span className="inline-block text-gray-500">|</span>
             <Link href="/terms" className="text-gray-400 hover:text-white">
               Terms of Service
             </Link>

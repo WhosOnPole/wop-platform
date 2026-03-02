@@ -198,6 +198,10 @@ export function ComingSoonContent() {
           Privacy Policy
         </Link>
         <span className="mx-2 text-white/40">|</span>
+        <Link href="/delete-data" className="hover:text-white">
+          Delete Your Data
+        </Link>
+        <span className="mx-2 text-white/40">|</span>
         <Link href="/terms" className="hover:text-white">
           Terms of Service
         </Link>
