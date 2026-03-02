@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 
-const MIN_DISPLAY_MS = 1200
-const FADE_DURATION_MS = 500
+const MIN_DISPLAY_MS = 400
+const FADE_DURATION_MS = 300
 const NAV_SHOW_DELAY_MS = 500
 const NAV_HIDE_SETTLE_MS = 150
 
@@ -33,7 +33,8 @@ export function LoadingScreen() {
   const hideNavTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevPathnameRef = useRef<string | null>(null)
 
-  // Initial load: show until window load + min display, then fade
+  // Initial load: show until DOM ready + min display, then fade
+  // Use DOMContentLoaded (not 'load') so we don't wait for images/fonts - content appears faster
   useEffect(() => {
     function startFade() {
       if (!readyToFadeRef.current || !minTimeElapsedRef.current) return
@@ -50,23 +51,23 @@ export function LoadingScreen() {
       if (readyToFadeRef.current) startFade()
     }, MIN_DISPLAY_MS)
 
-    function handleLoad() {
+    function handleReady() {
       readyToFadeRef.current = true
       if (minTimeElapsedRef.current) startFade()
     }
 
     if (typeof window === 'undefined') return
 
-    if (document.readyState === 'complete') {
-      handleLoad()
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', handleReady)
     } else {
-      window.addEventListener('load', handleLoad)
+      handleReady()
     }
 
     return () => {
       clearTimeout(minTimer)
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
-      window.removeEventListener('load', handleLoad)
+      document.removeEventListener('DOMContentLoaded', handleReady)
     }
   }, [])
 

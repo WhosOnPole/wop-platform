@@ -1,18 +1,16 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
 import { QueryProvider } from '@/components/providers/query-provider'
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import { BotIDProviderWrapper } from '@/components/providers/botid-provider'
 import { AuthSessionProvider } from '@/components/providers/auth-session-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 import { LoadingScreen } from '@/components/loading-screen'
 
-const inter = localFont({
-  src: '../public/fonts/Inter.ttf',
+const inter = Inter({
+  subsets: ['latin'],
   display: 'swap',
-  weight: '100 900',
-  style: 'normal',
   variable: '--font-inter',
 })
 const raygun = localFont({

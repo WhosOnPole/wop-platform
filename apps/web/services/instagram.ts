@@ -1,5 +1,10 @@
 import 'server-only'
 
+/**
+ * Fetches recent Instagram media for a username. Uses revalidate: 3600.
+ * When used on entity/driver pages: call from a client component (after mount)
+ * or API route to avoid blocking the main render. Do not call from RSC critical path.
+ */
 interface GetRecentInstagramMediaParams {
   username: string
   limit?: number

@@ -1,11 +1,7 @@
-export default function Loading() {
+export default function EntityLoading() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="h-[40vh] w-full animate-pulse bg-white/5" />
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        <div className="h-6 w-48 animate-pulse rounded bg-white/10" />
-        <div className="mt-4 h-32 w-full animate-pulse rounded-xl bg-white/5" />
-      </div>
+    <div className="flex min-h-[50vh] items-center justify-center" aria-hidden>
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
     </div>
   )
 }

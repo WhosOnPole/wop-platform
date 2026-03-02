@@ -246,6 +246,7 @@ export default async function DynamicPage({ params }: PageProps) {
     if (!supabaseUrl) {
       backgroundImage = entity.image_url
     } else {
+      // Use URL construction only; do not add blocking HEAD fetch to check existence
       const backgroundUrl = getTeamBackgroundUrl(entity.name, supabaseUrl)
       backgroundImage = backgroundUrl || getTeamLogoUrl(entity.name, supabaseUrl)
     }

@@ -9,10 +9,10 @@
 
 | Area | Status | Notes |
 |------|--------|--------|
-| **Caching / ISR** | Mixed | Entity and some pages use `revalidate`; feed is `force-dynamic` |
+| **Caching / ISR** | Mixed | Entity and feed use `revalidate`; some pages remain `force-dynamic` |
 | **Images** | Good | Next/Image with `sizes` in many places; some raw `img`/CSS backgrounds |
 | **JS / Client** | Watch | 80+ `'use client'` components; no loading boundaries on key routes |
-| **Data fetching** | Mixed | Some pages do extra work (HEAD fetch, Instagram) on the critical path |
+| **Data fetching** | Good | Entity page has no blocking fetches; feed uses revalidate |
 | **Measurement** | Missing | No built-in Lighthouse or bundle analysis in scripts |
 
 **Verdict:** The site is in a reasonable state but has clear levers to avoid it feeling slow: add route-level loading UIs, relax feed dynamism where possible, and tighten a few heavy server paths. Below is the detailed audit and a concrete action list.
@@ -28,7 +28,7 @@
   - `[type]/[slug]`: `revalidate = 3600`
   - `pitlane`: `revalidate = 300`
   - `story/[id]`, `article/[slug]`: `revalidate = 3600`
-  - Feed: `dynamic = 'force-dynamic'` (no static/cache).
+  - Feed: `revalidate = 60` (cached, revalidated every 60s).
 - **Loading UI:** No `loading.tsx` (or route-level Suspense) under `app/`; only local Suspense in auth pages.
 
 ---
@@ -47,12 +47,12 @@
 1. **No route-level loading states**  
    There are no `loading.tsx` files. During navigation or slow data, users see a blank or stalled screen until the full RSC payload is ready. This makes the site feel slower than it needs to be.
 
-2. **Feed is fully dynamic**  
-   `export const dynamic = 'force-dynamic'` on the feed means every visit hits the server and all feed queries. For a read-heavy feed, this increases TTFB and server load. Consider at least short revalidation (e.g. `revalidate = 60`) if freshness allows.
+2. ~~**Feed is fully dynamic**~~ **Resolved**  
+   Feed now uses `revalidate = 60` (cached, revalidated every 60s).
 
-3. **Entity page ([type]/[slug]) – extra work on critical path**  
-   - For **teams**, the page does a `fetch(backgroundUrl, { method: 'HEAD' })` to decide between background and logo. That blocks rendering and can be slow or flaky. Prefer a convention (e.g. always use background if present) or move this to a non-blocking path.
-   - For **drivers** with `instagram_username`, `getRecentInstagramMedia()` runs during the request. External API calls in the main render path add latency and variability. Consider moving to client fetch after shell render, or a short-lived cache.
+3. ~~**Entity page ([type]/[slug]) – extra work on critical path**~~ **Resolved**  
+   - **Teams**: No blocking HEAD fetch. Background logic uses `backgroundUrl || logoUrl` directly (URL construction only). Do not add blocking HEAD checks.
+   - **Drivers**: `getRecentInstagramMedia()` is not used on entity pages. If added in future, use a client component that fetches after mount (or an API route with cache).
 
 4. **Heavy client boundary at root**  
    Many providers and the global loading screen are client-side. The initial JS bundle includes QueryProvider, BotID, Auth, LayoutWrapper, etc. Any lazy-loading of below-the-fold or modal UI would reduce main-thread work.
@@ -77,11 +77,11 @@
    - `app/loading.tsx` – global fallback (e.g. minimal spinner or skeleton).
    - `app/feed/loading.tsx`, `app/[type]/[slug]/loading.tsx`, `app/pitlane/loading.tsx` (and optionally profile, podiums). Use simple skeletons or spinners so the shell appears immediately and the site feels responsive.
 
-2. **Relax feed dynamism**  
-   - If acceptable for product: remove `force-dynamic` and add `revalidate = 60` (or 300) so the feed can be cached and revalidated in the background. If feed must be real-time, keep dynamic but ensure DB and queries are indexed and fast.
+2. ~~**Relax feed dynamism**~~ **Done**  
+   Feed uses `revalidate = 60`.
 
-3. **Remove or defer entity page HEAD fetch**  
-   - For teams: either always use a single source (e.g. background URL if set, else logo) or resolve the “which image” logic in a non-blocking way (e.g. client-side or background job). Avoid blocking the main RSC render on a HEAD request.
+3. ~~**Remove or defer entity page HEAD fetch**~~ **Done**  
+   Team background uses URL construction only; no blocking HEAD. Do not add blocking fetches.
 
 ### P1 – Important
 
@@ -130,9 +130,9 @@
 ## 6. Checklist (copy and use)
 
 - [ ] Add `app/loading.tsx` and route-level `loading.tsx` for feed, entity, pitlane (and optionally others).
-- [ ] Change feed from `force-dynamic` to `revalidate` if product allows; otherwise verify feed queries and indexes.
-- [ ] Remove or defer team background HEAD fetch on entity page.
-- [ ] Defer or cache Instagram fetch on driver entity pages.
+- [x] Feed uses `revalidate = 60`.
+- [x] Entity page: no blocking HEAD fetch; team background uses URL construction only.
+- [x] Instagram: not used on entity pages. If added in future, use client fetch or API route with cache.
 - [ ] Add Lighthouse script (and optionally CI step) and document where reports are saved.
 - [ ] Add `@next/bundle-analyzer` and run at least once; document how to run and how to interpret.
 - [ ] (Optional) Add Web Vitals reporting in production.

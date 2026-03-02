@@ -177,7 +177,7 @@ Press conferences + interviews.
 * **16** drivers remain  
 * The **slowest 6** are eliminated → they start **P11–P16** 
 
-### **Q3 (12 minutes)**
+### **Q3 (13 minutes)**
 
 * **10** drivers remain  
 * Fastest time gets **Pole Position (P1)** 
