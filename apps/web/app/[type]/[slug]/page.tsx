@@ -429,7 +429,7 @@ export default async function DynamicPage({ params }: PageProps) {
 
       {/* Overview Section - Black background, above tabs (tracks + drivers) */}
       {(type === 'tracks' || type === 'drivers') && (
-        <div className="relative z-20 w-full overflow-visible bg-black">
+        <div className="relative z-20 w-full overflow-visible bg-black mb-6">
           {type === 'tracks' && (
             <EntityOverview
               type="track"
@@ -454,18 +454,14 @@ export default async function DynamicPage({ params }: PageProps) {
 
       {/* Track website link: below overview, above tabs */}
       {type === 'tracks' && entity?.website_url && (
-        <div className="relative z-20 w-full bg-black py-4">
-          <div className="mx-auto max-w-7xl px-6 text-center">
-            <a
-              href={entity.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium text-white/90 underline underline-offset-2 hover:text-white"
-            >
-              Visit website
-            </a>
-          </div>
-        </div>
+        <a
+          href={entity.website_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative z-20 block w-full py-4 text-center text-sm font-medium text-white bg-[#25b4b1] transition-colors mb-4 hover:bg-black hover:text-[#25b4b1]"
+        >
+          Visit website
+        </a>
       )}
 
       {/* Tabs Section */}

@@ -536,7 +536,7 @@ export function DiscussionSection({
   const headingClasses = isDark
     ? 'text-sm font-medium text-white/90 text-right'
     : 'text-sm font-medium text-gray-900 text-right'
-  const contentHeight = compact ? 'h-[35vh]' : 'h-[50vh]'
+  const contentHeight = compact ? 'min-h-[6rem] max-h-[35vh]' : 'min-h-[6rem] max-h-[50vh]'
   const contentBoxClasses = isDark
     ? `mt-6 flex ${contentHeight} flex-col overflow-y-auto rounded-md border border-white/20 bg-transparent p-4`
     : `mt-6 flex ${contentHeight} flex-col overflow-y-auto rounded-md border border-gray-200 bg-gray-50/50 p-4`

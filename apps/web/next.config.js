@@ -8,6 +8,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  turbopack: {},
   // Set tracing root for monorepo builds
   outputFileTracingRoot: path.join(__dirname, '../../'),
   reactStrictMode: true,
