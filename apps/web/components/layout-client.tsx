@@ -55,11 +55,11 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   }, [session, pathname, router, supabase])
 
   useEffect(() => {
-    // Only redirect to login on sign-out, not on initial load (public pages allowed)
+    // Redirect to landing on sign-out when on protected path (not on initial load)
     if (!session && !isLoading && !isAuthPath(pathname)) {
       const publicPaths = ['/', '/privacy', '/terms', '/coming-soon', '/banned']
       if (!publicPaths.includes(pathname ?? '')) {
-        router.replace('/login')
+        router.replace('/')
       }
     }
   }, [session, isLoading, pathname, router])
