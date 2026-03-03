@@ -73,7 +73,10 @@ export default async function PitlanePage() {
       if (timeUntilRace > 0) {
         const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
         const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+        counterText =
+          daysUntil > 0
+            ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} until race start`
+            : `${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
       }
     }
   } else if (nextRace?.start_date) {
@@ -84,7 +87,10 @@ export default async function PitlanePage() {
     if (timeUntilRace > 0) {
       const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
       const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+      counterText =
+        daysUntil > 0
+          ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} until race start`
+          : `${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
     }
   }
   

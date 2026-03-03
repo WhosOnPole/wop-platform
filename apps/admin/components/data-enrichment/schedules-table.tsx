@@ -11,7 +11,6 @@ interface ScheduleTrack {
   name: string
   start_date: string | null
   end_date: string | null
-  timezone: string | null
 }
 
 const CURRENT_SEASON = 2026
@@ -30,7 +29,7 @@ export function SchedulesTable() {
     setLoading(true)
     const { data, error } = await supabase
       .from('tracks')
-      .select('id, name, start_date, end_date, timezone')
+      .select('id, name, start_date, end_date')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true })
     if (error) {
@@ -64,9 +63,6 @@ export function SchedulesTable() {
                   Weekend ({CURRENT_SEASON})
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Timezone
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Actions
                 </th>
               </tr>
@@ -79,9 +75,6 @@ export function SchedulesTable() {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                     {formatWeekendRange(track.start_date, track.end_date) ?? '—'}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
-                    {track.timezone ?? '—'}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     <button
@@ -106,11 +99,7 @@ export function SchedulesTable() {
 
       {scheduleTrack && (
         <TrackScheduleModal
-          track={{
-            id: scheduleTrack.id,
-            name: scheduleTrack.name,
-            timezone: scheduleTrack.timezone,
-          }}
+          track={{ id: scheduleTrack.id, name: scheduleTrack.name }}
           onClose={() => setScheduleTrack(null)}
           onSaved={loadTracks}
         />

@@ -22,11 +22,7 @@ interface TrackEvent {
 }
 
 interface TrackScheduleModalProps {
-  track: {
-    id: string
-    name: string
-    timezone: string | null
-  }
+  track: { id: string; name: string }
   onClose: () => void
   onSaved?: () => void
 }
@@ -46,8 +42,6 @@ export function TrackScheduleModal({ track, onClose, onSaved }: TrackScheduleMod
     duration_minutes: '',
     season_year: new Date().getFullYear(),
   })
-
-  const timezone = track.timezone || 'UTC'
 
   useEffect(() => {
     loadEvents()
@@ -86,7 +80,7 @@ export function TrackScheduleModal({ track, onClose, onSaved }: TrackScheduleMod
     setEditingId(event.id)
     setFormData({
       event_type: event.event_type as (typeof formData)['event_type'],
-      scheduled_at: utcToLocalDatetimeString(event.scheduled_at, timezone),
+      scheduled_at: utcToLocalDatetimeString(event.scheduled_at, 'UTC'),
       duration_minutes: event.duration_minutes?.toString() ?? '',
       season_year: event.season_year,
     })
@@ -98,7 +92,7 @@ export function TrackScheduleModal({ track, onClose, onSaved }: TrackScheduleMod
     setError(null)
     setSaving(true)
     try {
-      const scheduledAtUtc = localToUtc(formData.scheduled_at, timezone)
+      const scheduledAtUtc = localToUtc(formData.scheduled_at, 'UTC')
       if (!scheduledAtUtc) {
         setError('Invalid date/time')
         return
@@ -149,7 +143,7 @@ export function TrackScheduleModal({ track, onClose, onSaved }: TrackScheduleMod
     const d = new Date(utcIso)
     if (isNaN(d.getTime())) return '—'
     return d.toLocaleString('en-US', {
-      timeZone: timezone,
+      timeZone: 'UTC',
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -165,7 +159,7 @@ export function TrackScheduleModal({ track, onClose, onSaved }: TrackScheduleMod
           <div>
             <h2 className="text-xl font-bold text-gray-900">Schedule: {track.name}</h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              Times in local time ({timezone})
+              Times in UTC
             </p>
           </div>
           <button
@@ -241,8 +235,8 @@ export function TrackScheduleModal({ track, onClose, onSaved }: TrackScheduleMod
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Date & time (local at track)
+                <label className="block text-sm font-medium text-gray-700">
+                Date & time (UTC)
               </label>
               <input
                 type="datetime-local"
@@ -291,7 +285,7 @@ export function TrackScheduleModal({ track, onClose, onSaved }: TrackScheduleMod
               <thead>
                 <tr className="border-b border-gray-200 text-left text-gray-600">
                   <th className="pb-2 font-medium">Type</th>
-                  <th className="pb-2 font-medium">Scheduled (local)</th>
+                  <th className="pb-2 font-medium">Scheduled (UTC)</th>
                   <th className="pb-2 font-medium">Duration</th>
                   <th className="pb-2 font-medium w-24">Actions</th>
                 </tr>

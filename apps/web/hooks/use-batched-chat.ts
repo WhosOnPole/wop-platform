@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { getChatStatus, type ChatStatus } from '@/utils/race-weekend'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -44,6 +45,14 @@ export function useBatchedChat({
   const deletedMessageIdsRef = useRef<Set<number>>(new Set())
   const lastSeenIdRef = useRef<number>(0)
 
+  // Cache get_chat_status for 5 min (reduces RPC calls on remount/navigation)
+  const { data: chatStatus } = useQuery({
+    queryKey: ['chat-status', trackId],
+    queryFn: () => getChatStatus(trackId, supabase),
+    enabled: !!enabled && !!trackId,
+    staleTime: 5 * 60 * 1000,
+  })
+
   // Load initial messages
   useEffect(() => {
     if (!enabled || !trackId) return
@@ -75,43 +84,45 @@ export function useBatchedChat({
     loadInitialMessages()
   }, [trackId, enabled, supabase, onError])
 
-  // Get chat status and connect to realtime
+  // Sync status from cached query
   useEffect(() => {
-    if (!enabled || !trackId) {
+    setStatus(chatStatus ?? null)
+  }, [chatStatus])
+
+  // Connect to realtime (unsubscribe when tab hidden to reduce realtime.list_changes)
+  useEffect(() => {
+    if (!enabled || !trackId || !chatStatus) {
+      setIsConnected(false)
+      return
+    }
+
+    if (chatStatus.mode !== 'open' && chatStatus.mode !== 'read_only') {
       setIsConnected(false)
       return
     }
 
     let mounted = true
     let channel: RealtimeChannel | null = null
+    let isVisible = typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+    let visibilityCleanup: (() => void) | null = null
 
     async function connect() {
       try {
-        // Check authentication first
+        visibilityCleanup?.()
+        visibilityCleanup = null
+
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
         if (!session) {
-          console.warn('Not authenticated, skipping realtime connection')
           setIsConnected(false)
           return
         }
 
-        // Get chat status
-        const chatStatus = await getChatStatus(trackId, supabase)
-        
-        if (!mounted) return
+        if (!mounted || !isVisible) return
 
-        setStatus(chatStatus)
-
-        // Only connect if chat is open or read_only
-        if (chatStatus.mode !== 'open' && chatStatus.mode !== 'read_only') {
-          setIsConnected(false)
-          return
-        }
-
-        // Create private channel
+        // Create channel
         // Note: If Realtime Authorization is not enabled, remove private: true
         const topic = `f1:race:${trackId}`
         channel = supabase.channel(topic, {
@@ -211,6 +222,21 @@ export function useBatchedChat({
         })
 
         channelRef.current = channel
+
+        function handleVisibilityChange() {
+          isVisible = document.visibilityState === 'visible'
+          const ch = channelRef.current
+          if (!isVisible && ch) {
+            supabase.removeChannel(ch)
+            channelRef.current = null
+            setIsConnected(false)
+          } else if (isVisible && mounted && !channelRef.current) {
+            connect()
+          }
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        visibilityCleanup = () => document.removeEventListener('visibilitychange', handleVisibilityChange)
       } catch (err: any) {
         if (!mounted) return
         console.error('Error connecting to chat:', err)
@@ -224,13 +250,15 @@ export function useBatchedChat({
 
     return () => {
       mounted = false
-      if (channel) {
-        supabase.removeChannel(channel)
+      visibilityCleanup?.()
+      const ch = channelRef.current
+      if (ch) {
+        supabase.removeChannel(ch)
         channelRef.current = null
       }
       setIsConnected(false)
     }
-  }, [trackId, enabled, supabase, onError])
+  }, [trackId, enabled, chatStatus, supabase, onError])
 
   // Send message via RPC
   const sendMessage = useCallback(

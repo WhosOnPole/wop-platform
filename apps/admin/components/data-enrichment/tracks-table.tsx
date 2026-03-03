@@ -16,7 +16,6 @@ interface Track {
   country: string | null
   start_date: string | null
   end_date: string | null
-  timezone: string | null
   circuit_ref: string | null
   overview_text: string | null
   history_text: string | null
@@ -83,9 +82,6 @@ export function TracksTable() {
                   Weekend
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Timezone
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Events
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -101,9 +97,6 @@ export function TracksTable() {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                     {formatWeekendRange(track.start_date, track.end_date) ?? '—'}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
-                    {track.timezone ?? '—'}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                     {eventCountByTrackId[track.id] ?? '—'}
@@ -144,11 +137,7 @@ export function TracksTable() {
 
       {scheduleTrack && (
         <TrackScheduleModal
-          track={{
-            id: scheduleTrack.id,
-            name: scheduleTrack.name,
-            timezone: scheduleTrack.timezone,
-          }}
+          track={{ id: scheduleTrack.id, name: scheduleTrack.name }}
           onClose={() => setScheduleTrack(null)}
           onSaved={loadTracks}
         />

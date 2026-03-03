@@ -76,12 +76,15 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 
       return (data || []) as Notification[]
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 60_000, // Consider fresh for 60s
+    refetchInterval: 60_000, // Refetch every 60s (was 30s)
   })
 
   // Fetch unread count
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['notifications', 'unread-count'],
+    staleTime: 60_000, // Consider fresh for 60s
+    refetchInterval: 60_000, // 60s (was 30s) - halves RPC calls
     queryFn: async () => {
       const {
         data: { session },
@@ -100,7 +103,6 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 
       return (data as number) || 0
     },
-    refetchInterval: 30000,
   })
 
   // Update hasUnread state
@@ -108,18 +110,22 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     setHasUnread(unreadCount > 0)
   }, [unreadCount])
 
-  // Set up real-time subscription
+  // Set up real-time subscription (unsubscribe when tab hidden to reduce realtime load)
   useEffect(() => {
-    let channel: any = null
+    const channelRef = { current: null as ReturnType<typeof supabase.channel> | null }
+    let visibilityCleanup: (() => void) | null = null
 
     async function setupSubscription() {
+      visibilityCleanup?.()
+      visibilityCleanup = null
+
       const {
         data: { session },
       } = await supabase.auth.getSession()
 
       if (!session) return
 
-      channel = supabase
+      const ch = supabase
         .channel('notifications')
         .on(
           'postgres_changes',
@@ -130,19 +136,33 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
             filter: `user_id=eq.${session.user.id}`,
           },
           () => {
-            // Invalidate queries to refetch
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
             queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
           }
         )
         .subscribe()
+
+      channelRef.current = ch
+
+      function handleVisibilityChange() {
+        if (document.visibilityState === 'hidden' && channelRef.current) {
+          supabase.removeChannel(channelRef.current)
+          channelRef.current = null
+        } else if (document.visibilityState === 'visible' && !channelRef.current) {
+          setupSubscription()
+        }
+      }
+
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+      visibilityCleanup = () => document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
 
     setupSubscription()
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
+      visibilityCleanup?.()
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
       }
     }
   }, [supabase, queryClient])
