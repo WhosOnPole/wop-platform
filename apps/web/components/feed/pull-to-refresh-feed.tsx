@@ -77,7 +77,7 @@ export function PullToRefreshFeed({ children, onRefresh, enabled }: PullToRefres
     <div className="relative">
       {/* Pull indicator - fixed at top, slides down with pull */}
       <div
-        className="pointer-events-none fixed left-0 right-0 top-14 z-40 flex h-12 items-center justify-center transition-opacity duration-150"
+        className="pointer-events-none fixed left-0 right-0 top-18 z-40 flex h-12 items-center justify-center transition-opacity duration-150"
         style={{
           opacity: indicatorOpacity,
           transform: `translateY(${Math.max(0, pullDistance - 48)}px)`,

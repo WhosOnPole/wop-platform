@@ -377,11 +377,11 @@ export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = 
                       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                       {/* Vertical circuit_ref/location on left: full-height bar with rotated text centered */}
                       {overlayText && (
-                        <div className="absolute inset-y-0 left-0 z-30 flex w-4 items-center justify-center overflow-visible">
+                        <div className="absolute inset-y-0 left-0 z-30 flex w-5 items-center justify-center overflow-visible">
                           <span
                             className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                             style={{
-                              fontSize: 'clamp(11px, 2.5vw, 20px)',
+                              fontSize: 'clamp(13px, 3vw, 24px)',
                               fontFamily: 'Inter, sans-serif',
                               letterSpacing: '0',
                               transform: 'rotate(-90deg)',
@@ -492,7 +492,7 @@ function ScheduleCard({ race }: ScheduleCardProps) {
                   className="object-contain"
                 />
               ) : null}
-              <h2 className="font-display tracking-wider text-lg">{race.circuit_ref || race.name}</h2>
+              <h2 className="font-display tracking-wider text-xl">{race.circuit_ref || race.name}</h2>
             </div>
             <p className="text-xs text-gray-300 tracking-wide pl-7">
               {dateDisplay}

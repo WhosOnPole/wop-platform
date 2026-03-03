@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Save, Upload, X, LogOut, User, Bell, Info } from 'lucide-react'
@@ -53,11 +54,12 @@ export default function SettingsPage() {
     return isValidTab(t) ? t : 'profile'
   })
 
-  // Sync activeTab from URL (e.g. /settings?tab=notifications)
+  // Sync activeTab from URL (e.g. /settings?tab=notifications). Default to profile when no tab specified.
   useEffect(() => {
     const t = searchParams.get('tab')
     if (t === 'settings') setActiveTab('notifications')
     else if (isValidTab(t)) setActiveTab(t)
+    else setActiveTab('profile')
   }, [searchParams])
 
   useEffect(() => {
@@ -310,8 +312,6 @@ export default function SettingsPage() {
       <div className="min-w-0 flex-1">
           {activeTab === 'profile' && (
         <section className="rounded-lg border border-white/20 bg-white/5 p-6">
-          <h2 className="mb-6 text-xl font-semibold text-white">Profile</h2>
-          
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Profile Image */}
             <div>
@@ -518,28 +518,32 @@ export default function SettingsPage() {
 
           {activeTab === 'info' && (
             <section className="rounded-lg border border-white/20 bg-white/5 p-6">
-              <h2 className="mb-4 text-xl font-semibold text-white">Info</h2>
+              <h2 className="mb-4 text-xl font-semibold text-white">Information</h2>
               <div className="space-y-3">
-                <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
-                  <summary className="cursor-pointer text-sm font-semibold text-white">Terms of Service</summary>
-                  <p className="mt-2 text-sm text-white/80">
-                    Placeholder: Terms of Service content will appear here.
-                  </p>
-                </details>
+                <Link
+                  href="/terms"
+                  className="block rounded-lg border border-white/20 px-4 py-3 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  Terms of Service
+                </Link>
 
-                <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
-                  <summary className="cursor-pointer text-sm font-semibold text-white">Privacy Policy</summary>
-                  <p className="mt-2 text-sm text-white/80">
-                    Placeholder: Privacy Policy content will appear here.
-                  </p>
-                </details>
+                <Link
+                  href="/privacy"
+                  className="block rounded-lg border border-white/20 px-4 py-3 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  Privacy Policy
+                </Link>
 
-                <details className="rounded-lg border border-white/20 px-4 py-3 bg-white/5">
-                  <summary className="cursor-pointer text-sm font-semibold text-white">Release Notes</summary>
-                  <p className="mt-2 text-sm text-white/80">
-                    Placeholder: Latest production deploy notes will appear here.
-                  </p>
-                </details>
+                <Link
+                  href="/delete-data"
+                  className="block rounded-lg border border-white/20 px-4 py-3 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  How to Delete Your Data
+                </Link>
+
+                <p className="mt-6 text-sm text-white/60 leading-relaxed">
+                  This platform is an independent, community-supported fan site and is not affiliated with, endorsed by, sponsored by, or officially connected to Formula 1®, any Formula 1 teams, drivers, sponsors, or affiliated organizations. All trademarks and related intellectual property are the property of their respective owners.
+                </p>
               </div>
             </section>
           )}

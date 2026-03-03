@@ -1,14 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Radio, Star, Check } from 'lucide-react'
+import { Radio, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { FeaturedNewsCard } from './featured-news-card'
 import { FeaturedGridPostBlock, type FeaturedGridForBlock } from './featured-grid-post-block'
-import { getAvatarUrl } from '@/utils/avatar'
 
 interface SpotlightHotTake {
   id: string
@@ -17,12 +14,6 @@ interface SpotlightHotTake {
 
 interface SpotlightData {
   hot_take: SpotlightHotTake | null
-}
-
-interface HighlightedFan {
-  id: string
-  username: string
-  profile_image_url: string | null
 }
 
 interface FeaturedGrid {
@@ -57,7 +48,6 @@ interface NewsStory {
 
 interface FeedHighlightedSidebarProps {
   spotlight: SpotlightData | null
-  highlightedFan: HighlightedFan | null
   featuredGrid: FeaturedGrid | null
   supabaseUrl?: string
   polls: Poll[]
@@ -77,7 +67,6 @@ const gradientCardInner =
 
 export function FeedHighlightedSidebar({
   spotlight,
-  highlightedFan,
   featuredGrid,
   supabaseUrl,
   polls,
@@ -90,59 +79,36 @@ export function FeedHighlightedSidebar({
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
   const [activePollId, setActivePollId] = useState<string | null>(null)
   const hasHotTake = Boolean(spotlight?.hot_take)
-  const hasHighlightedFan = Boolean(highlightedFan)
   const hasFeaturedGrid = Boolean(featuredGrid)
   const hasPolls = polls.length > 0
   const hasNews = featuredNews.length > 0
 
-  if (!hasHotTake && !hasHighlightedFan && !hasFeaturedGrid && !hasPolls && !hasNews) return null
+  if (!hasHotTake && !hasFeaturedGrid && !hasPolls && !hasNews) return null
 
   return (
     <>
       <div className="space-y-4">
         {hasHotTake && spotlight?.hot_take && (
-          <button
-            type="button"
-            onClick={() => setIsDiscussionOpen(true)}
-            className="flex w-full flex-col rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm text-left hover:bg-white/5 transition-colors cursor-pointer min-h-[140px]"
-          >
-            <div className="flex items-center gap-2">
-              <Radio className="h-5 w-5 text-white/90 shrink-0" />
-              <h2 className="text-lg font-bold text-white">Hot Take</h2>
-            </div>
-            <p className="mt-2 text-white/90 text-sm leading-relaxed line-clamp-4">
-              {spotlight.hot_take.content_text}
-            </p>
-            <p className="mt-3 text-xs text-white/70 ">Tap to join the discussion</p>
-          </button>
-        )}
-
-        {hasHighlightedFan && highlightedFan && (
-          <Link
-            href={`/u/${highlightedFan.username}`}
-            className="flex w-full items-center gap-4 rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm transition-colors hover:bg-white/5"
-          >
-            <div
-              className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
-                'bg-white/10'
-              }`}
+          <div className={gradientCardOuter} style={gradientCardStyle}>
+            <button
+              type="button"
+              onClick={() => spotlight.hot_take?.id && setIsDiscussionOpen(true)}
+              className={gradientCardInner + ' w-full min-h-[140px]'}
             >
-              <Image
-                src={getAvatarUrl(highlightedFan.profile_image_url)}
-                alt={highlightedFan.username}
-                fill
-                className="object-cover"
-                sizes="48px"
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 text-sm font-medium text-white/90">
-                <Star className="h-4 w-4 text-amber-400 shrink-0" />
-                <span>Highlighted Fan</span>
+              <div className="flex shrink-0 items-center space-x-2">
+                <Radio className="h-5 w-5 text-white/90" />
+                <h2 className="text-lg font-bold text-white">Hot Take</h2>
               </div>
-              <p className="mt-0.5 font-semibold text-white">@{highlightedFan.username}</p>
-            </div>
-          </Link>
+              <div className="min-h-[3.3em] flex-1 overflow-hidden">
+                <p className="text-white/90 text-base leading-relaxed line-clamp-5 pb-2">
+                  {spotlight.hot_take.content_text}
+                </p>
+              </div>
+              {spotlight.hot_take.id && (
+                <p className="mt-4 shrink-0 text-sm text-white/70 flex justify-end">Tap to join the discussion</p>
+              )}
+            </button>
+          </div>
         )}
 
         {hasFeaturedGrid && featuredGrid && (
@@ -150,6 +116,7 @@ export function FeedHighlightedSidebar({
             grid={featuredGrid as FeaturedGridForBlock}
             user={featuredGrid.user}
             supabaseUrl={supabaseUrl}
+            variant="carousel"
           />
         )}
 
@@ -184,8 +151,8 @@ export function FeedHighlightedSidebar({
 
         {hasNews &&
           featuredNews.map((news) => (
-            <div key={news.id} className="min-h-[180px]">
-              <FeaturedNewsCard newsStory={news} />
+            <div key={news.id} className="min-h-[160px]">
+              <FeaturedNewsCard newsStory={news} variant="carousel" />
             </div>
           ))}
       </div>

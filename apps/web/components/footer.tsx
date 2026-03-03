@@ -9,9 +9,8 @@ export function Footer() {
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-2">
             <Logo variant="gradient" size="md" href="/" className="mb-4" />
-            <p className="text-sm text-gray-400 max-w-md">
-              The ultimate Formula 1 fan community. Build your dream grid, connect with fans, and
-              chat during race weekends.
+            <p className="text-sm text-gray-400 max-w-md mb-6">
+              The ultimate Formula 1 fan community. Build your dream grid, connect with fans, and chat during race weekends.
             </p>
           </div>
 
@@ -74,6 +73,10 @@ export function Footer() {
             </ul>
           </div>
         </div>
+
+        <p className="mt-8 w-full max-w-4xl mx-auto text-center text-xs text-gray-400 leading-relaxed">
+          This platform is an independent, community-supported fan site created for informational, entertainment, and community engagement purposes. It is not affiliated with, endorsed by, sponsored by, or officially connected to Formula 1®, Formula One Management, the FIA, any Formula 1 teams, drivers, sponsors, event organizers, or affiliated entities. All trademarks, service marks, logos, team names, driver names, and related intellectual property referenced on this platform are the property of their respective owners and are used solely for nominative and descriptive purposes. No claim of ownership, partnership, or official association is made or implied. <br /> <br /> Membership fees and other payments made through this platform support site operations, development, and community features and do not confer any official status, affiliation, or access to Formula 1® or related organizations. Any rewards or benefits provided to users are administered solely by this independent platform and are not sponsored, endorsed, or administered by Formula 1® or any affiliated entity. The content presented reflects the views of the platform and its community contributors and does not represent the views or positions of Formula 1® or any related organization. <br /> <br />
+        </p>
 
         <div className="mt-8 border-t border-gray-800 pt-8">
           <p className="text-center text-sm text-gray-400">

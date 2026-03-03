@@ -257,19 +257,9 @@ export default async function PodiumsPage() {
     description: string | null
   }>
   const highlights = weeklyHighlightsResult.data
-  const highlightedFan = highlights?.highlighted_fan
-  const fanProfile = Array.isArray(highlightedFan) ? highlightedFan[0] : highlightedFan
-  const highlightedFanNormalized = fanProfile
-    ? {
-        id: String(fanProfile.id),
-        username: String(fanProfile.username),
-        profile_image_url:
-          typeof fanProfile.profile_image_url === 'string' ? fanProfile.profile_image_url : null,
-      }
-    : null
   const featuredGrid = getSpotlightFeaturedGrid({ grid: highlights?.highlighted_fan_grid })
 
-  // Enrich featured grid ranked_items for GridDisplayCard
+  // Enrich featured grid ranked_items and like_count/is_liked
   let enrichedFeaturedGrid = featuredGrid
   if (featuredGrid) {
     const fgRanked = featuredGrid.ranked_items || []
@@ -331,6 +321,26 @@ export default async function PodiumsPage() {
         }),
       }
     }
+
+    const [{ count: likeCount }, isLikedResult] = await Promise.all([
+      supabase
+        .from('grid_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('grid_id', featuredGrid.id),
+      session
+        ? supabase
+            .from('grid_likes')
+            .select('id')
+            .eq('grid_id', featuredGrid.id)
+            .eq('user_id', session.user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ])
+    enrichedFeaturedGrid = {
+      ...enrichedFeaturedGrid!,
+      like_count: likeCount ?? 0,
+      is_liked: !!isLikedResult.data,
+    }
   }
 
   return (
@@ -347,7 +357,6 @@ export default async function PodiumsPage() {
         voteCounts={voteCounts}
         stories={stories}
         sponsors={sponsors}
-        highlightedFan={highlightedFanNormalized}
         featuredGrid={enrichedFeaturedGrid}
         supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
         pollDiscussionPostsByPollId={pollDiscussionPostsByPollId}

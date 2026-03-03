@@ -8,7 +8,6 @@ import { FeedHighlightedSidebar } from '@/components/feed/feed-highlighted-sideb
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { BannerPollCard } from '@/components/feed/banner-poll-card'
-import { BannerHighlightedFanCard } from '@/components/feed/banner-highlighted-fan-card'
 import { FeaturedGridPostBlock } from '@/components/feed/featured-grid-post-block'
 import { toEntitySlug } from '@/utils/url-slug'
 import { getTrackSlug } from '@/utils/storage-urls'
@@ -1085,27 +1084,11 @@ export default async function FeedPage() {
     }
   }
 
-  const highlightedFanRaw = weeklyHighlights.data?.highlighted_fan
-  const highlightedFanProfile = Array.isArray(highlightedFanRaw)
-    ? highlightedFanRaw[0]
-    : highlightedFanRaw
-  const highlightedFan = highlightedFanProfile
-    ? {
-        id: String(highlightedFanProfile.id),
-        username: String(highlightedFanProfile.username),
-        profile_image_url:
-          typeof highlightedFanProfile.profile_image_url === 'string'
-            ? highlightedFanProfile.profile_image_url
-            : null,
-      }
-    : null
-
   type BannerItem =
     | { type: 'sponsor'; data: (typeof sponsorsList)[number] }
     | { type: 'featured_poll'; data: NonNullable<typeof featuredAdminPoll> }
     | { type: 'featured_story'; data: NonNullable<typeof featuredStory> }
     | { type: 'featured_grid'; data: NonNullable<typeof enrichedFeaturedGrid> }
-    | { type: 'featured_user'; data: NonNullable<typeof highlightedFan> }
   const bannerItems: BannerItem[] = []
   sponsorsList.forEach((sponsor) => bannerItems.push({ type: 'sponsor', data: sponsor }))
   // Only admin polls in banner; never user-submitted (community) polls
@@ -1114,9 +1097,8 @@ export default async function FeedPage() {
   }
   if (featuredStory) bannerItems.push({ type: 'featured_story', data: featuredStory })
   if (enrichedFeaturedGrid) bannerItems.push({ type: 'featured_grid', data: enrichedFeaturedGrid })
-  if (highlightedFan) bannerItems.push({ type: 'featured_user', data: highlightedFan })
 
-  // Desktop banner: sponsors + featured grid + highlighted fan only (no news, no featured poll — those live in the left sidebar)
+  // Desktop banner: sponsors + featured grid only (no news, no featured poll — those live in the left sidebar)
   const desktopBannerItems = bannerItems.filter(
     (item) => item.type !== 'featured_story' && item.type !== 'featured_poll'
   )
@@ -1128,7 +1110,7 @@ export default async function FeedPage() {
         <h3 className="text-sm text-white/80 font-sans mb-4">Post. React. Express Yourself.</h3>
       </div>
 
-      {desktopBannerItems.length > 0 && (
+      {sponsorsList.length > 0 && (
         <div className="relative z-10 hidden w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:block lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-hidden justify-center items-center">
             {desktopBannerItems.map((item) => (
@@ -1149,17 +1131,6 @@ export default async function FeedPage() {
         <aside className="hidden lg:block lg:col-span-4 lg:space-y-4">
           <FeedHighlightedSidebar
             spotlight={{ hot_take: activeHotTake.data || null }}
-            highlightedFan={(() => {
-              const fan = weeklyHighlights.data?.highlighted_fan
-              const profile = Array.isArray(fan) ? fan[0] : fan
-              if (!profile) return null
-              return {
-                id: String(profile.id),
-                username: String(profile.username),
-                profile_image_url:
-                  typeof profile.profile_image_url === 'string' ? profile.profile_image_url : null,
-              }
-            })()}
             featuredGrid={enrichedFeaturedGrid}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             polls={pollsForSpotlightBanner}

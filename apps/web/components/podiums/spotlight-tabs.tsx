@@ -3,15 +3,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Star, PenLine, Check } from 'lucide-react'
+import { PenLine, Check } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { useCreateModal } from '@/components/providers/create-modal-provider'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedGridPostBlock, type FeaturedGridForBlock } from '@/components/feed/featured-grid-post-block'
-import { getAvatarUrl } from '@/utils/avatar'
+import { getGridTypeLabel } from '../feed/featured-grid-tiles'
 
 interface Poll {
   id: string
@@ -42,12 +41,6 @@ interface Sponsor {
   description: string | null
 }
 
-interface HighlightedFan {
-  id: string
-  username: string
-  profile_image_url: string | null
-}
-
 interface FeaturedGrid {
   id: string
   type: 'driver' | 'team' | 'track'
@@ -68,7 +61,6 @@ interface SpotlightTabsProps {
   voteCounts: Record<string, Record<string, number>>
   stories: NewsStory[]
   sponsors: Sponsor[]
-  highlightedFan: HighlightedFan | null
   featuredGrid: FeaturedGrid | null
   supabaseUrl?: string
   pollDiscussionPostsByPollId?: Record<string, any[]>
@@ -114,7 +106,6 @@ export function SpotlightTabs({
   voteCounts,
   stories,
   sponsors,
-  highlightedFan,
   featuredGrid,
   supabaseUrl,
   pollDiscussionPostsByPollId = {},
@@ -357,40 +348,9 @@ export function SpotlightTabs({
             </section>
           )}
 
-          {highlightedFan && (
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold text-white">Highlighted Fan</h2>
-              <Link
-                href={`/u/${highlightedFan.username}`}
-                className="flex w-full items-center gap-4 rounded-lg border border-white/20 bg-white/5 p-4 transition-colors hover:bg-white/10"
-              >
-                <div
-                  className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
-                    'bg-white/10'
-                  }`}
-                >
-                  <Image
-                    src={getAvatarUrl(highlightedFan.profile_image_url)}
-                    alt={highlightedFan.username}
-                    fill
-                    className="object-cover"
-                    sizes="48px"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 text-sm font-medium text-white/90">
-                    <Star className="h-4 w-4 shrink-0 text-amber-400" />
-                    <span>Highlighted Fan</span>
-                  </div>
-                  <p className="mt-0.5 font-semibold text-white">@{highlightedFan.username}</p>
-                </div>
-              </Link>
-            </section>
-          )}
-
           {featuredGrid && (
             <section className="space-y-4">
-              <h2 className="text-xl font-semibold text-white">Featured Fan Grid</h2>
+              <h2 className="text-xl font-semibold text-white">Featured Fan Grid: {getGridTypeLabel(featuredGrid.type)}</h2>
               <FeaturedGridPostBlock
                 grid={featuredGrid as FeaturedGridForBlock}
                 user={featuredGrid.user}
@@ -399,7 +359,7 @@ export function SpotlightTabs({
             </section>
           )}
 
-          {sponsors.length === 0 && !highlightedFan && !featuredGrid && (
+          {sponsors.length === 0 && !featuredGrid && (
             <p className="py-8 text-center text-white/60">No picks this week. Check back soon.</p>
           )}
         </div>

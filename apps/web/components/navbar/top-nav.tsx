@@ -126,8 +126,8 @@ export function TopNav() {
   ]
   const mobileDropdownItems = [
     { href: '/feed', label: 'Feed', type: 'feed' as const },
-    { href: '/podiums', label: 'Spotlight', type: 'podiums' as const },
     { href: '/pitlane', label: 'Pitlane', type: 'pitlane' as const },
+    { href: '/podiums', label: 'Spotlight', type: 'podiums' as const },
   ]
 
   async function handleLogout() {
@@ -318,24 +318,6 @@ export function TopNav() {
                       <Settings className="h-5 w-5 text-white" />
                     </Link>
                   </div>
-                  <div className="w-full flex flex-row items-center justify-between relative" data-create-menu>
-                    <span className="text-lg font-sans tracking-wider [font-variant:all-small-caps;] text-white">Create</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false)
-                        setIsCreateOpen((prev) => !prev)
-                      }}
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none ${
-                        isCreateOpen
-                          ? 'bg-sunset-gradient text-white'
-                          : 'border border-white/30 text-[#838383] hover:bg-gray-200'
-                      }`}
-                      aria-label="Create"
-                    >
-                      <PlusCircle className="h-5 w-5" strokeWidth={0.9} />
-                    </button>
-                  </div>
                   {mobileDropdownItems.map((item) => {
                     const active = isActive(item.href)
                     return (
@@ -362,6 +344,24 @@ export function TopNav() {
                       </Link>
                     )
                   })}
+                  <div className="w-full flex flex-row items-center justify-between relative" data-create-menu>
+                    <span className="text-lg font-sans tracking-wider [font-variant:all-small-caps;] text-white">Create</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsCreateOpen((prev) => !prev)
+                      }}
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none ${
+                        isCreateOpen
+                          ? 'bg-sunset-gradient text-white'
+                          : 'border border-white/30 text-[#838383] hover:bg-gray-200'
+                      }`}
+                      aria-label="Create"
+                    >
+                      <PlusCircle className="h-5 w-5" strokeWidth={0.9} />
+                    </button>
+                  </div>
                   <div className="w-full border-t border-white/10 pt-4 mt-2">
                     <Link
                       href={profileHref}

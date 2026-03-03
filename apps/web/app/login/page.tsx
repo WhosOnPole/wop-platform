@@ -85,7 +85,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-black px-4 py-8">
       <div className="w-full max-w-md space-y-6 rounded-2xl border border-white/10 bg-black/60 p-8 backdrop-blur-sm">
         <div>
           <h2 className="text-center font-display text-3xl font-normal tracking-tight text-white">
@@ -152,6 +152,9 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+      <p className="mt-6 max-w-md text-center text-xs text-white/50 leading-relaxed">
+        This platform is an independent, community-supported fan site and is not affiliated with, endorsed by, sponsored by, or officially connected to Formula 1®, any Formula 1 teams, drivers, sponsors, or affiliated organizations. All trademarks and related intellectual property are the property of their respective owners.
+      </p>
     </div>
   )
 }

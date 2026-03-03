@@ -308,11 +308,11 @@ export function PitlaneSearchResults({
                           )}
                           <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                           {overlayText && (
-                            <div className="absolute left-1 top-1 z-30 flex h-16 w-3 items-center justify-center overflow-visible">
+                            <div className="absolute left-1 top-1 z-30 flex h-16 w-4 items-center justify-center overflow-visible">
                               <span
                                 className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
                                 style={{
-                                  fontSize: 'clamp(9px, 2vw, 14px)',
+                                  fontSize: 'clamp(11px, 2.5vw, 18px)',
                                   fontFamily: 'Inter, sans-serif',
                                   letterSpacing: '0',
                                   transform: 'rotate(-90deg)',
@@ -325,7 +325,7 @@ export function PitlaneSearchResults({
                           )}
                         </div>
                         <div className="mt-2 flex items-start gap-2">
-                          <p className="text-base text-white group-hover:text-gray-400 lowercase leading-tight">
+                          <p className="text-lg text-white group-hover:text-gray-400 lowercase leading-tight">
                             {track.circuit_ref || trackDisplayName}
                           </p>
                         </div>
@@ -443,7 +443,7 @@ function ScheduleCard({ race, onClose }: ScheduleCardProps) {
                   className="object-contain"
                 />
               ) : null}
-              <h2 className="font-display tracking-wider text-lg">{race.circuit_ref || race.name}</h2>
+              <h2 className="font-display tracking-wider text-xl">{race.circuit_ref || race.name}</h2>
             </div>
             <p className="text-xs text-gray-300 tracking-wide pl-7">
               {dateDisplay}

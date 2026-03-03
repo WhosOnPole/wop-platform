@@ -159,7 +159,7 @@ export function AddToHomeScreenPrompt({
           <button
             type="button"
             onClick={dismiss}
-            className="shrink-0 rounded-full p-1 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+            className="shrink-0 rounded-full p-1 text-black hover:bg-white/10 hover:text-white transition-colors"
             aria-label="Dismiss"
           >
             <X className="h-5 w-5" />

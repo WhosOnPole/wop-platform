@@ -164,7 +164,7 @@ export default async function PitlanePage() {
                       className="object-contain"
                     />
                   ) : null}
-                  <h2 className="font-display tracking-wider text-lg">
+                  <h2 className="font-display tracking-wider text-xl">
                     {nextRace.circuit_ref || nextRace.name}
                   </h2>
                 </div>

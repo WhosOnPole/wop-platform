@@ -83,7 +83,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/#who-we-are"
-              className="text-center text-sm text-white/70 underline underline-offset-2 hover:text-white"
+              className="text-center text-sm text-white/70 underline underline-offset-2 hover:text-white mb-6"
             >
               or learn more
             </Link>
@@ -104,94 +104,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* What we do */}
-      <section
-        id="features"
-        className="scroll-mt-20 border-t border-white/10 px-6 py-16 lg:px-12"
-      >
-        <div className="mx-auto max-w-3xl">
-          <h2 className="font-display text-3xl font-normal text-white md:text-4xl text-center">
-            What We Do
-          </h2>
-          <div className="mt-8 space-y-10 font-sans text-base text-white/90 md:text-lg leading-relaxed">
-            <p>
-              Who&apos;s On Pole is a social platform designed for fans to broadcast their racing opinions, find community, and share their stories. Think of us as a mix of old-school MySpace, F1 meme forums, and a motorsport news outlet - but centered on you, the fan.
-            </p>
-
-            <div>
-              <h3 className="font-display text-xl font-normal text-white md:text-2xl mb-3">
-                Your Profile
-              </h3>
-              <p className="mb-3">
-                Your profile page is the heart of the Who&apos;s On Pole experience - a blank space to make your own. Build your dream grid by selecting up to 10 drivers. Maybe you&apos;ve got data and essays defending every pick. Maybe you&apos;re a loyalist and only showcase your #1. Every type of grid is perfect, as long as it&apos;s unapologetically yours.
-              </p>
-              <p>
-                Your profile also displays your favorite tracks, your votes in polls, and your comments across driver and team pages. Think of it as your racing DNA - easy to share, easy to discover, and a great way to find like-minded fans. And if you&apos;re really dedicated, you might even land a spot on a driver&apos;s Top Fans Grid.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-display text-xl font-normal text-white md:text-2xl mb-3">
-                Fan Features
-              </h3>
-              <p className="mb-3">
-                This is where fans take center stage. Fan Features is a space to read others&apos; experiences - or share your own. No story is too big or too small:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 mb-3">
-                <li>Meeting a driver you&apos;ve always admired</li>
-                <li>A funny travel mishap on the way to a race</li>
-                <li>Landing your dream job in motorsport</li>
-                <li>A throwback from the Senna days</li>
-                <li>Your reaction to a recent race or news story</li>
-                <li>Showcasing fun piece of merch or craft you made</li>
-              </ul>
-              <p>
-                Send it in (with a picture if you&apos;d like), and your story could be featured on our front page or socials.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-display text-xl font-normal text-white md:text-2xl mb-3">
-                Poles & Podiums
-              </h3>
-              <p>
-                For the highly opinionated - which, let&apos;s face it, most of us are. Poles & Podiums is our ever-updated section of interactive polls and predictions, fueled by the F1 rumor mill. Rookie of the Year? Cadillac&apos;s future driver lineup? Place your bets and share your takes. And if your prediction comes true? That&apos;s bragging rights forever.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-display text-xl font-normal text-white md:text-2xl mb-3">
-                More to Explore
-              </h3>
-              <p className="mb-3">
-                These are just the highlights. You can also:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 mb-6">
-                <li>Dive into driver, team, and track discussion pages</li>
-                <li>Scroll through your personalized daily feed</li>
-                <li>Join our live race reaction chats</li>
-              </ul>
-              <p className="mb-3">
-                And this is just the beginning. As Who&apos;s On Pole grows, we plan to:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 mb-6">
-                <li>Partner with F1 teams to create fan experiences</li>
-                <li>Launch a marketplace spotlighting innovative, female-focused motorsport businesses</li>
-                <li>Keep evolving based on your feedback</li>
-              </ul>
-              <p>
-                We want you along for the ride. Got questions, suggestions, complaints, compliments, or just want to say hi? Reach us at{' '}
-                <a
-                  href="mailto:contactus@whosonpole.org"
-                  className="text-white underline underline-offset-2 hover:text-white/90"
-                >
-                  contactus@whosonpole.org
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   )
 }

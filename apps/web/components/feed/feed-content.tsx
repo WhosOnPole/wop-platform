@@ -140,12 +140,12 @@ type FeedItem =
 const DISCOVERY_LIMIT = 15
 const FEED_TAB_STORAGE_KEY = 'feed-active-tab'
 
-type FeedTab = 'following' | 'discovery'
+type FeedTab = 'pitcrew' | 'discovery'
 
 function getStoredFeedTab(): FeedTab {
-  if (typeof window === 'undefined') return 'following'
+  if (typeof window === 'undefined') return 'pitcrew'
   const stored = window.localStorage.getItem(FEED_TAB_STORAGE_KEY)
-  return stored === 'discovery' ? 'discovery' : 'following'
+  return stored === 'discovery' ? 'discovery' : 'pitcrew'
 }
 
 export function FeedContent({
@@ -174,7 +174,7 @@ export function FeedContent({
 
   const [activeTab, setActiveTab] = useState<FeedTab>(() => {
     const tabParam = searchParams.get('tab')
-    if (tabParam === 'discovery' || tabParam === 'following') return tabParam
+    if (tabParam === 'discovery' || tabParam === 'pitcrew') return tabParam
     return getStoredFeedTab()
   })
 
@@ -461,7 +461,7 @@ export function FeedContent({
   // Sync tab from URL (e.g. back/forward or shared link)
   useEffect(() => {
     const tabParam = searchParams.get('tab')
-    if (tabParam === 'discovery' || tabParam === 'following') {
+    if (tabParam === 'discovery' || tabParam === 'pitcrew') {
       setActiveTab(tabParam)
     }
   }, [searchParams])
@@ -516,15 +516,15 @@ export function FeedContent({
         <button
           type="button"
           role="tab"
-          aria-selected={activeTab === 'following'}
-          onClick={() => setFeedTab('following')}
+          aria-selected={activeTab === 'pitcrew'}
+          onClick={() => setFeedTab('pitcrew')}
           className={`flex flex-1 items-center justify-center px-4 py-2.5 text-xs uppercase tracking-wide transition border-b-2 -mb-px ${
-            activeTab === 'following'
+            activeTab === 'pitcrew'
               ? 'border-bright-teal text-white'
               : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/30'
           }`}
         >
-          Following
+          pitcrew
         </button>
         <button
           type="button"
@@ -541,7 +541,7 @@ export function FeedContent({
         </button>
       </nav>
 
-      {activeTab === 'following' && (
+      {activeTab === 'pitcrew' && (
         <>
           {!hasContent && emptyStateBlock}
           {hasContent &&
