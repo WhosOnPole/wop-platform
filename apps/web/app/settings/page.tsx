@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Save, Upload, X, LogOut, User, Bell, Info } from 'lucide-react'
+import { Save, Upload, LogOut, User, Bell, Info } from 'lucide-react'
 
 const TABS = ['profile', 'notifications', 'info'] as const
 type TabId = (typeof TABS)[number]
@@ -25,7 +25,8 @@ interface Profile {
   country: string | null
   show_state_on_profile?: boolean | null
   show_age_on_profile?: boolean | null
-  social_links: Record<string, string> | null
+  instagram_username: string | null
+  social_links?: Record<string, string> | null
 }
 
 export default function SettingsPage() {
@@ -39,10 +40,10 @@ export default function SettingsPage() {
     city: '',
     state: '',
     country: '',
+    instagramUsername: '',
   })
   const [doesShowStateOnProfile, setDoesShowStateOnProfile] = useState(false)
   const [doesShowAgeOnProfile, setDoesShowAgeOnProfile] = useState(false)
-  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([])
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -94,24 +95,20 @@ export default function SettingsPage() {
 
     if (data) {
       setProfile(data)
+      const igFromSocial =
+        data.social_links && typeof data.social_links === 'object' && data.social_links.instagram
+        ? String(data.social_links.instagram).replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').trim()
+        : ''
       setFormData({
         username: data.username || '',
         dateOfBirth: data.date_of_birth || '',
         city: data.city || '',
         state: data.state || '',
         country: data.country || '',
+        instagramUsername: data.instagram_username || igFromSocial || '',
       })
       setDoesShowStateOnProfile(data.show_state_on_profile !== false)
       setDoesShowAgeOnProfile(data.show_age_on_profile !== false)
-
-      if (data.social_links && typeof data.social_links === 'object') {
-        setSocialLinks(
-          Object.entries(data.social_links as Record<string, string>).map(([platform, url]) => ({
-            platform,
-            url,
-          }))
-        )
-      }
       setProfileImagePreview(data.profile_image_url)
     }
     setLoading(false)
@@ -127,20 +124,6 @@ export default function SettingsPage() {
       }
       reader.readAsDataURL(file)
     }
-  }
-
-  function addSocialLink() {
-    setSocialLinks([...socialLinks, { platform: '', url: '' }])
-  }
-
-  function removeSocialLink(index: number) {
-    setSocialLinks(socialLinks.filter((_, i) => i !== index))
-  }
-
-  function updateSocialLink(index: number, field: 'platform' | 'url', value: string) {
-    const updated = [...socialLinks]
-    updated[index][field] = value
-    setSocialLinks(updated)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -201,12 +184,7 @@ export default function SettingsPage() {
       imageUrl = publicUrl
     }
 
-    const socialLinksObj: Record<string, string> = {}
-    socialLinks.forEach((link) => {
-      if (link.platform.trim() && link.url.trim()) {
-        socialLinksObj[link.platform.trim().toLowerCase()] = link.url.trim()
-      }
-    })
+    const instagramUsername = formData.instagramUsername.replace(/^@/, '').trim() || null
 
     let age = null
     if (formData.dateOfBirth) {
@@ -231,7 +209,7 @@ export default function SettingsPage() {
       country: formData.country.trim() || null,
       show_state_on_profile: doesShowStateOnProfile,
       show_age_on_profile: doesShowAgeOnProfile,
-      social_links: Object.keys(socialLinksObj).length > 0 ? socialLinksObj : null,
+      instagram_username: instagramUsername,
     }
 
     const { error } = await supabase
@@ -279,8 +257,8 @@ export default function SettingsPage() {
         <div className="flex w-full">
           {(
             [
-              { id: 'profile' as const, label: 'Profile', icon: User },
               { id: 'notifications' as const, label: 'Notifications', icon: Bell },
+              { id: 'profile' as const, label: 'Profile', icon: User },
               { id: 'info' as const, label: 'Info', icon: Info },
             ] as const
           ).map(({ id, label, icon: Icon }, index) => (
@@ -309,10 +287,10 @@ export default function SettingsPage() {
       </div>
 
       {/* Content */}
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 overflow-hidden">
           {activeTab === 'profile' && (
-        <section className="rounded-lg border border-white/20 bg-white/5 p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <section className="rounded-lg border border-white/20 bg-white/5 p-6 min-w-0">
+          <form onSubmit={handleSubmit} className="space-y-6 min-w-0">
             {/* Profile Image */}
             <div>
               <label className="block text-sm font-medium text-white/90">Profile Image</label>
@@ -445,45 +423,24 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Social Links */}
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label className="block text-sm font-medium text-white/90">Social Links</label>
-                <button
-                  type="button"
-                  onClick={addSocialLink}
-                  className="text-sm font-medium text-[#25B4B1] hover:text-[#3BEFEB] transition-colors"
-                >
-                  Add link
-                </button>
-              </div>
-              <div className="space-y-2">
-                {socialLinks.map((link, index) => (
-                  <div key={index} className="flex space-x-2">
-                    <input
-                      type="text"
-                      placeholder="Platform (e.g., twitter)"
-                      value={link.platform}
-                      onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                      className="flex-1 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-                    />
-                    <input
-                      type="url"
-                      placeholder="URL"
-                      value={link.url}
-                      onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                      className="flex-1 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSocialLink(index)}
-                      className="rounded-md p-2 text-white/60 hover:text-red-400 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+            {/* Instagram username */}
+            <div className="min-w-0">
+              <label htmlFor="instagramUsername" className="block text-sm font-medium text-white/90">
+                Instagram username <span className="text-white/50">(optional)</span>
+              </label>
+              <input
+                type="text"
+                id="instagramUsername"
+                placeholder="username"
+                value={formData.instagramUsername}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    instagramUsername: e.target.value.replace(/^@/, ''),
+                  })
+                }
+                className="mt-1 block w-full min-w-0 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+              />
             </div>
 
             {errors.submit && (

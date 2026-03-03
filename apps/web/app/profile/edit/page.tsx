@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { Save, Upload, X } from 'lucide-react'
+import { Save, Upload } from 'lucide-react'
 
 interface Profile {
   id: string
@@ -16,7 +16,8 @@ interface Profile {
   state: string | null
   country: string | null
   show_state_on_profile?: boolean | null
-  social_links: Record<string, string> | null
+  instagram_username: string | null
+  social_links?: Record<string, string> | null
 }
 
 export default function EditProfilePage() {
@@ -30,9 +31,9 @@ export default function EditProfilePage() {
     city: '',
     state: '',
     country: '',
+    instagramUsername: '',
   })
   const [doesShowStateOnProfile, setDoesShowStateOnProfile] = useState(false)
-  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([])
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -71,24 +72,22 @@ export default function EditProfilePage() {
 
     if (data) {
       setProfile(data)
+      const igFromSocial =
+        data.social_links && typeof data.social_links === 'object' && data.social_links.instagram
+          ? String(data.social_links.instagram)
+              .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+              .replace(/^@/, '')
+              .trim()
+          : ''
       setFormData({
         username: data.username || '',
         dateOfBirth: data.date_of_birth || '',
         city: data.city || '',
         state: data.state || '',
         country: data.country || '',
+        instagramUsername: data.instagram_username || igFromSocial || '',
       })
       setDoesShowStateOnProfile(Boolean(data.show_state_on_profile))
-
-      // Convert social_links object to array
-      if (data.social_links && typeof data.social_links === 'object') {
-        setSocialLinks(
-          Object.entries(data.social_links as Record<string, string>).map(([platform, url]) => ({
-            platform,
-            url,
-          }))
-        )
-      }
       setProfileImagePreview(data.profile_image_url)
     }
     setLoading(false)
@@ -104,20 +103,6 @@ export default function EditProfilePage() {
       }
       reader.readAsDataURL(file)
     }
-  }
-
-  function addSocialLink() {
-    setSocialLinks([...socialLinks, { platform: '', url: '' }])
-  }
-
-  function removeSocialLink(index: number) {
-    setSocialLinks(socialLinks.filter((_, i) => i !== index))
-  }
-
-  function updateSocialLink(index: number, field: 'platform' | 'url', value: string) {
-    const updated = [...socialLinks]
-    updated[index][field] = value
-    setSocialLinks(updated)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -181,13 +166,7 @@ export default function EditProfilePage() {
       imageUrl = publicUrl
     }
 
-    // Convert social links array to object
-    const socialLinksObj: Record<string, string> = {}
-    socialLinks.forEach((link) => {
-      if (link.platform.trim() && link.url.trim()) {
-        socialLinksObj[link.platform.trim().toLowerCase()] = link.url.trim()
-      }
-    })
+    const instagramUsername = formData.instagramUsername.replace(/^@/, '').trim() || null
 
     // Calculate age from date of birth
     let age = null
@@ -213,7 +192,7 @@ export default function EditProfilePage() {
       state: formData.state.trim() || null,
       country: formData.country.trim() || null,
       show_state_on_profile: doesShowStateOnProfile,
-      social_links: Object.keys(socialLinksObj).length > 0 ? socialLinksObj : null,
+      instagram_username: instagramUsername,
     }
 
     const { error } = await supabase
@@ -361,45 +340,24 @@ export default function EditProfilePage() {
           </label>
         </div>
 
-        {/* Social Links */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700">Social Links</label>
-            <button
-              type="button"
-              onClick={addSocialLink}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              + Add Link
-            </button>
-          </div>
-          <div className="space-y-2">
-            {socialLinks.map((link, index) => (
-              <div key={index} className="flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="Platform (e.g., twitter)"
-                  value={link.platform}
-                  onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                />
-                <input
-                  type="url"
-                  placeholder="URL"
-                  value={link.url}
-                  onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeSocialLink(index)}
-                  className="rounded-md p-2 text-gray-400 hover:text-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+        {/* Instagram username */}
+        <div className="min-w-0">
+          <label htmlFor="instagramUsername" className="block text-sm font-medium text-gray-700">
+            Instagram username <span className="text-gray-400">(optional)</span>
+          </label>
+          <input
+            type="text"
+            id="instagramUsername"
+            placeholder="username"
+            value={formData.instagramUsername}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                instagramUsername: e.target.value.replace(/^@/, ''),
+              })
+            }
+            className="mt-1 block w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          />
         </div>
 
         {errors.submit && (

@@ -13,6 +13,7 @@ interface ProfileHeroSectionWrapperProps {
     age?: number | null
     show_state_on_profile?: boolean | null
     show_age_on_profile?: boolean | null
+    instagram_username?: string | null
   }
   isOwnProfile: boolean
   teamBackground?: string | null
