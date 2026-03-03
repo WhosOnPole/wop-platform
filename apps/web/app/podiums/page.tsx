@@ -340,7 +340,7 @@ export default async function PodiumsPage() {
       ...enrichedFeaturedGrid!,
       like_count: likeCount ?? 0,
       is_liked: !!isLikedResult.data,
-    }
+    } as typeof enrichedFeaturedGrid
   }
 
   return (

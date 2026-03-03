@@ -96,8 +96,7 @@ export function GridSlotsDisplay({
     return ''
   }
 
-  const SlotWrapper = linkItems ? Link : 'div'
-  const slotLinkProps = linkItems ? { href: `/grid/${grid.id}` } : {}
+  const slotHref = `/grid/${grid.id}`
 
   function renderSlotContent(
     item: GridItem,
@@ -245,9 +244,9 @@ export function GridSlotsDisplay({
                 </div>
               </div>
             </div>
-          ) : (
-            <SlotWrapper
-              {...slotLinkProps}
+          ) : linkItems ? (
+            <Link
+              href={slotHref}
               className="relative block aspect-square w-full rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
               style={
                 grid.type === 'driver'
@@ -275,7 +274,37 @@ export function GridSlotsDisplay({
                 true,
                 firstTrackSvgFailed ? new Set([firstItem.id]) : failedTrackIds
               )}
-            </SlotWrapper>
+            </Link>
+          ) : (
+            <div
+              className="relative block aspect-square w-full rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
+              style={
+                grid.type === 'driver'
+                  ? undefined
+                  : {
+                      backgroundImage:
+                        grid.type === 'track'
+                          ? 'url(/images/grid_bg.png)'
+                          : getItemImageUrl(firstItem)
+                            ? `url(${getItemImageUrl(firstItem)})`
+                            : 'url(/images/pit_bg.jpg)',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: grid.type === 'team' ? 'no-repeat' : undefined,
+                      backgroundColor:
+                        grid.type === 'track' || getItemImageUrl(firstItem)
+                          ? undefined
+                          : '#f3f4f6',
+                    }
+              }
+            >
+              {renderSlotContent(
+                firstItem,
+                1,
+                true,
+                firstTrackSvgFailed ? new Set([firstItem.id]) : failedTrackIds
+              )}
+            </div>
           )}
         </div>
       )}
@@ -297,33 +326,34 @@ export function GridSlotsDisplay({
               </div>
             )
           }
-          return (
-            <SlotWrapper
-              key={item.id}
-              {...slotLinkProps}
-              className="relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
-              style={
-                grid.type === 'driver'
-                  ? undefined
-                  : {
-                      backgroundImage:
-                        grid.type === 'track'
-                          ? 'url(/images/grid_bg.png)'
-                          : getItemImageUrl(item)
-                            ? `url(${getItemImageUrl(item)})`
-                            : 'url(/images/pit_bg.jpg)',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: grid.type === 'team' ? 'no-repeat' : undefined,
-                      backgroundColor:
-                        grid.type === 'track' || getItemImageUrl(item)
-                          ? undefined
-                          : '#f3f4f6',
-                    }
-              }
-            >
+          const slotStyle =
+            grid.type === 'driver'
+              ? undefined
+              : {
+                  backgroundImage:
+                    grid.type === 'track'
+                      ? 'url(/images/grid_bg.png)'
+                      : getItemImageUrl(item)
+                        ? `url(${getItemImageUrl(item)})`
+                        : 'url(/images/pit_bg.jpg)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: grid.type === 'team' ? 'no-repeat' : undefined,
+                  backgroundColor:
+                    grid.type === 'track' || getItemImageUrl(item)
+                      ? undefined
+                      : '#f3f4f6',
+                }
+          const slotClassName =
+            'relative block aspect-square w-full min-w-0 rounded-lg overflow-hidden hover:opacity-90 transition-opacity'
+          return linkItems ? (
+            <Link key={item.id} href={slotHref} className={slotClassName} style={slotStyle}>
               {renderSlotContent(item, rank, false, failedTrackIds)}
-            </SlotWrapper>
+            </Link>
+          ) : (
+            <div key={item.id} className={slotClassName} style={slotStyle}>
+              {renderSlotContent(item, rank, false, failedTrackIds)}
+            </div>
           )
         })}
       </div>

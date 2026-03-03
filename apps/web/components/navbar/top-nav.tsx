@@ -315,7 +315,7 @@ export function TopNav() {
                       className="relative flex h-8 w-8 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
                       aria-label="Notifications"
                     >
-                      <Settings className="h-5 w-5 text-white" />
+                      <Settings className="h-5 w-5 text-white" strokeWidth={1.25} />
                     </Link>
                   </div>
                   {mobileDropdownItems.map((item) => {
@@ -336,7 +336,7 @@ export function TopNav() {
                           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${
                             active
                               ? 'bg-sunset-gradient text-white'
-                              : 'border border-white/30 text-white/30 hover:bg-gray-200'
+                              : 'border border-white text-white/30 hover:bg-gray-200'
                           }`}
                         >
                           <NavIcon type={item.type} active={active} variant="circular" />
@@ -355,7 +355,7 @@ export function TopNav() {
                       className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none ${
                         isCreateOpen
                           ? 'bg-sunset-gradient text-white'
-                          : 'border border-white/30 text-[#838383] hover:bg-gray-200'
+                          : 'border border-white text-white hover:bg-gray-200'
                       }`}
                       aria-label="Create"
                     >
@@ -454,10 +454,10 @@ export function TopNav() {
 
 function NavIcon({ type, active, variant = 'dropdown' }: { type: string; active: boolean; variant?: 'circular' | 'dropdown' }) {
   const fillColor = variant === 'circular' 
-    ? (active ? '#FFFFFF' : '#838383')
+    ? '#FFFFFF'
     : (active ? '#000000' : '#6B6B6B')
   const strokeColor = variant === 'circular'
-    ? (active ? '#FFFFFF' : '#838383')
+    ? '#FFFFFF'
     : (active ? '#000000' : '#6B6B6B')
   
   if (type === 'feed') {
