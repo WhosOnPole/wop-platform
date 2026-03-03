@@ -26,6 +26,8 @@ interface PollCardProps {
   compact?: boolean
   /** Show Repost button; set false when embedded in a feed post */
   showRepost?: boolean
+  /** Show Featured chip when poll is featured; set false in modal context */
+  showFeaturedChip?: boolean
 }
 
 export function PollCard({
@@ -37,6 +39,7 @@ export function PollCard({
   variant = 'light',
   compact = false,
   showRepost = true,
+  showFeaturedChip = true,
 }: PollCardProps) {
   const isDark = variant === 'dark'
   const supabase = createClientComponentClient()
@@ -132,7 +135,7 @@ export function PollCard({
           {poll.question}
         </h2>
         <div className="flex shrink-0 items-center gap-2">
-          {poll.is_featured_podium && !compact && (
+          {poll.is_featured_podium && !compact && showFeaturedChip && (
             <div
               className="flex items-center space-x-1 rounded-full px-3 py-1 bg-sunset-gradient"
             >

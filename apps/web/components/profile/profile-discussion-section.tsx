@@ -132,7 +132,7 @@ export function ProfileDiscussionSection({
               <div className="mb-3 flex items-center space-x-3">
                 <div
                   className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
-                    isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                    isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
                   }`}
                 >
                   <img

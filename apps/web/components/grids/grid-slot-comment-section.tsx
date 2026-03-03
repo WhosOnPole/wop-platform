@@ -203,7 +203,7 @@ export function GridSlotCommentSection({
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     <div
                       className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                        isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                        isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
                       }`}
                     >
                       <img
@@ -266,7 +266,7 @@ export function GridSlotCommentSection({
                           <div className="flex min-w-0 flex-1 items-center gap-2">
                             <div
                               className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                                isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                                isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
                               }`}
                             >
                               <img

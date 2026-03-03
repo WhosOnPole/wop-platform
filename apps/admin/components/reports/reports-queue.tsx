@@ -101,7 +101,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {reports.map((report) => (
         <div
           key={report.id}
@@ -120,12 +120,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                   <strong>Reason:</strong> {report.reason || 'No reason provided'}
                 </span>
               </div>
-              <div className="text-sm text-gray-600 flex justify-between gap-3">
-                <span>
-                  <strong>Target ID:</strong> {report.target_id}
-                </span>
               
-              </div>
               <div className="mt-1 text-xs text-gray-500">
                 Reported on {new Date(report.created_at).toLocaleString()}
               </div>
@@ -156,7 +151,6 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                   )}
                   {report.targetPreview.parent_page_type && report.targetPreview.parent_page_id && (
                     <p className="mt-2 text-xs text-gray-500">
-                      Parent:{' '}
                       {report.targetPreview.parent_name
                         ? `${getTargetTypeLabel(report.targetPreview.parent_page_type)}: ${report.targetPreview.parent_name}`
                         : `${report.targetPreview.parent_page_type} (${report.targetPreview.parent_page_id})`}
@@ -164,6 +158,12 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                   )}
                 </div>
               )}
+              <div className="text-sm text-gray-600 flex justify-between gap-3 mt-3">
+                <span>
+                  <strong>Target ID:</strong> {report.target_id}
+                </span>
+              
+              </div>
             </div>
           </div>
 

@@ -8,7 +8,7 @@ import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { FeaturedNewsCard } from './featured-news-card'
 import { FeaturedGridPostBlock, type FeaturedGridForBlock } from './featured-grid-post-block'
-import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface SpotlightHotTake {
   id: string
@@ -124,7 +124,7 @@ export function FeedHighlightedSidebar({
           >
             <div
               className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
-                isDefaultAvatar(highlightedFan.profile_image_url) ? 'bg-white p-0.5' : 'bg-white/10'
+                'bg-white/10'
               }`}
             >
               <Image

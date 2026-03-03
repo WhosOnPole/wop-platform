@@ -11,7 +11,7 @@ import { useCreateModal } from '@/components/providers/create-modal-provider'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedGridPostBlock, type FeaturedGridForBlock } from '@/components/feed/featured-grid-post-block'
-import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface Poll {
   id: string
@@ -366,7 +366,7 @@ export function SpotlightTabs({
               >
                 <div
                   className={`relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
-                    isDefaultAvatar(highlightedFan.profile_image_url) ? 'bg-white p-0.5' : 'bg-white/10'
+                    'bg-white/10'
                   }`}
                 >
                   <Image

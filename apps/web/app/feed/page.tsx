@@ -1029,18 +1029,27 @@ export default async function FeedPage() {
     if (featuredGrid.type === 'driver' && fgIds.length > 0) {
       const { data: fgDrivers } = await supabase
         .from('drivers')
-        .select('id, name, headshot_url, image_url')
+        .select('id, name, headshot_url, image_url, team_id, teams:team_id(name)')
         .in('id', fgIds)
       const fgDriversById = new Map((fgDrivers || []).map((d: { id: string }) => [d.id, d]))
       enrichedFeaturedGrid = {
         ...featuredGrid,
         ranked_items: fgRanked.map((item: { id: string; name?: string }) => {
-          const d = fgDriversById.get(item.id) as { headshot_url?: string | null; image_url?: string | null; name?: string } | undefined
+          const d = fgDriversById.get(item.id) as {
+            headshot_url?: string | null
+            image_url?: string | null
+            name?: string
+            teams?: { name?: string } | Array<{ name?: string }>
+          } | undefined
+          const teamName = d?.teams
+            ? (Array.isArray(d.teams) ? d.teams[0]?.name : d.teams?.name)
+            : null
           return {
             ...item,
             name: item.name ?? d?.name ?? '',
             headshot_url: d?.headshot_url ?? null,
             image_url: d?.headshot_url ?? d?.image_url ?? null,
+            team_name: teamName ?? null,
           }
         }),
       }

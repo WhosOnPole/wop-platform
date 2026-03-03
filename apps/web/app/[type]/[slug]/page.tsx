@@ -461,7 +461,7 @@ export default async function DynamicPage({ params }: PageProps) {
             </div>
           )}
           {type === 'drivers' ? (
-            <div className="sticky top-[10vh] z-30 bg-black pt-8">
+            <div className="sticky top-[10vh] z-30 bg-black">
               <h2 className="mb-6 px-4 text-2xl text-right font-semibold capitalize text-white font-sageva tracking-wider">Discussions</h2>
               <DiscussionTab
                 posts={posts || []}

@@ -39,7 +39,7 @@ interface Comment {
 
 interface DiscussionSectionProps {
   posts: Post[]
-  parentPageType: 'driver' | 'team' | 'track' | 'poll' | 'hot_take' | 'profile'
+  parentPageType: 'driver' | 'team' | 'track' | 'poll' | 'hot_take' | 'profile' | 'story'
   parentPageId: string
   variant?: 'light' | 'dark'
   /** When true, uses smaller height for modal contexts (e.g. poll/hot take modals) */
@@ -531,7 +531,7 @@ export function DiscussionSection({
   }
 
   const sectionClasses = isDark
-    ? 'flex flex-col gap-4'
+    ? 'flex flex-col gap-4 pb-8'
     : 'flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow'
   const headingClasses = isDark
     ? 'text-sm font-medium text-white/90 text-right'
@@ -595,7 +595,7 @@ export function DiscussionSection({
                   <div className="flex min-w-0 flex-1 items-start space-x-3">
                     <div
                       className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
-                        isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                        isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
                       }`}
                     >
                       <img
@@ -684,7 +684,7 @@ export function DiscussionSection({
                             <div className="flex min-w-0 flex-1 items-start space-x-2">
                               <div
                                 className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                                  isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                                  isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
                                 }`}
                               >
                                 <img
@@ -791,7 +791,7 @@ export function DiscussionSection({
                                     <div className="flex min-w-0 flex-1 items-start space-x-2">
                                       <div
                                         className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                                          isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white p-0.5' : ''
+                                          isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
                                         }`}
                                       >
                                         <img

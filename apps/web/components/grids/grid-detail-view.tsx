@@ -155,7 +155,7 @@ function OwnProfileBlurbBlock({
       <div className="mb-6 flex items-start gap-3">
         <div
           className={`h-12 w-12 shrink-0 rounded-full overflow-hidden ${
-            isDefaultAvatar(owner.profile_image_url) ? 'bg-white p-0.5' : ''
+            isDefaultAvatar(owner.profile_image_url) ? 'bg-white/10' : ''
           }`}
         >
           <Image
@@ -178,7 +178,7 @@ function OwnProfileBlurbBlock({
     <div className="mb-6 flex items-start gap-3">
       <div
         className={`h-12 w-12 shrink-0 rounded-full overflow-hidden ${
-          isDefaultAvatar(owner.profile_image_url) ? 'bg-white p-0.5' : ''
+          isDefaultAvatar(owner.profile_image_url) ? 'bg-white/10' : ''
         }`}
       >
         <Image
@@ -451,7 +451,7 @@ function GridBlurbDisplay({
         <Link href={`/u/${owner.username}`} className="flex-shrink-0">
           <div
             className={`h-12 w-12 rounded-full overflow-hidden ${
-              isDefaultAvatar(owner.profile_image_url) ? 'bg-white p-0.5' : ''
+              isDefaultAvatar(owner.profile_image_url) ? 'bg-white/10' : ''
             }`}
           >
             <Image

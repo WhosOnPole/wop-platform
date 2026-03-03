@@ -558,7 +558,7 @@ export function FeedContent({
                   <div
                     className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
                       isDefaultAvatar(post.user?.profile_image_url)
-                        ? 'bg-white border border-gray-200'
+                        ? 'border border-white/20 bg-white/10'
                         : ''
                     }`}
                   >
@@ -877,7 +877,7 @@ export function FeedContent({
                           <div
                             className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
                               isDefaultAvatar(post.user?.profile_image_url)
-                                ? 'bg-white border border-gray-200'
+                                ? 'border border-white/20 bg-white/10'
                                 : ''
                             }`}
                           >
@@ -1012,7 +1012,7 @@ export function FeedContent({
                           <div
                             className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
                               isDefaultAvatar(grid.user?.profile_image_url)
-                                ? 'bg-white border border-gray-200'
+                                ? 'border border-white/20 bg-white/10'
                                 : ''
                             }`}
                           >

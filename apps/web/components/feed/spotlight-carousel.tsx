@@ -228,8 +228,8 @@ export function SpotlightCarousel({
     }
     if (card.type === 'grid') {
       return (
-        <div className={`${gradientCardOuter} border border-white/20`}>
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black px-4 py-2">
+        <div className={gradientCardOuter} style={gradientCardStyle}>
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black px-4 py-2 ">
             <FeaturedGridCarouselCard
               grid={card.data}
               user={card.data.user}

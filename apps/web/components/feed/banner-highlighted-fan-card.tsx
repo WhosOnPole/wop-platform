@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Star } from 'lucide-react'
-import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface HighlightedFan {
   id: string
@@ -23,7 +23,7 @@ export function BannerHighlightedFanCard({ fan }: BannerHighlightedFanCardProps)
     >
       <div
         className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-full ${
-          isDefaultAvatar(fan.profile_image_url) ? 'bg-white p-0.5' : 'bg-white/10'
+          'bg-white/10'
         }`}
       >
         <Image

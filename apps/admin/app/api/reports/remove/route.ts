@@ -100,8 +100,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unsupported target type' }, { status: 400 })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: updateError } = (supabase as any)
+    const { error: updateError } = await (supabase as any)
       .from('reports')
       .update({ status: 'resolved_removed' })
       .eq('id', reportId)

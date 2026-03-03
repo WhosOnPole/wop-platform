@@ -16,18 +16,18 @@ export function LoadingLogo() {
               'linear-gradient(90deg, #EC6D00 0%,#25B4B1 10%, #FF006F 20%, #25B4B1 30%, #FF006F 40%, #25B4B1 50%, #FF006F 60%, #25B4B1 70%, #FF006F 80%, #EC6D00 100%)',
           }}
         />
-        <div className="absolute inset-[2.5px] z-10 flex min-h-0 items-center justify-center overflow-hidden rounded-full bg-black">
+        <div className="absolute inset-[2.5px] z-10 flex min-h-0 items-center justify-center overflow-hidden rounded-full bg-black p-4">
           <Image
             src="/images/seal_white.png"
             alt=""
-            width={128}
-            height={128}
+            width={112}
+            height={112}
             priority
             className="h-full w-full object-contain"
           />
         </div>
       </div>
-      <p className="font-display text-sm text-white">Loading...</p>
+      <p className="font-display text-lg text-white">Loading...</p>
     </div>
   )
 }

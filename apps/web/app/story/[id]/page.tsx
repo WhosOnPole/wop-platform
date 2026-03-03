@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowLeft, PenLine } from 'lucide-react'
 import { getAvatarUrl } from '@/utils/avatar'
+import { DiscussionSection } from '@/components/dtt/discussion-section'
 
 export const runtime = 'nodejs'
 export const revalidate = 3600
@@ -83,6 +84,48 @@ export default async function StoryPage({ params }: PageProps) {
   const { id } = await params
   const story = await getStory(id)
   if (!story) notFound()
+
+  const cookieStore = await cookies()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  let storyPosts: Array<{
+    id: string
+    content: string
+    created_at: string
+    like_count: number
+    user: { id: string; username: string; profile_image_url: string | null } | null
+  }> = []
+
+  if (supabaseUrl && supabaseKey) {
+    const supabase = createServerComponentClient(
+      { cookies: () => cookieStore as any },
+      { supabaseUrl, supabaseKey }
+    )
+    const { data: posts } = await supabase
+      .from('posts')
+      .select(
+        `
+        *,
+        like_count,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .eq('parent_page_type', 'story')
+      .eq('parent_page_id', story.id)
+      .order('created_at', { ascending: false })
+
+    storyPosts = (posts || []).map((p: Record<string, unknown>) => ({
+      id: p.id as string,
+      content: p.content as string,
+      created_at: p.created_at as string,
+      like_count: (p.like_count as number) ?? 0,
+      user: p.user as { id: string; username: string; profile_image_url: string | null } | null,
+    }))
+  }
 
   const content = 'summary' in story && story.summary
     ? `${story.summary}\n\n${story.content}`
@@ -161,6 +204,16 @@ export default async function StoryPage({ params }: PageProps) {
           </div>
         </Link>
       )}
+
+      <div className="mt-8 rounded-xl border border-white/20 bg-white/5 p-6">
+        <DiscussionSection
+          posts={storyPosts}
+          parentPageType="story"
+          parentPageId={story.id}
+          variant="dark"
+          compact={false}
+        />
+      </div>
 
       <div className="mt-8 rounded-xl border border-white/20 bg-white/5 p-6 text-center">
         <p className="mb-4 text-white/90">Have a story? Submit it for our team to consider.</p>

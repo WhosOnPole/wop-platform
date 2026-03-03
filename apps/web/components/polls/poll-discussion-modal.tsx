@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { BarChart3 } from 'lucide-react'
 import { PollCard } from './poll-card'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 
@@ -41,11 +40,7 @@ export function PollDiscussionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
       <div className="h-[80vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
-        <div className="mb-4 flex items-start justify-between">
-          <div className="flex items-center space-x-2 text-white/90">
-            <BarChart3 className="h-5 w-5" />
-            <h3 className="text-xl font-semibold text-white">Featured Poll</h3>
-          </div>
+        <div className="mb-4 flex justify-end">
           <button
             type="button"
             onClick={onClose}
@@ -66,6 +61,7 @@ export function PollDiscussionModal({
             variant="dark"
             className="min-h-0 border-0 bg-transparent p-0 shadow-none"
             showRepost={false}
+            showFeaturedChip={false}
           />
         </div>
         <DiscussionSection
