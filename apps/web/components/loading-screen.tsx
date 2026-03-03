@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { LoadingLogo } from '@/components/loading-logo'
 
-const MIN_DISPLAY_MS = 400
+const MIN_DISPLAY_MS = 200
 const FADE_DURATION_MS = 300
 const NAV_SHOW_DELAY_MS = 300
 const NAV_HIDE_SETTLE_MS = 150

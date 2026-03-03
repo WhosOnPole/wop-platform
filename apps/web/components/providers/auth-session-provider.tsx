@@ -12,6 +12,7 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 import { createClientComponentClient, resetSessionInvalidated } from '@/utils/supabase-client'
 import { clearSupabaseAuthStorage } from '@/utils/clear-auth-storage'
+import { getStoredSessionSync } from '@/utils/get-stored-session'
 
 interface AuthSessionContextValue {
   session: Session | null
@@ -25,12 +26,12 @@ const AuthSessionContext = createContext<AuthSessionContextValue | null>(null)
 
 /**
  * Single source of truth for auth session.
- * - Calls getSession() once on mount (deduped by supabase-client).
+ * - Uses optimistic session from storage (sync, ~0.2ms) for instant UI when logged in.
+ * - Verifies via getSession() in background; updates if different.
  * - Subscribes to onAuthStateChange for updates.
- * - Avoids repeated getSession on navigation or multiple component mounts.
  */
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<Session | null>(() => getStoredSessionSync())
   const [isLoading, setIsLoading] = useState(true)
   const supabaseRef = useRef<ReturnType<typeof createClientComponentClient> | null>(null)
   const initRan = useRef(false)
