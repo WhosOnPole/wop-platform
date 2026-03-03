@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { PageBackButton } from '@/components/page-back-button'
 
 export const metadata: Metadata = {
   title: 'Terms of Service | Who\'s on Pole?',
@@ -8,6 +9,9 @@ export const metadata: Metadata = {
 export default function TermsOfServicePage() {
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <PageBackButton variant="dark" />
+      </div>
       <h1 className="text-4xl font-bold mb-6 text-center">Whosonpole, LLC – Terms of Service</h1>
       <p className="text-sm text-gray-500 text-center mb-12">Last Updated: March 1, 2026</p>
 

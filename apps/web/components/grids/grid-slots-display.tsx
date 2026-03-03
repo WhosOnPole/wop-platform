@@ -191,12 +191,22 @@ export function GridSlotsDisplay({
               </span>
             </div>
           ) : (
-            <div className="absolute inset-0 z-20 flex items-end justify-center px-0.5 pb-0.5 pointer-events-none">
+            <div
+              className={`absolute z-20 flex items-center justify-center overflow-visible pointer-events-none ${
+                grid.type === 'track'
+                  ? 'left-0.5 top-[25%] h-[50%] w-[12px] -translate-y-1/2'
+                  : 'left-0.5 top-0.5 h-[44px] w-3'
+              }`}
+            >
               <span
-                className="font-bold uppercase leading-none text-center text-white select-none line-clamp-1 text-[10px] min-[400px]:text-xs"
+                className="shrink-0 whitespace-nowrap text-white font-bold tracking-widest uppercase leading-none select-none"
                 style={{
                   fontFamily: 'Inter, sans-serif',
                   fontWeight: grid.type === 'track' ? 700 : 900,
+                  fontSize: grid.type === 'track' ? 'clamp(8px, 2vw, 15px)' : 'clamp(0.5rem, 2vw, 0.75rem)',
+                  letterSpacing: '0',
+                  transform: 'rotate(-90deg)',
+                  transformOrigin: 'center center',
                   textShadow:
                     '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.6)',
                 }}

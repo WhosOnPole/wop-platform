@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { Mail } from 'lucide-react'
+import { PageBackButton } from '@/components/page-back-button'
 
 export default function DeleteDataPage() {
   const supabase = createClientComponentClient()
@@ -49,6 +50,9 @@ export default function DeleteDataPage() {
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-12">
+      <div className="mb-6">
+        <PageBackButton variant="dark" />
+      </div>
       <h1 className="mb-2 text-3xl font-bold text-white">Delete Your Data</h1>
       <p className="mb-8 text-white/80">
         To request deletion of your account and associated data, please email our team. We will
