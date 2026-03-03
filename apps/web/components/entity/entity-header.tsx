@@ -104,7 +104,7 @@ function getNationalityFlagPath(nationality?: string | null): string | null {
     mexican: 'mexico',
     monégasque: 'monaco',
     monegasque: 'monaco',
-    finnish: 'uk', // No Finnish flag, fallback to UK
+    finnish: 'finland', // No Finnish flag, fallback to UK
     australian: 'australia',
     canadian: 'canada',
     japanese: 'japan',
@@ -154,8 +154,32 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
   const scrollOffset = Math.min(scrollProgress * maxScroll, maxScroll)
 
   if (type === 'track') {
-    // Track title, flag, location are shown at top of page (over back button)
-    return <div className="relative z-10 h-full" aria-hidden />
+    const track = entity as TrackEntity
+    const flagPath = getCountryFlagPath(track.country)
+    return (
+      <div className="relative z-10 px-4 pb-0 text-white flex flex-col justify-end h-full">
+        <div className="justify-end flex flex-col">
+          <div className="space-y-2 pb-4">
+            {(flagPath || track.location || track.country) && (
+              <div className="flex items-center gap-2 text-sm">
+                {flagPath && (
+                  <Image
+                    src={flagPath}
+                    alt={track.country || 'Flag'}
+                    width={24}
+                    height={24}
+                    className="object-contain"
+                  />
+                )}
+                <span>
+                  {[track.location, track.country].filter(Boolean).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (type === 'team') {
@@ -170,7 +194,7 @@ export function EntityHeader({ type, entity, drivers = [], supabaseUrl, scrollPr
   const team = driver.teams
 
   return (
-    <div className="relative z-10 px-4 pb-8 text-white flex flex-col justify-end h-full">
+    <div className="relative z-10 px-4 pb-0 text-white flex flex-col justify-end h-full">
       <div className="justify-end flex flex-col">
       <h1 className="mb-0.5 text-3xl font-display tracking-wider md:text-6xl">
         {driver.name}

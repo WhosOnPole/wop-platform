@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
+import { LoadingLogo } from '@/components/loading-logo'
 
 const MIN_DISPLAY_MS = 400
 const FADE_DURATION_MS = 300
-const NAV_SHOW_DELAY_MS = 500
+const NAV_SHOW_DELAY_MS = 300
 const NAV_HIDE_SETTLE_MS = 150
 
 function isSameOriginLink(target: Element | null): boolean {
@@ -128,29 +129,11 @@ export function LoadingScreen() {
   return (
     <div
       aria-hidden
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-500 ease-out ${
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black transition-opacity duration-500 ease-out p-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] ${
         isFading && !showNavOverlay ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      <div className="relative flex h-28 w-28 flex-shrink-0 overflow-hidden rounded-full sm:h-36 sm:w-36">
-        <div
-          className="absolute left-1/2 top-1/2 z-0 h-[200%] w-[170%] min-h-[170%] min-w-[170%] -translate-x-1/2 -translate-y-1/2 animate-slot-border-rotate"
-          style={{
-            background:
-              'linear-gradient(90deg, #EC6D00 0%,#25B4B1 10%, #FF006F 20%, #25B4B1 30%, #FF006F 40%, #25B4B1 50%, #FF006F 60%, #25B4B1 70%, #FF006F 80%, #EC6D00 100%)',
-          }}
-        />
-        <div className="absolute inset-[2.5px] z-10 flex min-h-0 items-center justify-center overflow-hidden rounded-full bg-black">
-          <img
-            src="/images/seal_white.png"
-            alt=""
-            className="h-20 w-20 object-contain sm:h-28 sm:w-28"
-            width={128}
-            height={128}
-          />
-        </div>
-      </div>
-      <p className=" absolute bottom-[35vh] font-display text-white text-sm w-full text-center">Loading...</p>
+      <LoadingLogo />
     </div>
   )
 }

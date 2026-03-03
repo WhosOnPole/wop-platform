@@ -1,7 +1,9 @@
+import { LoadingLogo } from '@/components/loading-logo'
+
 export default function EntityLoading() {
   return (
-    <div className="flex min-h-[50vh] items-center justify-center" aria-hidden>
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+    <div className="flex min-h-screen items-center justify-center bg-black" aria-hidden>
+      <LoadingLogo />
     </div>
   )
 }

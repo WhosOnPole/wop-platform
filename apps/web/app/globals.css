@@ -201,6 +201,12 @@ html:-ms-fullscreen {
   animation: slot-border-rotate 4s linear infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-slot-border-rotate {
+    animation: none;
+  }
+}
+
 /* Grid rank number: fade in place when changing slot */
 @keyframes rankNumberFade {
   from { opacity: 0; }

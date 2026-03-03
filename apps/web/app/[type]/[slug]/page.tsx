@@ -15,7 +15,6 @@ import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
 import { CheckInSection } from '@/components/race/check-in-section'
 import { getTeamLogoUrl, getTeamBackgroundUrl, getTrackSlug } from '@/utils/storage-urls'
-import { getCountryFlagPath } from '@/utils/flags'
 import { isRaceWeekendActive } from '@/utils/race-weekend'
 
 export const runtime = 'nodejs'
@@ -392,28 +391,10 @@ export default async function DynamicPage({ params }: PageProps) {
         {/* Content over background */}
         <div className="relative z-10 h-full flex flex-col">
           <div className="shrink-0 pt-4 px-4 sm:px-6 md:px-8">
-            
-            {/* Track title at top: Title, under -> Flag, City, Country */}
             {type === 'tracks' && (
-              <div className="mb-4 text-white">
-                <h1 className="font-display text-2xl tracking-wider sm:text-3xl md:text-4xl">
-                  {entity.name}
-                </h1>
-                <div className="mt-2 flex items-center gap-2 font-sans text-sm text-white/90 sm:text-base">
-                  {getCountryFlagPath(entity.country) && (
-                    <Image
-                      src={getCountryFlagPath(entity.country)!}
-                      alt={entity.country || 'Flag'}
-                      width={20}
-                      height={20}
-                      className="object-contain"
-                    />
-                  )}
-                  <span>
-                    {[entity.location, entity.country].filter(Boolean).join(', ')}
-                  </span>
-                </div>
-              </div>
+              <h1 className="mb-4 font-display text-2xl tracking-wider text-white sm:text-3xl md:text-4xl">
+                {entity.name}
+              </h1>
             )}
             <PageBackButton variant="dark" />
           </div>

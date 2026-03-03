@@ -122,7 +122,7 @@ export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
                   />
                 </div>
               )}
-              <p className="text-sm text-white/90 group-hover:text-white lowercase leading-tight">
+              <p className="text-sm text-white/90 group-hover:text-white leading-tight">
                 {driver.name}
               </p>
             </div>

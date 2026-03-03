@@ -113,7 +113,7 @@ export default async function HighlightsPage() {
             {calculationHistory.map((highlight) => (
               <div
                 key={highlight.id}
-                className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-0 last:pb-0"
+                className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-0 first:pb-0 "
               >
                 <div>
                   <p className="text-sm font-medium text-gray-900">

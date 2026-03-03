@@ -126,8 +126,8 @@ export function TopNav() {
   ]
   const mobileDropdownItems = [
     { href: '/feed', label: 'Feed', type: 'feed' as const },
-    { href: '/pitlane', label: 'Pit Lane', type: 'pitlane' as const },
     { href: '/podiums', label: 'Spotlight', type: 'podiums' as const },
+    { href: '/pitlane', label: 'Pitlane', type: 'pitlane' as const },
   ]
 
   async function handleLogout() {
@@ -267,9 +267,9 @@ export function TopNav() {
                 </button>
               </span>
               {isMenuOpen ? (
-            <div className="absolute right-0 top-full mt-2 rounded-xl border border-gray-200/20 bg-black/80 backdrop-blur-sm text-white z-50 overflow-visible min-w-[16rem]" data-top-nav-dropdown>
+            <div className="absolute right-0 top-full mt-2 rounded-xl border border-gray-200/20 bg-black/80 backdrop-blur-sm text-white z-50 overflow-visible min-w-[12.5rem]" data-top-nav-dropdown>
               {/* Desktop: Settings + Logout only */}
-              <div className="hidden md:block p-2 min-w-[12rem]">
+              <div className="hidden md:block p-2 min-w-[12.5rem]">
                 <Link
                   href="/settings?tab=notifications"
                   onClick={(e) => {
@@ -291,9 +291,9 @@ export function TopNav() {
                 </button>
               </div>
 
-              {/* Mobile: Feed, Pitlane, Spotlight, Profile, Create as circles */}
+              {/* Mobile: Create, Feed, Spotlight, Pitlane (text left, icons right) */}
               <div className="md:hidden p-4 px-6">
-                <div className="flex flex-col gap-4 items-start">
+                <div className="flex flex-col gap-5 w-full">
                   <div className="w-full flex items-center justify-between pb-3 border-b border-white/10">
                     <button
                       type="button"
@@ -318,23 +318,23 @@ export function TopNav() {
                       <Settings className="h-5 w-5 text-white" />
                     </Link>
                   </div>
-                  <div className="flex flex-row items-center gap-3 relative" data-create-menu>
+                  <div className="w-full flex flex-row items-center justify-between relative" data-create-menu>
+                    <span className="text-lg font-sans tracking-wider [font-variant:all-small-caps;] text-white">Create</span>
                     <button
                       type="button"
                       onClick={() => {
                         setIsMenuOpen(false)
                         setIsCreateOpen((prev) => !prev)
                       }}
-                      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none shadow-lg ${
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors focus:outline-none ${
                         isCreateOpen
-                          ? 'bg-gradient-to-r from-[#EC553E] to-[#EB0E78] text-white'
-                          : 'border border-white/20 text-white/30'
+                          ? 'bg-sunset-gradient text-white'
+                          : 'border border-white/30 text-[#838383] hover:bg-gray-200'
                       }`}
                       aria-label="Create"
                     >
-                      <PlusCircle className="h-6 w-6" strokeWidth={0.9} />
+                      <PlusCircle className="h-5 w-5" strokeWidth={0.9} />
                     </button>
-                    <span className="text-sm font-medium text-white">Create</span>
                   </div>
                   {mobileDropdownItems.map((item) => {
                     const active = isActive(item.href)
@@ -346,9 +346,10 @@ export function TopNav() {
                           if (active) e.preventDefault()
                           setIsMenuOpen(false)
                         }}
-                        className="flex flex-row items-center gap-4"
+                        className="w-full flex flex-row items-center justify-between"
                         aria-label={item.label}
                       >
+                        <span className="text-lg font-sans tracking-wider [font-variant:all-small-caps;] text-white">{item.label}</span>
                         <span
                           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${
                             active
@@ -358,7 +359,6 @@ export function TopNav() {
                         >
                           <NavIcon type={item.type} active={active} variant="circular" />
                         </span>
-                        <span className="text-sm font-medium text-white">{item.label}</span>
                       </Link>
                     )
                   })}
@@ -369,7 +369,7 @@ export function TopNav() {
                         if (isActive(profileHref)) e.preventDefault()
                         setIsMenuOpen(false)
                       }}
-                      className={`block w-full py-1 text-center text-sm font-semibold tracking-wide text-white transition-colors hover:text-white/90 ${
+                      className={`block w-full py-1 text-center text-lg font-sans tracking-wider [font-variant:all-small-caps;] text-white transition-colors hover:text-white/90 ${
                         isActive(profileHref) ? 'text-[#25B4B1]' : ''
                       }`}
                       aria-label="Profile"
