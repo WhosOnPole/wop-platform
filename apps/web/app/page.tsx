@@ -81,12 +81,6 @@ export default function HomePage() {
             >
               Sign Up
             </Link>
-            <Link
-              href="/#who-we-are"
-              className="text-center text-sm text-white/70 underline underline-offset-2 hover:text-white mb-6"
-            >
-              or learn more
-            </Link>
             {/* Clipped so phones are centered; on mobile only 50% of screen height; flush to next section on desktop */}
             <div className="relative w-full max-w-6xl overflow-hidden mx-auto flex-1
               min-h-[22vh] max-h-[50vh] md:min-h-[45vh] md:max-h-none">

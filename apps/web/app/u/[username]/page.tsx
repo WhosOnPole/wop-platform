@@ -125,7 +125,7 @@ export default async function UserProfilePage({ params }: PageProps) {
     })
   )
 
-  // Fetch activity: posts, comments, check-ins, likes, grid updates
+  // Fetch activity: posts, comments, check-ins, grid slot comments (grid updates excluded)
   const activities: any[] = []
 
   // Posts
@@ -232,32 +232,7 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   // Likes are not shown in activity (removed per product)
 
-  // Grid updates (from posts with parent_page_type='profile' and parent_page_id=user_id)
-  const { data: gridUpdatePosts } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('user_id', profile.id)
-    .eq('parent_page_type', 'profile')
-    .eq('parent_page_id', profile.id)
-    .order('created_at', { ascending: false })
-
-  if (gridUpdatePosts) {
-    for (const post of gridUpdatePosts) {
-      // Try to determine grid type from post content
-      let gridType: 'driver' | 'team' | 'track' | null = null
-      if (post.content?.toLowerCase().includes('driver')) gridType = 'driver'
-      else if (post.content?.toLowerCase().includes('team')) gridType = 'team'
-      else if (post.content?.toLowerCase().includes('track')) gridType = 'track'
-
-      activities.push({
-        id: post.id,
-        type: 'grid_update',
-        content: post.content,
-        created_at: post.created_at,
-        target_type: gridType,
-      })
-    }
-  }
+  // Grid updates are not shown in activity (posts with parent_page_type='profile' on own profile)
 
   // Grid slot comments this user made on their own grids (user-initiated only)
   const myGridIds = (grids || []).map((g: { id: string }) => g.id)
