@@ -164,69 +164,67 @@ export default async function ReportsPage() {
   )
 
   const enrichedReports =
-    pending
-      ?.map((report) => {
-        let targetPreview: any = null
-        if (report.target_type === 'post') {
-          const p = postMap[report.target_id]
-          if (p)
-            targetPreview = {
-              type: 'post',
-              content: p.content,
-              username: p.user?.username,
-              parent_page_type: p.parent_page_type,
-              parent_page_id: p.parent_page_id,
-              parent_name:
-                p.parent_page_type === 'driver'
-                  ? driverNameMap[p.parent_page_id as string]
-                  : p.parent_page_type === 'team'
-                  ? teamNameMap[p.parent_page_id as string]
-                  : p.parent_page_type === 'track'
-                  ? trackNameMap[p.parent_page_id as string]
-                  : p.parent_page_type === 'profile'
-                  ? parentProfileNameMap[p.parent_page_id as string]
-                  : null,
-            }
-        } else if (report.target_type === 'comment') {
-          const c = commentMap[report.target_id]
-          if (c) {
-            const parentPost = postMap[c.post_id]
-            targetPreview = {
-              type: 'comment',
-              content: c.content,
-              username: c.user?.username,
-              parent_page_type: parentPost?.parent_page_type,
-              parent_page_id: parentPost?.parent_page_id,
-              parent_name:
-                parentPost?.parent_page_type === 'driver'
-                  ? driverNameMap[parentPost.parent_page_id as string]
-                  : parentPost?.parent_page_type === 'team'
-                  ? teamNameMap[parentPost.parent_page_id as string]
-                  : parentPost?.parent_page_type === 'track'
-                  ? trackNameMap[parentPost.parent_page_id as string]
-                  : parentPost?.parent_page_type === 'profile'
-                  ? parentProfileNameMap[parentPost.parent_page_id as string]
-                  : null,
-            }
+    pending?.map((report) => {
+      let targetPreview: any = null
+      if (report.target_type === 'post') {
+        const p = postMap[report.target_id]
+        if (p)
+          targetPreview = {
+            type: 'post',
+            content: p.content,
+            username: p.user?.username,
+            parent_page_type: p.parent_page_type,
+            parent_page_id: p.parent_page_id,
+            parent_name:
+              p.parent_page_type === 'driver'
+                ? driverNameMap[p.parent_page_id as string]
+                : p.parent_page_type === 'team'
+                ? teamNameMap[p.parent_page_id as string]
+                : p.parent_page_type === 'track'
+                ? trackNameMap[p.parent_page_id as string]
+                : p.parent_page_type === 'profile'
+                ? parentProfileNameMap[p.parent_page_id as string]
+                : null,
           }
-        } else if (report.target_type === 'grid_slot_comment') {
-          const c = gridSlotCommentMap[report.target_id]
-          if (c)
-            targetPreview = {
-              type: 'grid_slot_comment',
-              content: c.content,
-              username: (c as any).user?.username,
-            }
-        } else if (report.target_type === 'grid') {
-          const g = gridMap[report.target_id]
-          if (g) targetPreview = { type: 'grid', content: g.blurb, username: g.user?.username }
-        } else if (report.target_type === 'profile') {
-          const p = profileMap[report.target_id]
-          if (p) targetPreview = { type: 'profile', username: p.username, image: p.profile_image_url }
+      } else if (report.target_type === 'comment') {
+        const c = commentMap[report.target_id]
+        if (c) {
+          const parentPost = postMap[c.post_id]
+          targetPreview = {
+            type: 'comment',
+            content: c.content,
+            username: c.user?.username,
+            parent_page_type: parentPost?.parent_page_type,
+            parent_page_id: parentPost?.parent_page_id,
+            parent_name:
+              parentPost?.parent_page_type === 'driver'
+                ? driverNameMap[parentPost.parent_page_id as string]
+                : parentPost?.parent_page_type === 'team'
+                ? teamNameMap[parentPost.parent_page_id as string]
+                : parentPost?.parent_page_type === 'track'
+                ? trackNameMap[parentPost.parent_page_id as string]
+                : parentPost?.parent_page_type === 'profile'
+                ? parentProfileNameMap[parentPost.parent_page_id as string]
+                : null,
+          }
         }
-        return { ...report, targetPreview }
-      })
-      .filter((report) => report.targetPreview != null) || []
+      } else if (report.target_type === 'grid_slot_comment') {
+        const c = gridSlotCommentMap[report.target_id]
+        if (c)
+          targetPreview = {
+            type: 'grid_slot_comment',
+            content: c.content,
+            username: (c as any).user?.username,
+          }
+      } else if (report.target_type === 'grid') {
+        const g = gridMap[report.target_id]
+        if (g) targetPreview = { type: 'grid', content: g.blurb, username: g.user?.username }
+      } else if (report.target_type === 'profile') {
+        const p = profileMap[report.target_id]
+        if (p) targetPreview = { type: 'profile', username: p.username, image: p.profile_image_url }
+      }
+      return { ...report, targetPreview }
+    }) || []
 
   return (
     <div>

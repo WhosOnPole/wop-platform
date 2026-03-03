@@ -124,7 +124,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
               <div className="mt-1 text-xs text-gray-500">
                 Reported on {new Date(report.created_at).toLocaleString()}
               </div>
-              {report.targetPreview && (
+              {report.targetPreview ? (
                 <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">
@@ -156,6 +156,10 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                         : `${report.targetPreview.parent_page_type} (${report.targetPreview.parent_page_id})`}
                     </p>
                   )}
+                </div>
+              ) : (
+                <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                  Content no longer available (may have been deleted)
                 </div>
               )}
               <div className="text-sm text-gray-600 flex justify-between gap-3 mt-3">

@@ -15,7 +15,7 @@ export default function SignupPage() {
     }
   }, [])
 
-  async function handleOAuth(provider: 'google' | 'apple' | 'facebook') {
+  async function handleOAuth(provider: 'google' | 'apple') {
     if (!redirectUrl) return
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
