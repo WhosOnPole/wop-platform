@@ -50,14 +50,14 @@ export default function SettingsPage() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const t = searchParams.get('tab')
-    if (t === 'settings') return 'notifications' // backwards compat
+    if (t === 'settings') return 'profile' // backwards compat
     return isValidTab(t) ? t : 'profile'
   })
 
   // Sync activeTab from URL (e.g. /settings?tab=notifications). Default to profile when no tab specified.
   useEffect(() => {
     const t = searchParams.get('tab')
-    if (t === 'settings') setActiveTab('notifications')
+    if (t === 'settings') setActiveTab('profile')
     else if (isValidTab(t)) setActiveTab(t)
     else setActiveTab('profile')
   }, [searchParams])
