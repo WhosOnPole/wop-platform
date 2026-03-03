@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, ReactNode } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 interface Tab {
   id: string
@@ -11,6 +12,8 @@ interface Tab {
 interface EntityTabsProps {
   tabs: Tab[]
   defaultTab?: string
+  /** When ?post= is in URL, switch to this tab (e.g. Discussion/Meetups) so scroll-to-post works */
+  scrollToPostTabId?: string
 }
 
 function getTabFromHash(): string | null {
@@ -19,9 +22,17 @@ function getTabFromHash(): string | null {
   return hash || null
 }
 
-export function EntityTabs({ tabs, defaultTab }: EntityTabsProps) {
+export function EntityTabs({ tabs, defaultTab, scrollToPostTabId }: EntityTabsProps) {
+  const searchParams = useSearchParams()
   const tabIds = tabs.map((t) => t.id)
   const [activeTab, setActiveTab] = useState(defaultTab ?? tabs[0]?.id ?? '')
+
+  useEffect(() => {
+    const postParam = searchParams.get('post')
+    if (postParam && scrollToPostTabId && tabIds.includes(scrollToPostTabId)) {
+      setActiveTab(scrollToPostTabId)
+    }
+  }, [searchParams, scrollToPostTabId, tabIds.join(',')])
 
   useEffect(() => {
     const hashTabId = getTabFromHash()

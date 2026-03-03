@@ -13,6 +13,7 @@ import { TrackTipsTab } from '@/components/entity/tabs/track-tips-tab'
 import { TrackScheduleTab } from '@/components/entity/tabs/track-schedule-tab'
 import { TeamDriversTab } from '@/components/entity/tabs/team-drivers-tab'
 import { DiscussionTab } from '@/components/entity/tabs/discussion-tab'
+import { EntityScrollToPost } from '@/components/entity/entity-scroll-to-post'
 import { CheckInSection } from '@/components/race/check-in-section'
 import { getTeamLogoUrl, getTeamBackgroundUrl, getTrackSlug } from '@/utils/storage-urls'
 import { isRaceWeekendActive } from '@/utils/race-weekend'
@@ -460,6 +461,7 @@ export default async function DynamicPage({ params }: PageProps) {
               />
             </div>
           )}
+          <EntityScrollToPost />
           {type === 'drivers' ? (
             <div className="sticky top-[10vh] z-30 bg-black">
               <h2 className="mb-6 px-4 text-2xl text-right font-semibold capitalize text-white font-sageva tracking-wider">Discussions</h2>
@@ -470,7 +472,10 @@ export default async function DynamicPage({ params }: PageProps) {
               />
             </div>
           ) : (
-            <EntityTabs tabs={tabs} />
+            <EntityTabs
+              tabs={tabs}
+              scrollToPostTabId={type === 'tracks' ? 'meetups' : type === 'teams' ? 'discussion' : undefined}
+            />
           )}
         </div>
       </div>

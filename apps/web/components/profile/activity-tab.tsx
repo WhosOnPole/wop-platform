@@ -31,9 +31,7 @@ export function ActivityTab({
   activities,
   profileUsername,
 }: ActivityTabProps) {
-  const filteredActivities = activities.filter(
-    (item) => item.type !== 'like' && item.type !== 'comment'
-  )
+  const filteredActivities = activities.filter((item) => item.type !== 'like')
 
   function getActivityIcon(item: ActivityItem) {
     switch (item.type) {
@@ -83,6 +81,12 @@ export function ActivityTab({
       return `/u/${profileUsername}?tab=${tab}`
     }
     if (item.target_id && item.target_type) {
+      if (item.target_type === 'poll' || item.target_type === 'hot_take') {
+        if ((item.type === 'post' || item.type === 'comment') && item.post_id) {
+          return `/feed?post=${encodeURIComponent(item.post_id)}`
+        }
+        return '/feed'
+      }
       const slug =
         item.target_type === 'profile'
           ? (item.target_name ?? '').replace(/^@/, '')
@@ -94,7 +98,9 @@ export function ActivityTab({
       else if (item.target_type === 'track') path = `/tracks/${slug}`
       else if (item.target_type === 'profile') path = `/u/${slug}`
       if (path && (item.type === 'post' || item.type === 'comment') && item.post_id) {
-        return `${path}?post=${encodeURIComponent(item.post_id)}`
+        const sep = path.includes('?') ? '&' : '?'
+        const tabPart = item.target_type === 'profile' ? 'tab=activity&' : ''
+        return `${path}${sep}${tabPart}post=${encodeURIComponent(item.post_id)}`
       }
       return path
     }
@@ -105,15 +111,15 @@ export function ActivityTab({
     <div className="flex min-h-0 flex-col gap-4">
       <div className="flex-1 min-h-0 overflow-y-auto pr-1">
         {filteredActivities.length === 0 ? (
-          <div className="py-12 text-center rounded-lg border border-white/10 bg-white/5">
+          <div className="py-12 text-center rounded-lg border border-white/10 bg-black/40 shadow backdrop-blur-sm">
             <p className="text-white/60">No activity yet</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-6">
             {filteredActivities.map((item) => {
               const link = getActivityLink(item)
-              const className = `flex items-start gap-4 rounded-lg border border-white/10 bg-white/5 p-4 ${
-                link ? 'hover:bg-white/10 transition-colors cursor-pointer active:bg-white/15' : ''
+              const cardClassName = `rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm ${
+                link ? 'hover:bg-black/50 transition-colors cursor-pointer block' : 'block'
               }`
 
               const isGridComment = item.type === 'grid_comment'
@@ -126,20 +132,27 @@ export function ActivityTab({
                       ? 'Tracks'
                       : 'Grid'
 
+              const headerSection = (
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-white/70">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">{getActivityIcon(item)}</div>
+                </div>
+              )
+
               const content = isGridComment ? (
                 <>
-                  <div className="flex-shrink-0">{getActivityIcon(item)}</div>
-                  <div className="flex flex-1 min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  {headerSection}
+                  <div id={item.post_id ? `post-${item.post_id}` : undefined} className="flex flex-1 min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-white">
                         {gridTypeLabel} Grid Comments Updated!
                       </p>
                       <p className="mt-1 text-sm text-white/80">
                         Position #{item.rank_index ?? 0}: &quot;{item.content ?? ''}&quot;
-                      </p>
-                      <p className="mt-2 text-xs text-white/50">
-                        {item.target_name ?? 'Someone'} ·{' '}
-                        {new Date(item.created_at).toLocaleString()}
                       </p>
                     </div>
                     {link && (
@@ -151,21 +164,59 @@ export function ActivityTab({
                 </>
               ) : (
                 <>
-                  <div className="flex-shrink-0">{getActivityIcon(item)}</div>
-
+                  {headerSection}
                   <div id={item.post_id ? `post-${item.post_id}` : undefined} className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium text-white">{getActivityLabel(item)}</span>
-                      {item.target_name && (
-                        <span className="text-white/80">
-                          {item.target_type === 'profile' ? '@' : ''}
-                          {item.target_name}
-                        </span>
-                      )}
-                    </div>
+                    {(item.type === 'post' || item.type === 'comment') && item.target_name && (
+                      <p className="mb-2 text-xs text-white/70">
+                        {item.type === 'post' && item.target_type === 'poll'
+                          ? 'Reposted poll: '
+                          : item.type === 'comment'
+                            ? `${getActivityLabel(item)} on `
+                            : 'Discussion on '}
+                        {link ? (
+                          <Link
+                            href={link}
+                            className="text-[#25B4B1] hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {item.target_type === 'profile' ? '@' : ''}
+                            {item.target_type === 'poll'
+                              ? `"${item.target_name.length > 60 ? item.target_name.slice(0, 60) + '…' : item.target_name}"`
+                              : item.target_type === 'hot_take'
+                                ? `Hot take: "${item.target_name.length > 50 ? item.target_name.slice(0, 50) + '…' : item.target_name}"`
+                                : item.target_name}
+                          </Link>
+                        ) : (
+                          <span>
+                            {item.target_type === 'profile' ? '@' : ''}
+                            {item.target_type === 'poll'
+                              ? `"${item.target_name.length > 60 ? item.target_name.slice(0, 60) + '…' : item.target_name}"`
+                              : item.target_type === 'hot_take'
+                                ? `Hot take: "${item.target_name.length > 50 ? item.target_name.slice(0, 50) + '…' : item.target_name}"`
+                                : item.target_name}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    {item.type === 'checkin' && item.target_name && (
+                      <p className="mb-2 text-xs text-white/70">
+                        {getActivityLabel(item)}{' '}
+                        {link ? (
+                          <Link
+                            href={link}
+                            className="text-[#25B4B1] hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {item.target_name}
+                          </Link>
+                        ) : (
+                          item.target_name
+                        )}
+                      </p>
+                    )}
 
                     {item.content && (
-                      <p className="mt-1 text-sm text-white/80 line-clamp-2">{item.content}</p>
+                      <p className="text-white/90">{item.content}</p>
                     )}
 
                     {item.type === 'grid_update' && item.target_type && (
@@ -173,24 +224,20 @@ export function ActivityTab({
                         Updated their {item.target_type} grid
                       </p>
                     )}
-
-                    <p className="mt-2 text-xs text-white/50">
-                      {new Date(item.created_at).toLocaleString()}
-                    </p>
                   </div>
                 </>
               )
 
               if (link) {
                 return (
-                  <Link key={item.id} href={link} className={className}>
+                  <Link key={item.id} href={link} className={cardClassName}>
                     {content}
                   </Link>
                 )
               }
 
               return (
-                <div key={item.id} className={className}>
+                <div key={item.id} className={cardClassName}>
                   {content}
                 </div>
               )

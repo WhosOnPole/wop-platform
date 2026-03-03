@@ -590,7 +590,7 @@ export function DiscussionSection({
             const { topLevel, repliesByParent } = groupComments(postComments)
 
             return (
-              <div key={post.id} className={`${postBorderClasses} pb-6 last:border-0`}>
+              <div key={post.id} id={`post-${post.id}`} className={`${postBorderClasses} pb-6 last:border-0`}>
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-start space-x-3">
                     <div

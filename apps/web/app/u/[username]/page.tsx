@@ -137,6 +137,11 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   if (posts) {
     for (const post of posts) {
+      // Skip posts on own profile - they're redundant (original post shows in profile discussion)
+      if (post.parent_page_type === 'profile' && post.parent_page_id === profile.id) {
+        continue
+      }
+
       // Fetch target name based on type
       let targetName = null
       if (post.parent_page_type === 'driver' && post.parent_page_id) {
@@ -151,6 +156,12 @@ export default async function UserProfilePage({ params }: PageProps) {
       } else if (post.parent_page_type === 'profile' && post.parent_page_id) {
         const { data } = await supabase.from('profiles').select('username').eq('id', post.parent_page_id).single()
         targetName = data?.username
+      } else if (post.parent_page_type === 'poll' && post.parent_page_id) {
+        const { data } = await supabase.from('polls').select('question').eq('id', post.parent_page_id).single()
+        targetName = data?.question ?? 'Poll'
+      } else if (post.parent_page_type === 'hot_take' && post.parent_page_id) {
+        const { data } = await supabase.from('hot_takes').select('content_text').eq('id', post.parent_page_id).single()
+        targetName = data?.content_text ?? 'Hot take'
       }
 
       activities.push({
@@ -193,6 +204,12 @@ export default async function UserProfilePage({ params }: PageProps) {
       } else if (parentPageType === 'profile' && parentPageId) {
         const { data } = await supabase.from('profiles').select('username').eq('id', parentPageId).single()
         targetName = data?.username
+      } else if (parentPageType === 'poll' && parentPageId) {
+        const { data } = await supabase.from('polls').select('question').eq('id', parentPageId).single()
+        targetName = data?.question ?? 'Poll'
+      } else if (parentPageType === 'hot_take' && parentPageId) {
+        const { data } = await supabase.from('hot_takes').select('content_text').eq('id', parentPageId).single()
+        targetName = data?.content_text ?? 'Hot take'
       }
 
       const parentPost = comment.post as { id?: string } | null
