@@ -3,9 +3,9 @@ import Link from 'next/link'
 
 export default function HomePage() {
   const cycleItems = [
+    { word: 'Passion', subline: 'Connection fueled by obsession' },
     { word: 'Community', subline: 'F1 fandom, redefined' },
     { word: 'Motorsport', subline: 'Built for the love of it' },
-    { word: 'Passion', subline: 'Connection fueled by obsession' },
   ] as const
 
   return (

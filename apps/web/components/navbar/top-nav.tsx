@@ -212,7 +212,7 @@ export function TopNav() {
                 className={`text-md transition-colors rounded-full px-4 py-2 ${
                   pathname === item.href
                     ? 'text-[#25B4B1] bg-sunset-start/55'
-                    : 'text-white hover:bg-sunset-start/55'
+                    : 'text-white hover:bg-[#25B4B1]/55'
                 }`}
               >
                 {item.label}
