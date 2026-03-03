@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { PenLine, Check } from 'lucide-react'
+import { PenLine, Check, Plus } from 'lucide-react'
 import { PollCard } from '@/components/polls/poll-card'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { useCreateModal } from '@/components/providers/create-modal-provider'
@@ -299,8 +299,9 @@ export function SpotlightTabs({
                 <button
                   type="button"
                   onClick={() => setActiveModal('poll')}
-                  className="rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1]/90"
                 >
+                  <Plus className="h-4 w-4" />
                   Create a poll
                 </button>
               </div>
