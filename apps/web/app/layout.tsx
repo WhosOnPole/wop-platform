@@ -7,6 +7,7 @@ import { BotIDProviderWrapper } from '@/components/providers/botid-provider'
 import { AuthSessionProvider } from '@/components/providers/auth-session-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 import { LoadingScreen } from '@/components/loading-screen'
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({
   subsets: ['latin'],
