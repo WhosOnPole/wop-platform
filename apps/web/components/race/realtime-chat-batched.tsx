@@ -9,6 +9,10 @@ import { useChatPolling } from '@/hooks/use-chat-polling'
 import { ChatMessageItem } from './chat-message-item'
 import type { ChatStatus } from '@/utils/race-weekend'
 
+/** Debounce connection state to prevent rapid blinking between "Connecting..." and "Live" */
+const CONNECTED_DEBOUNCE_MS = 400
+const DISCONNECTED_DEBOUNCE_MS = 1500
+
 interface RealtimeChatBatchedProps {
   trackId: string
   raceName?: string
@@ -25,6 +29,8 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
   const [isAdmin, setIsAdmin] = useState(false)
   const [usePolling, setUsePolling] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const prevMessageCountRef = useRef(0)
 
   // Get current user and admin status
   useEffect(() => {
@@ -86,9 +92,48 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
   const messages = usePolling ? polledMessages : batchedMessages
   const isConnectedState = usePolling ? isPolling : isConnected
 
-  // Auto-scroll to bottom when new messages arrive
+  // Debounce connection display to prevent rapid blinking
+  const [displayConnected, setDisplayConnected] = useState(false)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+    if (isConnectedState) {
+      debounceRef.current = setTimeout(() => setDisplayConnected(true), CONNECTED_DEBOUNCE_MS)
+    } else {
+      debounceRef.current = setTimeout(() => setDisplayConnected(false), DISCONNECTED_DEBOUNCE_MS)
+    }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [isConnectedState])
+
+  // Auto-scroll to bottom when new messages arrive, but only if user is already near bottom
+  // (avoids fighting users who scrolled up to read history). Always scroll on initial load.
+  const SCROLL_THRESHOLD = 120
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    const prevCount = prevMessageCountRef.current
+    prevMessageCountRef.current = messages.length
+
+    if (messages.length <= prevCount) return
+
+    const isInitialLoad = prevCount === 0 && messages.length > 0
+    if (isInitialLoad) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+
+    if (!container) return
+    const { scrollTop, scrollHeight, clientHeight } = container
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight
+    const isNearBottom = distanceFromBottom < SCROLL_THRESHOLD
+
+    if (isNearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   // Determine chat state
@@ -147,7 +192,7 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
                 <WifiOff className="h-4 w-4" />
                 <span>Polling</span>
               </div>
-            ) : isConnectedState ? (
+            ) : displayConnected ? (
               <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-green-300' : 'text-green-600'}`}>
                 <Wifi className="h-4 w-4" />
                 <span>Live</span>
@@ -179,7 +224,10 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
       </div>
 
       {/* Messages */}
-      <div className={isLiveLayout ? 'flex-1 min-h-0 overflow-y-auto p-4' : 'h-96 overflow-y-auto p-6'}>
+      <div
+        ref={scrollContainerRef}
+        className={isLiveLayout ? 'flex-1 min-h-0 overflow-y-auto p-4' : 'h-96 overflow-y-auto p-6'}
+      >
         {messages.length === 0 ? (
           <p className={`text-center ${isLiveLayout ? 'text-white/60' : 'text-gray-500'}`}>
             {isChatClosed

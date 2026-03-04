@@ -156,8 +156,6 @@ export default async function FeedPage() {
     featuredNews,
     sponsors,
     weeklyHighlights,
-    raceTracks,
-    liveTrackIdsResult,
     activeHotTake,
   ] = await Promise.all([
     // Posts from current user + users you follow
@@ -319,13 +317,6 @@ export default async function FeedPage() {
 
       return { data: highlights || null }
     })(),
-    // Upcoming race (based on tracks.start_date)
-    supabase
-      .from('tracks')
-      .select('id, name, location, country, start_date, end_date, circuit_ref, chat_enabled')
-      .not('start_date', 'is', null)
-      .order('start_date', { ascending: true }),
-    supabase.rpc('get_track_ids_with_active_event'),
     // Active hot take (single) by date range
     (async () => {
       const nowIso = new Date().toISOString()
@@ -364,36 +355,6 @@ export default async function FeedPage() {
     .eq('id', session.user.id)
     .single()
   const isNewUser = !currentUserProfile?.nav_glow_dismissed_at
-
-  const upcomingRace = (() => {
-    const race = getClosestRaceFromTracks({ tracks: (raceTracks.data || []) as TrackRace[] })
-    if (!race) return null
-    return {
-      ...race,
-      slug: slugify(race.name),
-      chat_enabled: race.chat_enabled ?? undefined,
-    }
-  })()
-
-  // Live = track has an active event right now (from track_events)
-  const liveTrackIdSet = new Set((liveTrackIdsResult?.data || []) as string[])
-  const isUpcomingRaceLive = Boolean(upcomingRace && liveTrackIdSet.has(upcomingRace.id))
-
-  // Only show upcoming race in carousel when live; fetch distinct users in chat (last 10 min) once per page load
-  let upcomingRaceForCarousel: (typeof upcomingRace & { liveChatUserCount?: number; isLive?: boolean }) | null =
-    isUpcomingRaceLive ? { ...upcomingRace!, isLive: true } : null
-  if (upcomingRaceForCarousel?.id) {
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
-    const { data: recentMessages } = await supabase
-      .from('live_chat_messages')
-      .select('user_id')
-      .eq('track_id', upcomingRaceForCarousel.id)
-      .gte('created_at', tenMinutesAgo)
-    const liveChatUserCount = recentMessages
-      ? new Set(recentMessages.map((r: { user_id: string }) => r.user_id)).size
-      : 0
-    upcomingRaceForCarousel = { ...upcomingRaceForCarousel, liveChatUserCount }
-  }
 
   // Fetch hot take discussion posts if active hot take exists
   let hotTakePosts: any[] = []
@@ -1119,7 +1080,6 @@ export default async function FeedPage() {
               voteCounts={feedPollVoteCounts}
               discussionPosts={hotTakePosts}
               pollDiscussionPostsByPollId={pollDiscussionPostsByPollId}
-              upcomingRace={upcomingRaceForCarousel}
               sponsors={sponsorsList}
               featuredNews={featuredNewsList}
             />

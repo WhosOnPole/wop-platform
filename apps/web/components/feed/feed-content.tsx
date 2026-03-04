@@ -140,12 +140,12 @@ type FeedItem =
 const DISCOVERY_LIMIT = 15
 const FEED_TAB_STORAGE_KEY = 'feed-active-tab'
 
-type FeedTab = 'pitcrew' | 'discovery'
+type FeedTab = 'pit crew' | 'discovery'
 
 function getStoredFeedTab(): FeedTab {
-  if (typeof window === 'undefined') return 'pitcrew'
+  if (typeof window === 'undefined') return 'pit crew'
   const stored = window.localStorage.getItem(FEED_TAB_STORAGE_KEY)
-  return stored === 'discovery' ? 'discovery' : 'pitcrew'
+  return stored === 'discovery' ? 'discovery' : 'pit crew'
 }
 
 export function FeedContent({
@@ -174,7 +174,7 @@ export function FeedContent({
 
   const [activeTab, setActiveTab] = useState<FeedTab>(() => {
     const tabParam = searchParams.get('tab')
-    if (tabParam === 'discovery' || tabParam === 'pitcrew') return tabParam
+    if (tabParam === 'discovery' || tabParam === 'pit crew') return tabParam
     return getStoredFeedTab()
   })
 
@@ -461,7 +461,7 @@ export function FeedContent({
   // Sync tab from URL (e.g. back/forward or shared link)
   useEffect(() => {
     const tabParam = searchParams.get('tab')
-    if (tabParam === 'discovery' || tabParam === 'pitcrew') {
+    if (tabParam === 'discovery' || tabParam === 'pit crew') {
       setActiveTab(tabParam)
     }
   }, [searchParams])
@@ -509,22 +509,22 @@ export function FeedContent({
   return (
     <div className="space-y-6">
       <nav
-        className="flex w-full border-b border-white/20 mt-12"
+        className="flex w-full border-b border-white/20"
         role="tablist"
         aria-label="Feed tabs"
       >
         <button
           type="button"
           role="tab"
-          aria-selected={activeTab === 'pitcrew'}
-          onClick={() => setFeedTab('pitcrew')}
+          aria-selected={activeTab === 'pit crew'}
+          onClick={() => setFeedTab('pit crew')}
           className={`flex flex-1 items-center justify-center px-4 py-2.5 text-xs uppercase tracking-wide transition border-b-2 -mb-px ${
-            activeTab === 'pitcrew'
+            activeTab === 'pit crew'
               ? 'border-bright-teal text-white'
               : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/30'
           }`}
         >
-          pitcrew
+          pit crew
         </button>
         <button
           type="button"
@@ -541,7 +541,7 @@ export function FeedContent({
         </button>
       </nav>
 
-      {activeTab === 'pitcrew' && (
+      {activeTab === 'pit crew' && (
         <>
           {!hasContent && emptyStateBlock}
           {hasContent &&

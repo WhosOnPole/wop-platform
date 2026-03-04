@@ -19,14 +19,21 @@ export default async function LiveChatPage() {
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-  // Fetch all tracks with dates and which have an active event right now
-  const [tracksResult, liveIdsResult] = await Promise.all([
+  // Fetch all tracks with dates, active events, and next upcoming (by track_events)
+  const currentSeason = new Date().getFullYear()
+  const [tracksResult, liveIdsResult, futureEventsResult] = await Promise.all([
     supabase
       .from('tracks')
       .select('id, name, start_date')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     supabase.rpc('get_track_ids_with_active_event'),
+    supabase
+      .from('track_events')
+      .select('track_id, scheduled_at')
+      .gt('scheduled_at', now.toISOString())
+      .eq('season_year', currentSeason)
+      .order('scheduled_at', { ascending: true }),
   ])
   const allRaces = tracksResult.data || []
   const liveTrackIds = new Set((liveIdsResult?.data || []) as string[])
@@ -41,10 +48,29 @@ export default async function LiveChatPage() {
 
   const liveRaces = allRaces.filter((race) => liveTrackIds.has(race.id))
 
-  const upcomingRaces = allRaces.filter((race) => {
-    if (!race.start_date) return false
-    return new Date(race.start_date) > now
-  })
+  // Upcoming: use track_events order (chronological by next event) when available
+  let upcomingRaces: typeof allRaces
+  const nextEventByTrackId = new Map<string, string>()
+  const futureEvents = futureEventsResult.data || []
+  if (futureEvents.length > 0) {
+    const upcomingTrackIdsOrdered: string[] = []
+    const seen = new Set<string>()
+    for (const ev of futureEvents) {
+      if (ev.track_id && !seen.has(ev.track_id)) {
+        seen.add(ev.track_id)
+        upcomingTrackIdsOrdered.push(ev.track_id)
+        if (ev.scheduled_at) nextEventByTrackId.set(ev.track_id, ev.scheduled_at)
+      }
+    }
+    upcomingRaces = upcomingTrackIdsOrdered
+      .map((id) => allRaces.find((r) => r.id === id))
+      .filter((r): r is (typeof allRaces)[0] => Boolean(r))
+  } else {
+    upcomingRaces = allRaces.filter((race) => {
+      if (!race.start_date) return false
+      return new Date(race.start_date) > now
+    })
+  }
 
   const recentRaces = allRaces.filter((race) => {
     if (!race.start_date) return false
@@ -105,7 +131,8 @@ export default async function LiveChatPage() {
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {upcomingRaces.map((race) => {
-              const raceTime = race.start_date ? new Date(race.start_date) : null
+              const nextEventAt = nextEventByTrackId.get(race.id)
+              const raceTime = nextEventAt ? new Date(nextEventAt) : (race.start_date ? new Date(race.start_date) : null)
               const timeUntil = raceTime ? raceTime.getTime() - now.getTime() : null
               const daysUntil = timeUntil ? Math.floor(timeUntil / (1000 * 60 * 60 * 24)) : null
               const hoursUntil = timeUntil

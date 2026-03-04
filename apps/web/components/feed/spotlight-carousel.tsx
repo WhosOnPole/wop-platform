@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Radio, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
-import { UpcomingRaceCard } from './upcoming-race-card'
 import { SponsorCard } from './sponsor-card'
 import { FeaturedGridCarouselCard } from './featured-grid-carousel-card'
 
@@ -48,19 +47,6 @@ interface Poll {
   admin_id?: string | null
 }
 
-interface Race {
-  id: string
-  name: string
-  slug: string
-  start_date: string | null
-  end_date: string | null
-  location: string | null
-  country: string | null
-  image_url: string | null
-  circuit_ref: string | null
-  chat_enabled?: boolean
-}
-
 interface Sponsor {
   id: string
   name: string
@@ -88,7 +74,6 @@ interface SpotlightCarouselProps {
   voteCounts?: Record<string, Record<string, number>>
   discussionPosts: any[]
   pollDiscussionPostsByPollId?: Record<string, any[]>
-  upcomingRace?: Race | null
   sponsors?: Sponsor[]
   featuredNews?: NewsStory[]
 }
@@ -101,31 +86,24 @@ export function SpotlightCarousel({
   voteCounts = {},
   discussionPosts,
   pollDiscussionPostsByPollId = {},
-  upcomingRace,
   sponsors = [],
   featuredNews = [],
 }: SpotlightCarouselProps) {
   const hasHotTake = Boolean(spotlight?.hot_take)
   const hasFeaturedGrid = Boolean(spotlight?.featured_grid)
   const hasAdminPolls = polls.length > 0
-  const hasUpcomingRace = Boolean(upcomingRace)
   const hasSponsors = sponsors.length > 0
   const featuredStory = featuredNews?.[0] ?? null
 
-  if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasUpcomingRace && !hasSponsors && !featuredStory) return null
+  if (!hasHotTake && !hasFeaturedGrid && !hasAdminPolls && !hasSponsors && !featuredStory) return null
 
   // Rectangular banner cards (desktop scroll / mobile carousel) — no min height, content-sized like hot take
   const bannerCardHeight = 160
 
   const cards = useMemo(() => {
-    const list: Array<{ type: 'upcoming_race' | 'hot_take' | 'grid' | 'poll' | 'sponsor' | 'featured_story'; data: any }> = []
+    const list: Array<{ type: 'hot_take' | 'grid' | 'poll' | 'sponsor' | 'featured_story'; data: any }> = []
     
-    // 1. Upcoming race banner (when live) - FIRST
-    if (upcomingRace) {
-      list.push({ type: 'upcoming_race', data: upcomingRace })
-    }
-    
-    // 2. Hot take (if exists)
+    // 1. Hot take (if exists)
     if (spotlight?.hot_take) {
       list.push({ type: 'hot_take', data: spotlight })
     }
@@ -151,7 +129,7 @@ export function SpotlightCarousel({
     })
     
     return list
-  }, [spotlight, polls, upcomingRace, sponsors, featuredStory])
+  }, [spotlight, polls, sponsors, featuredStory])
 
   const [activeIndex, setActiveIndex] = useState(0)
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
@@ -267,15 +245,6 @@ export function SpotlightCarousel({
               {hasVoted ? 'Tap to join the discussion' : 'Tap to vote'}
             </p>
           </button>
-        </div>
-      )
-    }
-    if (card.type === 'upcoming_race') {
-      return (
-        <div className={gradientCardOuter} style={gradientCardStyle}>
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[6px] bg-black p-6">
-            <UpcomingRaceCard race={card.data} />
-          </div>
         </div>
       )
     }
