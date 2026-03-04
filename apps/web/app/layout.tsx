@@ -78,6 +78,7 @@ export default function RootLayout({
             </AuthSessionProvider>
           </BotIDProviderWrapper>
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
   )

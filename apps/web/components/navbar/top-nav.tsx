@@ -211,8 +211,8 @@ export function TopNav() {
                 href={item.href}
                 className={`text-md transition-colors rounded-full px-4 py-2 ${
                   pathname === item.href
-                    ? 'text-[#25B4B1] bg-sunset-start/55'
-                    : 'text-white hover:bg-[#25B4B1]/55'
+                    ? 'text-[#25B4B1] bg-sunset-start/60'
+                    : 'text-white hover:bg-[#25B4B1]/60'
                 }`}
               >
                 {item.label}
@@ -231,9 +231,9 @@ export function TopNav() {
           {!isAuthed && !isAuthPage ? (
             <Link
               href="/login"
-              className="rounded-full bg-black px-4 py-2 text-xs text-white transition-opacity hover:opacity-90 md:hidden"
+              className="rounded-full text-white bg-[#25B4B1]/65 px-4 py-2 text-xs transition-opacity hover:opacity-90 md:hidden"
             >
-              Login
+              Login / Signup
             </Link>
           ) : null}
 
