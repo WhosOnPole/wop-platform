@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata: Metadata = {
   title: "Who's on Pole? - F1 Fan Community",
@@ -19,6 +20,7 @@ export default function RootLayout({
         <QueryProvider>
           <LayoutWrapper>{children}</LayoutWrapper>
         </QueryProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
