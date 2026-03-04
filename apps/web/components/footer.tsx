@@ -13,7 +13,7 @@ export function Footer() {
               We're on our formation lap. <br/><br/>
               Join us in building the ultimate F1 fan community. Rank drivers, share stories, vote, debate, and chat during races. <br/><br/>
               If you want it here - let's build it together. <br/><br/>
-              Drop us your ideas at<a href="mailto:team@whosonpole.org" className="text-gray-400 hover:text-white">team@whosonpole.org</a>
+              Drop us your ideas at <a href="mailto:team@whosonpole.org" className="text-gray-400 hover:text-white">team@whosonpole.org</a>
             </p>
           </div>
 
@@ -49,32 +49,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal Links */}
-          <div>
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider">Legal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/privacy" className="text-sm text-gray-400 hover:text-white">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/delete-data" className="text-sm text-gray-400 hover:text-white">
-                  Delete Your Data
-                </Link>
-              </li>
-              <li>
-                <a href="https://www.whosonpole.org/terms" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-white">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <Link href="/sitemap" className="text-sm text-gray-400 hover:text-white">
-                  Sitemap
-                </Link>
-              </li>
-            </ul>
-          </div>
+        
         </div>
 
         <p className="mt-8 w-full max-w-4xl mx-auto text-center text-xs text-gray-400 leading-relaxed">
