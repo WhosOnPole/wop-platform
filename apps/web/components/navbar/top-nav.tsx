@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic'
 import { NotificationBell } from '@/components/navbar/notification-bell'
 import { useCreateModal } from '@/components/providers/create-modal-provider'
 import { PlusCircle, Settings, LogOut, Search } from 'lucide-react'
+import { useLiveRace } from '@/hooks/use-live-race'
 
 const StoryModal = dynamic(
   () => import('@/components/create/modals/story-modal').then((mod) => mod.StoryModal),
@@ -61,6 +62,13 @@ export function TopNav() {
 
   const showNavGlow =
     !!profile && profile.nav_glow_dismissed_at == null && !navGlowDismissedInSession
+
+  const { liveRace } = useLiveRace()
+  const showJoinLiveChat =
+    !!liveRace &&
+    pathname !== '/pitlane' &&
+    pathname !== '/live-chat' &&
+    !pathname.startsWith('/race/')
 
   useEffect(() => {
     if (!user) {
@@ -162,6 +170,15 @@ export function TopNav() {
         <div className="hidden md:flex items-center gap-8 ml-auto mr-8">
           {isAuthed ? (
             <>
+              {/* Join Live Chat when a race is live (hidden on pitlane, live-chat, race pages) */}
+              {showJoinLiveChat ? (
+                <Link
+                  href={`/race/${liveRace!.slug}`}
+                  className="text-sm font-semibold text-[#25B4B1] hover:text-[#25B4B1]/90 transition-colors"
+                >
+                  Join Live Chat!
+                </Link>
+              ) : null}
               {/* Create - first in list with dropdown */}
               <div className="relative" data-top-nav-create>
                 <button
@@ -239,6 +256,14 @@ export function TopNav() {
 
           {isAuthed ? (
             <>
+              {showJoinLiveChat ? (
+                <Link
+                  href={`/race/${liveRace!.slug}`}
+                  className="rounded-full bg-[#25B4B1]/80 px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#25B4B1] transition-colors"
+                >
+                  Join Live Chat!
+                </Link>
+              ) : null}
               <NotificationBell currentUsername={profile?.username} />
               <div className="relative">
               <span

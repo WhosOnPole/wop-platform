@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { Heart } from 'lucide-react'
+import { Heart, Users } from 'lucide-react'
 import { CommentIcon } from '@/components/ui/comment-icon'
 
 interface UpcomingRaceBannerActionsProps {
@@ -54,15 +54,18 @@ export function UpcomingRaceBannerActions({
 
         setLikeCount(likeCountResult ?? 0)
 
-        // Get chat count - live chat messages if live, otherwise discussion posts count for Meetups tab
+        // When live: distinct users in chat (last 10 min). Otherwise: discussion posts count for Meetups tab.
         if (isLive) {
-          const { count: chatCountResult } = await supabase
+          const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+          const { data: recentMessages } = await supabase
             .from('live_chat_messages')
-            .select('*', { count: 'exact', head: true })
+            .select('user_id')
             .eq('track_id', trackId)
-            .is('deleted_at', null)
-
-          setChatCount(chatCountResult ?? 0)
+            .gte('created_at', tenMinutesAgo)
+          const distinctUsers = recentMessages
+            ? new Set(recentMessages.map((r: { user_id: string }) => r.user_id)).size
+            : 0
+          setChatCount(distinctUsers)
         } else {
           // Count discussion posts for this track = what the track page Meetups tab shows (DiscussionTab)
           const { count: postsCount, error } = await supabase
@@ -150,15 +153,19 @@ export function UpcomingRaceBannerActions({
 
   return (
     <div className="absolute top-2 right-2 z-20 flex items-center gap-1">
-      {/* Chat/Meetups button with count - always show count (0 or more) */}
+      {/* When live: user icon + people in chat count. Otherwise: comment icon + meetups count */}
       <button
         type="button"
         onClick={handleChatClick}
         className="flex min-w-[2.5rem] items-center justify-center gap-1.5 text-white hover:opacity-90"
-        aria-label={isLive ? `Join live chat (${chatCount})` : `View meetups (${chatCount})`}
+        aria-label={isLive ? `${chatCount} people in chat` : `View meetups (${chatCount})`}
       >
-        <CommentIcon className="h-4 w-4 shrink-0 text-white" />
-        <span className=" text-right text-sm text-white" aria-hidden>{chatCount}</span>
+        {isLive ? (
+          <Users className="h-4 w-4 shrink-0 text-white" />
+        ) : (
+          <CommentIcon className="h-4 w-4 shrink-0 text-white" />
+        )}
+        <span className="text-right text-sm text-white" aria-hidden>{chatCount}</span>
       </button>
 
       {/* Like Button with Count */}

@@ -241,3 +241,16 @@ html:-ms-fullscreen {
 .animate-nav-profile-pulse {
   animation: nav-profile-pulse 2.5s ease-in-out infinite;
 }
+
+/* Live upcoming race banner: blue glow (#25B4B1) with fade in/out */
+@keyframes live-banner-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(37, 180, 177, 0.5), 0 0 0 1px rgba(37, 180, 177, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(37, 180, 177, 0.75), 0 0 0 1px rgba(37, 180, 177, 0.5);
+  }
+}
+.animate-live-banner-glow {
+  animation: live-banner-glow 2.5s ease-in-out infinite;
+}

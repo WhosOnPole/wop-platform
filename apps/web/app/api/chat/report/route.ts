@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get message details for context
+    // Get message details for context (live_chat_messages has race_id, not track_id)
     const { data: message, error: messageError } = await supabase
       .from('live_chat_messages')
-      .select('id, track_id, user_id, message')
+      .select('id, user_id, message')
       .eq('id', messageId)
       .single()
 

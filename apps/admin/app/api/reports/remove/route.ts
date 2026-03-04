@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
-type TargetType = 'post' | 'comment' | 'grid' | 'profile' | 'grid_slot_comment'
+type TargetType = 'post' | 'comment' | 'grid' | 'profile' | 'grid_slot_comment' | 'chat_message'
 
 interface RemovePayload {
   reportId: number
@@ -96,6 +96,13 @@ export async function POST(request: Request) {
       if (error) throw error
     } else if (targetType === 'profile') {
       // For profiles, do not delete the profile; mark as resolved only.
+    } else if (targetType === 'chat_message') {
+      // live_chat_messages.id is integer; targetId is string
+      const { error } = await supabase
+        .from('live_chat_messages')
+        .delete()
+        .eq('id', parseInt(targetId, 10))
+      if (error) throw error
     } else {
       return NextResponse.json({ error: 'Unsupported target type' }, { status: 400 })
     }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { Users } from 'lucide-react'
 import { formatWeekendRange, parseDateOnly } from '@/utils/date-utils'
 
 interface Race {
@@ -15,6 +16,8 @@ interface Race {
   chat_enabled?: boolean
   /** When live, distinct users who sent a message in last 10 min (feed banner only) */
   liveChatUserCount?: number | null
+  /** When true, treat as live (event-based); if undefined, fall back to weekend window check */
+  isLive?: boolean
 }
 
 interface UpcomingRaceCardProps {
@@ -30,19 +33,18 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
   const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
   const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
 
-  // Check if race is live (within race weekend window)
-  const isLive = (() => {
-    if (!race.start_date || !race.end_date) return false
-    if (race.chat_enabled === false) return false
-
-    const start = new Date(race.start_date)
-    const endDay =
-      race.end_date.length <= 10 ? parseDateOnly(race.end_date) : new Date(race.end_date)
-    if (!endDay) return false
-    const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
-
-    return now >= start && now <= end
-  })()
+  const isLive =
+    race.isLive === true ||
+    (() => {
+      if (!race.start_date || !race.end_date) return false
+      if (race.chat_enabled === false) return false
+      const start = new Date(race.start_date)
+      const endDay =
+        race.end_date.length <= 10 ? parseDateOnly(race.end_date) : new Date(race.end_date)
+      if (!endDay) return false
+      const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000)
+      return now >= start && now <= end
+    })()
 
   // Weekend range (e.g. "Mar 7-8")
   const dateDisplay = formatWeekendRange(race.start_date, race.end_date) ?? 'Date TBA'
@@ -59,9 +61,14 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
   const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}#meetups`
 
   return (
-    <div className="flex h-full min-h-[120px] w-full overflow-hidden rounded-lg relative" style={{
-      boxShadow: isLive ? '0 0 20px rgba(255, 0, 110, 0.6), 0 0 5px rgba(253, 53, 50, 0.5), 0 0 15px rgba(253, 99, 0, 0.4), 0 0 0 .5px rgba(255, 0, 110, 0.4)' : '0 0 15px rgba(255, 0, 110, 0.6), 0 0 25px rgba(253, 53, 50, 0.5), 0 0 35px rgba(253, 99, 0, 0.4), 0 0 0 2px rgba(255, 0, 110, 0.4)',
-    }}>
+    <div
+      className={`flex h-full min-h-[120px] w-full overflow-hidden rounded-lg relative ${isLive ? 'animate-live-banner-glow' : ''}`}
+      style={{
+        boxShadow: isLive
+          ? undefined
+          : '0 0 15px rgba(255, 0, 110, 0.6), 0 0 25px rgba(253, 53, 50, 0.5), 0 0 35px rgba(253, 99, 0, 0.4), 0 0 0 2px rgba(255, 0, 110, 0.4)',
+      }}
+    >
       <Link
         href={bannerHref}
         className="block hover:opacity-90 transition-opacity w-full h-full"
@@ -76,19 +83,20 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
 
+          {/* Top right: user icon + people in chat count when live */}
+          {isLive && (
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 text-white">
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="text-sm font-medium tabular-nums">
+                {typeof race.liveChatUserCount === 'number' ? race.liveChatUserCount : 0}
+              </span>
+            </div>
+          )}
           <div className="absolute inset-0 flex flex-col justify-center">
             <div className="px-6 py-4 text-white space-y-1">
               {isLive ? (
                 <>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-white/95">
-                    Join The Live Chat!
-                  </p>
                   <h2 className="font-display tracking-wider text-lg">{race.circuit_ref || race.name}</h2>
-                  {typeof race.liveChatUserCount === 'number' && (
-                    <p className="text-sm text-white/90">
-                      {race.liveChatUserCount} {race.liveChatUserCount === 1 ? 'user' : 'users'} in chat
-                    </p>
-                  )}
                 </>
               ) : (
                 <>
@@ -107,6 +115,12 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
               )}
             </div>
           </div>
+          {/* Bottom right: Join Live Chat when live */}
+          {isLive ? (
+            <p className="absolute bottom-3 right-4 text-xs font-black uppercase tracking-wider text-white/95 [font-variant:small-caps]">
+              Join Live Chat!
+            </p>
+          ) : null}
         </section>
       </Link>
     </div>

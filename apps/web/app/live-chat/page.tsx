@@ -17,17 +17,21 @@ export default async function LiveChatPage() {
   )
 
   const now = new Date()
-  const graceMs = 24 * 60 * 60 * 1000
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-  // Fetch all races
-  const { data: allRaces } = await supabase
-    .from('tracks')
-    .select('id, name, start_date')
-    .not('start_date', 'is', null)
-    .order('start_date', { ascending: true })
+  // Fetch all tracks with dates and which have an active event right now
+  const [tracksResult, liveIdsResult] = await Promise.all([
+    supabase
+      .from('tracks')
+      .select('id, name, start_date')
+      .not('start_date', 'is', null)
+      .order('start_date', { ascending: true }),
+    supabase.rpc('get_track_ids_with_active_event'),
+  ])
+  const allRaces = tracksResult.data || []
+  const liveTrackIds = new Set((liveIdsResult?.data || []) as string[])
 
-  if (!allRaces) {
+  if (allRaces.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <p className="text-gray-500">No races scheduled.</p>
@@ -35,13 +39,7 @@ export default async function LiveChatPage() {
     )
   }
 
-  // Categorize races
-  const liveRaces = allRaces.filter((race) => {
-    if (!race.start_date) return false
-    const raceTime = new Date(race.start_date)
-    const raceEndTime = new Date(raceTime.getTime() + graceMs)
-    return now >= raceTime && now <= raceEndTime
-  })
+  const liveRaces = allRaces.filter((race) => liveTrackIds.has(race.id))
 
   const upcomingRaces = allRaces.filter((race) => {
     if (!race.start_date) return false
@@ -90,7 +88,7 @@ export default async function LiveChatPage() {
                   </p>
                 )}
                 <div className="mt-4 rounded-md bg-red-600 px-4 py-2 text-center text-sm font-medium text-white group-hover:bg-red-700">
-                  Join Live Chat →
+                  Join Live Chat! →
                 </div>
               </Link>
             ))}

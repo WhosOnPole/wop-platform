@@ -68,32 +68,8 @@ function getClosestRaceFromTracks(params: { tracks: TrackRace[] }) {
   if (tracks.length === 0) return null
 
   const now = new Date()
-  const graceMs = 24 * 60 * 60 * 1000
 
-  // First, find live races (within race weekend window)
-  const liveRaces = tracks.filter((track) => {
-    if (!track.start_date || !track.end_date) return false
-    if (track.chat_enabled === false) return false
-
-    const start = new Date(track.start_date)
-    const endDay =
-      track.end_date.length <= 10 ? parseDateOnly(track.end_date) : new Date(track.end_date)
-    if (!endDay) return false
-    const end = new Date(endDay.getTime() + graceMs)
-
-    return now >= start && now <= end
-  })
-
-  // If we have a live race, return it
-  if (liveRaces.length > 0) {
-    return liveRaces.sort((a, b) => {
-      const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
-      const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
-      return bTime - aTime // Most recent first
-    })[0]
-  }
-
-  // Otherwise, find the next upcoming race
+  // Find the next upcoming race (by start_date)
   const upcomingRaces = tracks.filter((track) => {
     if (!track.start_date) return false
     return new Date(track.start_date) > now
@@ -181,6 +157,7 @@ export default async function FeedPage() {
     sponsors,
     weeklyHighlights,
     raceTracks,
+    liveTrackIdsResult,
     activeHotTake,
   ] = await Promise.all([
     // Posts from current user + users you follow
@@ -348,6 +325,7 @@ export default async function FeedPage() {
       .select('id, name, location, country, start_date, end_date, circuit_ref, chat_enabled')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
+    supabase.rpc('get_track_ids_with_active_event'),
     // Active hot take (single) by date range
     (async () => {
       const nowIso = new Date().toISOString()
@@ -397,26 +375,13 @@ export default async function FeedPage() {
     }
   })()
 
-  // Check if upcoming race is live (for carousel display)
-  const isUpcomingRaceLive = (() => {
-    if (!upcomingRace || !upcomingRace.start_date || !upcomingRace.end_date) return false
-    if (upcomingRace.chat_enabled === false) return false
-
-    const now = new Date()
-    const start = new Date(upcomingRace.start_date)
-    const endDay =
-      upcomingRace.end_date.length <= 10
-        ? parseDateOnly(upcomingRace.end_date)
-        : new Date(upcomingRace.end_date)
-    if (!endDay) return false
-    const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
-
-    return now >= start && now <= end
-  })()
+  // Live = track has an active event right now (from track_events)
+  const liveTrackIdSet = new Set((liveTrackIdsResult?.data || []) as string[])
+  const isUpcomingRaceLive = Boolean(upcomingRace && liveTrackIdSet.has(upcomingRace.id))
 
   // Only show upcoming race in carousel when live; fetch distinct users in chat (last 10 min) once per page load
-  let upcomingRaceForCarousel: (typeof upcomingRace & { liveChatUserCount?: number }) | null =
-    isUpcomingRaceLive ? upcomingRace : null
+  let upcomingRaceForCarousel: (typeof upcomingRace & { liveChatUserCount?: number; isLive?: boolean }) | null =
+    isUpcomingRaceLive ? { ...upcomingRace!, isLive: true } : null
   if (upcomingRaceForCarousel?.id) {
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
     const { data: recentMessages } = await supabase

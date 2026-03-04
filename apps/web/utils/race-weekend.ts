@@ -51,7 +51,9 @@ export function getRaceWeekendWindow(track: Track): {
 }
 
 /**
- * Check if race weekend is currently active (today's UTC date is between start_date and end_date).
+ * Check if the track's race weekend window (start_date..end_date) is active.
+ * Use for non-chat features only (e.g. check-in section on track page).
+ * For live chat open/closed, use getChatStatus(trackId) which is driven by track_events.
  */
 export function isRaceWeekendActive(track: Track): boolean {
   if (!isChatEnabled(track)) return false

@@ -50,9 +50,19 @@ export default async function PitlanePage() {
   const nextRace = getClosestRace({ tracks: tracksWithStartDate })
   const backgroundImage = '/images/race_banner.jpeg'
 
-  // Weekend range (e.g. "Mar 7-8") then track name
-  const weekendRange = formatWeekendRange(nextRace?.start_date ?? null, nextRace?.end_date ?? null)
-  const trackName = nextRace?.circuit_ref || nextRace?.name || nextRace?.location || nextRace?.country
+  // Live = track has an active event right now (from track_events)
+  const { data: liveTrackIds } = await supabase.rpc('get_track_ids_with_active_event')
+  const liveIdSet = new Set((liveTrackIds || []) as string[])
+  const liveTrack =
+    liveTrackIds?.length > 0
+      ? tracksWithStartDate.find((t) => liveIdSet.has(t.id))
+      : null
+  const isLive = Boolean(liveTrack)
+
+  // Weekend range (e.g. "Mar 7-8") then track name (use live track or next race)
+  const bannerRace = liveTrack || nextRace
+  const weekendRange = formatWeekendRange(bannerRace?.start_date ?? null, bannerRace?.end_date ?? null)
+  const trackName = bannerRace?.circuit_ref || bannerRace?.name || bannerRace?.location || bannerRace?.country
   let dateDisplay = 'Date TBA'
   if (weekendRange && trackName) {
     dateDisplay = `${weekendRange} - ${trackName}`
@@ -80,7 +90,6 @@ export default async function PitlanePage() {
       }
     }
   } else if (nextRace?.start_date) {
-    // Fallback to start_date if end_date not available
     const raceTime = new Date(nextRace.start_date)
     const now = new Date()
     const timeUntilRace = raceTime.getTime() - now.getTime()
@@ -93,27 +102,8 @@ export default async function PitlanePage() {
           : `${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
     }
   }
-  
-  // Check if race weekend is live (within active window)
-  const isLive = (() => {
-    if (!nextRace?.start_date || !nextRace?.end_date) return false
-    if (nextRace.chat_enabled === false) return false
 
-    const now = new Date()
-    const start = new Date(nextRace.start_date)
-    const endDay =
-      nextRace.end_date.length <= 10
-        ? parseDateOnly(nextRace.end_date)
-        : new Date(nextRace.end_date)
-    if (!endDay) return false
-    const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
-
-    return now >= start && now <= end
-  })()
-  
-  // Determine link destination
-  const trackSlug = nextRace ? slugify(nextRace.name) : ''
-  // When live, link to race page (which shows chat). Otherwise link to track page.
+  const trackSlug = bannerRace ? slugify(bannerRace.name) : ''
   const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
 
   return (
@@ -123,26 +113,18 @@ export default async function PitlanePage() {
         <h3 className="text-sm text-white/70 font-sans mb-6">Tap into the Grid. Stay ahead of the pack.</h3>
       </div>
       <div className="mx-auto max-w-6xl mt-6">
-      {/* Upcoming race banner */}
-      {nextRace ? (
+      {/* Upcoming / live race banner */}
+      {bannerRace ? (
         <div className="mb-5 relative mx-4 mb-8 sm:mx-6 lg:mx-8">
-          <sup className="w-full text-left block text-sm text-[#838383]">Upcoming</sup>
+          <sup className="w-full text-left block text-sm text-[#838383]">{isLive ? 'Live now' : 'Upcoming'}</sup>
         <Link
           href={bannerHref}
-          className="block overflow-hidden hover:opacity-90"
-          style={
-            isLive
-              ? {
-                  boxShadow:
-                    '0 0 20px rgba(255, 0, 110, 0.6), 0 0 5px rgba(253, 53, 50, 0.5), 0 0 15px rgba(253, 99, 0, 0.4), 0 0 0 .5px rgba(255, 0, 110, 0.4)',
-                }
-              : undefined
-          }
+          className={`block overflow-hidden hover:opacity-90 rounded-lg ${isLive ? 'animate-live-banner-glow' : ''}`}
         >
           <section className="relative h-[80px] w-full cursor-pointer">
             <Image
               src={backgroundImage}
-              alt={nextRace.circuit_ref || nextRace.name}
+              alt={bannerRace.circuit_ref || bannerRace.name}
               fill
               priority
               sizes="(max-width: 768px) calc(100vw - 2rem), (max-width: 1024px) calc(100vw - 3rem), 1152px"
@@ -152,7 +134,7 @@ export default async function PitlanePage() {
             
             {/* Action Buttons - Top Right */}
             <UpcomingRaceBannerActions
-              trackId={nextRace.id}
+              trackId={bannerRace.id}
               trackSlug={trackSlug}
               isLive={isLive}
             />
@@ -161,17 +143,17 @@ export default async function PitlanePage() {
               <div className="px-2 sm:px-10 text-white pt-2">
                 {/* Grand Prix Name with Flag - Same line */}
                 <div className="flex items-center gap-2">
-                  {nextRace.country && getCountryFlagPath(nextRace.country) ? (
+                  {bannerRace.country && getCountryFlagPath(bannerRace.country) ? (
                     <Image
-                      src={getCountryFlagPath(nextRace.country)!}
-                      alt={nextRace.country}
+                      src={getCountryFlagPath(bannerRace.country)!}
+                      alt={bannerRace.country}
                       width={20}
                       height={20}
                       className="object-contain"
                     />
                   ) : null}
                   <h2 className="font-display tracking-wider text-xl">
-                    {nextRace.circuit_ref || nextRace.name}
+                    {bannerRace.circuit_ref || bannerRace.name}
                   </h2>
                 </div>
                 {/* Date - City, Country - Below name, aligned with name start */}
@@ -184,7 +166,11 @@ export default async function PitlanePage() {
                   </p>
                 )}
               </div>
-              
+              {isLive ? (
+                <p className="absolute bottom-2 right-3 text-xs font-bold uppercase tracking-wider text-white/95 [font-variant:small-caps]">
+                  Join Live Chat!
+                </p>
+              ) : null}
             </div>
             </section>
           </Link>
@@ -241,32 +227,8 @@ function getClosestRace(params: { tracks: Array<{ start_date: string | null; end
   if (tracks.length === 0) return null
 
   const now = new Date()
-  const graceMs = 24 * 60 * 60 * 1000
 
-  // First, find live races (within race weekend window)
-  const liveRaces = tracks.filter((track) => {
-    if (!track.start_date || !track.end_date) return false
-    if (track.chat_enabled === false) return false
-
-    const start = new Date(track.start_date)
-    const endDay =
-      track.end_date.length <= 10 ? parseDateOnly(track.end_date) : new Date(track.end_date)
-    if (!endDay) return false
-    const end = new Date(endDay.getTime() + graceMs)
-
-    return now >= start && now <= end
-  })
-
-  // If we have a live race, return it
-  if (liveRaces.length > 0) {
-    return liveRaces.sort((a, b) => {
-      const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
-      const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
-      return bTime - aTime // Most recent first
-    })[0]
-  }
-
-  // Otherwise, find the next upcoming race
+  // Next upcoming race (by start_date)
   const upcomingRaces = tracks.filter((track) => {
     if (!track.start_date) return false
     return new Date(track.start_date) > now

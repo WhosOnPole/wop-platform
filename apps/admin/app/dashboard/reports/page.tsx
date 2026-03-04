@@ -39,8 +39,13 @@ export default async function ReportsPage() {
     .map((r) => r.target_id)
   const gridIds = pending.filter((r) => r.target_type === 'grid').map((r) => r.target_id)
   const profileIds = pending.filter((r) => r.target_type === 'profile').map((r) => r.target_id)
+  const chatMessageIds = pending
+    .filter((r) => r.target_type === 'chat_message')
+    .map((r) => parseInt(r.target_id, 10))
+    .filter((n) => !Number.isNaN(n))
 
-  const [postsRes, commentsRes, gridSlotCommentsRes, gridsRes, profilesRes] = await Promise.all([
+  const [postsRes, commentsRes, gridSlotCommentsRes, gridsRes, profilesRes, chatMessagesRes] =
+    await Promise.all([
     postIds.length
       ? supabase
           .from('posts')
@@ -106,6 +111,20 @@ export default async function ReportsPage() {
           .select('id, username, profile_image_url')
           .in('id', profileIds)
       : { data: [] },
+    chatMessageIds.length
+      ? supabase
+          .from('live_chat_messages')
+          .select(
+            `
+            id,
+            message,
+            user:profiles!user_id (
+              username
+            )
+          `
+          )
+          .in('id', chatMessageIds)
+      : { data: [] },
   ])
 
   const postMap = Object.fromEntries((postsRes.data || []).map((p) => [p.id, p]))
@@ -115,6 +134,9 @@ export default async function ReportsPage() {
   )
   const gridMap = Object.fromEntries((gridsRes.data || []).map((g) => [g.id, g]))
   const profileMap = Object.fromEntries((profilesRes.data || []).map((p) => [p.id, p]))
+  const chatMessageMap = Object.fromEntries(
+    (chatMessagesRes.data || []).map((m) => [String(m.id), m])
+  )
 
   // Collect parent page IDs from posts/comments for naming
   const parentDriverIds = new Set<string>()
@@ -222,6 +244,14 @@ export default async function ReportsPage() {
       } else if (report.target_type === 'profile') {
         const p = profileMap[report.target_id]
         if (p) targetPreview = { type: 'profile', username: p.username, image: p.profile_image_url }
+      } else if (report.target_type === 'chat_message') {
+        const m = chatMessageMap[report.target_id]
+        if (m)
+          targetPreview = {
+            type: 'chat_message',
+            content: (m as any).message,
+            username: (m as any).user?.username,
+          }
       }
       return { ...report, targetPreview }
     }) || []

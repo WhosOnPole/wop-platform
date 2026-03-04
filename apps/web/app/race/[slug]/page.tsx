@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { RealtimeChatBatched } from '@/components/race/realtime-chat-batched'
 import { AdminChatControl } from '@/components/race/admin-chat-control'
-import { isRaceWeekendActive } from '@/utils/race-weekend'
+import { getChatStatus } from '@/utils/race-weekend'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -42,17 +42,11 @@ export default async function RacePage({ params }: PageProps) {
     notFound()
   }
 
-  const raceTime = race.start_date ? new Date(race.start_date) : null
-  const now = new Date()
-  const graceMs = 24 * 60 * 60 * 1000
-  const isLive = raceTime
-    ? now >= raceTime && now <= new Date(raceTime.getTime() + graceMs)
-    : false
-  const isUpcoming = raceTime ? raceTime > now : false
-  const isPast = raceTime ? raceTime < now : false
-
-  // Check if race weekend is active (using utility function)
-  const raceWeekendActive = isRaceWeekendActive(race)
+  // Live = chat is open or read_only (active track event window)
+  const chatStatus = await getChatStatus(race.id, supabase)
+  const chatActive = chatStatus.mode === 'open' || chatStatus.mode === 'read_only'
+  const opensAt = chatStatus.opens_at ? new Date(chatStatus.opens_at) : null
+  const isUpcoming = opensAt ? opensAt > new Date() : false
 
   // Check if user is admin
   let isAdmin = false
@@ -68,8 +62,8 @@ export default async function RacePage({ params }: PageProps) {
     isAdmin = isAdminEmail || isAdminRole || false
   }
 
-  // When live: full-screen chat_bg, no scroll, header + styled chat box
-  if (raceWeekendActive) {
+  // When live (active track event): full-screen chat_bg, no scroll, header + styled chat box
+  if (chatActive) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden bg-black">
         {/* Full viewport background */}
@@ -81,8 +75,9 @@ export default async function RacePage({ params }: PageProps) {
         <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 py-6 sm:px-6 lg:px-8 pt-16">
           {/* Top header outside race chat */}
           <h1 className="font-display text-2xl tracking-wider text-white sm:text-3xl shrink-0">
-            {race.name} RACEtalk
+          RACEtalk: {race.location} - {race.country}
           </h1>
+          <p className="text-sm text-white/90">{race.name}</p>
 
           {/* Admin above chat (when admin) */}
           {isAdmin && (
@@ -126,12 +121,20 @@ export default async function RacePage({ params }: PageProps) {
         </div>
       )}
 
-      {isUpcoming ? (
+      {isUpcoming && opensAt ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
           <p className="text-gray-600">
-            Chat will be available when the race weekend starts. Check back on{' '}
-            {raceTime?.toLocaleDateString()}!
+            Chat will be available when the session starts. Check back on{' '}
+            {opensAt.toLocaleString(undefined, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
+            !
           </p>
+        </div>
+      ) : chatStatus.reason ? (
+        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
+          <p className="text-gray-600">{chatStatus.reason}</p>
         </div>
       ) : null}
     </div>
