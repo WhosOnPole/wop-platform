@@ -65,7 +65,7 @@ export default async function RacePage({ params }: PageProps) {
   // When live (active track event): full-screen chat_bg, no scroll, header + styled chat box
   if (chatActive) {
     return (
-      <div className="fixed inset-0 flex flex-col overflow-hidden bg-black pt-[calc(3.75rem+env(safe-area-inset-top))]">
+      <div className="fixed inset-0 flex flex-col overflow-hidden bg-black pt-[calc(1.75rem+env(safe-area-inset-top))]">
         {/* Full viewport background */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"

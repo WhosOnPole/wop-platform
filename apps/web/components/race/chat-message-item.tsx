@@ -101,12 +101,59 @@ export function ChatMessageItem({
     setShowMenu(false)
   }
 
+  const menuButton = (
+    <div className={`relative shrink-0 opacity-0 transition-opacity group-hover:opacity-100 ${isOwnMessage ? 'order-2' : ''}`}>
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className={`p-1 ${isDark ? 'text-white/50 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
+        aria-label="Message options"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      {showMenu && (
+        <div
+          ref={menuRef}
+          className={`absolute z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg ${isOwnMessage ? 'right-0' : 'left-0'}`}
+        >
+          <div className="py-1">
+            <button
+              onClick={() => {
+                setShowReportModal(true)
+                setShowMenu(false)
+              }}
+              className="flex w-full items-center space-x-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Flag className="h-4 w-4" />
+              <span>Report</span>
+            </button>
+            {isAdmin && (
+              <>
+                <button
+                  onClick={handleDelete}
+                  className="flex w-full items-center space-x-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete</span>
+                </button>
+                <button
+                  onClick={handleViewProfile}
+                  className="flex w-full items-center space-x-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <User className="h-4 w-4" />
+                  <span>View Profile</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <>
       <div
-        className={`group flex items-start space-x-3 ${
-          isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''
-        }`}
+        className="group flex items-start space-x-3"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onContextMenu={handleContextMenu}
@@ -114,6 +161,8 @@ export function ChatMessageItem({
         {/* Avatar */}
         <div
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+            isOwnMessage ? 'order-3' : 'order-1'
+          } ${
             isDark
               ? isOwnMessage
                 ? 'bg-[#25B4B1]'
@@ -130,9 +179,9 @@ export function ChatMessageItem({
 
         {/* Message content */}
         <div
-          className={`flex-1 ${isOwnMessage ? 'text-right' : ''}`}
+          className={`flex-1 ${isOwnMessage ? 'order-1 text-right' : 'order-2'}`}
         >
-          <div className="flex items-center space-x-2">
+          <div className={`flex items-center space-x-2 ${isOwnMessage ? 'justify-end' : ''}`}>
             <Link
               href={profileUrl}
               className={`text-sm font-medium transition-colors ${
@@ -144,6 +193,7 @@ export function ChatMessageItem({
               {message.display_name || 'Unknown'}
             </Link>
             <span className={`text-xs ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{timestamp}</span>
+            {!isOwnMessage && menuButton}
           </div>
           <p
             className={`mt-1 text-sm ${
@@ -154,56 +204,8 @@ export function ChatMessageItem({
           </p>
         </div>
 
-        {/* Menu button (desktop hover) */}
-        <div className="relative shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className={`p-1 ${isDark ? 'text-white/50 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
-            aria-label="Message options"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-
-          {/* Context menu */}
-          {showMenu && (
-            <div
-              ref={menuRef}
-              className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg"
-            >
-              <div className="py-1">
-                <button
-                  onClick={() => {
-                    setShowReportModal(true)
-                    setShowMenu(false)
-                  }}
-                  className="flex w-full items-center space-x-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  <Flag className="h-4 w-4" />
-                  <span>Report</span>
-                </button>
-
-                {isAdmin && (
-                  <>
-                    <button
-                      onClick={handleDelete}
-                      className="flex w-full items-center space-x-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span>Delete</span>
-                    </button>
-                    <button
-                      onClick={handleViewProfile}
-                      className="flex w-full items-center space-x-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      <User className="h-4 w-4" />
-                      <span>View Profile</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Menu button (own messages: sibling between content and avatar) */}
+        {isOwnMessage && menuButton}
       </div>
 
       {/* Report modal */}
