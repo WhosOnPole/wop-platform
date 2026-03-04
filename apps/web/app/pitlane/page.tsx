@@ -20,7 +20,7 @@ export default async function PitlanePage() {
 
   const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-  const [tracksWithDates, drivers, teams, tracks] = await Promise.all([
+  const [tracksWithDates, drivers, teams, tracks, nextUpcomingTrackIdResult] = await Promise.all([
     supabase
       .from('tracks')
       .select('id, name, location, country, start_date, end_date, circuit_ref, chat_enabled')
@@ -40,6 +40,7 @@ export default async function PitlanePage() {
       .from('tracks')
       .select('id, name, location, country, circuit_ref')
       .order('name', { ascending: true }),
+    supabase.rpc('get_track_id_with_next_upcoming_event'),
   ])
 
   const tracksWithStartDate = tracksWithDates.data || []
@@ -47,7 +48,14 @@ export default async function PitlanePage() {
   const teamsData = teams.data || []
   const tracksData = tracks.data || []
 
-  const nextRace = getClosestRace({ tracks: tracksWithStartDate })
+  const nextRace = (() => {
+    const nextTrackId = nextUpcomingTrackIdResult?.data as string | null
+    if (nextTrackId) {
+      const track = tracksWithStartDate.find((t) => t.id === nextTrackId)
+      if (track) return track
+    }
+    return getClosestRace({ tracks: tracksWithStartDate })
+  })()
   const backgroundImage = '/images/race_banner.jpeg'
 
   // Live = track has an active event right now (from track_events)
@@ -70,32 +78,39 @@ export default async function PitlanePage() {
     dateDisplay = weekendRange
   }
 
-  // Calculate counter - countdown to race day (use parseDateOnly for date-only to avoid offset)
+  // Calculate counter - countdown to next event (prefer track_events.scheduled_at over track dates)
   let counterText = ''
-  if (nextRace?.end_date) {
-    const raceTime =
+  let countdownTarget: Date | null = null
+  if (nextRace?.id && !isLive) {
+    const currentSeason = new Date().getFullYear()
+    const { data: nextEvent } = await supabase
+      .from('track_events')
+      .select('scheduled_at')
+      .eq('track_id', nextRace.id)
+      .eq('season_year', currentSeason)
+      .gt('scheduled_at', new Date().toISOString())
+      .order('scheduled_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    if (nextEvent?.scheduled_at) {
+      countdownTarget = new Date(nextEvent.scheduled_at)
+    }
+  }
+  if (!countdownTarget && nextRace?.end_date) {
+    countdownTarget =
       nextRace.end_date.length <= 10
         ? parseDateOnly(nextRace.end_date)
         : new Date(nextRace.end_date)
-    if (raceTime) {
-      const now = new Date()
-      const timeUntilRace = raceTime.getTime() - now.getTime()
-      if (timeUntilRace > 0) {
-        const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
-        const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        counterText =
-          daysUntil > 0
-            ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} until race start`
-            : `${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
-      }
-    }
-  } else if (nextRace?.start_date) {
-    const raceTime = new Date(nextRace.start_date)
+  }
+  if (!countdownTarget && nextRace?.start_date) {
+    countdownTarget = new Date(nextRace.start_date)
+  }
+  if (countdownTarget) {
     const now = new Date()
-    const timeUntilRace = raceTime.getTime() - now.getTime()
-    if (timeUntilRace > 0) {
-      const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
-      const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const timeUntil = countdownTarget.getTime() - now.getTime()
+    if (timeUntil > 0) {
+      const daysUntil = Math.floor(timeUntil / (1000 * 60 * 60 * 24))
+      const hoursUntil = Math.floor((timeUntil % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       counterText =
         daysUntil > 0
           ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} until race start`

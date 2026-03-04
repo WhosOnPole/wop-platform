@@ -9,6 +9,10 @@ import { useChatPolling } from '@/hooks/use-chat-polling'
 import { ChatMessageItem } from './chat-message-item'
 import type { ChatStatus } from '@/utils/race-weekend'
 
+/** Debounce connection state to prevent rapid blinking between "Connecting..." and "Live" */
+const CONNECTED_DEBOUNCE_MS = 400
+const DISCONNECTED_DEBOUNCE_MS = 1500
+
 interface RealtimeChatBatchedProps {
   trackId: string
   raceName?: string
@@ -86,6 +90,24 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
   const messages = usePolling ? polledMessages : batchedMessages
   const isConnectedState = usePolling ? isPolling : isConnected
 
+  // Debounce connection display to prevent rapid blinking
+  const [displayConnected, setDisplayConnected] = useState(false)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+    if (isConnectedState) {
+      debounceRef.current = setTimeout(() => setDisplayConnected(true), CONNECTED_DEBOUNCE_MS)
+    } else {
+      debounceRef.current = setTimeout(() => setDisplayConnected(false), DISCONNECTED_DEBOUNCE_MS)
+    }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [isConnectedState])
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -147,7 +169,7 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
                 <WifiOff className="h-4 w-4" />
                 <span>Polling</span>
               </div>
-            ) : isConnectedState ? (
+            ) : displayConnected ? (
               <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-green-300' : 'text-green-600'}`}>
                 <Wifi className="h-4 w-4" />
                 <span>Live</span>

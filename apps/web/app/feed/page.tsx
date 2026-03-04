@@ -158,6 +158,7 @@ export default async function FeedPage() {
     weeklyHighlights,
     raceTracks,
     liveTrackIdsResult,
+    nextUpcomingTrackIdResult,
     activeHotTake,
   ] = await Promise.all([
     // Posts from current user + users you follow
@@ -326,6 +327,7 @@ export default async function FeedPage() {
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true }),
     supabase.rpc('get_track_ids_with_active_event'),
+    supabase.rpc('get_track_id_with_next_upcoming_event'),
     // Active hot take (single) by date range
     (async () => {
       const nowIso = new Date().toISOString()
@@ -366,7 +368,15 @@ export default async function FeedPage() {
   const isNewUser = !currentUserProfile?.nav_glow_dismissed_at
 
   const upcomingRace = (() => {
-    const race = getClosestRaceFromTracks({ tracks: (raceTracks.data || []) as TrackRace[] })
+    const tracks = (raceTracks.data || []) as TrackRace[]
+    const nextTrackId = nextUpcomingTrackIdResult?.data as string | null
+    let race: TrackRace | null = null
+    if (nextTrackId) {
+      race = tracks.find((t) => t.id === nextTrackId) || null
+    }
+    if (!race) {
+      race = getClosestRaceFromTracks({ tracks })
+    }
     if (!race) return null
     return {
       ...race,
@@ -379,9 +389,9 @@ export default async function FeedPage() {
   const liveTrackIdSet = new Set((liveTrackIdsResult?.data || []) as string[])
   const isUpcomingRaceLive = Boolean(upcomingRace && liveTrackIdSet.has(upcomingRace.id))
 
-  // Only show upcoming race in carousel when live; fetch distinct users in chat (last 10 min) once per page load
+  // Do not show race in carousel when live (users join via nav "Join Live Chat"); show when upcoming only
   let upcomingRaceForCarousel: (typeof upcomingRace & { liveChatUserCount?: number; isLive?: boolean }) | null =
-    isUpcomingRaceLive ? { ...upcomingRace!, isLive: true } : null
+    !isUpcomingRaceLive && upcomingRace ? { ...upcomingRace, isLive: false } : null
   if (upcomingRaceForCarousel?.id) {
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
     const { data: recentMessages } = await supabase
