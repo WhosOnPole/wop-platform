@@ -35,9 +35,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.39.0
         version: 2.81.1
-      '@vercel/analytics':
-        specifier: ^1.6.1
-        version: 1.6.1(next@16.1.1)(react@19.2.3)
       lucide-react:
         specifier: ^0.309.0
         version: 0.309.0(react@19.2.3)

@@ -2,8 +2,6 @@
  * Race weekend detection and chat status utilities
  */
 
-import { parseDateOnly } from './date-utils'
-
 interface Track {
   id: string
   name?: string
@@ -28,44 +26,42 @@ export function isChatEnabled(track: Track): boolean {
   return track.chat_enabled !== false
 }
 
+/** Date-only YYYY-MM-DD from DB (tracks.start_date / end_date are DATE, no timezone). */
+function toDateStr(s: string | null | undefined): string | null {
+  if (!s) return null
+  const part = s.slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(part) ? part : null
+}
+
 /**
- * Get race weekend window (start and end times)
- * Uses parseDateOnly for date-only end_date to avoid timezone shift.
+ * Get race weekend window (start and end of start_date..end_date in UTC).
+ * Tracks store DATE only; we build UTC boundaries for comparisons.
  */
 export function getRaceWeekendWindow(track: Track): {
   start: Date | null
   end: Date | null
 } {
-  if (!track.start_date || !track.end_date) {
-    return { start: null, end: null }
-  }
+  const startStr = toDateStr(track.start_date)
+  const endStr = toDateStr(track.end_date)
+  if (!startStr || !endStr) return { start: null, end: null }
 
-  const start = new Date(track.start_date)
-  const endDay =
-    track.end_date.length <= 10 ? parseDateOnly(track.end_date) : new Date(track.end_date)
-  if (!endDay) return { start: null, end: null }
-  const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000) // +24 hours
-
+  const start = new Date(startStr + 'T00:00:00Z')
+  const end = new Date(endStr + 'T23:59:59.999Z')
   return { start, end }
 }
 
 /**
- * Check if race weekend is currently active
+ * Check if race weekend is currently active (today's UTC date is between start_date and end_date).
  */
 export function isRaceWeekendActive(track: Track): boolean {
-  // Chat must be enabled
-  if (!isChatEnabled(track)) {
-    return false
-  }
+  if (!isChatEnabled(track)) return false
 
-  const { start, end } = getRaceWeekendWindow(track)
-  
-  if (!start || !end) {
-    return false
-  }
+  const startStr = toDateStr(track.start_date)
+  const endStr = toDateStr(track.end_date)
+  if (!startStr || !endStr) return false
 
-  const now = new Date()
-  return now >= start && now <= end
+  const today = new Date().toISOString().slice(0, 10)
+  return today >= startStr && today <= endStr
 }
 
 /**

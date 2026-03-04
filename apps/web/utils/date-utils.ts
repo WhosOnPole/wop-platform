@@ -37,23 +37,36 @@ export function formatDateShort(
 }
 
 /**
+ * Normalize an ISO or YYYY-MM-DD string to date-only for calendar display.
+ * Avoids timezone shift: "2026-03-06T00:00:00.000" (no Z) is parsed as local and can show as Mar 5.
+ */
+function toDateOnlyForDisplay(dateStr: string | null): string | null {
+  if (!dateStr) return null
+  const dateOnly = /^\d{4}-\d{2}-\d{2}/.exec(dateStr)?.[0] ?? (dateStr.length >= 10 ? dateStr.slice(0, 10) : null)
+  return dateOnly && /^\d{4}-\d{2}-\d{2}$/.test(dateOnly) ? dateOnly : null
+}
+
+/**
  * Format weekend range from start_date and end_date.
- * Same month: "Mar 7-8". Different months: "Mar 7 - Apr 2".
- * Pass opts.year: false to omit the year (e.g. "Mar 7 - Apr 2" instead of "Mar 7, 2025 - Apr 2, 2025").
+ * Uses the calendar date (weekend_start / weekend_end) only so display is correct in any timezone.
+ * Same month: "Mar 6-8". Different months: "Mar 6 - Apr 2".
+ * Pass opts.year: false to omit the year.
  */
 export function formatWeekendRange(
   startDate: string | null,
   endDate: string | null,
   opts?: { year?: boolean }
 ): string | null {
-  const start = startDate?.includes('T') ? new Date(startDate) : parseDateOnly(startDate ?? null)
-  const end = endDate?.includes('T') ? new Date(endDate) : parseDateOnly(endDate ?? null)
+  const startPart = toDateOnlyForDisplay(startDate)
+  const endPart = toDateOnlyForDisplay(endDate)
+  const start = startPart ? parseDateOnly(startPart) : null
+  const end = endPart ? parseDateOnly(endPart) : null
   const noYear = opts?.year === false
   if (!start || isNaN(start.getTime())) {
-    return endDate ? formatDateShort(endDate, { year: noYear ? false : undefined }) : null
+    return endPart ? formatDateShort(endPart, { year: noYear ? false : undefined }) : null
   }
   if (!end || isNaN(end.getTime())) {
-    return formatDateShort(startDate, { year: noYear ? false : undefined })
+    return formatDateShort(startPart, { year: noYear ? false : undefined })
   }
   const sameMonth =
     start.getUTCMonth() === end.getUTCMonth() &&
@@ -62,7 +75,7 @@ export function formatWeekendRange(
     const monthShort = end.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
     return `${monthShort} ${start.getUTCDate()}-${end.getUTCDate()}`
   }
-  return `${formatDateShort(startDate, { year: noYear ? false : undefined })} - ${formatDateShort(endDate, { year: noYear ? false : undefined })}`
+  return `${formatDateShort(startPart, { year: noYear ? false : undefined })} - ${formatDateShort(endPart, { year: noYear ? false : undefined })}`
 }
 
 /**
