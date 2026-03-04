@@ -13,7 +13,7 @@ export function Footer() {
               We're on our formation lap. <br/><br/>
               Join us in building the ultimate F1 fan community. Rank drivers, share stories, vote, debate, and chat during races. <br/><br/>
               If you want it here - let's build it together. <br/><br/>
-              Drop us your ideas at<a href="mailto:team@whosonpole.org" className="text-gray-400 hover:text-white">team@whosonpole.org</a>
+              Drop us your ideas at <a href="mailto:team@whosonpole.org" className="text-gray-400 hover:text-white">team@whosonpole.org</a>
             </p>
           </div>
 
