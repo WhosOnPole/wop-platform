@@ -10,7 +10,10 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <Logo variant="gradient" size="md" href="/" className="mb-4" />
             <p className="text-sm text-gray-400 max-w-md mb-6">
-              The ultimate Formula 1 fan community. Build your dream grid, connect with fans, and chat during race weekends.
+              We're on our formation lap. <br/><br/>
+              Join us in building the ultimate F1 fan community. Rank drivers, share stories, vote, debate, and chat during races. <br/><br/>
+              If you want it here - let's build it together. <br/><br/>
+              Drop us your ideas at<a href="mailto:team@whosonpole.org" className="text-gray-400 hover:text-white">team@whosonpole.org</a>
             </p>
           </div>
 

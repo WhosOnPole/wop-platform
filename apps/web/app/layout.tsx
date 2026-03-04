@@ -41,7 +41,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata: Metadata = {
   title: "Who's on Pole? - F1 Fan Community",
-  description: 'Join the ultimate Formula 1 fan community',
+  description: 'Join the ultimate F1 fan community',
   manifest: '/manifest.json',
   icons: {
     icon: '/icons/icon-192.png',
