@@ -509,7 +509,7 @@ export function FeedContent({
   return (
     <div className="space-y-6">
       <nav
-        className="flex w-full border-b border-white/20 mt-12"
+        className="flex w-full border-b border-white/20"
         role="tablist"
         aria-label="Feed tabs"
       >

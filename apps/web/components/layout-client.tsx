@@ -80,7 +80,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   const isGridFullBleed =
     pathname?.startsWith('/grid/') || pathname?.startsWith('/profile/edit-grid/')
   const isHome = pathname === '/'
-  const mainPadTop = !isGridFullBleed && !isHome ? 'pt-14' : ''
+  const mainPadTop = !isGridFullBleed && !isHome ? 'pt-16' : ''
 
   return (
     <CreateModalProvider>
