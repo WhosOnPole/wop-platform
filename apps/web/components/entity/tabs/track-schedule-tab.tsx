@@ -1,4 +1,4 @@
-import { formatWeekendRange } from '@/utils/date-utils'
+import { formatWeekendRange, formatTimezoneVsEst } from '@/utils/date-utils'
 
 export interface TrackScheduleEvent {
   event_type: string
@@ -14,10 +14,12 @@ interface TrackScheduleTabProps {
     name?: string | null
     location?: string | null
     country?: string | null
+    circuit_ref?: string | null
+    timezone?: string | null
   } | null
 }
 
-function formatEventDateTime(iso: string): string {
+function formatEventDateTime(iso: string, timezone?: string | null): string {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
   return d.toLocaleString('en-US', {
@@ -25,6 +27,7 @@ function formatEventDateTime(iso: string): string {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: timezone || 'UTC',
   })
 }
 
@@ -71,7 +74,7 @@ export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
           <ul className="space-y-4">
             {events.map((ev, i) => {
               const label = eventTypeLabel(ev.event_type)
-              const dateTime = formatEventDateTime(ev.scheduled_at)
+              const dateTime = formatEventDateTime(ev.scheduled_at, track?.timezone)
               const withDuration =
                 ev.event_type === 'qualifying' || ev.event_type === 'sprint_qualifying'
               const durationPart =
@@ -94,6 +97,11 @@ export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
           </ul>
         )}
       </div>
+      {track?.timezone && (
+        <p className="text-center text-sm text-white/60">
+          {track.circuit_ref || track.name} is {formatTimezoneVsEst(track.timezone)}.
+        </p>
+      )}
     </div>
   )
 }

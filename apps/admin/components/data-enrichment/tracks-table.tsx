@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Edit, Loader2, Calendar } from 'lucide-react'
+import { Edit, Loader2 } from 'lucide-react'
 import { TrackEditModal } from './track-edit-modal'
-import { TrackScheduleModal } from './track-schedule-modal'
 import { formatWeekendRange } from '@/utils/date-utils'
 
 interface Track {
@@ -16,6 +15,7 @@ interface Track {
   country: string | null
   start_date: string | null
   end_date: string | null
+  timezone: string | null
   circuit_ref: string | null
   overview_text: string | null
   history_text: string | null
@@ -30,7 +30,6 @@ export function TracksTable() {
   const [eventCountByTrackId, setEventCountByTrackId] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [editingTrack, setEditingTrack] = useState<Track | null>(null)
-  const [scheduleTrack, setScheduleTrack] = useState<Track | null>(null)
 
   useEffect(() => {
     loadTracks()
@@ -101,14 +100,7 @@ export function TracksTable() {
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                     {eventCountByTrackId[track.id] ?? '—'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium flex gap-2">
-                    <button
-                      onClick={() => setScheduleTrack(track)}
-                      className="flex items-center text-blue-600 hover:text-blue-900"
-                    >
-                      <Calendar className="mr-1 h-4 w-4" />
-                      Schedule
-                    </button>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     <button
                       onClick={() => setEditingTrack(track)}
                       className="flex items-center text-blue-600 hover:text-blue-900"
@@ -131,15 +123,6 @@ export function TracksTable() {
             setEditingTrack(null)
             loadTracks()
           }}
-          hasScheduleEvents={(eventCountByTrackId[editingTrack.id] ?? 0) > 0}
-        />
-      )}
-
-      {scheduleTrack && (
-        <TrackScheduleModal
-          track={{ id: scheduleTrack.id, name: scheduleTrack.name }}
-          onClose={() => setScheduleTrack(null)}
-          onSaved={loadTracks}
         />
       )}
     </>

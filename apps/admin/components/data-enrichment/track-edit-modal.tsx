@@ -4,14 +4,31 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { localToUtc, utcToLocalDatetimeString } from '@/utils/date-utils'
+
+const TRACK_TIMEZONES = [
+  { value: 'America/New_York', label: 'Eastern (New York)' },
+  { value: 'America/Chicago', label: 'Central (Chicago)' },
+  { value: 'America/Denver', label: 'Mountain (Denver)' },
+  { value: 'America/Los_Angeles', label: 'Pacific (Los Angeles)' },
+  { value: 'Europe/London', label: 'London' },
+  { value: 'Europe/Paris', label: 'Paris' },
+  { value: 'Europe/Monaco', label: 'Monaco' },
+  { value: 'Europe/Budapest', label: 'Budapest' },
+  { value: 'Asia/Tokyo', label: 'Tokyo' },
+  { value: 'Asia/Shanghai', label: 'Shanghai' },
+  { value: 'Australia/Melbourne', label: 'Melbourne' },
+  { value: 'America/Sao_Paulo', label: 'São Paulo' },
+  { value: 'America/Mexico_City', label: 'Mexico City' },
+  { value: 'Asia/Singapore', label: 'Singapore' },
+  { value: 'UTC', label: 'UTC' },
+]
 
 const trackSchema = z.object({
   name: z.string().min(1).max(200),
   laps: z.number().int().min(1).optional().or(z.null()),
   location: z.string().max(200).optional().or(z.literal('')),
   country: z.string().max(200).optional().or(z.literal('')),
-  start_date: z.string().optional().or(z.literal('')),
-  end_date: z.string().optional().or(z.literal('')),
   circuit_ref: z.string().max(200).optional().or(z.literal('')),
   overview_text: z.string().max(5000).optional().or(z.literal('')),
   website_url: z.string().url().optional().or(z.literal('')),
@@ -26,29 +43,43 @@ interface TrackEditModalProps {
     country: string | null
     start_date: string | null
     end_date: string | null
+    timezone: string | null
     circuit_ref: string | null
     overview_text: string | null
     website_url: string | null
   }
   onClose: () => void
-  /** When true, start_date is derived from schedule (first event) and shown read-only. */
-  hasScheduleEvents?: boolean
 }
 
-export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: TrackEditModalProps) {
+function splitDatetime(datetime: string): { date: string; time: string } {
+  if (!datetime) return { date: '', time: '' }
+  if (datetime.includes('T')) {
+    const [date, time] = datetime.split('T')
+    return { date: date || '', time: (time || '').slice(0, 5) || '00:00' }
+  }
+  return { date: datetime.slice(0, 10) || '', time: '00:00' }
+}
+
+export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
   const supabase = createClientComponentClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const tz = track.timezone || 'UTC'
+  const startLocal = track.start_date ? utcToLocalDatetimeString(track.start_date, tz) : ''
+  const endLocal = track.end_date ? utcToLocalDatetimeString(track.end_date, tz) : ''
   const [formData, setFormData] = useState({
     name: track.name || '',
     laps: track.laps?.toString() || '',
     location: track.location || '',
     country: track.country || '',
-    start_date: toDatetimeLocal(track.start_date),
-    end_date: toDateInput(track.end_date),
     circuit_ref: track.circuit_ref || '',
     overview_text: track.overview_text || '',
     website_url: track.website_url || '',
+    timezone: track.timezone || 'UTC',
+    start_date: splitDatetime(startLocal).date,
+    start_time: splitDatetime(startLocal).time,
+    end_date: splitDatetime(endLocal).date,
+    end_time: splitDatetime(endLocal).time,
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -62,25 +93,32 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
         laps: formData.laps ? parseInt(formData.laps, 10) : null,
         location: formData.location || undefined,
         country: formData.country || undefined,
-        start_date: formData.start_date || undefined,
-        end_date: formData.end_date || undefined,
         circuit_ref: formData.circuit_ref || undefined,
         overview_text: formData.overview_text || undefined,
         website_url: formData.website_url || undefined,
       })
 
+      const tz = formData.timezone || 'UTC'
+      const startLocal = formData.start_date
+        ? `${formData.start_date}T${formData.start_time || '00:00'}`
+        : ''
+      const endLocal = formData.end_date
+        ? `${formData.end_date}T${formData.end_time || '00:00'}`
+        : ''
+      const startDateUtc = startLocal ? localToUtc(startLocal, tz) : null
+      const endDateUtc = endLocal ? localToUtc(endLocal, tz) : null
+
       const updatePayload: Record<string, unknown> = {
-        name: validated.name,
+        ...validated,
         laps: validated.laps ?? null,
         location: validated.location || null,
         country: validated.country || null,
-        end_date: validated.end_date || null,
         circuit_ref: validated.circuit_ref || null,
         overview_text: validated.overview_text || null,
         website_url: validated.website_url || null,
-      }
-      if (!hasScheduleEvents) {
-        updatePayload.start_date = validated.start_date || null
+        timezone: formData.timezone || null,
+        start_date: startDateUtc,
+        end_date: endDateUtc,
       }
 
       const { error: updateError } = await supabase
@@ -194,33 +232,64 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
           </div>
 
           <div className="border-t border-gray-200 pt-4 mt-4">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Schedule</h3>
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">Weekend date range</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Times are local to the track&apos;s timezone. Used for Pitlane upcoming and schedule tabs.
+            </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Weekend start date/time
-                </label>
-                {hasScheduleEvents && (
-                  <p className="mt-0.5 text-xs text-gray-500">
-                    Start date is set from schedule (first event). Edit events in Schedule to change it.
-                  </p>
-                )}
-                <input
-                  type="datetime-local"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  readOnly={hasScheduleEvents}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">End date</label>
-                <input
-                  type="date"
-                  value={formData.end_date}
-                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                <select
+                  value={formData.timezone}
+                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                />
+                >
+                  {TRACK_TIMEZONES.map((tz) => (
+                    <option key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start date</label>
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start time</label>
+                  <input
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End date</label>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End time</label>
+                  <input
+                    type="time"
+                    value={formData.end_time}
+                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -252,18 +321,4 @@ export function TrackEditModal({ track, onClose, hasScheduleEvents = false }: Tr
       </div>
     </div>
   )
-}
-
-function toDateInput(value: string | null) {
-  if (!value) return ''
-  if (value.includes('T')) return value.slice(0, 10)
-  return value
-}
-
-function toDatetimeLocal(value: string | null) {
-  if (!value) return ''
-  if (value.includes('T')) return value.slice(0, 16)
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return ''
-  return parsed.toISOString().slice(0, 16)
 }

@@ -345,6 +345,8 @@ export default async function DynamicPage({ params }: PageProps) {
                   name: entity.name,
                   location: entity.location,
                   country: entity.country,
+                  circuit_ref: entity.circuit_ref,
+                  timezone: entity.timezone,
                 }
               : null
           }

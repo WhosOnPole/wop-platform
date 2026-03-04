@@ -11,6 +11,7 @@ interface ScheduleTrack {
   name: string
   start_date: string | null
   end_date: string | null
+  timezone: string | null
 }
 
 const CURRENT_SEASON = 2026
@@ -29,7 +30,7 @@ export function SchedulesTable() {
     setLoading(true)
     const { data, error } = await supabase
       .from('tracks')
-      .select('id, name, start_date, end_date')
+      .select('id, name, start_date, end_date, timezone')
       .not('start_date', 'is', null)
       .order('start_date', { ascending: true })
     if (error) {
@@ -100,6 +101,7 @@ export function SchedulesTable() {
       {scheduleTrack && (
         <TrackScheduleModal
           track={{ id: scheduleTrack.id, name: scheduleTrack.name }}
+          timezone={scheduleTrack.timezone}
           onClose={() => setScheduleTrack(null)}
           onSaved={loadTracks}
         />

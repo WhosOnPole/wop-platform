@@ -88,6 +88,24 @@ function getTimezoneOffsetMinutes(timezone: string, date: Date): number {
   return tzMins - utcMins
 }
 
+const EASTERN = 'America/New_York'
+
+/**
+ * Format the timezone difference between a track's timezone and Eastern Time.
+ * Returns e.g. "16 hours ahead of EST" or "5 hours behind EDT".
+ */
+export function formatTimezoneVsEst(trackTimezone: string): string {
+  const now = new Date()
+  const trackOffsetMin = getTimezoneOffsetMinutes(trackTimezone, now)
+  const easternOffsetMin = getTimezoneOffsetMinutes(EASTERN, now)
+  const diffMin = trackOffsetMin - easternOffsetMin
+  const diffHours = Math.round(diffMin / 60)
+  const easternLabel = easternOffsetMin === -300 ? 'EST' : 'EDT'
+  if (diffHours === 0) return `same as ${easternLabel}`
+  if (diffHours > 0) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ahead of ${easternLabel}`
+  return `${Math.abs(diffHours)} hour${Math.abs(diffHours) !== 1 ? 's' : ''} behind ${easternLabel}`
+}
+
 /**
  * Convert a local datetime string (YYYY-MM-DDTHH:mm or HH:mm) in the given
  * IANA timezone to an ISO string in UTC.
