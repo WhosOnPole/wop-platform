@@ -37,6 +37,7 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
   themeColor: '#111111',
 }
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata: Metadata = {
   title: "Who's on Pole? - F1 Fan Community",
@@ -79,6 +80,7 @@ export default function RootLayout({
           </BotIDProviderWrapper>
         </QueryProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

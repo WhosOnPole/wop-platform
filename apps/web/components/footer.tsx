@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="text-white">
       <div className="w-full px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-2">
             <Logo variant="gradient" size="md" href="/" className="mb-4" />
@@ -79,8 +79,20 @@ export function Footer() {
         </p>
 
         <div className="mt-8 border-t border-gray-800 pt-8">
-          <p className="text-center text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Who&apos;s on Pole? All rights reserved.
+          <p className="text-center text-xs text-gray-400 space-x-2">
+            <span>&copy; {new Date().getFullYear()} Who&apos;s on Pole? All rights reserved.</span>
+            <span className="inline-block text-gray-500">|</span>
+            <Link href="/privacy" className="text-gray-400 hover:text-white">
+              Privacy Policy
+            </Link>
+            <span className="inline-block text-gray-500">|</span>
+            <Link href="/delete-data" className="text-gray-400 hover:text-white">
+              Delete Your Data
+            </Link>
+            <span className="inline-block text-gray-500">|</span>
+            <Link href="/terms" className="text-gray-400 hover:text-white">
+              Terms of Service
+            </Link>
           </p>
         </div>
       </div>
