@@ -4,14 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { PollModal } from './poll-modal'
-
-interface Poll {
-  id: string
-  question: string
-  options: string[]
-  is_featured_podium: boolean
-  created_at: string
-}
+import { Poll } from './content.types'
 
 export function PollsTab() {
   const supabase = createClientComponentClient()
@@ -60,8 +53,25 @@ export function PollsTab() {
     )
   }
 
+  const featuredPollExpired =
+    polls.some(
+      (p) =>
+        p.is_featured_podium &&
+        p.ends_at != null &&
+        p.ends_at !== '' &&
+        new Date(p.ends_at) < new Date()
+    )
+
   return (
     <>
+      {featuredPollExpired && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <p className="text-sm font-medium">
+            Your featured poll has expired. Create a new featured poll to keep it visible on Spotlight.
+          </p>
+        </div>
+      )}
+
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setIsCreating(true)}
@@ -84,6 +94,9 @@ export function PollsTab() {
                   Options
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Active Until
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Featured
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -101,6 +114,9 @@ export function PollsTab() {
                     <div className="text-sm text-gray-500">
                       {Array.isArray(poll.options) ? poll.options.length : 0} options
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {poll.ends_at ? new Date(poll.ends_at).toLocaleString() : 'No end date'}
                   </td>
                   <td className="px-6 py-4">
                     {poll.is_featured_podium && (

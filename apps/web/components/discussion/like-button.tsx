@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Heart } from 'lucide-react'
 
 interface LikeButtonProps {
   targetId: string
-  targetType: 'post' | 'comment'
+  targetType: 'post' | 'comment' | 'grid_slot_comment'
   initialLikeCount: number
   initialIsLiked: boolean
   onLikeChange?: (targetId: string, isLiked: boolean) => void
+  variant?: 'light' | 'dark'
 }
 
 export function LikeButton({
@@ -19,6 +20,7 @@ export function LikeButton({
   initialLikeCount,
   initialIsLiked,
   onLikeChange,
+  variant = 'light',
 }: LikeButtonProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
@@ -31,9 +33,6 @@ export function LikeButton({
   useEffect(() => {
     setIsLiked(initialIsLiked)
     setLikeCount(initialLikeCount)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'like-button.tsx:initial-sync',message:'initial props sync',data:{targetId,targetType,initialLikeCount,initialIsLiked},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
   }, [targetId, initialIsLiked, initialLikeCount])
 
   // Also sync when props change (for same targetId but different user session)
@@ -61,10 +60,6 @@ export function LikeButton({
 
     setIsLoading(true)
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'like-button.tsx:handleToggleLike:before',message:'before toggle',data:{targetId,targetType,isLiked,likeCount},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
-
     // Optimistic update
     const previousLiked = isLiked
     const previousCount = likeCount
@@ -90,9 +85,6 @@ export function LikeButton({
         setLikeCount(previousCount)
       } else {
         const deletedCount = Array.isArray(deletedVotes) ? deletedVotes.length : 0
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H10',location:'like-button.tsx:handleToggleLike:unlike-db',message:'unlike delete result',data:{targetId,targetType,userId:session.user.id,rowsDeleted:deletedCount},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
         const wasDeleted = deletedCount > 0
         // If nothing was deleted, revert optimistic UI
         if (!wasDeleted) {
@@ -100,13 +92,9 @@ export function LikeButton({
           setLikeCount(previousCount)
         }
         // Refresh count from database after trigger updates it
-        await refreshLikeCount()
+        await refreshLikeCount({ allowDecrease: true })
         const userIsLiked = await refreshUserLikeState(session.user.id)
-        // Notify parent of state change based on refreshed state
         onLikeChange?.(targetId, !!userIsLiked)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'H2',location:'like-button.tsx:handleToggleLike:unlike-success',message:'unlike success',data:{targetId,targetType,rowsDeleted:wasDeleted ? deletedVotes.length : 0,userIsLiked:!!userIsLiked},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
       }
     } else {
       // Optimistically update UI
@@ -127,7 +115,7 @@ export function LikeButton({
           // Unique constraint violation - already liked (shouldn't happen, but handle it)
           console.warn('Already liked (duplicate)', error)
           // Don't revert - user already liked it
-          await refreshLikeCount()
+          await refreshLikeCount({ allowDecrease: false })
           const userIsLiked = await refreshUserLikeState(session.user.id)
           onLikeChange?.(targetId, !!userIsLiked)
         } else {
@@ -136,25 +124,24 @@ export function LikeButton({
           setLikeCount(previousCount)
         }
       } else {
-        // Refresh count from database after trigger updates it
-        await refreshLikeCount()
+        // Refresh count from database after trigger updates it (don't allow decrease so we don't flicker to 0 if DB is briefly stale)
+        await refreshLikeCount({ allowDecrease: false })
         const userIsLiked = await refreshUserLikeState(session.user.id)
-        // Notify parent of state change based on refreshed state
         onLikeChange?.(targetId, !!userIsLiked)
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run2',hypothesisId:'H2',location:'like-button.tsx:handleToggleLike:like-success',message:'like success',data:{targetId,targetType,userId:session.user.id},timestamp:Date.now()})}).catch(()=>{})
-        // #endregion
-        // #region agent log
-        await logVoteCount('run2', 'H8-like', targetId, targetType, session.user.id)
-        // #endregion
       }
     }
 
     setIsLoading(false)
   }
 
-  async function refreshLikeCount() {
-    const tableName = targetType === 'post' ? 'posts' : 'comments'
+  async function refreshLikeCount(options?: { allowDecrease?: boolean }) {
+    const allowDecrease = options?.allowDecrease !== false
+    const tableName =
+      targetType === 'post'
+        ? 'posts'
+        : targetType === 'comment'
+          ? 'comments'
+          : 'grid_slot_comments'
 
     // Try to read denormalized like_count
     const { data, error } = await supabase
@@ -164,12 +151,8 @@ export function LikeButton({
       .single()
 
     if (!error && data && data.like_count !== null && data.like_count !== undefined) {
-      setLikeCount(data.like_count || 0)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'like-button.tsx:refreshLikeCount:like_count',message:'refreshed like_count',data:{targetId,targetType,like_count:data.like_count},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
-      // Always also log current vote count for comparison
-      await logVoteCount('run1', 'H9', targetId, targetType, 'n/a')
+      const dbCount = data.like_count || 0
+      setLikeCount((prev) => (allowDecrease ? dbCount : Math.max(prev, dbCount)))
       return
     }
 
@@ -181,10 +164,7 @@ export function LikeButton({
       .eq('target_type', targetType)
 
     if (!countError && typeof count === 'number') {
-      setLikeCount(count)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'like-button.tsx:refreshLikeCount:fallback',message:'fallback votes count used',data:{targetId,targetType,count},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
+      setLikeCount((prev) => (allowDecrease ? count : Math.max(prev, count)))
       return
     }
 
@@ -194,15 +174,6 @@ export function LikeButton({
     if (countError) {
       console.error('Error refreshing like count (fallback votes count):', countError)
     }
-  }
-
-  async function logVoteCount(runId: string, hypothesisId: string, targetId: string, targetType: 'post' | 'comment', userId: string) {
-    const { count, error } = await supabase
-      .from('votes')
-      .select('id', { head: true, count: 'exact' })
-      .eq('target_id', targetId)
-      .eq('target_type', targetType)
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId,hypothesisId,location:'like-button.tsx:logVoteCount',message:'vote count after toggle',data:{targetId,targetType,userId,count,hasError:!!error},timestamp:Date.now()})}).catch(()=>{})
   }
 
   async function refreshUserLikeState(userId: string) {
@@ -215,26 +186,32 @@ export function LikeButton({
     if (!error) {
       setIsLiked((count || 0) > 0)
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/28d01ed4-45e5-408c-a9a5-badf5c252607',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H11',location:'like-button.tsx:refreshUserLikeState',message:'refreshed user like state',data:{targetId,targetType,userId,count:count ?? null,hasError:!!error},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
     return (count || 0) > 0
   }
+
+  const isDark = variant === 'dark'
+  const buttonClasses = isDark
+    ? isLiked
+      ? 'text-sunset-end hover:opacity-90'
+      : 'text-white/90 hover:text-white'
+    : isLiked
+      ? 'text-sunset-end hover:opacity-90'
+      : 'text-gray-600 hover:text-gray-700'
 
   return (
     <button
       onClick={handleToggleLike}
       disabled={isLoading}
-      className={`inline-flex items-center gap-1 align-middle leading-none transition-colors disabled:opacity-50 ${
-        isLiked
-          ? 'text-pink-600 hover:text-pink-700'
-          : 'text-gray-600 hover:text-gray-700'
-      }`}
+      className={`inline-flex items-center gap-1 align-middle leading-none transition-colors disabled:opacity-50 ${buttonClasses}`}
       title={isLiked ? 'Unlike' : 'Like'}
     >
-      <Heart className={`h-4 w-4 shrink-0 ${isLiked ? 'fill-current' : ''}`} />
+      {isLiked ? (
+        <span className="heart-fill-sunset inline-block h-5 w-5 shrink-0" aria-hidden />
+      ) : (
+        <Heart className="h-5 w-5 shrink-0" />
+      )}
       {likeCount > 0 && (
-        <span className="text-sm font-medium leading-none">{likeCount}</span>
+        <span className={`text-sm font-medium leading-none ${isLiked ? 'text-sunset-end' : ''}`}>{likeCount}</span>
       )}
     </button>
   )

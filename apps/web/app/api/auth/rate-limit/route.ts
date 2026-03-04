@@ -131,7 +131,7 @@ async function cleanupExpiredRecords(
 export async function POST(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY
 
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing Supabase configuration')
@@ -149,7 +149,6 @@ export async function POST(request: NextRequest) {
     const ip =
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
-      request.headers.get('cf-connecting-ip') || // Cloudflare specific
       'unknown'
 
     const { endpoint } = await request.json()

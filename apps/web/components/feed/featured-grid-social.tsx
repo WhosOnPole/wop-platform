@@ -1,15 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Heart, MessageSquare } from 'lucide-react'
+import Link from 'next/link'
+import { createClientComponentClient } from '@/utils/supabase-client'
+import { Heart } from 'lucide-react'
+import { CommentIcon } from '@/components/ui/comment-icon'
 
 interface FeaturedGridSocialProps {
   gridId: string
   initialLikeCount: number
+  initialCommentCount?: number
 }
 
-export function FeaturedGridSocial({ gridId, initialLikeCount }: FeaturedGridSocialProps) {
+export function FeaturedGridSocial({ gridId, initialLikeCount, initialCommentCount = 0 }: FeaturedGridSocialProps) {
   const supabase = createClientComponentClient()
   const [isLiked, setIsLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(initialLikeCount)
@@ -81,18 +84,23 @@ export function FeaturedGridSocial({ gridId, initialLikeCount }: FeaturedGridSoc
         onClick={toggleLike}
         disabled={isLoading}
         className={`flex items-center space-x-1 transition-colors ${
-          isLiked
-            ? 'text-pink-600 hover:text-pink-700'
-            : 'text-pink-600 hover:text-pink-700'
+          isLiked ? 'text-sunset-end hover:opacity-90' : 'text-gray-600 hover:text-gray-700'
         } disabled:opacity-50`}
       >
-        <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
-        {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
+        {isLiked ? (
+          <span className="heart-fill-sunset inline-block h-5 w-5 shrink-0" aria-hidden />
+        ) : (
+          <Heart className="h-5 w-5" />
+        )}
+        {likeCount > 0 && <span className={`text-sm font-medium ${isLiked ? 'text-sunset-end' : ''}`}>{likeCount}</span>}
       </button>
-      <button className="flex items-center space-x-1 text-gray-600 hover:text-gray-700 transition-colors">
-        <MessageSquare className="h-5 w-5" />
-        <span className="text-sm font-medium">0</span>
-      </button>
+      <Link
+        href={`/grid/${gridId}`}
+        className="inline-flex items-center gap-1.5 text-sm leading-none text-white transition-colors hover:text-white/90"
+      >
+        <CommentIcon className="h-5 w-5 shrink-0" />
+        <span className="font-medium leading-none tabular-nums">{initialCommentCount}</span>
+      </Link>
     </div>
   )
 }

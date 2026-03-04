@@ -1,5 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { WeeklyHighlightsManager } from '@/components/highlights/weekly-highlights-manager'
 import { AutoCalculateButton } from '@/components/highlights/auto-calculate-button'
 import { HighlightedFanManager } from '@/components/highlights/highlighted-fan-manager'
@@ -15,7 +17,14 @@ async function getCurrentWeekStart() {
 }
 
 export default async function HighlightsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore as any },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
   const weekStart = await getCurrentWeekStart()
 
   // Fetch current week's highlights
@@ -55,17 +64,29 @@ export default async function HighlightsPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
+  const missingFan = !currentHighlights?.highlighted_fan_id
+  const missingGrid = !currentHighlights?.highlighted_fan_grid_id
+  const needsHighlights = !currentHighlights || missingFan || missingGrid
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Weekly Highlights</h1>
           <p className="mt-2 text-gray-600">
-            Set the highlighted fan and sponsor for the current week. The week starts on Monday.
+            Set the highlighted fan and endorsement for the current week. The week starts on Monday.
           </p>
         </div>
         <AutoCalculateButton weekStart={weekStart} />
       </div>
+
+      {needsHighlights && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <p className="text-sm font-medium">
+            Set the featured fan and grid for this week to keep Spotlight Our Picks active.
+          </p>
+        </div>
+      )}
 
       {currentHighlights?.highlighted_fan && (
         <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -92,7 +113,7 @@ export default async function HighlightsPage() {
             {calculationHistory.map((highlight) => (
               <div
                 key={highlight.id}
-                className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-0 last:pb-0"
+                className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-0 first:pb-0 "
               >
                 <div>
                   <p className="text-sm font-medium text-gray-900">
@@ -126,12 +147,14 @@ export default async function HighlightsPage() {
         </div>
 
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Sponsor</h2>
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Endorsement</h2>
           <HighlightedSponsorManager
             currentWeekStart={weekStart}
             existingSponsor={currentHighlights?.highlighted_sponsor || null}
           />
         </div>
+
+        {/* Hot take spotlight section removed (deprecated) */}
       </div>
     </div>
   )

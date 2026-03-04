@@ -21,17 +21,13 @@ export function WeeklyHighlightsManager({
   // Fan selection
   const [fanSearch, setFanSearch] = useState('')
   const [fanResults, setFanResults] = useState<any[]>([])
-  const [selectedFan, setSelectedFan] = useState<any>(
-    existingHighlights?.highlighted_fan || null
-  )
+  const [selectedFan, setSelectedFan] = useState<any>(existingHighlights?.highlighted_fan || null)
   const [searchingFans, setSearchingFans] = useState(false)
 
   // Sponsor selection
   const [sponsorSearch, setSponsorSearch] = useState('')
   const [sponsorResults, setSponsorResults] = useState<any[]>([])
-  const [selectedSponsor, setSelectedSponsor] = useState<any>(
-    existingHighlights?.highlighted_sponsor || null
-  )
+  const [selectedSponsor, setSelectedSponsor] = useState<any>(existingHighlights?.highlighted_sponsor || null)
   const [searchingSponsors, setSearchingSponsors] = useState(false)
 
   useEffect(() => {
@@ -85,14 +81,14 @@ export function WeeklyHighlightsManager({
     setLoading(true)
 
     try {
-      if (!selectedFan || !selectedSponsor) {
-        throw new Error('Please select both a fan and a sponsor')
-      }
+      if (!selectedFan || !selectedSponsor) throw new Error('Please select both a fan and an endorsement')
 
       const payload = {
         week_start_date: currentWeekStart,
         highlighted_fan_id: selectedFan.id,
         highlighted_sponsor_id: selectedSponsor.id,
+        // Preserve existing grid selection if set elsewhere
+        highlighted_fan_grid_id: existingHighlights?.highlighted_fan_grid_id || null,
       }
 
       const { error: upsertError } = await supabase
@@ -202,7 +198,7 @@ export function WeeklyHighlightsManager({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Highlighted Sponsor *
+            Highlighted Endorsement *
           </label>
           {selectedSponsor ? (
             <div className="mb-2 flex items-center space-x-3 rounded-md border border-gray-300 bg-gray-50 p-3">
@@ -235,7 +231,7 @@ export function WeeklyHighlightsManager({
                   type="text"
                   value={sponsorSearch}
                   onChange={(e) => setSponsorSearch(e.target.value)}
-                  placeholder="Search for a sponsor by name..."
+                  placeholder="Search for an endorsement by name..."
                   className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 />
               </div>

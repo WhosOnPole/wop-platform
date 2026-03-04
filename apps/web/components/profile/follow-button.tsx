@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { UserPlus, UserCheck } from 'lucide-react'
 
@@ -60,20 +60,17 @@ export function FollowButton({ targetUserId, isInitiallyFollowing }: FollowButto
     <button
       onClick={handleToggleFollow}
       disabled={isLoading}
-      className={`flex items-center space-x-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+      className={`flex items-center space-x-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
         isFollowing
-          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
+          ? 'border border-white/50 bg-transparent text-white hover:bg-white/10'
+          : 'bg-transparent border border-white/50 text-white hover:bg-white hover:text-black'
       }`}
     >
       {isFollowing ? (
-        <>
-          <UserCheck className="h-4 w-4" />
-          <span>Following</span>
-        </>
+        <UserCheck className="h-4 w-4" strokeWidth={2} />
       ) : (
         <>
-          <UserPlus className="h-4 w-4" />
+          <span>+</span>
           <span>Follow</span>
         </>
       )}

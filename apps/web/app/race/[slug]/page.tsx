@@ -1,9 +1,9 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { Calendar, MapPin, Users } from 'lucide-react'
-import { CheckInSection } from '@/components/race/check-in-section'
-import { LiveChatComponent } from '@/components/race/live-chat-component'
+import { RealtimeChatBatched } from '@/components/race/realtime-chat-batched'
+import { AdminChatControl } from '@/components/race/admin-chat-control'
+import { getChatStatus } from '@/utils/race-weekend'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -16,145 +16,125 @@ interface PageProps {
 
 export default async function RacePage({ params }: PageProps) {
   const { slug } = await params
-  const cookieGetter = cookies as unknown as () => any
-  const supabase = createServerComponentClient({ cookies: cookieGetter })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore as any },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Fetch race
-  const { data: race } = await supabase
-    .from('race_schedule')
-    .select(
-      `
-      *,
-      track:tracks!track_id (
-        id,
-        name,
-        image_url
-      )
-    `
-    )
-    .eq('slug', slug)
-    .single()
+  const slugName = slug.replace(/-/g, ' ')
+  const { data: tracks } = await supabase
+    .from('tracks')
+    .select('id, name, location, country, start_date, end_date, chat_enabled')
+    .ilike('name', `%${slugName}%`)
+
+  const race = tracks?.find(
+    (track) => track.name.toLowerCase().replace(/\\s+/g, '-') === slug
+  ) || tracks?.[0]
 
   if (!race) {
     notFound()
   }
 
-  const raceTime = race.race_time ? new Date(race.race_time) : null
-  const now = new Date()
-  const isLive = raceTime
-    ? now >= raceTime && now <= new Date(raceTime.getTime() + 3 * 60 * 60 * 1000)
-    : false
-  const isUpcoming = raceTime ? raceTime > now : false
-  const isPast = raceTime ? raceTime < now : false
+  // Live = chat is open or read_only (active track event window)
+  const chatStatus = await getChatStatus(race.id, supabase)
+  const chatActive = chatStatus.mode === 'open' || chatStatus.mode === 'read_only'
+  const opensAt = chatStatus.opens_at ? new Date(chatStatus.opens_at) : null
+  const isUpcoming = opensAt ? opensAt > new Date() : false
 
-  // Fetch check-ins
-  const { data: checkIns } = await supabase
-    .from('race_checkins')
-    .select(
-      `
-      *,
-      user:profiles!user_id (
-        id,
-        username,
-        profile_image_url
-      )
-    `
-    )
-    .eq('race_id', race.id)
-    .order('created_at', { ascending: false })
-
-  // Check if current user has checked in
-  let userCheckIn = null
+  // Check if user is admin
+  let isAdmin = false
   if (session) {
-    const { data } = await supabase
-      .from('race_checkins')
-      .select('*')
-      .eq('race_id', race.id)
-      .eq('user_id', session.user.id)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, email')
+      .eq('id', session.user.id)
       .single()
 
-    userCheckIn = data
+    const isAdminEmail = session.user.email?.endsWith('@whosonpole.org')
+    const isAdminRole = profile?.role === 'admin'
+    isAdmin = isAdminEmail || isAdminRole || false
   }
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Race Header */}
-      <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg">
-        {race.track?.image_url && (
-          <div className="relative h-64 w-full">
-            <img
-              src={race.track.image_url}
-              alt={race.name}
-              className="h-full w-full object-cover"
+  // When live (active track event): full-screen chat_bg, no scroll, header + styled chat box
+  if (chatActive) {
+    return (
+      <div className="fixed inset-0 flex flex-col overflow-hidden bg-black">
+        {/* Full viewport background */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/images/chat_bg.png)' }}
+          aria-hidden
+        />
+        <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 py-6 sm:px-6 lg:px-8 pt-16">
+          {/* Top header outside race chat */}
+          <h1 className="font-display text-2xl tracking-wider text-white sm:text-3xl shrink-0">
+          RACEtalk: {race.location} - {race.country}
+          </h1>
+          <p className="text-sm text-white/90">{race.name}</p>
+
+          {/* Admin above chat (when admin) */}
+          {isAdmin && (
+            <div className="mt-4 shrink-0">
+              <AdminChatControl
+                trackId={race.id}
+                initialChatEnabled={race.chat_enabled !== false}
+              />
+            </div>
+          )}
+
+          {/* Race chat in styled container */}
+          <div
+            className="mt-4 flex-1 min-h-0 flex flex-col rounded-[20px] overflow-hidden"
+            style={{
+              border: '1px solid #525252',
+              background: 'rgba(0, 0, 0, 0.40)',
+            }}
+          >
+            <RealtimeChatBatched
+              trackId={race.id}
+              raceName={race.name}
+              liveLayout
             />
-            {isLive && (
-              <div className="absolute top-4 right-4 flex items-center space-x-2 rounded-full bg-red-600 px-4 py-2">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                <span className="text-sm font-bold text-white">LIVE</span>
-              </div>
-            )}
-          </div>
-        )}
-        <div className="p-8">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900">{race.name}</h1>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {race.track && (
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">{race.track.name}</span>
-              </div>
-            )}
-            {raceTime && (
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">
-                  {raceTime.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </span>
-              </div>
-            )}
-            {raceTime && (
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-700">
-                  {raceTime.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZoneName: 'short',
-                  })}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </div>
+    )
+  }
 
-      {/* Check-In Section */}
-      {session && (
-        <CheckInSection
-          raceId={race.id}
-          raceName={race.name}
-          userCheckIn={userCheckIn}
-          checkIns={checkIns || []}
-        />
+  // Not live: standard scrollable page
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Admin Chat Control */}
+      {isAdmin && (
+        <div className="mb-6">
+          <AdminChatControl
+            trackId={race.id}
+            initialChatEnabled={race.chat_enabled !== false}
+          />
+        </div>
       )}
 
-      {/* Live Chat Section */}
-      {isLive || isPast ? (
-        <LiveChatComponent raceId={race.id} raceTime={raceTime} />
-      ) : isUpcoming ? (
+      {isUpcoming && opensAt ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
           <p className="text-gray-600">
-            Chat will be available when the race starts. Check back on{' '}
-            {raceTime?.toLocaleDateString()}!
+            Chat will be available when the session starts. Check back on{' '}
+            {opensAt.toLocaleString(undefined, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
+            !
           </p>
+        </div>
+      ) : chatStatus.reason ? (
+        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
+          <p className="text-gray-600">{chatStatus.reason}</p>
         </div>
       ) : null}
     </div>

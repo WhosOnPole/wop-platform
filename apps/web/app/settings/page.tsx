@@ -1,0 +1,520 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { createClientComponentClient } from '@/utils/supabase-client'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Save, Upload, LogOut, User, Bell, Info } from 'lucide-react'
+
+const TABS = ['profile', 'notifications', 'info'] as const
+type TabId = (typeof TABS)[number]
+
+function isValidTab(t: string | null): t is TabId {
+  return t === 'profile' || t === 'notifications' || t === 'info'
+}
+
+interface Profile {
+  id: string
+  username: string
+  email: string
+  profile_image_url: string | null
+  date_of_birth: string | null
+  age: number | null
+  city: string | null
+  state: string | null
+  country: string | null
+  show_state_on_profile?: boolean | null
+  show_age_on_profile?: boolean | null
+  instagram_username: string | null
+  social_links?: Record<string, string> | null
+}
+
+export default function SettingsPage() {
+  const supabase = createClientComponentClient()
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [formData, setFormData] = useState({
+    username: '',
+    dateOfBirth: '',
+    city: '',
+    state: '',
+    country: '',
+    instagramUsername: '',
+  })
+  const [doesShowStateOnProfile, setDoesShowStateOnProfile] = useState(false)
+  const [doesShowAgeOnProfile, setDoesShowAgeOnProfile] = useState(false)
+  const [profileImage, setProfileImage] = useState<File | null>(null)
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const t = searchParams.get('tab')
+    if (t === 'settings') return 'profile' // backwards compat
+    return isValidTab(t) ? t : 'profile'
+  })
+
+  // Sync activeTab from URL (e.g. /settings?tab=notifications). Default to profile when no tab specified.
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t === 'settings') setActiveTab('profile')
+    else if (isValidTab(t)) setActiveTab(t)
+    else setActiveTab('profile')
+  }, [searchParams])
+
+  useEffect(() => {
+    loadProfile()
+  }, [])
+
+  async function loadProfile() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        router.push('/onboarding')
+        return
+      }
+      console.error('Error loading profile:', error)
+      setLoading(false)
+      return
+    }
+
+    if (data) {
+      setProfile(data)
+      const igFromSocial =
+        data.social_links && typeof data.social_links === 'object' && data.social_links.instagram
+        ? String(data.social_links.instagram).replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').trim()
+        : ''
+      setFormData({
+        username: data.username || '',
+        dateOfBirth: data.date_of_birth || '',
+        city: data.city || '',
+        state: data.state || '',
+        country: data.country || '',
+        instagramUsername: data.instagram_username || igFromSocial || '',
+      })
+      setDoesShowStateOnProfile(data.show_state_on_profile !== false)
+      setDoesShowAgeOnProfile(data.show_age_on_profile !== false)
+      setProfileImagePreview(data.profile_image_url)
+    }
+    setLoading(false)
+  }
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      setProfileImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setErrors({})
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    if (!formData.username.trim()) {
+      setErrors({ username: 'Username is required' })
+      setIsSubmitting(false)
+      return
+    }
+
+    if (formData.username !== profile?.username) {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', formData.username.trim())
+        .maybeSingle()
+
+      if (existing) {
+        setErrors({ username: 'Username already taken' })
+        setIsSubmitting(false)
+        return
+      }
+    }
+
+    let imageUrl = profile?.profile_image_url || null
+
+    if (profileImage) {
+      const fileExt = profileImage.name.split('.').pop()
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
+      const filePath = `profile-images/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, profileImage, { upsert: true })
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError)
+        setErrors({ image: 'Failed to upload image' })
+        setIsSubmitting(false)
+        return
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('avatars').getPublicUrl(filePath)
+      imageUrl = publicUrl
+    }
+
+    const instagramUsername = formData.instagramUsername.replace(/^@/, '').trim() || null
+
+    let age = null
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth)
+      const today = new Date()
+      age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+    }
+
+    const profileData = {
+      id: session.user.id,
+      username: formData.username.trim(),
+      email: session.user.email || '',
+      profile_image_url: imageUrl,
+      date_of_birth: formData.dateOfBirth || null,
+      age: age,
+      city: formData.city.trim() || null,
+      state: formData.state.trim() || null,
+      country: formData.country.trim() || null,
+      show_state_on_profile: doesShowStateOnProfile,
+      show_age_on_profile: doesShowAgeOnProfile,
+      instagram_username: instagramUsername,
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(profileData, { onConflict: 'id' })
+
+    if (error) {
+      console.error('Error saving profile:', error)
+      setErrors({ submit: 'Failed to save profile' })
+    } else {
+      router.push(`/u/${formData.username.trim()}`)
+    }
+    setIsSubmitting(false)
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
+        </div>
+      </div>
+    )
+  }
+
+  function setTab(tab: TabId) {
+    setActiveTab(tab)
+    router.replace(`/settings?tab=${tab}`, { scroll: false })
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold font-display text-white">Notifications</h1>
+        <p className="mt-2 text-white/80">Manage your profile and notification preferences</p>
+      </div>
+
+      {/* Tab nav: Profile, Notifications, Info - pitlane style */}
+      <div className="mb-6 flex w-full overflow-hidden rounded-full">
+        <div className="flex w-full">
+          {(
+            [
+              { id: 'notifications' as const, label: 'Notifications', icon: Bell },
+              { id: 'profile' as const, label: 'Profile', icon: User },
+              { id: 'info' as const, label: 'Info', icon: Info },
+            ] as const
+          ).map(({ id, label, icon: Icon }, index) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={`relative flex flex-1 items-center justify-center gap-2 px-4 py-2.5 text-xs tracking-wide uppercase transition ${
+                activeTab === id
+                  ? 'bg-white/30 text-white'
+                  : 'bg-white/[19%] text-[#FFFFFF50] hover:text-white'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+              {index < 2 && (
+                <span
+                  className={`pointer-events-none absolute right-0 top-1 bottom-1 w-[.5px] ${
+                    activeTab === id ? 'bg-white/10' : 'bg-white/20'
+                  }`}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="min-w-0 flex-1 overflow-hidden">
+          {activeTab === 'profile' && (
+        <section className="rounded-lg border border-white/20 bg-white/5 p-6 min-w-0">
+          <form onSubmit={handleSubmit} className="space-y-6 min-w-0">
+            {/* Profile Image */}
+            <div>
+              <label className="block text-sm font-medium text-white/90">Profile Image</label>
+              <div className="mt-2 flex items-center space-x-4">
+                {profileImagePreview && (
+                  <img
+                    src={profileImagePreview}
+                    alt="Profile preview"
+                    className="h-20 w-20 rounded-full object-cover ring-2 ring-white/20"
+                  />
+                )}
+                <label className="flex cursor-pointer items-center space-x-2 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors">
+                  <Upload className="h-4 w-4" />
+                  <span>Upload Image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
+            </div>
+
+            {/* Username */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-white/90">
+                Username *
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                required
+              />
+              {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
+            </div>
+
+            {/* Date of Birth */}
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-white/90">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                max={new Date().toISOString().split('T')[0]}
+                className="mt-1 mb-6 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] [color-scheme:dark]"
+              />
+              <div className="rounded-md border border-white/20 bg-white/5 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-[#25B4B1] focus:ring-[#25B4B1] focus:ring-offset-0"
+                    checked={doesShowAgeOnProfile}
+                    onChange={(e) => setDoesShowAgeOnProfile(e.target.checked)}
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-white">Show my age on my profile</span>
+                    <span className="block text-sm text-white/70">
+                      If enabled, your age will be visible to other users on your public profile.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-white/90">
+                  City <span className="text-white/50">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                />
+              </div>
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium text-white/90">
+                  State <span className="text-white/50">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="state"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                />
+              </div>
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-white/90">
+                  Country <span className="text-white/50">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                />
+              </div>
+            </div>
+
+            {/* Privacy */}
+            <div className="space-y-4">
+              <div className="rounded-md border border-white/20 bg-white/5 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-[#25B4B1] focus:ring-[#25B4B1] focus:ring-offset-0"
+                    checked={doesShowStateOnProfile}
+                    onChange={(e) => setDoesShowStateOnProfile(e.target.checked)}
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-white">Show my state on my profile</span>
+                    <span className="block text-sm text-white/70">
+                      If enabled, your state may be visible to other users on your public profile.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Instagram username */}
+            <div className="min-w-0">
+              <label htmlFor="instagramUsername" className="block text-sm font-medium text-white/90">
+                Instagram username <span className="text-white/50">(optional)</span>
+              </label>
+              <input
+                type="text"
+                id="instagramUsername"
+                placeholder="username"
+                value={formData.instagramUsername}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    instagramUsername: e.target.value.replace(/^@/, ''),
+                  })
+                }
+                className="mt-1 block w-full min-w-0 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+              />
+            </div>
+
+            {errors.submit && (
+              <div className="rounded-md bg-red-500/20 border border-red-500/30 p-4">
+                <p className="text-sm text-red-400">{errors.submit}</p>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex items-center space-x-2 rounded-md bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+              >
+                <Save className="h-4 w-4" />
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </form>
+        </section>
+          )}
+
+          {activeTab === 'notifications' && (
+            <section className="rounded-lg border border-white/20 bg-white/5 p-6">
+              <h2 className="mb-6 text-2xl font-semibold text-white">Coming Soon!</h2>
+              <p className="text-white/70">
+                Notification preferences will be available here soon.
+              </p>
+            </section>
+          )}
+
+          {activeTab === 'info' && (
+            <section className="rounded-lg border border-white/20 bg-white/5 p-6">
+              <h2 className="mb-4 text-xl font-semibold text-white">Information</h2>
+              <div className="space-y-3">
+                <Link
+                  href="/terms"
+                  className="block rounded-lg border border-white/20 px-4 py-3 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  Terms of Service
+                </Link>
+
+                <Link
+                  href="/privacy"
+                  className="block rounded-lg border border-white/20 px-4 py-3 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+
+                <Link
+                  href="/delete-data"
+                  className="block rounded-lg border border-white/20 px-4 py-3 bg-white/5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  How to Delete Your Data
+                </Link>
+
+                <p className="mt-6 text-sm text-white/60 leading-relaxed">
+                  This platform is an independent, community-supported fan site and is not affiliated with, endorsed by, sponsored by, or officially connected to Formula 1®, any Formula 1 teams, drivers, sponsors, or affiliated organizations. All trademarks and related intellectual property are the property of their respective owners.
+                </p>
+              </div>
+            </section>
+          )}
+      </div>
+
+      {/* Log out - full-width red button at bottom */}
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-8 flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+      >
+        <LogOut className="h-4 w-4 shrink-0" />
+        Log out
+      </button>
+    </div>
+  )
+}

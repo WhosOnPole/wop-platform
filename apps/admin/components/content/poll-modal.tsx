@@ -4,20 +4,17 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2, Plus, Trash2 } from 'lucide-react'
 import { z } from 'zod'
+import { Poll } from './content.types'
 
 const pollSchema = z.object({
   question: z.string().min(1),
   options: z.array(z.string().min(1)).min(2),
   is_featured_podium: z.boolean(),
+  ends_at: z.string().optional().nullable(),
 })
 
 interface PollModalProps {
-  poll: {
-    id: string
-    question: string
-    options: string[]
-    is_featured_podium: boolean
-  } | null
+  poll: Poll | null
   onClose: () => void
 }
 
@@ -29,6 +26,9 @@ export function PollModal({ poll, onClose }: PollModalProps) {
     question: poll?.question || '',
     options: poll?.options || ['', ''],
     is_featured_podium: poll?.is_featured_podium || false,
+    ends_at: poll?.ends_at
+      ? new Date(poll.ends_at).toISOString().slice(0, 16)
+      : '',
   })
 
   function addOption() {
@@ -62,6 +62,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
         question: formData.question,
         options: formData.options.filter((opt) => opt.trim() !== ''),
         is_featured_podium: formData.is_featured_podium,
+        ends_at: formData.ends_at ? formData.ends_at : null,
       })
 
       if (validated.options.length < 2) {
@@ -76,12 +77,12 @@ export function PollModal({ poll, onClose }: PollModalProps) {
         throw new Error('Not authenticated')
       }
 
-      const payload = {
-        ...validated,
-        admin_id: session.user.id,
-      }
-
       if (poll) {
+        const payload = {
+          ...validated,
+          admin_id: session.user.id,
+          ends_at: validated.ends_at ? new Date(validated.ends_at).toISOString() : null,
+        }
         const { error: updateError } = await supabase
           .from('polls')
           .update(payload)
@@ -89,6 +90,13 @@ export function PollModal({ poll, onClose }: PollModalProps) {
 
         if (updateError) throw updateError
       } else {
+        const payload = {
+          question: validated.question,
+          options: validated.options,
+          is_featured_podium: validated.is_featured_podium,
+          admin_id: session.user.id,
+          ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        }
         const { error: insertError } = await supabase.from('polls').insert(payload)
 
         if (insertError) throw insertError
@@ -104,7 +112,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
             {poll ? 'Edit Poll' : 'Create Poll'}
@@ -177,6 +185,25 @@ export function PollModal({ poll, onClose }: PollModalProps) {
               Featured Podium
             </label>
           </div>
+
+          {poll ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Ends At <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.ends_at}
+                onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Poll is active while ends_at is empty or in the future.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">You have 24 hours to vote. Polls stay visible for 30 days.</p>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <button

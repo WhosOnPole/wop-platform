@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface User {
   id: string
@@ -26,19 +27,11 @@ export function FeaturedDiscussions({ posts }: FeaturedDiscussionsProps) {
           className="rounded-lg border border-gray-200 bg-white p-4 shadow hover:shadow-md transition-shadow"
         >
           <div className="mb-3 flex items-center space-x-3">
-            {post.user?.profile_image_url ? (
-              <img
-                src={post.user.profile_image_url}
-                alt={post.user.username}
-                className="h-8 w-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                <span className="text-xs font-medium text-gray-600">
-                  {post.user?.username?.charAt(0).toUpperCase() || '?'}
-                </span>
-              </div>
-            )}
+            <img
+              src={getAvatarUrl(post.user?.profile_image_url)}
+              alt={post.user?.username ?? ''}
+              className="h-8 w-8 rounded-full object-cover"
+            />
             <div>
               <Link
                 href={`/u/${post.user?.username || 'unknown'}`}

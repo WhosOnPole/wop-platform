@@ -1,9 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter, useParams } from 'next/navigation'
-import { GridEditor } from '@/components/grid-editor/grid-editor'
+import { GridDetailView } from '@/components/grids/grid-detail-view'
+import { getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
+
+type RankItem = {
+  id: string
+  name: string
+  nationality?: string | null
+  headshot_url?: string | null
+  image_url?: string | null
+  team_name?: string | null
+  location?: string | null
+  country?: string | null
+  circuit_ref?: string | null
+  track_slug?: string
+  is_placeholder?: boolean
+}
 
 export default function EditGridPage() {
   const supabase = createClientComponentClient()
@@ -11,87 +27,308 @@ export default function EditGridPage() {
   const params = useParams()
   const type = params.type as 'driver' | 'team' | 'track'
   const [loading, setLoading] = useState(true)
-  const [availableItems, setAvailableItems] = useState<any[]>([])
+  const [rankedList, setRankedList] = useState<RankItem[]>([])
+  const [availableItems, setAvailableItems] = useState<RankItem[]>([])
+  const [slotBlurbs, setSlotBlurbs] = useState<Record<number, string>>(() => {
+    const init: Record<number, string> = {}
+    for (let r = 1; r <= 10; r++) init[r] = ''
+    return init
+  })
+  const [existingGridId, setExistingGridId] = useState<string | null>(null)
+  const [profile, setProfile] = useState<{ id: string; username: string; profile_image_url: string | null } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? undefined
+
+  function getPlaceholderItem(index: number): RankItem {
+    return {
+      id: `__placeholder__${index}`,
+      name: '',
+      is_placeholder: true,
+    }
+  }
+
+  function padToTen(items: RankItem[]): RankItem[] {
+    const unique: RankItem[] = []
+    const seenIds = new Set<string>()
+    for (const item of items) {
+      if (item.is_placeholder) continue
+      if (seenIds.has(item.id)) continue
+      seenIds.add(item.id)
+      unique.push(item)
+      if (unique.length >= 10) break
+    }
+
+    const filled = unique.slice(0, 10)
+    const padded: RankItem[] = []
+    for (let i = 0; i < 10; i++) {
+      padded.push(filled[i] ?? getPlaceholderItem(i))
+    }
+    return padded
+  }
 
   useEffect(() => {
     if (!['driver', 'team', 'track'].includes(type)) {
       router.push('/')
       return
     }
-
-    loadAvailableItems()
+    loadAll()
   }, [type])
 
-  async function loadAvailableItems() {
+  async function loadAll() {
     setLoading(true)
-    
     try {
-      let result
-      
-      if (type === 'driver') {
-        result = await supabase
-          .from('drivers')
-          .select('id, name, image_url, headshot_url, team_id, teams:team_id(image_url)')
-          .eq('active', true)
-          .order('name')
-      } else if (type === 'team') {
-        result = await supabase
-          .from('teams')
-          .select('id, name, image_url')
-          .eq('active', true)
-          .order('name')
-      } else if (type === 'track') {
-        result = await supabase
-          .from('tracks')
-          .select('id, name, image_url')
-          .order('name')
-      } else {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
         setLoading(false)
         return
       }
 
-      if (result.data) {
-        setAvailableItems(
-          result.data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            image_url: item.image_url,
-            headshot_url: item.headshot_url || null,
-            team_icon_url: item.teams?.image_url || null,
-          }))
-        )
+      const [profileRes, gridRes, catalogRes] = await Promise.all([
+        supabase.from('profiles').select('id, username, profile_image_url').eq('id', session.user.id).single(),
+        supabase.from('grids').select('*').eq('user_id', session.user.id).eq('type', type).single(),
+        loadCatalog(type),
+      ])
+
+      const profileData = profileRes.data
+      const existingGrid = gridRes.data
+      const catalog = catalogRes
+      setAvailableItems(catalog)
+
+      if (profileData) setProfile(profileData)
+      if (existingGrid) {
+        setExistingGridId(existingGrid.id)
+        const rankedIds = (existingGrid.ranked_items || []) as Array<{ id: string; name: string }>
+        const ordered = rankedIds
+          .map((r) => catalog.find((c) => c.id === r.id))
+          .filter((c): c is RankItem => !!c)
+        setRankedList(padToTen(ordered))
+        const { data: slotBlurbsRows } = await supabase
+          .from('grid_slot_blurbs')
+          .select('rank_index, content')
+          .eq('grid_id', existingGrid.id)
+        const next: Record<number, string> = {}
+        for (let r = 1; r <= 10; r++) next[r] = ''
+        ;(slotBlurbsRows ?? []).forEach((row: { rank_index: number; content: string }) => {
+          const rank = Number(row.rank_index)
+          if (rank >= 1 && rank <= 10) next[rank] = row.content ?? ''
+        })
+        setSlotBlurbs(next)
+      } else {
+        setRankedList(padToTen([]))
+        setSlotBlurbs(() => {
+          const init: Record<number, string> = {}
+          for (let r = 1; r <= 10; r++) init[r] = ''
+          return init
+        })
       }
     } catch (error) {
-      console.error('Error loading items:', error)
+      console.error('Error loading edit grid:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) {
+  async function loadCatalog(t: 'driver' | 'team' | 'track'): Promise<RankItem[]> {
+    if (t === 'driver') {
+      const { data } = await supabase
+        .from('drivers')
+        .select('id, name, image_url, headshot_url, nationality, teams:team_id(name)')
+        .eq('active', true)
+        .order('name')
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        nationality: d.nationality ?? null,
+        headshot_url: d.headshot_url ?? null,
+        image_url: d.image_url ?? null,
+        team_name: Array.isArray(d.teams) ? d.teams[0]?.name : d.teams?.name ?? null,
+      }))
+    }
+    if (t === 'track') {
+      const { data } = await supabase.from('tracks').select('id, name, location, country, circuit_ref').order('name')
+      return (data || []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        location: t.location ?? null,
+        country: t.country ?? null,
+        circuit_ref: t.circuit_ref ?? null,
+        track_slug: getTrackSlug(t.name),
+      }))
+    }
+    const { data } = await supabase.from('teams').select('id, name').eq('active', true).order('name')
+    return (data || []).map((t: any) => ({ id: t.id, name: t.name }))
+  }
+
+  async function handleSave() {
+    const realItems = rankedList.filter((i) => !i.is_placeholder).slice(0, 10)
+    if (realItems.length === 0) {
+      alert('Please rank at least one item')
+      return
+    }
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    setIsSubmitting(true)
+    const rankedItemIds = realItems.map((item) => ({ id: item.id, name: item.name }))
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', session.user.id)
+      .single()
+
+    const sanitizedBlurbs: Record<number, string> = {}
+    for (let i = 1; i <= 10; i++) {
+      const result = sanitizeUserContent(slotBlurbs[i] ?? '', {
+        maxLength: CONTENT_MAX_LENGTHS.blurb,
+        fieldName: `Slot ${i} comment`,
+      })
+      if (!result.ok) {
+        alert(result.error)
+        setIsSubmitting(false)
+        return
+      }
+      sanitizedBlurbs[i] = result.value
+    }
+
+    const gridTypeLabel = type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'
+    let gridId: string
+
+    if (existingGridId) {
+      const { data: currentGrid } = await supabase
+        .from('grids')
+        .select('ranked_items')
+        .eq('id', existingGridId)
+        .single()
+      const previousState = currentGrid?.ranked_items || null
+      const { error: updateError } = await supabase
+        .from('grids')
+        .update({
+          ranked_items: rankedItemIds,
+          blurb: sanitizedBlurbs[1] || null,
+          previous_state: previousState,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingGridId)
+
+      if (updateError) {
+        console.error('Error updating grid:', updateError)
+        alert('Failed to update grid')
+        setIsSubmitting(false)
+        return
+      }
+      gridId = existingGridId
+      const postContent = sanitizedBlurbs[1] || `Updated their Top ${gridTypeLabel} grid`
+      const defaultContent = `Updated their Top ${gridTypeLabel} grid`
+      const { data: newPost } = await supabase
+        .from('posts')
+        .insert({
+          user_id: session.user.id,
+          content: postContent,
+          parent_page_type: 'profile',
+          parent_page_id: session.user.id,
+          grid_id: gridId,
+          grid_snapshot: rankedItemIds,
+        })
+        .select('id')
+        .single()
+      if (newPost?.id && postContent === defaultContent) {
+        await supabase
+          .from('posts')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('parent_page_type', 'profile')
+          .eq('parent_page_id', session.user.id)
+          .neq('id', newPost.id)
+          .ilike('content', `%Top ${gridTypeLabel} grid%`)
+      }
+    } else {
+      const nowIso = new Date().toISOString()
+      const { data: inserted, error } = await supabase
+        .from('grids')
+        .insert({
+          user_id: session.user.id,
+          type,
+          ranked_items: rankedItemIds,
+          blurb: sanitizedBlurbs[1] || null,
+          updated_at: nowIso,
+        })
+        .select('id')
+        .single()
+      if (error) {
+        console.error('Error saving grid:', error)
+        alert('Failed to save grid')
+        setIsSubmitting(false)
+        return
+      }
+      gridId = inserted.id
+    }
+
+    const slotBlurbsRows = Array.from({ length: 10 }, (_, i) => ({
+      grid_id: gridId,
+      rank_index: i + 1,
+      content: sanitizedBlurbs[i + 1] ?? '',
+    }))
+    const { error: slotBlurbsError } = await supabase
+      .from('grid_slot_blurbs')
+      .upsert(slotBlurbsRows, { onConflict: 'grid_id,rank_index' })
+
+    if (slotBlurbsError) {
+      console.error('Error saving grid slot comments:', slotBlurbsError)
+      alert('Grid saved but comments could not be saved. Please try again.')
+    }
+
+    router.push(`/u/${profileData?.username || session.user.id}`)
+    setIsSubmitting(false)
+  }
+
+  if (loading || !profile) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-        </div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
       </div>
     )
   }
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Edit Your Top {type === 'driver' ? 'Drivers' : type === 'team' ? 'Teams' : 'Tracks'}{' '}
-          Ranking
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Drag and drop to rank your top 10 {type === 'driver' ? 'drivers' : type === 'team' ? 'teams' : 'tracks'}
-        </p>
-      </div>
+  const gridForView = {
+    id: existingGridId || '',
+    type,
+    ranked_items: rankedList,
+    blurb: (slotBlurbs[1] ?? '') || null,
+    like_count: 0,
+    is_liked: false,
+    slotBlurbs,
+  }
 
-      <GridEditor type={type} availableItems={availableItems} />
-    </div>
+  return (
+    <GridDetailView
+      grid={gridForView}
+      owner={profile}
+      isOwnProfile
+      supabaseUrl={supabaseUrl}
+      mode="edit"
+      rankedList={rankedList}
+      onRankedListChange={setRankedList}
+      onSlotBlurbChange={(rankIndex, value) =>
+        setSlotBlurbs((prev) => ({ ...prev, [rankIndex]: value }))
+      }
+      onSlotBlurbSave={
+        existingGridId
+          ? async (rankIndex, value) => {
+              await supabase
+                .from('grid_slot_blurbs')
+                .upsert(
+                  { grid_id: existingGridId, rank_index: rankIndex, content: value.trim().slice(0, 140) },
+                  { onConflict: 'grid_id,rank_index' }
+                )
+            }
+          : undefined
+      }
+      onSave={handleSave}
+      availableItems={availableItems}
+    />
   )
 }
-

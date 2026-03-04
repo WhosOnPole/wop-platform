@@ -4,15 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { NewsStoryModal } from './news-story-modal'
-
-interface NewsStory {
-  id: string
-  title: string
-  image_url: string | null
-  content: string
-  is_featured: boolean
-  created_at: string
-}
+import { NewsStory } from './content.types'
 
 export function NewsStoriesTab() {
   const supabase = createClientComponentClient()
@@ -69,7 +61,7 @@ export function NewsStoriesTab() {
           className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          <span>Create News Story</span>
+          <span>Create New Story</span>
         </button>
       </div>
 

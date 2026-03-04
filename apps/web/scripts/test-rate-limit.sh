@@ -62,6 +62,6 @@ echo "  🚫 Last 2 requests should return 429 (rate limited)"
 echo ""
 echo "If results differ, check:"
 echo "  1. Migration has been applied to database"
-echo "  2. SUPABASE_SERVICE_ROLE_KEY is set in environment"
+echo "  2. SUPABASE_SECRET_KEY is set in environment"
 echo "  3. Server is running and accessible"
 

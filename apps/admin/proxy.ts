@@ -7,8 +7,8 @@ export async function proxy(req: NextRequest) {
   const supabase = createMiddlewareClient({ req, res })
   const pathname = req.nextUrl.pathname
 
-  // Allow access to auth routes (callback, reset-password) and login page for unauthenticated users
-  const publicPaths = ['/login', '/auth/callback', '/auth/reset-password']
+  // Allow access to auth routes (callback, reset-password) and login/signup pages for unauthenticated users
+  const publicPaths = ['/login', '/signup', '/auth/callback', '/auth/reset-password']
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
 
   // Refresh session if expired
@@ -24,11 +24,11 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Check if user is trying to access login page
-  const isLoginPage = pathname === '/login'
+  // Check if user is trying to access login/signup pages
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
 
   // If user has session, check admin access
-  if (session && !isLoginPage) {
+  if (session && !isAuthPage) {
     // Check if user is admin and check ban status
     const { data: profile } = await supabase
       .from('profiles')
@@ -52,15 +52,16 @@ export async function proxy(req: NextRequest) {
     const isAdminRole = profile?.role === 'admin'
 
     if (!isAdminEmail && !isAdminRole) {
-      // Not an admin, redirect to main site
-      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+      // Not an admin, redirect to main web app (never admin). NEXT_PUBLIC_SITE_URL is admin's own URL.
+      const mainSiteUrl =
+        process.env.NEXT_PUBLIC_MAIN_SITE_URL ||
         (req.nextUrl.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
       return NextResponse.redirect(new URL(mainSiteUrl))
     }
   }
 
-  // If on login page and already authenticated
-  if (session && isLoginPage) {
+  // If on login/signup pages and already authenticated
+  if (session && isAuthPage) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, email')
@@ -74,8 +75,9 @@ export async function proxy(req: NextRequest) {
       // Admin user, redirect to dashboard
       return NextResponse.redirect(new URL('/dashboard', req.url))
     } else {
-      // Non-admin user on login page, redirect to main site
-      const mainSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+      // Non-admin user on login page, redirect to main web app (never admin)
+      const mainSiteUrl =
+        process.env.NEXT_PUBLIC_MAIN_SITE_URL ||
         (req.nextUrl.hostname === 'localhost' ? 'http://localhost:3000' : 'https://www.whosonpole.org')
       return NextResponse.redirect(new URL(mainSiteUrl))
     }

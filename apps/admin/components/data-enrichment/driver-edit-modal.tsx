@@ -5,17 +5,50 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 
+/** Nationalities that have flag assets (matches web app flags.ts getNationalityFlagPath). */
+const DRIVER_NATIONALITIES = [
+  '',
+  'American',
+  'Argentine',
+  'Australian',
+  'Austrian',
+  'Azerbaijani',
+  'Bahraini',
+  'Belgian',
+  'Brazilian',
+  'British',
+  'Canadian',
+  'Chinese',
+  'Dutch',
+  'Emirati',
+  'French',
+  'German',
+  'Hungarian',
+  'Italian',
+  'Japanese',
+  'Mexican',
+  'Monégasque',
+  'Qatari',
+  'Saudi',
+  'Singaporean',
+  'Spanish',
+  'Thai',
+] as const
+
 const driverSchema = z.object({
-  image_url: z.string().url().optional().or(z.literal('')),
+  name: z.string().min(1).max(200),
   team_id: z.union([z.string().uuid(), z.literal(''), z.null()]).transform((val) => val === '' ? null : val),
   active: z.boolean().optional(),
   racing_number: z.number().int().positive().optional().or(z.null()),
   age: z.number().int().positive().max(100).optional().or(z.null()),
   nationality: z.string().max(100).optional().or(z.literal('')),
-  podiums_total: z.number().int().min(0).optional(),
-  current_standing: z.number().int().positive().optional().or(z.null()),
-  world_championships: z.number().int().min(0).optional(),
-  instagram_url: z.string().url().optional().or(z.literal('')),
+  overview_text: z.string().max(5000).optional().or(z.literal('')),
+  instagram_username: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .transform((val) => (val ?? '').trim().toLowerCase() || undefined)
+    .refine((val) => !val || (val.length <= 30 && /^[a-z0-9._]+$/.test(val)), 'Invalid Instagram username'),
 })
 
 interface Team {
@@ -34,10 +67,11 @@ interface DriverEditModalProps {
     racing_number: number | null
     age: number | null
     nationality: string | null
+    overview_text: string | null
     podiums_total: number
     current_standing: number | null
     world_championships: number
-    instagram_url: string | null
+    instagram_username: string | null
   }
   onClose: () => void
 }
@@ -48,17 +82,20 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [loadingTeams, setLoadingTeams] = useState(true)
-  const [formData, setFormData] = useState({
-    image_url: driver.image_url || '',
-    team_id: driver.team_id || '',
-    active: driver.active ?? true,
-    racing_number: driver.racing_number?.toString() || '',
-    age: driver.age?.toString() || '',
-    nationality: driver.nationality || '',
-    podiums_total: driver.podiums_total.toString(),
-    current_standing: driver.current_standing?.toString() || '',
-    world_championships: driver.world_championships.toString(),
-    instagram_url: driver.instagram_url || '',
+  const [formData, setFormData] = useState(() => {
+    const d = driver.nationality?.trim() || ''
+    const nationality =
+      !d ? '' : (DRIVER_NATIONALITIES.find((n) => n && n.toLowerCase() === d.toLowerCase()) as string) || d
+    return {
+      name: driver.name || '',
+      team_id: driver.team_id || '',
+      active: driver.active ?? true,
+      racing_number: driver.racing_number?.toString() || '',
+      age: driver.age?.toString() || '',
+      nationality,
+      overview_text: driver.overview_text || '',
+      instagram_username: driver.instagram_username || '',
+    }
   })
 
   useEffect(() => {
@@ -91,28 +128,28 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
     try {
       // Validate form data
       const validated = driverSchema.parse({
-        image_url: formData.image_url || undefined,
+        name: formData.name.trim(),
         team_id: formData.team_id && formData.team_id.trim() !== '' ? formData.team_id : null,
         active: formData.active,
         racing_number: formData.racing_number ? parseInt(formData.racing_number) : null,
         age: formData.age ? parseInt(formData.age) : null,
         nationality: formData.nationality || undefined,
-        podiums_total: parseInt(formData.podiums_total),
-        current_standing: formData.current_standing ? parseInt(formData.current_standing) : null,
-        world_championships: parseInt(formData.world_championships),
-        instagram_url: formData.instagram_url || undefined,
+        overview_text: formData.overview_text || undefined,
+        instagram_username: formData.instagram_username || undefined,
       })
 
-      // Use service role for admin operations (this should be done via Server Action in production)
       const { error: updateError } = await supabase
         .from('drivers')
         .update({
-          ...validated,
-          image_url: validated.image_url || null,
+          name: validated.name,
           team_id: validated.team_id || null,
           active: validated.active ?? true,
-          team_icon_url: null, // Remove team_icon_url, it will come from team relationship
-          instagram_url: validated.instagram_url || null,
+          team_icon_url: null,
+          overview_text: validated.overview_text || null,
+          racing_number: validated.racing_number ?? null,
+          age: validated.age ?? null,
+          nationality: validated.nationality || null,
+          instagram_username: validated.instagram_username || null,
         })
         .eq('id', driver.id)
 
@@ -128,7 +165,7 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Edit Driver: {driver.name}</h2>
           <button
@@ -148,14 +185,13 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Image URL
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Name</label>
               <input
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                required
               />
             </div>
 
@@ -223,60 +259,45 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
               <label className="block text-sm font-medium text-gray-700">
                 Nationality
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.nationality}
                 onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
+              >
+                <option value="">—</option>
+                {DRIVER_NATIONALITIES.filter(Boolean).map((nat) => (
+                  <option key={nat} value={nat}>
+                    {nat}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Podiums Total
+                Instagram Username
               </label>
               <input
-                type="number"
-                value={formData.podiums_total}
-                onChange={(e) => setFormData({ ...formData, podiums_total: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Current Standing
-              </label>
-              <input
-                type="number"
-                value={formData.current_standing}
-                onChange={(e) => setFormData({ ...formData, current_standing: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                World Championships
-              </label>
-              <input
-                type="number"
-                value={formData.world_championships}
-                onChange={(e) => setFormData({ ...formData, world_championships: e.target.value })}
+                type="text"
+                value={formData.instagram_username}
+                onChange={(e) => setFormData({ ...formData, instagram_username: e.target.value })}
+                placeholder="lewishamilton"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               />
             </div>
 
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700">
-                Instagram URL
+                Overview (driver page section)
               </label>
-              <input
-                type="url"
-                value={formData.instagram_url}
-                onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+              <textarea
+                rows={4}
+                value={formData.overview_text}
+                onChange={(e) => setFormData({ ...formData, overview_text: e.target.value })}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                placeholder="Short overview or bio shown on the driver entity page"
               />
+              <p className="mt-1 text-xs text-gray-500">Max 5000 characters. Shown next to racing number on the driver page.</p>
             </div>
           </div>
 

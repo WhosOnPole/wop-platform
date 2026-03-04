@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { NewsStory } from './content.types'
 
 const newsStorySchema = z.object({
   title: z.string().min(1).max(500),
@@ -13,13 +14,7 @@ const newsStorySchema = z.object({
 })
 
 interface NewsStoryModalProps {
-  story: {
-    id: string
-    title: string
-    image_url: string | null
-    content: string
-    is_featured: boolean
-  } | null
+  story: NewsStory | null
   onClose: () => void
 }
 
@@ -87,7 +82,7 @@ export function NewsStoryModal({ story, onClose }: NewsStoryModalProps) {
       <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {story ? 'Edit News Story' : 'Create News Story'}
+            {story ? 'Edit Story' : 'Create Story'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />

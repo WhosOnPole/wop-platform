@@ -8,7 +8,7 @@ interface Report {
   id: number
   reporter_id: string
   target_id: string
-  target_type: 'post' | 'grid' | 'profile' | 'comment'
+  target_type: 'post' | 'grid' | 'profile' | 'comment' | 'grid_slot_comment' | 'chat_message'
   reason: string
   status: string
   created_at: string
@@ -71,21 +71,25 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
         body: JSON.stringify({ reportId, targetType, targetId }),
       })
 
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Failed to remove content')
+        const msg = data?.error || res.statusText || 'Failed to remove content'
+        console.error('Remove content error:', res.status, msg, data)
+        throw new Error(msg)
       }
 
       setReports(reports.filter((r) => r.id !== reportId))
     } catch (error: any) {
       console.error('Error removing content:', error)
-      alert('Failed to remove content: ' + error.message)
+      alert('Failed to remove content: ' + (error?.message || 'Unknown error'))
     } finally {
       setProcessing(null)
     }
   }
 
   function getTargetTypeLabel(type: string) {
+    if (type === 'grid_slot_comment') return 'Grid slot comment'
+    if (type === 'chat_message') return 'Chat message'
     return type.charAt(0).toUpperCase() + type.slice(1)
   }
 
@@ -98,7 +102,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {reports.map((report) => (
         <div
           key={report.id}
@@ -117,20 +121,21 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                   <strong>Reason:</strong> {report.reason || 'No reason provided'}
                 </span>
               </div>
-              <div className="text-sm text-gray-600 flex justify-between gap-3">
-                <span>
-                  <strong>Target ID:</strong> {report.target_id}
-                </span>
               
-              </div>
               <div className="mt-1 text-xs text-gray-500">
                 Reported on {new Date(report.created_at).toLocaleString()}
               </div>
-              {report.targetPreview && (
+              {report.targetPreview ? (
                 <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold">
-                      Reported {report.targetPreview.type === 'comment' ? 'Comment' : 'Content'}
+                      Reported{' '}
+                      {report.targetPreview.type === 'comment' ||
+                      report.targetPreview.type === 'grid_slot_comment'
+                        ? 'Comment'
+                        : report.targetPreview.type === 'chat_message'
+                          ? 'Message'
+                          : 'Content'}
                     </span>
                     {report.targetPreview.username && (
                       <span className="text-xs text-gray-500">by {report.targetPreview.username}</span>
@@ -149,14 +154,23 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                   )}
                   {report.targetPreview.parent_page_type && report.targetPreview.parent_page_id && (
                     <p className="mt-2 text-xs text-gray-500">
-                      Parent:{' '}
                       {report.targetPreview.parent_name
                         ? `${getTargetTypeLabel(report.targetPreview.parent_page_type)}: ${report.targetPreview.parent_name}`
                         : `${report.targetPreview.parent_page_type} (${report.targetPreview.parent_page_id})`}
                     </p>
                   )}
                 </div>
+              ) : (
+                <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                  Content no longer available (may have been deleted)
+                </div>
               )}
+              <div className="text-sm text-gray-600 flex justify-between gap-3 mt-3">
+                <span>
+                  <strong>Target ID:</strong> {report.target_id}
+                </span>
+              
+              </div>
             </div>
           </div>
 

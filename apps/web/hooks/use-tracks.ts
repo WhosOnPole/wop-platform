@@ -1,14 +1,12 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 
 interface Track {
   id: string
   name: string
-  image_url: string | null
-  track_length: number | null
-  built_date: string | null
+  laps: number | null
   overview_text: string | null
   circuit_ref: string | null
   location: string | null

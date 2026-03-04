@@ -1,9 +1,18 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { ReportsQueue } from '@/components/reports/reports-queue'
 
 export default async function ReportsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore as any },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
 
   // Fetch pending reports with reporter info
   const { data: reports } = await supabase
@@ -25,10 +34,18 @@ export default async function ReportsPage() {
   // Collect target IDs by type to fetch previews
   const postIds = pending.filter((r) => r.target_type === 'post').map((r) => r.target_id)
   const commentIds = pending.filter((r) => r.target_type === 'comment').map((r) => r.target_id)
+  const gridSlotCommentIds = pending
+    .filter((r) => r.target_type === 'grid_slot_comment')
+    .map((r) => r.target_id)
   const gridIds = pending.filter((r) => r.target_type === 'grid').map((r) => r.target_id)
   const profileIds = pending.filter((r) => r.target_type === 'profile').map((r) => r.target_id)
+  const chatMessageIds = pending
+    .filter((r) => r.target_type === 'chat_message')
+    .map((r) => parseInt(r.target_id, 10))
+    .filter((n) => !Number.isNaN(n))
 
-  const [postsRes, commentsRes, gridsRes, profilesRes] = await Promise.all([
+  const [postsRes, commentsRes, gridSlotCommentsRes, gridsRes, profilesRes, chatMessagesRes] =
+    await Promise.all([
     postIds.length
       ? supabase
           .from('posts')
@@ -60,6 +77,20 @@ export default async function ReportsPage() {
           )
           .in('id', commentIds)
       : { data: [] },
+    gridSlotCommentIds.length
+      ? supabase
+          .from('grid_slot_comments')
+          .select(
+            `
+            id,
+            content,
+            user:profiles!user_id (
+              username
+            )
+          `
+          )
+          .in('id', gridSlotCommentIds)
+      : { data: [] },
     gridIds.length
       ? supabase
           .from('grids')
@@ -80,12 +111,32 @@ export default async function ReportsPage() {
           .select('id, username, profile_image_url')
           .in('id', profileIds)
       : { data: [] },
+    chatMessageIds.length
+      ? supabase
+          .from('live_chat_messages')
+          .select(
+            `
+            id,
+            message,
+            user:profiles!user_id (
+              username
+            )
+          `
+          )
+          .in('id', chatMessageIds)
+      : { data: [] },
   ])
 
   const postMap = Object.fromEntries((postsRes.data || []).map((p) => [p.id, p]))
   const commentMap = Object.fromEntries((commentsRes.data || []).map((c) => [c.id, c]))
+  const gridSlotCommentMap = Object.fromEntries(
+    (gridSlotCommentsRes.data || []).map((c) => [c.id, c])
+  )
   const gridMap = Object.fromEntries((gridsRes.data || []).map((g) => [g.id, g]))
   const profileMap = Object.fromEntries((profilesRes.data || []).map((p) => [p.id, p]))
+  const chatMessageMap = Object.fromEntries(
+    (chatMessagesRes.data || []).map((m) => [String(m.id), m])
+  )
 
   // Collect parent page IDs from posts/comments for naming
   const parentDriverIds = new Set<string>()
@@ -179,12 +230,28 @@ export default async function ReportsPage() {
                 : null,
           }
         }
+      } else if (report.target_type === 'grid_slot_comment') {
+        const c = gridSlotCommentMap[report.target_id]
+        if (c)
+          targetPreview = {
+            type: 'grid_slot_comment',
+            content: c.content,
+            username: (c as any).user?.username,
+          }
       } else if (report.target_type === 'grid') {
         const g = gridMap[report.target_id]
         if (g) targetPreview = { type: 'grid', content: g.blurb, username: g.user?.username }
       } else if (report.target_type === 'profile') {
         const p = profileMap[report.target_id]
         if (p) targetPreview = { type: 'profile', username: p.username, image: p.profile_image_url }
+      } else if (report.target_type === 'chat_message') {
+        const m = chatMessageMap[report.target_id]
+        if (m)
+          targetPreview = {
+            type: 'chat_message',
+            content: (m as any).message,
+            username: (m as any).user?.username,
+          }
       }
       return { ...report, targetPreview }
     }) || []

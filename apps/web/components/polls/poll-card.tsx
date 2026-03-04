@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { Trophy } from 'lucide-react'
-import { DiscussionSection } from '@/components/dtt/discussion-section'
+import { Trophy, Repeat2 } from 'lucide-react'
+import { useCreateModal } from '@/components/providers/create-modal-provider'
 
 interface Poll {
   id: string
@@ -12,6 +12,7 @@ interface Poll {
   options: any[]
   is_featured_podium: boolean
   created_at: string
+  ends_at?: string | null
 }
 
 interface PollCardProps {
@@ -19,13 +20,40 @@ interface PollCardProps {
   userResponse: string | undefined
   voteCounts: Record<string, number>
   onVote: (pollId: string, optionId: string) => void
+  className?: string
+  variant?: 'light' | 'dark'
+  /** Smaller padding and text for embedded (e.g. repost) context */
+  compact?: boolean
+  /** Show Repost button; set false when embedded in a feed post */
+  showRepost?: boolean
+  /** Show Featured chip when poll is featured; set false in modal context */
+  showFeaturedChip?: boolean
 }
 
-export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardProps) {
+export function PollCard({
+  poll,
+  userResponse,
+  voteCounts,
+  onVote,
+  className,
+  variant = 'light',
+  compact = false,
+  showRepost = true,
+  showFeaturedChip = true,
+}: PollCardProps) {
+  const isDark = variant === 'dark'
   const supabase = createClientComponentClient()
   const router = useRouter()
+  const createModal = useCreateModal()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [localResponse, setLocalResponse] = useState(userResponse)
+
+  function handleRepost() {
+    createModal?.openPostModal({
+      referencePollId: poll.id,
+      referencePollQuestion: poll.question,
+    })
+  }
 
   // Calculate vote counts and percentages
   // Note: poll.options is a JSONB array of strings, not objects
@@ -48,6 +76,7 @@ export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardPro
 
   async function handleVote(optionIndex: number) {
     if (localResponse) return // Already voted
+    if (poll.ends_at && new Date(poll.ends_at) < new Date()) return // Poll ended
 
     setIsSubmitting(true)
     const {
@@ -55,6 +84,7 @@ export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardPro
     } = await supabase.auth.getSession()
 
     if (!session) {
+      setIsSubmitting(false)
       router.push('/login')
       return
     }
@@ -69,52 +99,92 @@ export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardPro
     })
 
     if (error) {
-      console.error('Error voting:', error)
-      alert(`Failed to record vote: ${error.message}`)
+      const isDuplicate =
+        error.code === '23505' ||
+        /unique|duplicate/i.test(error.message ?? '')
+      if (isDuplicate) {
+        setLocalResponse(selectedOptionId)
+        onVote(poll.id, selectedOptionId)
+        router.refresh()
+      } else {
+        console.error('Error voting:', error)
+        alert(`Failed to record vote: ${error.message}`)
+      }
     } else {
       setLocalResponse(selectedOptionId)
       onVote(poll.id, selectedOptionId)
-      router.refresh() // Refresh to get updated vote counts
+      router.refresh()
     }
     setIsSubmitting(false)
   }
 
   const hasVoted = !!localResponse
+  const isExpired = !!poll.ends_at && new Date(poll.ends_at) < new Date()
+  const showResults = hasVoted || isExpired
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow text-black">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">{poll.question}</h2>
-        {poll.is_featured_podium && (
-          <div className="flex items-center space-x-1 rounded-full bg-yellow-100 px-3 py-1">
-            <Trophy className="h-4 w-4 text-yellow-600" />
-            <span className="text-xs font-medium text-yellow-800">Featured</span>
-          </div>
-        )}
+    <div
+      className={`h-full w-full rounded-lg p-0 shadow ${
+        isDark
+          ? ' backdrop-blur-sm text-white'
+          : 'border-gray-200 bg-white text-black'
+      } ${className || ''}`}
+    >
+      <div className={compact ? 'mb-2 flex items-center justify-between gap-2' : 'mb-4 flex items-center justify-between gap-2'}>
+        <h2 className={`min-w-0 flex-1 ${compact ? 'text-base font-medium' : 'text-xl font-semibold'} ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {poll.question}
+        </h2>
+        <div className="flex shrink-0 items-center gap-2">
+          {poll.is_featured_podium && !compact && showFeaturedChip && (
+            <div
+              className="flex items-center space-x-1 rounded-full px-3 py-1 bg-sunset-gradient"
+            >
+              <Trophy className="h-4 w-4" />
+              <span className="text-xs font-medium">Featured</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {hasVoted ? (
-        <div className="space-y-3">
-          <p className="mb-4 text-sm text-gray-600">
-            {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
-          </p>
+      {showResults ? (
+        <div className={compact ? 'space-y-2' : 'space-y-3'}>
           {optionsWithStats.map((option) => {
             const isSelected = localResponse === option.id
             return (
               <div key={option.id} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className={`font-medium ${isSelected ? 'text-blue-600' : 'text-gray-700'}`}>
+                  <span
+                    className={`font-medium ${
+                      isDark
+                        ? isSelected
+                          ? 'text-[#EF771B]'
+                          : 'text-white/20'
+                        : isSelected
+                          ? 'text-blue-600'
+                          : 'text-gray-700'
+                    }`}
+                  >
                     {option.text}
                     {isSelected && ' ✓ (Your vote)'}
                   </span>
-                  <span className="text-gray-600">
+                  <span className={isDark ? 'text-white/80' : 'text-gray-600'}>
                     {option.votes} ({option.percentage}%)
                   </span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className={`h-2 overflow-hidden rounded-full ${
+                    isDark ? 'bg-white/20' : 'bg-gray-200'
+                  }`}
+                >
                   <div
                     className={`h-full transition-all ${
-                      isSelected ? 'bg-blue-600' : 'bg-gray-400'
+                      isDark
+                        ? isSelected
+                          ? 'bg-sunset-gradient'
+                          : 'bg-white/40'
+                        : isSelected
+                          ? 'bg-blue-600'
+                          : 'bg-gray-400'
                     }`}
                     style={{ width: `${option.percentage}%` }}
                   />
@@ -124,13 +194,17 @@ export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardPro
           })}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className={compact ? 'space-y-1.5' : 'space-y-2'}>
           {optionsWithStats.map((option) => (
             <button
               key={option.id}
               onClick={() => handleVote(option.index)}
               disabled={isSubmitting}
-              className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:border-blue-500 disabled:opacity-50"
+              className={
+                isDark
+                  ? `w-full rounded-md border border-white/20 bg-white/10 text-left text-sm font-medium text-white transition-colors hover:bg-white/20 disabled:opacity-50 ${compact ? 'px-3 py-2' : 'px-4 py-3'}`
+                  : `w-full rounded-md border border-gray-300 bg-white text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:border-blue-500 disabled:opacity-50 ${compact ? 'px-3 py-2' : 'px-4 py-3'}`
+              }
             >
               {option.text}
             </button>
@@ -138,14 +212,31 @@ export function PollCard({ poll, userResponse, voteCounts, onVote }: PollCardPro
         </div>
       )}
 
-      {/* Discussion Section */}
-      <div className="mt-6 border-t border-gray-200 pt-6">
-        <DiscussionSection
-          posts={[]}
-          parentPageType="poll"
-          parentPageId={poll.id}
-        />
-      </div>
+      {createModal && showRepost && (
+        <div
+          className={`flex items-center justify-between border-t ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} ${isDark ? 'border-white/10' : 'border-gray-200'}`}
+        >
+          {showResults ? (
+            <p className={`text-sm ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
+              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
+            </p>
+          ) : (
+            <span />
+          )}
+          <button
+            type="button"
+            onClick={handleRepost}
+            className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${
+              isDark
+                ? 'text-white/80 hover:text-white'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Repeat2 className="h-4 w-4" />
+            Repost
+          </button>
+        </div>
+      )}
     </div>
   )
 }

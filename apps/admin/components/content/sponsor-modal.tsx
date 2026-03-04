@@ -4,20 +4,17 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { Sponsor } from './content.types'
 
 const sponsorSchema = z.object({
   name: z.string().min(1),
   logo_url: z.string().url().optional().or(z.literal('')),
   website_url: z.string().url().optional().or(z.literal('')),
+  description: z.string().optional().or(z.literal('')),
 })
 
 interface SponsorModalProps {
-  sponsor: {
-    id: string
-    name: string
-    logo_url: string | null
-    website_url: string | null
-  } | null
+  sponsor: Sponsor | null
   onClose: () => void
 }
 
@@ -29,6 +26,7 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
     name: sponsor?.name || '',
     logo_url: sponsor?.logo_url || '',
     website_url: sponsor?.website_url || '',
+    description: sponsor?.description || '',
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -41,12 +39,14 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
         name: formData.name,
         logo_url: formData.logo_url || undefined,
         website_url: formData.website_url || undefined,
+        description: formData.description || undefined,
       })
 
       const payload = {
         name: validated.name,
         logo_url: validated.logo_url || null,
         website_url: validated.website_url || null,
+        description: validated.description || null,
       }
 
       if (sponsor) {
@@ -64,7 +64,7 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
 
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Failed to save sponsor')
+      setError(err.message || 'Failed to save endorsement')
     } finally {
       setLoading(false)
     }
@@ -72,10 +72,10 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {sponsor ? 'Edit Sponsor' : 'Create Sponsor'}
+            {sponsor ? 'Edit Endorsement' : 'Create Endorsement'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />
@@ -125,6 +125,17 @@ export function SponsorModal({ sponsor, onClose }: SponsorModalProps) {
               value={formData.website_url}
               onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={4}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              placeholder="Enter endorsement description..."
             />
           </div>
 

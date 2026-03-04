@@ -4,14 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { SponsorModal } from './sponsor-modal'
-
-interface Sponsor {
-  id: string
-  name: string
-  logo_url: string | null
-  website_url: string | null
-  created_at: string
-}
+import { Sponsor } from './content.types'
 
 export function SponsorsTab() {
   const supabase = createClientComponentClient()
@@ -40,13 +33,13 @@ export function SponsorsTab() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this sponsor?')) return
+    if (!confirm('Are you sure you want to delete this endorsement?')) return
 
     const { error } = await supabase.from('sponsors').delete().eq('id', id)
 
     if (error) {
       console.error('Error deleting sponsor:', error)
-      alert('Failed to delete sponsor')
+      alert('Failed to delete endorsement')
     } else {
       loadSponsors()
     }
@@ -68,7 +61,7 @@ export function SponsorsTab() {
           className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          <span>Create Sponsor</span>
+          <span>Create Endorsement</span>
         </button>
       </div>
 

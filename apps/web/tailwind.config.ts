@@ -18,8 +18,8 @@ const config: Config = {
         'racing-orange': '#ef771b',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Raygun', 'serif'],
+        sans: ['var(--font-inter)', 'sans-serif'],
+        display: ['var(--font-raygun)', 'serif'],
       },
       backgroundImage: {
         'sunset-gradient': 'linear-gradient(45deg, #d90084, #ff4300)',

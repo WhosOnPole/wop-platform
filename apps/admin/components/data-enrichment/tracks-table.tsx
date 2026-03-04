@@ -4,20 +4,30 @@ import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Edit, Loader2 } from 'lucide-react'
 import { TrackEditModal } from './track-edit-modal'
+import { formatWeekendRange } from '@/utils/date-utils'
 
 interface Track {
   id: string
   name: string
-  image_url: string | null
-  built_date: string | null
-  track_length: number | null
+  laps: number | null
+  turns: number | null
+  location: string | null
+  country: string | null
+  start_date: string | null
+  end_date: string | null
+  timezone: string | null
+  circuit_ref: string | null
   overview_text: string | null
   history_text: string | null
+  website_url: string | null
 }
+
+const CURRENT_SEASON = 2026
 
 export function TracksTable() {
   const supabase = createClientComponentClient()
   const [tracks, setTracks] = useState<Track[]>([])
+  const [eventCountByTrackId, setEventCountByTrackId] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [editingTrack, setEditingTrack] = useState<Track | null>(null)
 
@@ -27,15 +37,24 @@ export function TracksTable() {
 
   async function loadTracks() {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('tracks')
-      .select('*')
-      .order('name')
-
+    const { data, error } = await supabase.from('tracks').select('*').order('name')
     if (error) {
       console.error('Error loading tracks:', error)
+      setTracks([])
     } else {
-      setTracks(data || [])
+      setTracks(data ?? [])
+      if ((data?.length ?? 0) > 0) {
+        const ids = data!.map((t) => t.id)
+        const { data: events } = await supabase
+          .from('track_events')
+          .select('track_id')
+          .in('track_id', ids)
+          .eq('season_year', CURRENT_SEASON)
+        const count: Record<string, number> = {}
+        ids.forEach((id) => (count[id] = 0))
+        events?.forEach((e) => (count[e.track_id] = (count[e.track_id] ?? 0) + 1))
+        setEventCountByTrackId(count)
+      }
     }
     setLoading(false)
   }
@@ -59,6 +78,12 @@ export function TracksTable() {
                   Track
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Weekend
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Events
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Actions
                 </th>
               </tr>
@@ -67,16 +92,13 @@ export function TracksTable() {
               {tracks.map((track) => (
                 <tr key={track.id}>
                   <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center">
-                      {track.image_url && (
-                        <img
-                          src={track.image_url}
-                          alt={track.name}
-                          className="mr-3 h-10 w-10 rounded object-cover"
-                        />
-                      )}
-                      <div className="text-sm font-medium text-gray-900">{track.name}</div>
-                    </div>
+                    <div className="text-sm font-medium text-gray-900">{track.name}</div>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                    {formatWeekendRange(track.start_date, track.end_date) ?? '—'}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                    {eventCountByTrackId[track.id] ?? '—'}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
                     <button

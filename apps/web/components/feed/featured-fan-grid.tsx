@@ -13,8 +13,14 @@ interface FeaturedFanGridProps {
 }
 
 export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) {
-  const cookieGetter = cookies as unknown as () => any
-  const supabase = createServerComponentClient({ cookies: cookieGetter })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore as any },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
 
   // Fetch the most recent driver grid for the highlighted fan
   const { data: driverGrid } = await supabase
@@ -30,12 +36,18 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
     return null
   }
 
-  // Fetch grid like count
-  const { data: likeCountData } = await supabase.rpc('get_grid_like_count', {
-    grid_uuid: driverGrid.id,
-  })
+  // Fetch grid like count and comment count
+  const [{ data: likeCountData }, { count: commentCount }] = await Promise.all([
+    supabase.rpc('get_grid_like_count', { grid_uuid: driverGrid.id }),
+    supabase
+      .from('grid_slot_comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('grid_id', driverGrid.id)
+      .is('deleted_at', null),
+  ])
 
   const likeCount = typeof likeCountData === 'number' ? likeCountData : 0
+  const commentCountValue = commentCount ?? 0
 
   const topThree = driverGrid.ranked_items.slice(0, 3)
   const rest = driverGrid.ranked_items.slice(3, 10)
@@ -63,17 +75,17 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
   )
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-lg">
+    <div className="rounded-lg border border-white/10 bg-black/40 p-6 shadow-lg backdrop-blur-sm">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Featured Grid Of The Day</h2>
-        <p className="text-pink-600 font-medium">
-          <Link href={`/u/${highlightedFan.username}`} className="hover:underline">
+        <h2 className="mb-1 text-2xl font-bold text-white">Featured Grid Of The Day</h2>
+        <p className="font-medium text-[#25B4B1]">
+          <Link href={`/u/${highlightedFan.username}`} className="hover:underline hover:text-[#25B4B1]/90">
             {highlightedFan.username}&apos;s Grid
           </Link>
         </p>
         {driverGrid.blurb && (
-          <p className="text-sm text-gray-600 mt-2">{driverGrid.blurb}</p>
+          <p className="mt-2 text-sm text-white/90">{driverGrid.blurb}</p>
         )}
       </div>
 
@@ -185,7 +197,7 @@ export async function FeaturedFanGrid({ highlightedFan }: FeaturedFanGridProps) 
       )}
 
       {/* Social Interaction */}
-      <FeaturedGridSocial gridId={driverGrid.id} initialLikeCount={likeCount} />
+      <FeaturedGridSocial gridId={driverGrid.id} initialLikeCount={likeCount} initialCommentCount={commentCountValue} />
     </div>
   )
 }

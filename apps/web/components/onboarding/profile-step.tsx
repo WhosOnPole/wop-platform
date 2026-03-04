@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Save, Upload, X } from 'lucide-react'
+import Link from 'next/link'
+import { createClientComponentClient } from '@/utils/supabase-client'
+import { Pencil, Save } from 'lucide-react'
 
 interface OnboardingProfileStepProps {
   onComplete: () => void
@@ -13,20 +14,37 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
   const [formData, setFormData] = useState({
     username: '',
     dateOfBirth: '',
-    city: '',
-    state: '',
-    country: '',
   })
-  const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; url: string }>>([])
+  const [doesShowAgeOnProfile, setDoesShowAgeOnProfile] = useState(true)
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false)
+  const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
+  const [imageScale, setImageScale] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
+  const maxDob = (() => {
+    const today = new Date()
+    today.setFullYear(today.getFullYear() - 13)
+    return today.toISOString().split('T')[0]
+  })()
+
   useEffect(() => {
     loadExistingData()
   }, [])
+
+  function normalizeUsername(input: string) {
+    return input
+      .toLowerCase()
+      .trim()
+      .replace(/['']/g, '')
+      .replace(/[^a-z0-9_]+/g, '_')
+      .replace(/_{2,}/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 50)
+  }
 
   async function loadExistingData() {
     const {
@@ -37,7 +55,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('*')
+      .select('username, date_of_birth, profile_image_url, show_age_on_profile')
       .eq('id', session.user.id)
       .maybeSingle()
 
@@ -45,19 +63,24 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       setFormData({
         username: profile.username || '',
         dateOfBirth: profile.date_of_birth || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        country: profile.country || '',
       })
+      setDoesShowAgeOnProfile(profile.show_age_on_profile !== false)
       setProfileImagePreview(profile.profile_image_url)
-      if (profile.social_links && typeof profile.social_links === 'object') {
-        setSocialLinks(
-          Object.entries(profile.social_links as Record<string, string>).map(([platform, url]) => ({
-            platform,
-            url,
-          }))
-        )
-      }
+    }
+
+    const userMeta = session.user.user_metadata as Record<string, unknown>
+    const preferred =
+      (typeof userMeta.preferred_username === 'string' && userMeta.preferred_username) ||
+      (typeof userMeta.tiktok_display_name === 'string' && userMeta.tiktok_display_name) ||
+      (typeof userMeta.user_name === 'string' && userMeta.user_name) ||
+      (typeof userMeta.username === 'string' && userMeta.username) ||
+      (typeof userMeta.full_name === 'string' && userMeta.full_name) ||
+      (typeof userMeta.name === 'string' && userMeta.name) ||
+      ''
+
+    const normalized = preferred ? normalizeUsername(preferred) : ''
+    if (!profile?.username && normalized) {
+      setFormData((prev) => ({ ...prev, username: prev.username || normalized }))
     }
     setLoading(false)
   }
@@ -66,6 +89,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     const file = e.target.files?.[0]
     if (file) {
       setProfileImage(file)
+      setImageScale(1)
       const reader = new FileReader()
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string)
@@ -74,18 +98,37 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     }
   }
 
-  function addSocialLink() {
-    setSocialLinks([...socialLinks, { platform: '', url: '' }])
-  }
-
-  function removeSocialLink(index: number) {
-    setSocialLinks(socialLinks.filter((_, i) => i !== index))
-  }
-
-  function updateSocialLink(index: number, field: 'platform' | 'url', value: string) {
-    const updated = [...socialLinks]
-    updated[index][field] = value
-    setSocialLinks(updated)
+  async function cropImageToBlob(dataUrl: string, zoom: number): Promise<Blob> {
+    const size = 512
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('No canvas context'))
+          return
+        }
+        const w = img.naturalWidth
+        const h = img.naturalHeight
+        const coverScale = size / Math.min(w, h)
+        const drawW = w * coverScale * zoom
+        const drawH = h * coverScale * zoom
+        const dx = (size - drawW) / 2
+        const dy = (size - drawH) / 2
+        ctx.drawImage(img, 0, 0, w, h, dx, dy, drawW, drawH)
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+          'image/jpeg',
+          0.92
+        )
+      }
+      img.onerror = () => reject(new Error('Image load failed'))
+      img.src = dataUrl
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -99,14 +142,38 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     if (!session) return
 
-    // Validate required fields
     if (!formData.username.trim()) {
       setErrors({ username: 'Username is required' })
       setIsSubmitting(false)
       return
     }
 
-    // Check username uniqueness
+    if (!formData.dateOfBirth) {
+      setErrors({ dateOfBirth: 'Date of birth is required' })
+      setIsSubmitting(false)
+      return
+    }
+
+    if (!agreeToPrivacy || !agreeToTerms) {
+      setErrors({
+        legal: 'You must agree to the Privacy Policy and Terms and Conditions to continue',
+      })
+      setIsSubmitting(false)
+      return
+    }
+
+    const birthDate = new Date(formData.dateOfBirth)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--
+
+    if (Number.isNaN(age) || age < 13) {
+      setErrors({ dateOfBirth: 'You must be at least 13 years old to use this service' })
+      setIsSubmitting(false)
+      return
+    }
+
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -121,61 +188,43 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     let imageUrl = profileImagePreview
 
-    // Upload image if changed
-    if (profileImage) {
-      const fileExt = profileImage.name.split('.').pop()
-      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
-      const filePath = `profile-images/${fileName}`
+    if (profileImage && profileImagePreview) {
+      try {
+        const blob = await cropImageToBlob(profileImagePreview, imageScale)
+        const fileName = `${session.user.id}-${Date.now()}.jpg`
+        const filePath = `profile-images/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, profileImage, { upsert: true })
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, blob, { upsert: true, contentType: 'image/jpeg' })
 
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError)
-        setErrors({ image: 'Failed to upload image' })
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError)
+          setErrors({ image: 'Failed to upload image' })
+          setIsSubmitting(false)
+          return
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('avatars').getPublicUrl(filePath)
+        imageUrl = publicUrl
+      } catch (err) {
+        console.error('Error cropping image:', err)
+        setErrors({ image: 'Failed to process image' })
         setIsSubmitting(false)
         return
       }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('avatars').getPublicUrl(filePath)
-      imageUrl = publicUrl
     }
 
-    // Convert social links array to object
-    const socialLinksObj: Record<string, string> = {}
-    socialLinks.forEach((link) => {
-      if (link.platform.trim() && link.url.trim()) {
-        socialLinksObj[link.platform.trim().toLowerCase()] = link.url.trim()
-      }
-    })
-
-    // Calculate age from date of birth
-    let age = null
-    if (formData.dateOfBirth) {
-      const birthDate = new Date(formData.dateOfBirth)
-      const today = new Date()
-      age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--
-      }
-    }
-
-    // Upsert profile
     const profileData = {
       id: session.user.id,
       username: formData.username.trim(),
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,
-      age: age,
-      city: formData.city.trim() || null,
-      state: formData.state.trim() || null,
-      country: formData.country.trim() || null,
-      social_links: Object.keys(socialLinksObj).length > 0 ? socialLinksObj : null,
+      age,
+      show_age_on_profile: doesShowAgeOnProfile,
     }
 
     const { error } = await supabase.from('profiles').upsert(profileData, { onConflict: 'id' })
@@ -189,198 +238,176 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     setIsSubmitting(false)
   }
 
+  const inputClass =
+    'mt-1 block w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-white placeholder:text-white/40 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] mb-8'
+  const labelClass = 'block text-sm font-medium text-white/90 mb-2'
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#25B4B1] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-12">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Set Up Your Profile</h2>
-        <p className="mt-1 text-sm text-gray-600">Tell us about yourself (all fields required)</p>
+        <h2 className="font-display text-2xl font-normal text-white">Set Up Your Profile</h2>
+        <p className="mt-1 text-sm text-white/70">
+          One step away from your journey!
+        </p>
       </div>
 
-      {/* Profile Image */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
-        <div className="mt-2 flex items-center space-x-4">
-          {profileImagePreview ? (
-            <div className="relative">
-              <img
-                src={profileImagePreview}
-                alt="Profile preview"
-                className="h-24 w-24 rounded-full object-cover"
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        {/* Profile Image - left 1/3 */}
+        <div className="flex flex-col items-center">
+          <label className={labelClass}>Profile Picture</label>
+          <div className="relative">
+            {profileImagePreview ? (
+              <div className="h-40 w-40 overflow-hidden rounded-full">
+                <img
+                  src={profileImagePreview}
+                  alt="Profile preview"
+                  className="h-full w-full object-cover transition-transform duration-150"
+                  style={{ transform: `scale(${imageScale})` }}
+                />
+              </div>
+            ) : (
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-white/10">
+                <span className="text-2xl text-white/40">+</span>
+              </div>
+            )}
+            {/* Pencil button overlapping bottom-right of avatar circle */}
+            <label className="absolute bottom-0 right-0 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-black bg-[#25B4B1] text-white shadow-lg hover:bg-[#25B4B1]/90 transition-colors">
+              <Pencil className="h-4 w-4" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
               />
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileImage(null)
-                  setProfileImagePreview(null)
-                }}
-                className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-200">
-              <span className="text-2xl text-gray-400">?</span>
+            </label>
+          </div>
+          {profileImagePreview && (
+            <div className="mt-3 w-full max-w-[10rem]">
+              <p className="mb-1 text-xs text-white/70">Adjust zoom</p>
+              <input
+                type="range"
+                min={0.5}
+                max={2}
+                step={0.05}
+                value={imageScale}
+                onChange={(e) => setImageScale(Number(e.target.value))}
+                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-[#25B4B1] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#25B4B1] [&::-webkit-slider-thumb]:shadow"
+              />
             </div>
           )}
-          <label className="cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <Upload className="mr-2 inline h-4 w-4" />
-            Upload Photo
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </label>
+          {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
         </div>
-        {errors.image && <p className="mt-1 text-sm text-red-600">{errors.image}</p>}
-      </div>
 
-      {/* Username */}
-      <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-          Username <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          id="username"
-          required
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-          className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-          placeholder="Choose a username"
-        />
-        {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
-      </div>
-
-      {/* Date of Birth */}
-      <div>
-        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
-          Date of Birth <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="date"
-          id="dateOfBirth"
-          required
-          value={formData.dateOfBirth}
-          onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-          max={new Date().toISOString().split('T')[0]}
-          className="mt-1 block w-full rounded-md text-black border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-        />
-      </div>
-
-      {/* Location */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div>
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-            City <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="city"
-            required
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            placeholder="City"
-          />
-        </div>
-        <div>
-          <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-            State <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="state"
-            required
-            value={formData.state}
-            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            placeholder="State"
-          />
-        </div>
-        <div>
-          <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-            Country <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="country"
-            required
-            value={formData.country}
-            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            placeholder="Country"
-          />
-        </div>
-      </div>
-
-      {/* Social Links */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Social Links (Optional)</label>
-        <div className="mt-2 space-y-2">
-          {socialLinks.map((link, index) => (
-            <div key={index} className="flex space-x-2">
+        {/* Username + Date of Birth + Show age - right 2/3, stacked */}
+        <div className="sm:col-span-2 flex flex-col">
+          <div className="p-8 backdrop-blur-sm space-y-6">
+            <div>
+              <label htmlFor="username" className={labelClass}>
+                Username <span className="text-red-400">*</span>
+              </label>
               <input
                 type="text"
-                placeholder="Platform (e.g., Twitter, Instagram)"
-                value={link.platform}
-                onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                id="username"
+                required
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className={inputClass}
+                placeholder="Choose a username"
               />
-              <input
-                type="url"
-                placeholder="URL"
-                value={link.url}
-                onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 text-black px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={() => removeSocialLink(index)}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2 text-red-600 hover:bg-gray-50"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={addSocialLink}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
-            + Add Social Link
-          </button>
+
+            <div>
+              <label htmlFor="dateOfBirth" className={labelClass}>
+                Date of Birth <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                required
+                value={formData.dateOfBirth}
+                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                max={maxDob}
+                className={inputClass}
+              />
+              {errors.dateOfBirth && <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>}
+            </div>
+
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+                checked={doesShowAgeOnProfile}
+                onChange={(e) => setDoesShowAgeOnProfile(e.target.checked)}
+              />
+              <span>
+                <span className="block text-sm font-medium pt-1 text-white">Show my age on my profile</span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+                checked={agreeToPrivacy}
+                onChange={(e) => setAgreeToPrivacy(e.target.checked)}
+              />
+              <span className="block pt-1 text-sm text-white/90">
+                I agree to the{' '}
+                <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-[#25B4B1] hover:underline">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
+                checked={agreeToTerms}
+                onChange={(e) => setAgreeToTerms(e.target.checked)}
+              />
+              <span className="block pt-1 text-sm text-white/90">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-[#25B4B1] hover:underline">
+                  Terms and Conditions
+                </Link>
+              </span>
+            </label>
+          </div>
         </div>
       </div>
 
-      {errors.submit && (
-        <div className="rounded-md bg-red-50 p-4">
-          <p className="text-sm text-red-800">{errors.submit}</p>
+      {errors.legal && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+          <p className="text-sm text-red-400">{errors.legal}</p>
         </div>
       )}
 
-      {/* Submit Button */}
-      <div className="flex justify-end">
+      {errors.submit && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+          <p className="text-sm text-red-400">{errors.submit}</p>
+        </div>
+      )}
+
+      <div className="flex justify-center">
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="flex items-center space-x-2 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          disabled={isSubmitting || !agreeToPrivacy || !agreeToTerms}
+          className="w-full max-w-md flex items-center justify-center gap-2 rounded-lg bg-[#25B4B1] px-6 py-3 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
-          <span>Continue</span>
+          <span>Hop In!</span>
         </button>
       </div>
     </form>
   )
 }
-

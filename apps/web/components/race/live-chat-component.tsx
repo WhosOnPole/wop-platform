@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
+import { getAvatarUrl } from '@/utils/avatar'
 import { useRouter } from 'next/navigation'
 import { Send, MessageSquare, AlertCircle } from 'lucide-react'
 
@@ -19,11 +20,11 @@ interface ChatMessage {
 }
 
 interface LiveChatComponentProps {
-  raceId: string
+  trackId: string
   raceTime: Date | null
 }
 
-export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) {
+export function LiveChatComponent({ trackId, raceTime }: LiveChatComponentProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -33,9 +34,9 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Check if chat has ended (3 hours after race time)
+    // Check if chat has ended (24 hours after race time)
     if (raceTime) {
-      const chatEndTime = new Date(raceTime.getTime() + 3 * 60 * 60 * 1000)
+      const chatEndTime = new Date(raceTime.getTime() + 24 * 60 * 60 * 1000)
       if (new Date() > chatEndTime) {
         setIsChatEnded(true)
       }
@@ -46,14 +47,14 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
 
     // Subscribe to new messages
     const channel = supabase
-      .channel(`race-${raceId}`)
+      .channel(`race-${trackId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'live_chat_messages',
-          filter: `race_id=eq.${raceId}`,
+          filter: `track_id=eq.${trackId}`,
         },
         (payload) => {
           // Fetch the full message with user data
@@ -83,7 +84,7 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [raceId, raceTime])
+  }, [trackId, raceTime])
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -103,7 +104,7 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
         )
       `
       )
-      .eq('race_id', raceId)
+      .eq('track_id', trackId)
       .order('created_at', { ascending: true })
       .limit(100)
 
@@ -128,7 +129,7 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
 
     const { error } = await supabase.from('live_chat_messages').insert({
       user_id: session.user.id,
-      race_id: raceId,
+      track_id: trackId,
       message: newMessage.trim(),
     })
 
@@ -166,19 +167,11 @@ export function LiveChatComponent({ raceId, raceTime }: LiveChatComponentProps) 
           <div className="space-y-4">
             {messages.map((message) => (
               <div key={message.id} className="flex items-start space-x-3">
-                {message.user?.profile_image_url ? (
-                  <img
-                    src={message.user.profile_image_url}
-                    alt={message.user.username}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                    <span className="text-xs font-medium text-gray-600">
-                      {message.user?.username?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
+                <img
+                  src={getAvatarUrl(message.user?.profile_image_url)}
+                  alt={message.user?.username ?? ''}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-900">

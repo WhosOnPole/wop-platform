@@ -7,8 +7,7 @@ import { Loader2, Calendar } from 'lucide-react'
 interface Race {
   id: string
   name: string
-  slug: string
-  race_time: string | null
+  start_date: string | null
 }
 
 interface ChatMessage {
@@ -54,7 +53,7 @@ export function ChatLogsViewer({ races }: ChatLogsViewerProps) {
         )
       `
       )
-      .eq('race_id', raceId)
+      .eq('track_id', raceId)
       .order('created_at', { ascending: true })
 
     if (error) {
@@ -81,7 +80,7 @@ export function ChatLogsViewer({ races }: ChatLogsViewerProps) {
           <option value="">-- Select a race --</option>
           {races.map((race) => (
             <option key={race.id} value={race.id}>
-              {race.name} - {race.race_time ? new Date(race.race_time).toLocaleDateString() : 'TBD'}
+              {race.name} - {race.start_date ? new Date(race.start_date).toLocaleDateString() : 'TBD'}
             </option>
           ))}
         </select>
@@ -93,9 +92,9 @@ export function ChatLogsViewer({ races }: ChatLogsViewerProps) {
             <Calendar className="h-5 w-5 text-gray-400" />
             <div>
               <h3 className="font-semibold text-gray-900">{selectedRace.name}</h3>
-              {selectedRace.race_time && (
+              {selectedRace.start_date && (
                 <p className="text-sm text-gray-500">
-                  {new Date(selectedRace.race_time).toLocaleString()}
+                  {new Date(selectedRace.start_date).toLocaleString()}
                 </p>
               )}
             </div>

@@ -1,78 +1,103 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { Logo } from '@/components/ui/logo'
-
-// export const dynamic = 'force-dynamic'
-// export const runtime = 'edge'
 
 export default function HomePage() {
-  // Home page now shows coming-soon content
-  // Auth redirects are handled by middleware
-  // This page only renders static content for unauthenticated users
-  // Using regular img tag instead of Next.js Image for edge runtime compatibility
+  const cycleItems = [
+    { word: 'Passion', subline: 'Connection fueled by obsession' },
+    { word: 'Community', subline: 'F1 fandom, redefined' },
+    { word: 'Motorsport', subline: 'Built for the love of it' },
+  ] as const
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Desktop Split Layout */}
-      <div className="flex h-screen">
-        {/* Left Panel - Login/Create Account (1/3) */}
-        <div className="hidden lg:flex lg:w-1/3 bg-background flex-col items-center justify-center p-12">
-          <div className="w-full max-w-sm space-y-8">
-            <Logo variant="gradient" size="md" href="/" className="mx-auto w-full" />
-            <div className="space-y-4">
-              <Link
-                href="/login"
-                className="block w-full rounded-full bg-white px-6 py-3 text-center text-base font-medium text-background-text transition-colors hover:bg-gray-100"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/signup"
-                className="block w-full rounded-full border-2 border-white px-6 py-3 text-center text-base font-medium text-white transition-colors hover:bg-white/10"
-              >
-                Create Account
-              </Link>
+    <div className="min-h-screen bg-black">
+      {/* Background image */}
+      <div className="absolute inset-0">
+        <Image
+          src="/images/landing_bg.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          aria-hidden
+        />
+      </div>
+        {/* Gradient overlay: fade to black toward bottom */}
+        <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          background:
+            'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.95) 85%, #000 100%)',
+        }}
+      />
+      
+      <section className="relative min-h-screen w-full max-w-7xl mx-auto  overflow-hidden">
+        <div className="relative z-10 flex min-h-screen flex-col pt-24">
+          {/* Main hero row: left 2/3 cycling words, right 1/3 text + line + seal — same grid/alignment on mobile and desktop */}
+          <div className="grid flex-1 grid-cols-12 gap-4 items-center px-6 pt-10 pb-0 lg:gap-8 lg:px-12 lg:pt-16">
+            {/* Left: cycling display words + sublines (2/3), left-aligned, vertically centered */}
+            <div className="relative min-h-[200px] w-full col-span-8 lg:min-h-[260px] self-center">
+              {cycleItems.map((item, i) => (
+                <div
+                  key={item.word}
+                  className={`absolute inset-0 flex flex-col justify-center font-display text-white ${`hero-cycle-item-${i + 1}`}`}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <span className="text-5xl font-normal tracking-tight md:text-[10em]">
+                    {item.word}
+                  </span>
+                  <span className="mt-2 font-sans text-base font-normal text-white/80 md:text-lg lg:text-xl">
+                    {item.subline}
+                  </span>
+                </div>
+              ))}
             </div>
-            <p className="text-center text-sm text-gray-400">
-              Join the F1 fan community
+
+            {/* Right: small text, vertical line, seal (1/3) */}
+            <div className="flex min-h-[200px] flex-col items-end justify-center gap-4 col-span-4 lg:min-h-0">
+              <p className="max-w-[180px] text-right font-sans text-sm font-normal text-white/90 lg:text-base">
+                Where passion becomes community
+              </p>
+              <div className=" w-px bg-white/50 md:h-[35vh] h-[20vh] mr-10" aria-hidden />
+              <Image
+                src="/images/seal_white.png"
+                alt=""
+                width={128}
+                height={128}
+                className="h-auto w-24 object-contain lg:w-32"
+                aria-hidden
+              />
+            </div>
+          </div>
+
+          {/* Centered row: tagline, button, "or learn more", trio — section height shows only top half of a larger image */}
+          <div className="flex flex-1 w-full min-h-0 flex-col items-center gap-6 px-4 pb-0 pt-6 md:pt-0 lg:px-6">
+            <p className="max-w-2xl text-center font-sans text-base text-white/90 md:text-lg">
+              The Formula 1 fan platform built on passion, not performance metrics.
             </p>
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            >
+              Sign Up
+            </Link>
+            {/* Clipped so phones are centered; on mobile only 50% of screen height; flush to next section on desktop */}
+            <div className="relative w-full max-w-6xl overflow-hidden mx-auto flex-1
+              min-h-[22vh] max-h-[50vh] md:min-h-[45vh] md:max-h-none">
+              <Image
+                src="/images/trio.png"
+                alt=""
+                width={500}
+                height={550}
+                className="absolute inset-0 object-cover object-top w-full h-full"
+                sizes="(max-width: 768px) 100vw, 1024px"
+                aria-hidden
+              />
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* Right Panel - Scrollable Content (2/3) */}
-        <div className="w-full lg:w-2/3 m-0 p-0">
-          {/* Hero Section */}
-          <section className="relative min-h-[100vh] flex flex-row overflow-hidden m-0 p-0">
-            {/* Background Image - Using CSS background instead of Next.js Image for edge runtime */}
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-top"
-              style={{
-                backgroundImage: 'url(/images/backsplash.png)',
-                top: 0,
-                left: 0,
-              }}
-            />
-            {/* Content Overlay */}
-            <div className="relative z-10 h-full w-full text-center max-w-3xl mx-auto text-white flex flex-col items-center justify-center px-10 pt-8">
-              <Logo variant="white" size="lg" href="/" className="mx-auto mb-8" />
-              <h1 className="font-secondary text-xl lg:text-3xl mb-6">
-                Building community. Highlighting fan stories. Making a space for women in the world of F1.
-              </h1>
-              <p className="text-sm lg:text-lg mb-8 leading-relaxed">
-                Follow now to be a part of a racing community where no one will accuse you of being a &quot;Drive to Survive&quot; fan.
-                <br />
-                <br />
-                Build your dream grid, connect with fans, chat during race weekends, and so much more!
-              </p>
-              <Link
-                href="/signup"
-                className="inline-block rounded-full bg-background px-8 py-4 text-lg font-bold italic text-white transition-colors hover:opacity-90"
-              >
-                Join Us!
-              </Link>
-            </div>
-          </section>
-        </div>
-      </div>
     </div>
   )
 }

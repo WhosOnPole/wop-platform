@@ -2,60 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Font Face Declarations */
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter.ttf') format('truetype-variations');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-  font-variation-settings: 'opsz' 18;
-}
-
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter.ttf') format('truetype-variations');
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-  font-variation-settings: 'opsz' 18;
-}
-
-@font-face {
-  font-family: 'Raygun';
-  src: url('/fonts/RaygunRegular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
 
 :root {
-  --background: #191C1C;
+  --background: #111111;
   --foreground: #ffffff;
-  --sunset-start: #d90084;
-  --sunset-end: #ff4300;
+  --sunset-start: #EC553E;
+  --sunset-end: #EB0E78;
   --bright-teal: #25b4b1;
   --racing-orange: #ef771b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #191C1C;
+    --background: #000000;
     --foreground: #ffffff;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: #191C1C;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+html {
   scrollbar-width: none; /* Hide scrollbars in Firefox */
+  -ms-overflow-style: none; /* Hide scrollbars in IE/Edge */
 }
 
-/* Hide scrollbars (WebKit) */
-*::-webkit-scrollbar {
+body {
+  color: var(--foreground);
+  background: #000000;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  scrollbar-width: none; /* Hide scrollbars in Firefox */
+  -ms-overflow-style: none; /* Hide scrollbars in IE/Edge */
+  /* Support for safe area insets (notch, home indicator) */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Fullscreen mode support */
+html:fullscreen,
+html:-webkit-full-screen,
+html:-moz-full-screen,
+html:-ms-fullscreen {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Use viewport height that accounts for browser chrome on mobile */
+@supports (height: 100dvh) {
+  html {
+    height: 100dvh;
+  }
+  
+  body {
+    min-height: 100dvh;
+  }
+}
+
+/* Fallback for browsers that don't support dvh */
+@supports not (height: 100dvh) {
+  html {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Hide scrollbars (WebKit) — exclude palette so its scrollbar can be styled */
+*:not(.palette-horizontal-scroll)::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* Edit grid palette: ever-present, big pill-shaped horizontal scrollbar for touch */
+.palette-horizontal-scroll {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  touch-action: pan-x;
+  padding-bottom: 12px;
+  scrollbar-gutter: stable;
+}
+.palette-horizontal-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  pointer-events: auto;
+  margin: 0 6px;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 9999px;
+  pointer-events: auto;
+  cursor: grab;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-thumb:active {
+  cursor: grabbing;
+}
+.palette-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7);
+  background-clip: padding-box;
+}
+@supports (scrollbar-width: auto) {
+  .palette-horizontal-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.15);
+  }
 }
 
 @layer utilities {
@@ -67,18 +130,127 @@ body {
     font-family: 'Raygun', serif;
   }
 
+  .font-sageva {
+    font-family: 'Sageva', serif;
+  }
+
   .bg-sunset-gradient {
-    background: linear-gradient(45deg, var(--sunset-start), var(--sunset-end));
+    background: linear-gradient(90deg, var(--sunset-start), var(--sunset-end));
   }
 
   .text-sunset-gradient {
-    background: linear-gradient(45deg, var(--sunset-start), var(--sunset-end));
+    background: linear-gradient(90deg, var(--sunset-start), var(--sunset-end));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .bg-background {
-    background: linear-gradient(180deg, #1E2121 0%, #303232 100%);
+  /* Filled heart icon with sunset gradient (use with inline-block and size) */
+  .heart-fill-sunset {
+    background: linear-gradient(90deg, var(--sunset-start), var(--sunset-end));
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'/%3E%3C/svg%3E") center / contain no-repeat;
   }
+
+  /* .bg-background {
+    background: linear-gradient(180deg, #1E2121 0%, #303232 100%);
+  } */
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Hero word cycle: one word visible at a time, 3s each */
+@keyframes hero-word-cycle {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  38% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.hero-cycle-item-1 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: 0s; }
+.hero-cycle-item-2 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: -3s; }
+.hero-cycle-item-3 { animation: hero-word-cycle 9s ease-in-out infinite; animation-delay: -6s; }
+
+/* Active slot border: rotating gradient layer (fluid moving border) */
+@keyframes slot-border-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+.animate-slot-border-rotate {
+  animation: slot-border-rotate 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slot-border-rotate {
+    animation: none;
+  }
+}
+
+/* Grid rank number: fade in place when changing slot */
+@keyframes rankNumberFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-rank-number-fade {
+  animation: rankNumberFade 0.2s ease-out forwards;
+}
+
+/* Top nav profile button: prominent sunset-end pink pulsating glow for new users */
+@keyframes nav-glow {
+  0%, 100%{
+    box-shadow: 0 0 0 0 rgba(235, 14, 120, 0.7), 0 0 15px 8px rgba(235, 14, 120, 0.5);
+  }
+  40% {
+    box-shadow: 0 0 0 0px rgba(235, 14, 120, 0), 0 0 30px 18px rgba(235, 14, 120, 0.65);
+  }
+}
+.animate-nav-glow {
+  animation: nav-glow 2.5s ease-in-out infinite;
+}
+
+/* Profile icon pulse: subtle shrink/expand in sync with nav glow */
+@keyframes nav-profile-pulse {
+  0%, 100% {
+    transform: scale(.62);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+.animate-nav-profile-pulse {
+  animation: nav-profile-pulse 2.5s ease-in-out infinite;
+}
+
+/* Live upcoming race banner: blue glow (#25B4B1) with fade in/out */
+@keyframes live-banner-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(37, 180, 177, 0.5), 0 0 0 1px rgba(37, 180, 177, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(37, 180, 177, 0.75), 0 0 0 1px rgba(37, 180, 177, 0.5);
+  }
+}
+.animate-live-banner-glow {
+  animation: live-banner-glow 2.5s ease-in-out infinite;
 }

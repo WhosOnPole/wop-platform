@@ -1,0 +1,559 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { getTeamBackgroundUrl, getTrackSlug, getTrackSvgUrl } from '@/utils/storage-urls'
+import { stripSprintSuffix } from '@/utils/grid-labels'
+import { getTeamPrimaryColor } from '@/utils/team-colors'
+import { formatWeekendRange } from '@/utils/date-utils'
+import { DriverCardMedia } from '../drivers/driver-card-media'
+
+interface Driver {
+  id: string
+  name: string
+  headshot_url?: string | null
+  image_url?: string | null
+  nationality?: string | null
+  racing_number?: number | null
+}
+
+interface Team {
+  id: string
+  name: string
+  image_url?: string | null
+}
+
+interface Track {
+  id: string
+  name: string
+  image_url?: string | null
+  location?: string | null
+  country?: string | null
+  circuit_ref?: string | null
+}
+
+interface ScheduleTrack {
+  id: string
+  name: string
+  image_url?: string | null
+  location?: string | null
+  country?: string | null
+  start_date: string | null
+  end_date: string | null
+  circuit_ref?: string | null
+}
+
+interface PitlaneTabsProps {
+  drivers: Driver[]
+  teams: Team[]
+  tracks: Track[]
+  schedule: ScheduleTrack[]
+  searchQuery: string
+  supabaseUrl?: string
+}
+
+type TabKey = 'drivers' | 'teams' | 'tracks' | 'schedule'
+
+const TAB_ORDER: TabKey[] = ['drivers', 'tracks', 'teams', 'schedule']
+
+function getTabFromHash(): TabKey | null {
+  if (typeof window === 'undefined') return null
+  const hash = window.location.hash?.replace(/^#/, '')
+  return hash && TAB_ORDER.includes(hash as TabKey) ? (hash as TabKey) : null
+}
+
+export function PitlaneTabs({ drivers = [], teams = [], tracks = [], schedule = [], searchQuery = '', supabaseUrl }: PitlaneTabsProps) {
+  const [activeTab, setActiveTab] = useState<TabKey>(() => getTabFromHash() ?? 'drivers')
+  const [failedTrackSvgIds, setFailedTrackSvgIds] = useState<Set<string>>(new Set())
+  const contentRef = useRef<HTMLDivElement>(null)
+  const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+  const isSwipe = useRef(false)
+
+  const SWIPE_THRESHOLD = 50 // Minimum distance in pixels
+
+  // Sync tab to URL hash so back navigation restores tab state
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.hash.slice(1) !== activeTab) {
+      window.history.replaceState(null, '', `#${activeTab}`)
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    const handler = () => {
+      const tabFromHash = getTabFromHash()
+      if (tabFromHash) setActiveTab(tabFromHash)
+    }
+    window.addEventListener('hashchange', handler)
+    window.addEventListener('popstate', handler)
+    return () => {
+      window.removeEventListener('hashchange', handler)
+      window.removeEventListener('popstate', handler)
+    }
+  }, [])
+
+  // Filter function for search
+  const filterItems = <T extends { name: string }>(items: T[] | undefined, query: string): T[] => {
+    if (!items) return []
+    if (!query.trim()) return items
+    const lowerQuery = query.toLowerCase()
+    return items.filter((item) => item.name.toLowerCase().includes(lowerQuery))
+  }
+
+  // Special filter for schedule that includes circuit_ref
+  const filterSchedule = (items: ScheduleTrack[] | undefined, query: string): ScheduleTrack[] => {
+    if (!items) return []
+    if (!query.trim()) return items
+    const lowerQuery = query.toLowerCase()
+    return items.filter((item) => {
+      const nameMatch = item.name.toLowerCase().includes(lowerQuery)
+      const circuitRefMatch = item.circuit_ref?.toLowerCase().includes(lowerQuery) || false
+      return nameMatch || circuitRefMatch
+    })
+  }
+
+  const filteredDrivers = useMemo(() => filterItems(drivers, searchQuery), [drivers, searchQuery])
+  const filteredTeams = useMemo(() => filterItems(teams, searchQuery), [teams, searchQuery])
+  const filteredTracks = useMemo(() => filterItems(tracks, searchQuery), [tracks, searchQuery])
+  const filteredSchedule = useMemo(() => filterSchedule(schedule, searchQuery), [schedule, searchQuery])
+
+  const items = useMemo(() => {
+    if (activeTab === 'drivers') return filteredDrivers
+    if (activeTab === 'teams') return filteredTeams
+    if (activeTab === 'schedule') return filteredSchedule
+    return filteredTracks
+  }, [activeTab, filteredDrivers, filteredTeams, filteredTracks, filteredSchedule])
+
+  // Mobile swipe gesture detection (match profile behavior)
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window
+    if (!isMobile || !contentRef.current) return
+
+    const content = contentRef.current
+
+    function handleTouchStart(e: TouchEvent) {
+      touchStartX.current = e.touches[0].clientX
+      touchStartY.current = e.touches[0].clientY
+      isSwipe.current = false
+    }
+
+    function handleTouchMove(e: TouchEvent) {
+      if (!touchStartX.current || !touchStartY.current) return
+
+      const touchX = e.touches[0].clientX
+      const touchY = e.touches[0].clientY
+      const deltaX = touchX - touchStartX.current
+      const deltaY = touchY - touchStartY.current
+
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+        isSwipe.current = true
+        e.preventDefault()
+      }
+    }
+
+    function handleTouchEnd(e: TouchEvent) {
+      if (!touchStartX.current || !touchStartY.current || !isSwipe.current) {
+        touchStartX.current = 0
+        touchStartY.current = 0
+        return
+      }
+
+      const touchX = e.changedTouches[0].clientX
+      const touchY = e.changedTouches[0].clientY
+      const deltaX = touchX - touchStartX.current
+      const deltaY = touchY - touchStartY.current
+      const absDeltaX = Math.abs(deltaX)
+      const absDeltaY = Math.abs(deltaY)
+
+      if (absDeltaX > SWIPE_THRESHOLD && absDeltaX > absDeltaY) {
+        const currentIndex = TAB_ORDER.indexOf(activeTab)
+        const nextIndex =
+          deltaX > 0
+            ? currentIndex === 0
+              ? TAB_ORDER.length - 1
+              : currentIndex - 1
+            : currentIndex === TAB_ORDER.length - 1
+              ? 0
+              : currentIndex + 1
+
+        setActiveTab(TAB_ORDER[nextIndex])
+      }
+
+      touchStartX.current = 0
+      touchStartY.current = 0
+      isSwipe.current = false
+    }
+
+    content.addEventListener('touchstart', handleTouchStart, { passive: true })
+    content.addEventListener('touchmove', handleTouchMove, { passive: false })
+    content.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      content.removeEventListener('touchstart', handleTouchStart)
+      content.removeEventListener('touchmove', handleTouchMove)
+      content.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [activeTab])
+
+  return (
+    <section>
+      <sup className="w-full text-left block text-sm text-[#838383] ">Explore the sport and voice your opinion</sup>
+      <div className="flex items-center justify-between w-full rounded-full overflow-hidden">
+        <div className="flex w-full">
+          <TabButton
+            label="DRIVERS"
+            active={activeTab === 'drivers'}
+            onClick={() => setActiveTab('drivers')}
+            showDivider={true}
+          />
+          <TabButton
+            label="TRACKS"
+            active={activeTab === 'tracks'}
+            onClick={() => setActiveTab('tracks')}
+            showDivider={true}
+          />
+          <TabButton
+            label="TEAMS"
+            active={activeTab === 'teams'}
+            onClick={() => setActiveTab('teams')}
+            showDivider={true}
+          />
+          <TabButton
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="16" viewBox="0 0 17 16" fill="none">
+                <path d="M3.27769 0V1.45494C3.27769 1.54871 3.40449 1.8659 3.45687 1.96244C3.90895 2.79679 5.10945 2.84092 5.65664 2.07001C5.7228 1.97623 5.89095 1.61905 5.89095 1.51975V0H11.1175V1.55285C11.1175 2.02174 11.797 2.57062 12.2449 2.61475C12.9258 2.68232 13.7307 2.14724 13.7307 1.42184V0H15.1849C16.1497 0 17.0304 1.03294 16.9973 1.97761V13.6805C16.9394 14.6776 16.424 15.4113 15.4316 15.643C10.9576 15.7533 6.46571 15.6568 1.98484 15.6912C1.01038 15.6319 0.27023 15.0955 0.0565926 14.1218C-0.0274839 9.96528 -0.00680938 5.78251 0.0469445 1.62181C0.150317 0.790217 1.01451 0 1.85666 0H3.27769ZM1.36598 3.9235L1.31636 3.97315V13.7798C1.31636 13.795 1.36322 13.9508 1.37425 13.9826C1.48727 14.2956 1.74777 14.3563 2.04962 14.3853H14.9244C15.2124 14.3673 15.5074 14.3025 15.619 14.0019C15.6356 13.955 15.6907 13.7481 15.6907 13.715V3.97177L15.6411 3.92212H1.36598V3.9235Z" fill="white" fillOpacity="0.4"/>
+              </svg>
+            }
+            active={activeTab === 'schedule'}
+            onClick={() => setActiveTab('schedule')}
+          />
+        </div>
+      </div>
+
+      <div ref={contentRef} className="px-4 py-5 sm:px-6 h-[400px] overflow-scroll">
+        {activeTab === 'schedule' ? (
+          <div className="space-y-0 md:grid md:grid-cols-2 md:gap-4">
+            {!filteredSchedule || filteredSchedule.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-white/50 md:col-span-2">
+                {searchQuery ? 'No races found matching your search.' : 'Nothing to show yet. Check back soon.'}
+              </div>
+            ) : (
+              filteredSchedule.map((race) => (
+                <ScheduleCard key={race.id} race={race} />
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-x-5 gap-y-4 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {items.length === 0 ? (
+              <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-white/50">
+                {searchQuery ? 'No results found matching your search.' : 'Nothing to show yet. Check back soon.'}
+              </div>
+            ) : (
+              items.map((item) => {
+                if (activeTab === 'drivers') {
+                  const driver = item as Driver
+                  const displayName = stripSprintSuffix(driver.name)
+                  const slug = displayName.toLowerCase().replace(/\s+/g, '-')
+                  const parts = displayName.split(' ')
+                  const driverCode = (parts[parts.length - 1] || displayName).substring(0, 3).toUpperCase()
+                  return (
+                    <Link
+                      key={driver.id}
+                      href={`/drivers/${slug}`}
+                      className="group flex flex-col"
+                    >
+                      <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
+                        <DriverCardMedia
+                          driverName={displayName}
+                          supabaseUrl={supabaseUrl}
+                          fallbackSrc={driver.headshot_url || driver.image_url}
+                          sizes="100px"
+                          darkenBackgroundOnly
+                        />
+                        <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
+                        {driver.racing_number != null && (
+                          <div className="absolute right-1 top-1.5 z-19">
+                            <span
+                              className="leading-none tabular-nums font-sageva text-white opacity-15"
+                              style={{ fontSize: 'clamp(1.75rem, 8vw, 3rem)' }}
+                            >
+                              {driver.racing_number}
+                            </span>
+                          </div>
+                        )}
+                        {driverCode && (
+                          <div className="absolute bottom-4 left-2 z-30 flex w-1 items-center justify-center overflow-visible">
+                            <span
+                              className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none tracking-widest"
+                              style={{
+                                fontSize: 'clamp(12px, 4vw, 25px)',
+                                fontFamily: 'Inter, sans-serif',
+                                letterSpacing: '0',
+                                fontWeight: 900,
+                                transform: 'rotate(-90deg)',
+                                transformOrigin: 'center center',
+                              }}
+                            >
+                              {driverCode}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  )
+                }
+
+                if (activeTab === 'teams') {
+                  const team = item as Team
+                  const displayName = stripSprintSuffix(team.name)
+                  const slug = displayName.toLowerCase().replace(/\s+/g, '-')
+                  const bgUrl = supabaseUrl ? getTeamBackgroundUrl(displayName, supabaseUrl) : null
+                  return (
+                    <Link
+                      key={team.id}
+                      href={`/teams/${slug}`}
+                      className="group flex flex-col"
+                    >
+                      <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
+                        <div
+                          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+                          style={{
+                            backgroundImage: bgUrl ? `url(${bgUrl})` : 'url(/images/pit_bg.jpg)',
+                          }}
+                          aria-hidden
+                        />
+                        <div className="absolute inset-0 z-10 bg-black/30" aria-hidden />
+                        <span
+                          className="absolute inset-0 z-20 flex items-center justify-center px-2 font-semibold uppercase leading-none opacity-90 line-clamp-2 text-center"
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 900,
+                            fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)',
+                            color: 'white',
+                            textShadow: '0 .5px 1px rgba(0, 0, 0, 0.8), 0 1.3px 1.6px rgba(51, 13, 73, 0.5)',
+                          }}
+                        >
+                          {displayName}
+                        </span>
+                      </div>
+                    </Link>
+                  )
+                }
+
+                const track = item as Track
+                const trackDisplayName = stripSprintSuffix(track.name)
+                const slug = trackDisplayName.toLowerCase().replace(/\s+/g, '-')
+                const overlayText = stripSprintSuffix(track.circuit_ref || track.location || track.name || '').toUpperCase()
+                const trackSvgUrl = supabaseUrl ? getTrackSvgUrl(getTrackSlug(trackDisplayName), supabaseUrl) : null
+                const showTrackSvg = trackSvgUrl && !failedTrackSvgIds.has(track.id)
+                return (
+                  <Link
+                    key={track.id}
+                    href={`/tracks/${slug}`}
+                    className="group flex flex-col"
+                  >
+                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl">
+                      <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/pit_bg.jpg)' }} aria-hidden />
+                      <div className="absolute inset-0 z-0 bg-black/40" aria-hidden />
+                      {/* Track SVG from storage: scale(1.1) so it's larger and bleeds right (parent overflow-hidden clips) */}
+                      {showTrackSvg && (
+                        <div
+                          className="absolute inset-0 z-10 flex items-center justify-center p-2"
+                          style={{ transform: 'scale(2.2)', transformOrigin: '-2% 40%' }}
+                        >
+                          <img
+                            src={trackSvgUrl}
+                            alt=""
+                            className="h-full max-h-full w-auto object-contain"
+                            onError={() => setFailedTrackSvgIds((s) => new Set(s).add(track.id))}
+                            aria-hidden
+                          />
+                        </div>
+                      )}
+                      {/* Overlay gradient for text readability */}
+                      <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                      {/* Vertical circuit_ref/location on left: full-height bar with rotated text centered */}
+                      {overlayText && (
+                        <div className="absolute inset-y-0 left-0 z-30 flex w-5 items-center justify-center overflow-visible">
+                          <span
+                            className="shrink-0 whitespace-nowrap text-white font-bold uppercase leading-none"
+                            style={{
+                              fontSize: 'clamp(13px, 3vw, 24px)',
+                              fontFamily: 'Inter, sans-serif',
+                              letterSpacing: '0',
+                              transform: 'rotate(-90deg)',
+                              transformOrigin: 'center center',
+                            }}
+                          >
+                            {overlayText}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                )
+              })
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+interface TabButtonProps {
+  label?: string
+  icon?: React.ReactNode
+  active: boolean
+  onClick: () => void
+  showDivider?: boolean
+}
+
+function TabButton({ label, icon, active, onClick, showDivider = false }: TabButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative px-4 py-2.5 text-xs tracking-wide transition w-1/4 uppercase bg-white hover:text-white flex items-center justify-center ${
+        active ? 'text-white bg-opacity-30' : ' text-[#FFFFFF50] bg-opacity-[19%]'
+      }`}
+    >
+      {icon || label}
+      {showDivider ? (
+        <span
+          className={`pointer-events-none absolute right-0 top-1 bottom-1 w-[.5px] ${
+            active ? 'bg-white/10' : 'bg-white/20'
+          }`}
+        />
+      ) : null}
+    </button>
+  )
+}
+
+interface AvatarProps {
+  src?: string | null
+  alt: string
+  fallback: string
+  variant?: 'default' | 'team'
+}
+
+function Avatar({ src, alt, fallback, variant = 'default' }: AvatarProps) {
+  const isTeam = variant === 'team'
+  return (
+    <div className={`relative h-full w-full overflow-hidden ${isTeam ? 'bg-transparent p-4' : ''}`}>
+      {src ? (
+        <Image 
+          src={src} 
+          alt={alt} 
+          fill 
+          sizes="240px" 
+          className={isTeam ? 'object-contain brightness-0 invert' : 'object-cover'} 
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-gray-500">
+          {fallback}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+interface ScheduleCardProps {
+  race: ScheduleTrack
+}
+
+function ScheduleCard({ race }: ScheduleCardProps) {
+  const dateDisplay =
+    formatWeekendRange(race.start_date, race.end_date) ?? 'Date TBA'
+
+  const trackSlug = slugify(race.name)
+  const bannerHref = `/tracks/${trackSlug}`
+
+  return (
+    <Link
+      href={bannerHref}
+      className="block overflow-hidden hover:opacity-90 rounded-sm border-b border-gray-900"
+    >
+      <section className="relative h-[90px] w-full cursor-pointer">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
+
+        <div className="absolute inset-0 flex flex-col justify-between">
+          <div className="px-2 sm:px-10 text-white space-y-0 pt-2">
+            <div className="flex items-center gap-2">
+              {race.country && getCountryFlagPath(race.country) ? (
+                <Image
+                  src={getCountryFlagPath(race.country)!}
+                  alt={race.country}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+              ) : null}
+              <h2 className="font-display tracking-wider text-xl">{race.circuit_ref || race.name}</h2>
+            </div>
+            <p className="text-xs text-gray-300 tracking-wide pl-7">
+              {dateDisplay}
+              {race.location ? ` - ${race.location}` : ''}
+              {race.country ? `, ${race.country}` : ''}
+            </p>
+            <p className="text-xs text-gray-300 tracking-wide pl-7">{race.circuit_ref ? `${race.name}` : ''}</p>
+          </div>
+        </div>
+      </section>
+    </Link>
+  )
+}
+
+function getCountryFlagPath(country?: string | null): string | null {
+  if (!country) return null
+  const normalized = country.trim().toLowerCase()
+  
+  // Map country to flag file name
+  const flagMap: Record<string, string> = {
+    argentina: 'argentina',
+    argentine: 'argentina',
+    australia: 'australia',
+    austria: 'austria',
+    belgium: 'belgium',
+    brazil: 'brazil',
+    canada: 'canada',
+    china: 'china',
+    france: 'france',
+    germany: 'germany',
+    hungary: 'hungary',
+    italy: 'italy',
+    japan: 'japan',
+    mexico: 'mexico',
+    monaco: 'monaco',
+    netherlands: 'netherlands',
+    qatar: 'qatar',
+    singapore: 'singapore',
+    spain: 'spain',
+    uk: 'uk',
+    'united kingdom': 'uk',
+    'united states': 'usa',
+    usa: 'usa',
+    abu_dhabi: 'uae',
+    'abu dhabi': 'uae',
+    uae: 'uae',
+    united_arab_emirates: 'uae',
+    'united arab emirates': 'uae',
+    bahrain: 'bahrain',
+    azerbaijan: 'azerbaijan',
+    saudi: 'saudi_arabia',
+    saudi_arabia: 'saudi_arabia',
+    'saudi arabia': 'saudi_arabia',
+  }
+  
+  const flagName = flagMap[normalized]
+  if (!flagName) return null
+  
+  return `/images/flags/${flagName}_flag.svg`
+}
+
+function slugify(name: string) {
+  return name.toLowerCase().trim().replace(/\s+/g, '-')
+}

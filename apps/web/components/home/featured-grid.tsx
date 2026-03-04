@@ -1,6 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
+import { getAvatarUrl } from '@/utils/avatar'
 
 interface FeaturedGridProps {
   highlightedFan: {
@@ -11,8 +12,14 @@ interface FeaturedGridProps {
 }
 
 export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
-  const cookieGetter = cookies as unknown as () => any
-  const supabase = createServerComponentClient({ cookies: cookieGetter })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore as any },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
 
   // Fetch top 3 grids (one of each type: driver, team, track)
   const [driverGrid, teamGrid, trackGrid] = await Promise.all([
@@ -64,13 +71,11 @@ export async function FeaturedGrid({ highlightedFan }: FeaturedGridProps) {
   return (
     <div>
       <div className="mb-4 flex items-center space-x-3">
-        {highlightedFan.profile_image_url && (
-          <img
-            src={highlightedFan.profile_image_url}
-            alt={highlightedFan.username}
-            className="h-12 w-12 rounded-full object-cover"
-          />
-        )}
+        <img
+          src={getAvatarUrl(highlightedFan.profile_image_url)}
+          alt={highlightedFan.username}
+          className="h-12 w-12 rounded-full object-cover"
+        />
         <div>
           <Link
             href={`/u/${highlightedFan.username}`}

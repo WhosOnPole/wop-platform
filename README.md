@@ -8,8 +8,8 @@ A comprehensive full-stack web application built with Next.js 14, Supabase, and 
 - **Frontend (User)**: Next.js 14 App Router (`apps/web`)
 - **Frontend (Admin)**: Next.js 14 App Router (`apps/admin`)
 - **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime, Edge Functions)
-- **Data Source**: OpenF1 API for F1 data ingestion
-- **Deployment**: Cloudflare Pages
+- **Data Source**: Handled through the admin dashboard
+- **Deployment**: Vercel
 
 ## 📁 Project Structure
 
@@ -52,14 +52,25 @@ pnpm install
 Create `.env.local` files in both `apps/web` and `apps/admin`:
 
 **apps/web/.env.local:**
-**apps/admin/.env.local:**
 
-**Note:** Get your `SUPABASE_SERVICE_ROLE_KEY` from Supabase Dashboard > Settings > API > service_role key
+
+**apps/admin/.env.local:**
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+NEXT_PUBLIC_SITE_URL=http://localhost:3001
+NEXT_PUBLIC_MAIN_SITE_URL=http://localhost:3000
+SUPABASE_SECRET_KEY=sb_secret_your_key # server-side only, set via env/secret store
+```
+
+**Note:** `NEXT_PUBLIC_SITE_URL` is the admin app's own URL (for OAuth callbacks). `NEXT_PUBLIC_MAIN_SITE_URL` is the main web app URL used when redirecting non-admin users away from admin.
+
+**Note:** Use Supabase's new API keys: publishable key for client-side access and secret key for server-only usage. Add them in your hosting env (e.g., Vercel) instead of committing to git.
 
 See [SETUP.md](./SETUP.md) for detailed setup instructions.
 
 
-### Development
 
 Run both apps in development mode:
 ```bash
@@ -129,7 +140,6 @@ pnpm dev:admin  # Runs on http://localhost:3001
 
 - [Supabase Documentation](https://supabase.com/docs)
 - [Next.js Documentation](https://nextjs.org/docs)
-- [OpenF1 API](https://www.openf1.org/)
 
 ## 📄 License
 

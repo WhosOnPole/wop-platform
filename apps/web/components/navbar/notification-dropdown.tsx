@@ -1,12 +1,15 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Heart, MessageSquare, UserPlus, AtSign, Vote, X } from 'lucide-react'
+import { Heart, MessageSquare, UserPlus, AtSign, Vote, X, AlertCircle } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
+import { getAvatarUrl } from '@/utils/avatar'
 import Link from 'next/link'
 
 interface NotificationDropdownProps {
   onClose: () => void
+  /** Current user's username (for linking to "your post" on your profile) */
+  currentUsername?: string | null
 }
 
 const notificationIcons = {
@@ -16,15 +19,23 @@ const notificationIcons = {
   follow: UserPlus,
   mention: AtSign,
   poll_vote: Vote,
+  tip_denied: AlertCircle,
 }
 
-const notificationMessages = {
-  like_grid: (actor: string) => `${actor} liked your grid`,
-  like_post: (actor: string) => `${actor} liked your post`,
-  comment: (actor: string) => `${actor} commented on your post`,
-  follow: (actor: string) => `${actor} started following you`,
-  mention: (actor: string) => `${actor} mentioned you`,
-  poll_vote: (actor: string) => `${actor} voted on a poll you're following`,
+type NotificationMetadata = { message?: string; preview?: string; grid_owner_username?: string }
+
+const notificationMessages: Record<
+  string,
+  (actor: string, metadata?: NotificationMetadata) => string
+> = {
+  like_grid: (actor) => `${actor} liked your grid`,
+  like_post: (actor) => `${actor} liked your post`,
+  comment: (actor) => `${actor} commented on your post`,
+  follow: (actor) => `${actor} started following you`,
+  mention: (actor) => `${actor} mentioned you`,
+  poll_vote: (actor) => `${actor} voted on a poll you're following`,
+  tip_denied: (_actor, metadata) =>
+    metadata?.message ?? 'Your track tip was not approved. You can try again or reach out to us for appeal.',
 }
 
 function formatTimeAgo(dateString: string): string {
@@ -54,38 +65,42 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString()
 }
 
-function getNotificationUrl(notification: any): string {
+function getNotificationUrl(notification: any, currentUsername?: string | null): string {
   const { type, target_type, target_id, actor_id, metadata } = notification
 
   switch (type) {
     case 'like_grid':
-      // For grid likes, link to the grid owner's profile if available in metadata
-      // Otherwise, link to the actor's profile (person who liked it)
       if (metadata?.grid_owner_username) {
         return `/u/${metadata.grid_owner_username}`
       }
-      return `/u/${notification.actor?.username || actor_id}`
+      return `/u/${notification.actor?.username ?? actor_id}`
     case 'comment':
-      // Comments are on posts, so link to the post
-      // In a real implementation, we might want a post detail page
-      // For now, link to feed or the post owner's profile
+      // Comment on your post → your profile, activity tab, with post highlighted
+      if (currentUsername && target_id) {
+        return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`
+      }
       return '/feed'
     case 'like_post':
-      // Similar to comments, link to feed or post detail
+      // Like on your post → your profile, activity tab, with post highlighted
+      if (currentUsername && target_id) {
+        return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`
+      }
       return '/feed'
     case 'follow':
-      return `/u/${notification.actor?.username || actor_id}`
+      // User started following you → go to that user's profile
+      return `/u/${notification.actor?.username ?? actor_id}`
     case 'mention':
-      // Mentions are in posts, link to feed
       return '/feed'
     case 'poll_vote':
-      return `/polls/${target_id}`
+      return `/podiums`
+    case 'tip_denied':
+      return '/feed'
     default:
       return '/'
   }
 }
 
-export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
+export function NotificationDropdown({ onClose, currentUsername }: NotificationDropdownProps) {
   const router = useRouter()
   const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } = useNotifications({
     limit: 10,
@@ -95,7 +110,7 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
     if (!notification.read_at) {
       markAsRead(notification.id)
     }
-    const url = getNotificationUrl(notification)
+    const url = getNotificationUrl(notification, currentUsername)
     router.push(url)
     onClose()
   }
@@ -106,31 +121,31 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
 
   if (isLoading) {
     return (
-      <div className="absolute right-0 top-12 z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-xl">
+      <div className="absolute right-[-10vw] top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
         <div className="p-4">
-          <div className="text-sm text-gray-500">Loading notifications...</div>
+          <div className="text-sm text-white/60">Loading notifications...</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="absolute right-0 top-12 z-50 w-80 rounded-lg border border-gray-200 bg-white shadow-xl">
+    <div className="absolute right-[-10vw] top-12 z-50 w-80 rounded-2xl border border-white/20 bg-black shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between border-b border-white/20 px-4 py-3">
+        <h3 className="text-sm font-semibold text-white">Notifications</h3>
+        <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="text-xs text-blue-600 hover:text-blue-700"
+              className="text-xs text-[#25B4B1] hover:text-[#3BEFEB]"
             >
               Mark all as read
             </button>
           )}
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-white/50 hover:text-white"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -142,68 +157,60 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
       <div className="max-h-96 overflow-y-auto">
         {notifications.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-sm text-gray-500">No notifications yet</p>
+            <p className="text-sm text-white/60">No notifications yet</p>
             <Link
               href="/notifications"
-              className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+              className="mt-2 inline-block text-sm text-[#25B4B1] hover:text-[#3BEFEB]"
               onClick={onClose}
             >
               View all notifications
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-white/10">
             {notifications.map((notification) => {
-              const Icon = notificationIcons[notification.type]
+              const Icon = notificationIcons[notification.type] ?? AlertCircle
               const actor = notification.actor?.username || 'Someone'
-              const message = notificationMessages[notification.type](actor)
+              const messageFn = notificationMessages[notification.type]
+              const message = messageFn
+                ? messageFn(actor, notification.metadata as NotificationMetadata | undefined)
+                : ((notification.metadata as NotificationMetadata)?.message ?? 'Notification')
               const isUnread = !notification.read_at
 
               return (
                 <button
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`w-full px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
-                    isUnread ? 'bg-blue-50' : ''
+                  className={`w-full px-4 py-3 text-left transition-colors hover:bg-white/5 ${
+                    isUnread ? 'bg-white/5' : ''
                   }`}
                 >
-                  <div className="flex items-start space-x-3">
-                    {/* Actor Avatar */}
+                  <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
-                      {notification.actor?.profile_image_url ? (
-                        <img
-                          src={notification.actor.profile_image_url}
-                          alt={actor}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white">
-                          <span className="text-sm font-medium">
-                            {actor.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                      <img
+                        src={getAvatarUrl(notification.actor?.profile_image_url)}
+                        alt={actor}
+                        className="h-10 w-10 rounded-full object-cover ring-1 ring-white/20"
+                      />
                     </div>
-
-                    {/* Notification Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start space-x-2">
-                        <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
-                        <div className="flex-1">
-                          <p className={`text-sm ${isUnread ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start gap-2">
+                        <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-white/50" />
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm ${isUnread ? 'font-semibold text-white' : 'text-white/90'}`}>
                             {message}
                           </p>
                           {notification.metadata?.preview && (
-                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                            <p className="mt-1 text-xs text-white/50 line-clamp-2">
                               {notification.metadata.preview}
                             </p>
                           )}
-                          <p className="mt-1 text-xs text-gray-400">
+                          <p className="mt-1 text-xs text-white/40">
                             {formatTimeAgo(notification.created_at)}
                           </p>
                         </div>
                         {isUnread && (
-                          <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
+                          <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-[#25B4B1]" />
                         )}
                       </div>
                     </div>
@@ -217,10 +224,10 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
 
       {/* Footer */}
       {notifications.length > 0 && (
-        <div className="border-t border-gray-200 px-4 py-3">
+        <div className="border-t border-white/20 px-4 py-3">
           <Link
             href="/notifications"
-            className="block text-center text-sm text-blue-600 hover:text-blue-700"
+            className="block text-center text-sm text-[#25B4B1] hover:text-[#3BEFEB]"
             onClick={onClose}
           >
             View all notifications

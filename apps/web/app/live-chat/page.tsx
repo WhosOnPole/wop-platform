@@ -7,20 +7,31 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export default async function LiveChatPage() {
-  const cookieGetter = cookies as unknown as () => any
-  const supabase = createServerComponentClient({ cookies: cookieGetter })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient(
+    { cookies: () => cookieStore as any },
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    }
+  )
 
   const now = new Date()
-  const threeHoursLater = new Date(now.getTime() + 3 * 60 * 60 * 1000)
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-  // Fetch all races
-  const { data: allRaces } = await supabase
-    .from('race_schedule')
-    .select('*')
-    .order('race_time', { ascending: true })
+  // Fetch all tracks with dates and which have an active event right now
+  const [tracksResult, liveIdsResult] = await Promise.all([
+    supabase
+      .from('tracks')
+      .select('id, name, start_date')
+      .not('start_date', 'is', null)
+      .order('start_date', { ascending: true }),
+    supabase.rpc('get_track_ids_with_active_event'),
+  ])
+  const allRaces = tracksResult.data || []
+  const liveTrackIds = new Set((liveIdsResult?.data || []) as string[])
 
-  if (!allRaces) {
+  if (allRaces.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <p className="text-gray-500">No races scheduled.</p>
@@ -28,22 +39,16 @@ export default async function LiveChatPage() {
     )
   }
 
-  // Categorize races
-  const liveRaces = allRaces.filter((race) => {
-    if (!race.race_time) return false
-    const raceTime = new Date(race.race_time)
-    const raceEndTime = new Date(raceTime.getTime() + 3 * 60 * 60 * 1000)
-    return now >= raceTime && now <= raceEndTime
-  })
+  const liveRaces = allRaces.filter((race) => liveTrackIds.has(race.id))
 
   const upcomingRaces = allRaces.filter((race) => {
-    if (!race.race_time) return false
-    return new Date(race.race_time) > now
+    if (!race.start_date) return false
+    return new Date(race.start_date) > now
   })
 
   const recentRaces = allRaces.filter((race) => {
-    if (!race.race_time) return false
-    const raceTime = new Date(race.race_time)
+    if (!race.start_date) return false
+    const raceTime = new Date(race.start_date)
     return raceTime < now && raceTime >= sevenDaysAgo
   })
 
@@ -67,7 +72,7 @@ export default async function LiveChatPage() {
             {liveRaces.map((race) => (
               <Link
                 key={race.id}
-                href={`/race/${race.slug}`}
+                href={`/race/${slugify(race.name)}`}
                 className="group overflow-hidden rounded-lg border-2 border-red-500 bg-gradient-to-br from-red-50 to-red-100 p-6 shadow-lg hover:shadow-xl transition-shadow"
               >
                 <div className="mb-2 flex items-center space-x-2">
@@ -77,13 +82,13 @@ export default async function LiveChatPage() {
                 <h3 className="mb-2 text-xl font-bold text-gray-900 group-hover:text-red-700">
                   {race.name}
                 </h3>
-                {race.race_time && (
+                {race.start_date && (
                   <p className="text-sm text-gray-600">
-                    Started {new Date(race.race_time).toLocaleString()}
+                    Started {new Date(race.start_date).toLocaleString()}
                   </p>
                 )}
                 <div className="mt-4 rounded-md bg-red-600 px-4 py-2 text-center text-sm font-medium text-white group-hover:bg-red-700">
-                  Join Live Chat →
+                  Join Live Chat! →
                 </div>
               </Link>
             ))}
@@ -100,7 +105,7 @@ export default async function LiveChatPage() {
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {upcomingRaces.map((race) => {
-              const raceTime = race.race_time ? new Date(race.race_time) : null
+              const raceTime = race.start_date ? new Date(race.start_date) : null
               const timeUntil = raceTime ? raceTime.getTime() - now.getTime() : null
               const daysUntil = timeUntil ? Math.floor(timeUntil / (1000 * 60 * 60 * 24)) : null
               const hoursUntil = timeUntil
@@ -110,7 +115,7 @@ export default async function LiveChatPage() {
               return (
                 <Link
                   key={race.id}
-                  href={`/race/${race.slug}`}
+                  href={`/race/${slugify(race.name)}`}
                   className="group overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow hover:shadow-lg transition-shadow"
                 >
                   <h3 className="mb-2 text-lg font-semibold text-gray-900 group-hover:text-blue-600">
@@ -152,15 +157,15 @@ export default async function LiveChatPage() {
             {recentRaces.map((race) => (
               <Link
                 key={race.id}
-                href={`/race/${race.slug}`}
+                href={`/race/${slugify(race.name)}`}
                 className="group overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow hover:shadow-lg transition-shadow"
               >
                 <h3 className="mb-2 text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                   {race.name}
                 </h3>
-                {race.race_time && (
+                {race.start_date && (
                   <p className="text-sm text-gray-600">
-                    {new Date(race.race_time).toLocaleDateString()}
+                    {new Date(race.start_date).toLocaleDateString()}
                   </p>
                 )}
                 <div className="mt-4 rounded-md border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 group-hover:bg-gray-50">
@@ -183,3 +188,6 @@ export default async function LiveChatPage() {
   )
 }
 
+function slugify(name: string) {
+  return name.toLowerCase().trim().replace(/\s+/g, '-')
+}

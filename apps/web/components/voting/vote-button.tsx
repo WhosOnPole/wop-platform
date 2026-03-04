@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Heart } from 'lucide-react'
 
@@ -93,7 +93,11 @@ export function VoteButton({
       }`}
       title={isVoted ? 'Remove vote' : 'Vote'}
     >
-      <Heart className={`h-4 w-4 shrink-0 ${isVoted ? 'fill-current' : ''}`} />
+      {isVoted ? (
+        <span className="heart-fill-sunset inline-block h-4 w-4 shrink-0" aria-hidden />
+      ) : (
+        <Heart className="h-4 w-4 shrink-0" />
+      )}
       <span className="leading-none">{voteCount}</span>
     </button>
   )

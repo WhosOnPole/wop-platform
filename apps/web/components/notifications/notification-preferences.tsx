@@ -43,18 +43,27 @@ export function NotificationPreferences() {
     updatePreferences({ [field]: newValue })
   }
 
+  const toggleClass = (on: boolean) =>
+    `relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#25B4B1] focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 ${
+      on ? 'bg-[#25B4B1]' : 'bg-white/20'
+    }`
+  const thumbClass = (on: boolean) =>
+    `pointer-events-none absolute left-[2px] top-[2px] inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+      on ? 'translate-x-5' : 'translate-x-0'
+    }`
+
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-        <div className="text-gray-500">Loading preferences...</div>
+      <div className="rounded-lg border border-white/20 bg-white/5 p-12 text-center">
+        <div className="text-white/70">Loading preferences...</div>
       </div>
     )
   }
 
   if (!preferences || !localPrefs) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-        <div className="text-gray-500">Failed to load preferences</div>
+      <div className="rounded-lg border border-white/20 bg-white/5 p-12 text-center">
+        <div className="text-white/70">Failed to load preferences</div>
       </div>
     )
   }
@@ -62,151 +71,133 @@ export function NotificationPreferences() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Notification Preferences</h1>
-        <p className="mt-2 text-gray-600">Manage how you receive notifications</p>
+        <h1 className="text-3xl font-bold text-white">Notification Preferences</h1>
+        <p className="mt-2 text-white/80">Manage how you receive notifications</p>
       </div>
 
       <div className="space-y-6">
         {/* Email Notifications Section */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="rounded-lg border border-white/20 bg-white/5 p-6">
           <div className="mb-4 flex items-center space-x-2">
-            <Mail className="h-5 w-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Email Notifications</h2>
+            <Mail className="h-5 w-5 text-white/60" />
+            <h2 className="text-lg font-semibold text-white">Email Notifications</h2>
           </div>
-          <p className="mb-4 text-sm text-gray-600">
+          <p className="mb-4 text-sm text-white/70">
             Choose which notifications you want to receive via email
           </p>
 
           <div className="space-y-4">
-            <label className="flex items-center justify-between">
+            <label className="flex items-center justify-between cursor-pointer">
               <div>
-                <div className="font-medium text-gray-900">Likes</div>
-                <div className="text-sm text-gray-500">When someone likes your grid or post</div>
+                <div className="font-medium text-white">Likes</div>
+                <div className="text-sm text-white/70">When someone likes your grid or post</div>
               </div>
               <button
+                type="button"
+                role="switch"
+                aria-checked={localPrefs.email_likes}
                 onClick={() => handleToggle('email_likes')}
                 disabled={isUpdating}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                  localPrefs.email_likes ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
+                className={toggleClass(localPrefs.email_likes)}
               >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    localPrefs.email_likes ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <span className={thumbClass(localPrefs.email_likes)} />
               </button>
             </label>
 
-            <label className="flex items-center justify-between">
+            <label className="flex items-center justify-between cursor-pointer">
               <div>
-                <div className="font-medium text-gray-900">Comments</div>
-                <div className="text-sm text-gray-500">When someone comments on your post</div>
+                <div className="font-medium text-white">Comments</div>
+                <div className="text-sm text-white/70">When someone comments on your post</div>
               </div>
               <button
+                type="button"
+                role="switch"
+                aria-checked={localPrefs.email_comments}
                 onClick={() => handleToggle('email_comments')}
                 disabled={isUpdating}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                  localPrefs.email_comments ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
+                className={toggleClass(localPrefs.email_comments)}
               >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    localPrefs.email_comments ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <span className={thumbClass(localPrefs.email_comments)} />
               </button>
             </label>
 
-            <label className="flex items-center justify-between">
+            <label className="flex items-center justify-between cursor-pointer">
               <div>
-                <div className="font-medium text-gray-900">Follows</div>
-                <div className="text-sm text-gray-500">When someone starts following you</div>
+                <div className="font-medium text-white">Follows</div>
+                <div className="text-sm text-white/70">When someone starts following you</div>
               </div>
               <button
+                type="button"
+                role="switch"
+                aria-checked={localPrefs.email_follows}
                 onClick={() => handleToggle('email_follows')}
                 disabled={isUpdating}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                  localPrefs.email_follows ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
+                className={toggleClass(localPrefs.email_follows)}
               >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    localPrefs.email_follows ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <span className={thumbClass(localPrefs.email_follows)} />
               </button>
             </label>
 
-            <label className="flex items-center justify-between">
+            <label className="flex items-center justify-between cursor-pointer">
               <div>
-                <div className="font-medium text-gray-900">Mentions</div>
-                <div className="text-sm text-gray-500">When someone mentions you in a post</div>
+                <div className="font-medium text-white">Mentions</div>
+                <div className="text-sm text-white/70">When someone mentions you in a post</div>
               </div>
               <button
+                type="button"
+                role="switch"
+                aria-checked={localPrefs.email_mentions}
                 onClick={() => handleToggle('email_mentions')}
                 disabled={isUpdating}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                  localPrefs.email_mentions ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
+                className={toggleClass(localPrefs.email_mentions)}
               >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    localPrefs.email_mentions ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <span className={thumbClass(localPrefs.email_mentions)} />
               </button>
             </label>
 
-            <label className="flex items-center justify-between">
+            <label className="flex items-center justify-between cursor-pointer">
               <div>
-                <div className="font-medium text-gray-900">Poll Votes</div>
-                <div className="text-sm text-gray-500">When someone votes on a poll you're following</div>
+                <div className="font-medium text-white">Poll Votes</div>
+                <div className="text-sm text-white/70">When someone votes on a poll you're following</div>
               </div>
               <button
+                type="button"
+                role="switch"
+                aria-checked={localPrefs.email_poll_votes}
                 onClick={() => handleToggle('email_poll_votes')}
                 disabled={isUpdating}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                  localPrefs.email_poll_votes ? 'bg-blue-600' : 'bg-gray-200'
-                }`}
+                className={toggleClass(localPrefs.email_poll_votes)}
               >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    localPrefs.email_poll_votes ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <span className={thumbClass(localPrefs.email_poll_votes)} />
               </button>
             </label>
           </div>
         </div>
 
         {/* Push Notifications Section */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="rounded-lg border border-white/20 bg-white/5 p-6">
           <div className="mb-4 flex items-center space-x-2">
-            <Smartphone className="h-5 w-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Push Notifications</h2>
+            <Smartphone className="h-5 w-5 text-white/60" />
+            <h2 className="text-lg font-semibold text-white">Push Notifications</h2>
           </div>
-          <p className="mb-4 text-sm text-gray-600">
+          <p className="mb-4 text-sm text-white/70">
             Receive push notifications in your browser (coming soon)
           </p>
 
-          <label className="flex items-center justify-between">
+          <label className="flex items-center justify-between cursor-pointer">
             <div>
-              <div className="font-medium text-gray-900">Enable Push Notifications</div>
-              <div className="text-sm text-gray-500">Get notified even when you're not on the site</div>
+              <div className="font-medium text-white">Enable Push Notifications</div>
+              <div className="text-sm text-white/70">Get notified even when you're not on the site</div>
             </div>
             <button
+              type="button"
+              role="switch"
+              aria-checked={localPrefs.push_enabled}
               onClick={() => handleToggle('push_enabled')}
-              disabled={isUpdating || true} // Disabled until implemented
-              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
-                localPrefs.push_enabled ? 'bg-blue-600' : 'bg-gray-200'
-              }`}
+              disabled={isUpdating || true}
+              className={toggleClass(localPrefs.push_enabled)}
             >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  localPrefs.push_enabled ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
+              <span className={thumbClass(localPrefs.push_enabled)} />
             </button>
           </label>
         </div>

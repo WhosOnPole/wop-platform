@@ -1,17 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface TrackCardProps {
   track: {
     id: string
     name: string
-    image_url: string | null
     location: string | null
     country: string | null
     altitude: number | null
-    track_length: string | null
+    laps?: number | null
     overview_text: string | null
   }
   slug: string
@@ -23,23 +21,11 @@ export function TrackCard({ track, slug }: TrackCardProps) {
       href={`/tracks/${slug}`}
       className="group overflow-hidden rounded-lg border border-gray-200 bg-white shadow transition-all hover:shadow-lg hover:scale-105"
     >
-      {/* Track Image */}
-      <div className="relative h-64 w-full bg-gradient-to-br from-gray-100 to-gray-200">
-        {track.image_url ? (
-          <Image
-            src={track.image_url}
-            alt={track.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover object-center"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <span className="text-4xl font-bold text-gray-400">
-              {track.name.charAt(0)}
-            </span>
-          </div>
-        )}
+      {/* Track image placeholder */}
+      <div className="relative h-64 w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+        <span className="text-4xl font-bold text-gray-400">
+          {track.name.charAt(0)}
+        </span>
       </div>
 
       {/* Track Info */}
@@ -64,9 +50,9 @@ export function TrackCard({ track, slug }: TrackCardProps) {
               {track.altitude}m
             </span>
           )}
-          {track.track_length && (
+          {track.laps != null && (
             <span className="rounded-full bg-gray-100 px-2 py-1">
-              {track.track_length} km
+              {track.laps} laps
             </span>
           )}
         </div>

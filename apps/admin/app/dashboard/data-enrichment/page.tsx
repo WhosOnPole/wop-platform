@@ -1,20 +1,20 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DriversTable } from '@/components/data-enrichment/drivers-table'
 import { TeamsTable } from '@/components/data-enrichment/teams-table'
 import { TracksTable } from '@/components/data-enrichment/tracks-table'
-import { OpenF1RefreshButton } from '@/components/data-enrichment/openf1-refresh-button'
+import { SchedulesTable } from '@/components/data-enrichment/schedules-table'
 
 export default async function DataEnrichmentPage() {
-  const supabase = createServerComponentClient({ cookies })
-
   return (
     <div>
       <h1 className="mb-6 text-3xl font-bold text-gray-900">Data Enrichment</h1>
       <p className="mb-8 text-gray-600">
-        Edit driver, team, and track data. Note: Drivers and teams are synced from OpenF1 API.
-        You can only edit enriched fields (images, bios, stats).
+        Edit driver, team, and track data. You can update enriched fields such as images, bios,
+        and stats.
       </p>
 
       <Tabs defaultValue="drivers" className="w-full mb-8">
@@ -22,6 +22,7 @@ export default async function DataEnrichmentPage() {
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="tracks">Tracks</TabsTrigger>
+          <TabsTrigger value="schedules">Schedules</TabsTrigger>
         </TabsList>
 
         <TabsContent value="drivers">
@@ -35,12 +36,11 @@ export default async function DataEnrichmentPage() {
         <TabsContent value="tracks">
           <TracksTable />
         </TabsContent>
-      </Tabs>
 
-            {/* OpenF1 Refresh Button */}
-      <div className="mb-8">
-        <OpenF1RefreshButton />
-      </div>
+        <TabsContent value="schedules">
+          <SchedulesTable />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

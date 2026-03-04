@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createPortal } from 'react-dom'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Flag } from 'lucide-react'
 
@@ -92,65 +93,76 @@ export function DiscussionReportButton({
         Report
       </button>
 
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">Report Content</h3>
-            <p className="mb-4 text-sm text-gray-600">
-              Please select a reason for reporting this content.
-            </p>
+      {showModal &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 isolate flex items-center justify-center bg-black/60"
+            style={{ zIndex: 2147483647 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discussion-report-modal-title"
+          >
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl mx-4">
+              <h3 id="discussion-report-modal-title" className="mb-4 text-lg font-semibold text-gray-900">
+                Report Content
+              </h3>
+              <p className="mb-4 text-sm text-gray-600">
+                Please select a reason for reporting this content.
+              </p>
 
-            <div className="mb-4 space-y-2">
-              {reportReasons.map((r) => (
-                <label
-                  key={r}
-                  className="flex items-center space-x-2 rounded-md border border-gray-200 p-2 hover:bg-gray-50 cursor-pointer"
+              <div className="mb-4 space-y-2">
+                {reportReasons.map((r) => (
+                  <label
+                    key={r}
+                    className="flex items-center space-x-2 rounded-md border border-gray-200 p-2 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="reason"
+                      value={r}
+                      checked={selectedReason === r}
+                      onChange={(e) => setSelectedReason(e.target.value)}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <span className="text-sm text-gray-700">{r}</span>
+                  </label>
+                ))}
+              </div>
+
+              {selectedReason === 'Other' && (
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Please provide details..."
+                  rows={3}
+                  className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-black"
+                />
+              )}
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowModal(false)
+                    setReason('')
+                    setSelectedReason('')
+                  }}
+                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  <input
-                    type="radio"
-                    name="reason"
-                    value={r}
-                    checked={selectedReason === r}
-                    onChange={(e) => setSelectedReason(e.target.value)}
-                    className="h-4 w-4 text-blue-600"
-                  />
-                  <span className="text-sm text-gray-700">{r}</span>
-                </label>
-              ))}
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitReport}
+                  disabled={isSubmitting || (!selectedReason || (selectedReason === 'Other' && !reason.trim()))}
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </div>
             </div>
-
-            {selectedReason === 'Other' && (
-              <textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Please provide details..."
-                rows={3}
-                className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-black"
-              />
-            )}
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowModal(false)
-                  setReason('')
-                  setSelectedReason('')
-                }}
-                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitReport}
-                disabled={isSubmitting || (!selectedReason || (selectedReason === 'Other' && !reason.trim()))}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Report'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   )
 }

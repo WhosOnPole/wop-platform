@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@/utils/supabase-client'
+import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
+import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 
 interface User {
   id: string
@@ -40,6 +42,15 @@ export function ProfileDiscussionSection({
     e.preventDefault()
     if (!newPostContent.trim()) return
 
+    const result = sanitizeUserContent(newPostContent, {
+      maxLength: CONTENT_MAX_LENGTHS.post,
+      fieldName: 'Post',
+    })
+    if (!result.ok) {
+      alert(result.error)
+      return
+    }
+
     setIsSubmitting(true)
     const {
       data: { session },
@@ -53,7 +64,7 @@ export function ProfileDiscussionSection({
     const { data, error } = await supabase
       .from('posts')
       .insert({
-        content: newPostContent.trim(),
+        content: result.value,
         user_id: session.user.id,
         parent_page_type: 'profile',
         parent_page_id: profileId,
@@ -119,19 +130,17 @@ export function ProfileDiscussionSection({
           posts.map((post) => (
             <div key={post.id} className="border-b border-gray-200 pb-6 last:border-0">
               <div className="mb-3 flex items-center space-x-3">
-                {post.user?.profile_image_url ? (
+                <div
+                  className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
+                    isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
+                  }`}
+                >
                   <img
-                    src={post.user.profile_image_url}
-                    alt={post.user.username}
-                    className="h-8 w-8 rounded-full object-cover"
+                    src={getAvatarUrl(post.user?.profile_image_url)}
+                    alt={post.user?.username ?? ''}
+                    className="h-full w-full rounded-full object-cover"
                   />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                    <span className="text-xs font-medium text-gray-600">
-                      {post.user?.username?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
+                </div>
                 <div>
                   <Link
                     href={`/u/${post.user?.username || 'unknown'}`}
@@ -144,7 +153,17 @@ export function ProfileDiscussionSection({
                   </p>
                 </div>
               </div>
-              <p className="text-gray-700">{post.content}</p>
+              {post.content ? <p className="text-gray-700">{post.content}</p> : null}
+              {'image_url' in post && typeof (post as { image_url?: string }).image_url === 'string' && (
+                <div className="mt-2 overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={(post as { image_url: string }).image_url}
+                    alt=""
+                    className="max-h-80 w-full object-contain"
+                  />
+                </div>
+              )}
             </div>
           ))
         )}
