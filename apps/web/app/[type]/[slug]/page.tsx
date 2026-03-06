@@ -452,17 +452,6 @@ export default async function DynamicPage({ params }: PageProps) {
       {/* Tabs Section */}
       <div className="relative z-20 bg-[#000000] min-h-[30vh]">
         <div className="mx-auto max-w-7xl px-6">
-          {/* Race check-in: track page when race weekend has started */}
-          {trackRaceWeekendActive && type === 'tracks' && entity && (
-            <div className="pt-6 pb-4">
-              <CheckInSection
-                trackId={entity.id}
-                raceName={entity.name}
-                userCheckIn={trackUserCheckIn}
-                checkIns={trackCheckIns}
-              />
-            </div>
-          )}
           <EntityScrollToPost />
           {type === 'drivers' ? (
             <div className="sticky top-[10vh] z-30 bg-black">
