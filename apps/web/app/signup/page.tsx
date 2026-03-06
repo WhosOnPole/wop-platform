@@ -43,9 +43,9 @@ export default function SignupPage() {
 
         <button
           type="button"
-          onClick={() => (window.location.href = '/api/auth/tiktok')}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
-          aria-label="Sign up with TikTok"
+          onClick={() => alert('Coming Soon!')}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white/50 transition-colors opacity-60 cursor-not-allowed"
+          aria-label="Sign up with TikTok (coming soon)"
         >
           <img src="/icons/tiktok.svg" alt="TikTok" className="h-5 w-5" />
           <span>Sign up with TikTok</span>
@@ -75,7 +75,7 @@ export default function SignupPage() {
           </svg>
           <span>Sign up with Apple</span>
         </button>
-       
+        
         <p className="text-center text-sm text-white/70">
           Already have an account?{' '}
           <Link href="/login" className="font-medium text-[#25B4B1] hover:text-[#25B4B1]/90">

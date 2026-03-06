@@ -77,7 +77,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center rounded-full bg-black px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              className="inline-flex items-center justify-center rounded-full bg-[#25B4B1]/65 px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
               Sign Up
             </Link>
