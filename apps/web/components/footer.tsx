@@ -49,32 +49,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal Links */}
-          <div>
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider">Legal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/privacy" className="text-sm text-gray-400 hover:text-white">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/delete-data" className="text-sm text-gray-400 hover:text-white">
-                  Delete Your Data
-                </Link>
-              </li>
-              <li>
-                <a href="https://www.whosonpole.org/terms" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 hover:text-white">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <Link href="/sitemap" className="text-sm text-gray-400 hover:text-white">
-                  Sitemap
-                </Link>
-              </li>
-            </ul>
-          </div>
+        
         </div>
 
         <p className="mt-8 w-full max-w-4xl mx-auto text-center text-xs text-gray-400 leading-relaxed">
