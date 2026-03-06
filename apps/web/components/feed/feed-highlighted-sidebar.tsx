@@ -158,8 +158,8 @@ export function FeedHighlightedSidebar({
       </div>
 
       {isDiscussionOpen && spotlight?.hot_take?.id && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
+        <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/60 px-4 pt-[calc(3.75rem+env(safe-area-inset-top))] pb-4 overflow-y-auto">
+          <div className="max-h-[calc(100vh-6rem)] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
             <div className="mb-4 flex items-start justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 text-white/90">
