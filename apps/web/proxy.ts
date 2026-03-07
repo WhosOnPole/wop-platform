@@ -27,22 +27,8 @@ const PUBLIC_PATHS = [
  */
 export async function proxy(req: NextRequest) {
   const url = req.nextUrl.clone()
-  const hostname = url.hostname.toLowerCase()
-  const forwardedProto = req.headers.get('x-forwarded-proto')
-  const isLocalHost =
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '::1' ||
-    hostname.endsWith('.local')
-
-  // Canonicalize host/protocol for SEO: www -> apex, http -> https.
-  if (!isLocalHost && (hostname === 'www.whosonpole.org' || forwardedProto === 'http')) {
-    url.protocol = 'https'
-    if (hostname === 'www.whosonpole.org') {
-      url.hostname = 'whosonpole.org'
-    }
-    return NextResponse.redirect(url, 308)
-  }
+  // Domain/protocol canonicalization should be handled in deployment settings.
+  // Keep middleware free of host/protocol redirects to avoid production loops.
 
   // Centralized redirect-map pattern for legacy URLs.
   const redirect = matchRedirect(url.pathname)
