@@ -35,7 +35,7 @@ export function EntityOverview(props: EntityOverviewProps) {
       <div className="mx-auto flex max-w-6xl flex-row items-center gap-2 sm:gap-8">
         {leftContent != null && (
           <div className="flex w-1/3 flex-col overflow-hidden font-sageva text-sunset-gradient border-r border-white/10 pr-4 mr-4">
-            <div className="flex flex-col items-center pt-3">
+            <div className="flex flex-col items-center pt-4">
               {isTrack ? (
                 <>
                   <span
