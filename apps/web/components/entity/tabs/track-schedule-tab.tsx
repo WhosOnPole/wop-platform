@@ -128,8 +128,12 @@ export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
                 >
                   <span className="shrink-0 font-medium text-white">{label}:</span>
                   <span className="text-right">
-                    {localTime}
-                    {userTime && userTzLabel ? ` • ${userTime} (${userTzLabel})` : ''}
+                    <span className="block">{localTime}</span>
+                    {userTime && userTzLabel ? (
+                      <span className="mt-1 block text-white/70">
+                        {userTime} ({userTzLabel})
+                      </span>
+                    ) : null}
                   </span>
                 </li>
               )
