@@ -16,17 +16,37 @@ export default async function DashboardPage() {
     }
   )
 
-  // Get current/upcoming race weekend
-  const now = new Date().toISOString()
-  const { data: currentRace } = await supabase
+  // Get scheduled races
+  const { data: scheduledRaces } = await supabase
     .from('tracks')
     .select('id, name, location, start_date, end_date, chat_enabled')
     .not('start_date', 'is', null)
-    .not('end_date', 'is', null)
-    .or(`start_date.lte.${now},and(start_date.gte.${now},end_date.gte.${now})`)
     .order('start_date', { ascending: true })
-    .limit(1)
-    .single()
+
+  // Source of truth for "live" status should match app experience:
+  // active track_events windows via RPC.
+  const [{ data: liveTrackIds }, { data: nextUpcomingTrackId }] = await Promise.all([
+    supabase.rpc('get_track_ids_with_active_event'),
+    supabase.rpc('get_track_id_with_next_upcoming_event'),
+  ])
+
+  const raceList = scheduledRaces || []
+  const liveIdSet = new Set((liveTrackIds || []) as string[])
+  const liveRace = raceList.find((race) => liveIdSet.has(race.id)) || null
+
+  const rpcUpcomingRace =
+    typeof nextUpcomingTrackId === 'string'
+      ? raceList.find((race) => race.id === nextUpcomingTrackId) || null
+      : null
+
+  const fallbackUpcomingRace = getClosestUpcomingRace(raceList)
+
+  const currentRace = liveRace || rpcUpcomingRace || fallbackUpcomingRace
+  const currentRaceStatus: 'live' | 'upcoming' | null = liveRace
+    ? 'live'
+    : currentRace
+      ? 'upcoming'
+      : null
 
   // Get chat metrics for current race
   let metrics = null
@@ -141,6 +161,7 @@ export default async function DashboardPage() {
       {currentRace && (
         <RaceWeekendWidget
           initialRace={currentRace}
+          initialRaceStatus={currentRaceStatus || 'upcoming'}
           initialMetrics={metrics}
         />
       )}
@@ -202,5 +223,32 @@ export default async function DashboardPage() {
       </div>
     </div>
   )
+}
+
+function getClosestUpcomingRace(
+  tracks: Array<{ start_date: string | null } & Record<string, any>>
+) {
+  if (tracks.length === 0) return null
+
+  const now = new Date()
+
+  const upcoming = tracks.filter((track) => {
+    if (!track.start_date) return false
+    return new Date(track.start_date) >= now
+  })
+
+  if (upcoming.length > 0) {
+    return upcoming.sort((a, b) => {
+      const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
+      const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
+      return aTime - bTime
+    })[0]
+  }
+
+  return tracks.sort((a, b) => {
+    const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
+    const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
+    return bTime - aTime
+  })[0]
 }
 
