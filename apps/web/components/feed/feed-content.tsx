@@ -140,7 +140,9 @@ type FeedItem =
   | (NewsStory & { contentType: 'news' })
   | (StandalonePoll & { contentType: 'poll' })
 
-const DISCOVERY_LIMIT = 15
+const FEED_BATCH_SIZE = 8
+const DISCOVERY_BATCH_SIZE = 8
+const DISCOVERY_FETCH_BUFFER = 40
 const FEED_TAB_STORAGE_KEY = 'feed-active-tab'
 
 type FeedTab = 'pit crew' | 'discovery'
@@ -168,7 +170,9 @@ export function FeedContent({
   const [discoveryParentPageByKey, setDiscoveryParentPageByKey] = useState<
     Record<string, { name: string; href: string; type: string; content_text?: string }>
   >({})
+  const [hasMoreDiscovery, setHasMoreDiscovery] = useState(false)
   const [isLoadingDiscovery, setIsLoadingDiscovery] = useState(false)
+  const [isLoadingDiscoveryMore, setIsLoadingDiscoveryMore] = useState(false)
   const [hasLoadedDiscovery, setHasLoadedDiscovery] = useState(false)
 
   const [activeTab, setActiveTab] = useState<FeedTab>(() => {
@@ -190,12 +194,23 @@ export function FeedContent({
 
   const excludePostIds = useMemo(() => posts.map((p) => p.id), [posts])
   const excludeGridIds = useMemo(() => grids.map((g) => g.id), [grids])
+  const discoveryLoadedIdsRef = useRef({ postIds: new Set<string>(), gridIds: new Set<string>() })
 
-  const fetchDiscovery = useCallback(async () => {
-    if (hasLoadedDiscoveryRef.current) return
-    hasLoadedDiscoveryRef.current = true
-    setIsLoadingDiscovery(true)
-    setHasLoadedDiscovery(true)
+  const fetchDiscovery = useCallback(async (isLoadMore = false) => {
+    if (!isLoadMore && hasLoadedDiscoveryRef.current) return
+    if (!isLoadMore) {
+      hasLoadedDiscoveryRef.current = true
+      setIsLoadingDiscovery(true)
+    } else {
+      setIsLoadingDiscoveryMore(true)
+    }
+
+    const combinedExcludePostIds = isLoadMore
+      ? [...excludePostIds, ...discoveryLoadedIdsRef.current.postIds]
+      : excludePostIds
+    const combinedExcludeGridIds = isLoadMore
+      ? [...excludeGridIds, ...discoveryLoadedIdsRef.current.gridIds]
+      : excludeGridIds
 
     try {
       const supabase = createClientComponentClient()
@@ -216,7 +231,7 @@ export function FeedContent({
         `
         )
         .order('created_at', { ascending: false })
-        .limit(DISCOVERY_LIMIT * 2)
+        .limit(DISCOVERY_FETCH_BUFFER)
 
       // Fetch grids from all users (exclude feed ids client-side)
       const { data: discoverGrids } = await supabase
@@ -232,26 +247,24 @@ export function FeedContent({
         `
         )
         .order('updated_at', { ascending: false, nullsFirst: false })
-        .limit(DISCOVERY_LIMIT * 2)
+        .limit(DISCOVERY_FETCH_BUFFER)
 
       const allowedPostParentTypes = ['hot_take', 'poll', 'profile', 'driver', 'team'] as const
       const postsList = ((discoverPosts || []) as Array<Record<string, unknown> & { id: string; like_count?: number | null; user_id?: string }>)
-        .filter((p) => !excludePostIds.includes(p.id))
+        .filter((p) => !combinedExcludePostIds.includes(p.id))
         .filter(
           (p) =>
             p.parent_page_type == null ||
             allowedPostParentTypes.includes(p.parent_page_type as (typeof allowedPostParentTypes)[number])
         )
-        .slice(0, DISCOVERY_LIMIT)
       const gridsList = ((discoverGrids || []) as Array<Record<string, unknown> & { id: string; type: string; ranked_items: any[]; user_id?: string }>)
-        .filter((g) => !excludeGridIds.includes(g.id))
+        .filter((g) => !combinedExcludeGridIds.includes(g.id))
         .filter(
           (g) =>
             g.type === 'driver' &&
             Array.isArray(g.ranked_items) &&
             g.ranked_items.length > 0
         )
-        .slice(0, DISCOVERY_LIMIT)
 
       // Fetch hot take context for hot take posts (existing posts from any user)
       const hotTakeIds = [
@@ -450,13 +463,28 @@ export function FeedContent({
       const combined = [...enrichedPosts, ...enrichedGrids].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
-      setDiscoveryItems(combined.slice(0, DISCOVERY_LIMIT * 2))
-      setHasLoadedDiscovery(true)
+      const batch = combined.slice(0, DISCOVERY_BATCH_SIZE)
+      if (isLoadMore) {
+        setDiscoveryItems((prev) => [...prev, ...batch])
+        setDiscoveryParentPageByKey((prev) => ({ ...prev, ...discoveryParentPageByKey }))
+      } else {
+        setDiscoveryItems(batch)
+        setDiscoveryParentPageByKey(discoveryParentPageByKey)
+      }
+      batch.forEach((item) => {
+        if (item.contentType === 'post') discoveryLoadedIdsRef.current.postIds.add(item.id)
+        else if (item.contentType === 'grid') discoveryLoadedIdsRef.current.gridIds.add(item.id)
+      })
+      setHasMoreDiscovery(combined.length > DISCOVERY_BATCH_SIZE)
+      if (!isLoadMore) setHasLoadedDiscovery(true)
     } catch {
-      hasLoadedDiscoveryRef.current = false
-      setHasLoadedDiscovery(false)
+      if (!isLoadMore) {
+        hasLoadedDiscoveryRef.current = false
+        setHasLoadedDiscovery(false)
+      }
     } finally {
       setIsLoadingDiscovery(false)
+      setIsLoadingDiscoveryMore(false)
     }
   }, [excludePostIds, excludeGridIds])
 
@@ -855,7 +883,7 @@ export function FeedContent({
             <div className="flex justify-center py-6">
               <button
                 type="button"
-                onClick={() => router.push(`/feed?page=${currentPage + 1}`)}
+                onClick={() => router.push(`/feed?page=${currentPage + 1}`, { scroll: false })}
                 className="rounded-lg border border-white/20 bg-white/5 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
               >
                 Load more
@@ -1062,6 +1090,25 @@ export function FeedContent({
                 }
                 return null
               })}
+              {hasMoreDiscovery && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    type="button"
+                    onClick={() => fetchDiscovery(true)}
+                    disabled={isLoadingDiscoveryMore}
+                    className="rounded-lg border border-white/20 bg-white/5 px-6 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+                  >
+                    {isLoadingDiscoveryMore ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                        Loading…
+                      </span>
+                    ) : (
+                      'Load more'
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </>
