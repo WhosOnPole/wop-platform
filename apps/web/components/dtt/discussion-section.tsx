@@ -681,7 +681,7 @@ export function DiscussionSection({
 
                 {/* Comments List */}
                 {topLevel.length > 0 && (
-                  <div className="mt-4 ml-11 space-y-4 border-l-2 border-white/20 pl-4">
+                  <div className="mt-4 ml-8 space-y-4 border-l border-white/20 pl-2">
                     {topLevel.map((comment) => {
                       const commentReplies = repliesByParent[comment.id] || []
 

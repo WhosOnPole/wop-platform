@@ -196,7 +196,7 @@ export function LikeButton({
       : 'text-white/90 hover:text-white'
     : isLiked
       ? 'text-sunset-end hover:opacity-90'
-      : 'text-gray-600 hover:text-gray-700'
+      : 'text-white hover:text-gray-700'
 
   return (
     <button
