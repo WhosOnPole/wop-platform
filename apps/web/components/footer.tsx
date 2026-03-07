@@ -72,6 +72,9 @@ export function Footer() {
               Terms of Service
             </Link>
           </p>
+          <p className="text-center text-xs text-gray-400 w-full mt-8">
+            <Link href="https://divinedesigns.io" className="text-[#9a7cff] hover:text-white" target="_blank">Developed by Divine Designs Development</Link>
+          </p>
         </div>
       </div>
     </footer>
