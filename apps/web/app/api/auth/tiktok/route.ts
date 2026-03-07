@@ -377,7 +377,7 @@ export async function GET(request: Request) {
 
   const userId = signInData.user?.id
   let hasUsername = false
-  let hasDobOrAge = false
+  let hasDob = false
   if (userId) {
     // Ensure auth metadata has a preferred_username (useful for future providers too)
     try {
@@ -397,12 +397,12 @@ export async function GET(request: Request) {
     // Ensure profile row exists
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id, username, date_of_birth, age')
+      .select('id, username, date_of_birth')
       .eq('id', userId)
       .maybeSingle()
 
     hasUsername = Boolean(existingProfile?.username)
-    hasDobOrAge = Boolean(existingProfile?.date_of_birth || existingProfile?.age)
+    hasDob = Boolean(existingProfile?.date_of_birth)
 
     if (!existingProfile) {
       await supabase.from('profiles').insert({
@@ -424,7 +424,7 @@ export async function GET(request: Request) {
   }
 
   // Onboarding is only required when required profile fields are missing.
-  // A completed profile requires: username + dob/age.
-  const isProfileComplete = Boolean(hasUsername && hasDobOrAge)
+  // A completed profile requires: username + date_of_birth.
+  const isProfileComplete = Boolean(hasUsername && hasDob)
   return NextResponse.redirect(new URL(isProfileComplete ? '/feed' : '/onboarding', requestUrl.origin))
 }

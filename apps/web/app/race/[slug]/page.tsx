@@ -1,5 +1,6 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { RealtimeChatBatched } from '@/components/race/realtime-chat-batched'
 import { AdminChatControl } from '@/components/race/admin-chat-control'
@@ -47,6 +48,7 @@ export default async function RacePage({ params }: PageProps) {
   const chatActive = chatStatus.mode === 'open' || chatStatus.mode === 'read_only'
   const opensAt = chatStatus.opens_at ? new Date(chatStatus.opens_at) : null
   const isUpcoming = opensAt ? opensAt > new Date() : false
+  const trackSlug = race.name.toLowerCase().trim().replace(/\s+/g, '-')
 
   // Check if user is admin
   let isAdmin = false
@@ -77,7 +79,12 @@ export default async function RacePage({ params }: PageProps) {
           <h1 className="font-display text-2xl tracking-wider text-white sm:text-3xl shrink-0">
           RACEtalk: {race.location} - {race.country}
           </h1>
-          <p className="text-sm text-white/90">{race.name}</p>
+          <Link
+            href={`/tracks/${trackSlug}`}
+            className="inline-flex items-center gap-1 text-sm text-white/90 transition-colors hover:text-white"
+          >
+            {race.name} <span aria-hidden>→</span>
+          </Link>
 
           {/* Admin above chat (when admin) */}
           {isAdmin && (

@@ -1,20 +1,19 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Settings } from 'lucide-react'
 import { ProfilePhotoUpload } from './profile-photo-upload'
 import { FollowButton } from './follow-button'
 import { getTeamBackgroundGradient } from '@/utils/team-colors'
 import { getTeamBackgroundUrl } from '@/utils/storage-urls'
+import { getCountryFlagPath } from '@/utils/flags'
 
 interface ProfileHeroSectionProps {
   profile: {
     id: string
     username: string
     profile_image_url: string | null
-    city?: string | null
-    state?: string | null
-    age?: number | null
-    show_state_on_profile?: boolean | null
-    show_age_on_profile?: boolean | null
+    country?: string | null
+    show_country_on_profile?: boolean | null
     instagram_username?: string | null
   }
   isOwnProfile: boolean
@@ -52,12 +51,9 @@ export function ProfileHeroSection({
     : DEFAULT_GRADIENT
 
   // Respect visibility preferences
-  const showLocation = profile.show_state_on_profile !== false
-  const showAge = profile.show_age_on_profile !== false
-  const locationParts: string[] = []
-  if (profile.city) locationParts.push(profile.city)
-  if (showLocation && profile.state) locationParts.push(profile.state)
-  const locationText = locationParts.length > 0 ? locationParts.join(', ') : null
+  const showCountry = profile.show_country_on_profile !== false
+  const locationText = showCountry ? profile.country ?? null : null
+  const countryFlagPath = locationText ? getCountryFlagPath(locationText) : null
 
   return (
     <div className="relative w-full h-full">
@@ -142,17 +138,23 @@ export function ProfileHeroSection({
           </div>
         )}
 
-        {/* Age + Location + Follow Button Row */}
+        {/* Location + Follow Button Row */}
         <div className="mt-1 flex items-center justify-between gap-4">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 text-sm text-white/90 md:text-base">
-            {showAge && profile.age != null && showLocation && (
-              <>
-                <span>{profile.age}</span>
-                <span>•</span>
-              </>
-            )}
-            {showAge && profile.age != null && !showLocation && <span>{profile.age} •</span>}
-            {locationText && <span>{locationText}</span>}
+            {locationText ? (
+              <span className="inline-flex items-center gap-2">
+                {countryFlagPath ? (
+                  <Image
+                    src={countryFlagPath}
+                    alt={locationText}
+                    width={16}
+                    height={16}
+                    className="h-4 w-4 object-contain"
+                  />
+                ) : null}
+                <span>{locationText}</span>
+              </span>
+            ) : null}
           </div>
 
           {/* Follow Button - only show if not own profile */}

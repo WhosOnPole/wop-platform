@@ -133,7 +133,7 @@ export function RaceWeekendWidget({
           </h2>
         </div>
         <Link
-          href={`/tracks/${initialRace.name?.toLowerCase().replace(/\s+/g, '-')}`}
+          href={`https://www.whosonpole.org/tracks/${initialRace.name?.toLowerCase().replace(/\s+/g, '-')}`}
           className="text-sm text-blue-600 hover:text-blue-700"
         >
           View Race Page →

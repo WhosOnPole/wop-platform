@@ -1,10 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Save, Upload, LogOut, User, Bell, Info } from 'lucide-react'
+import { Save, LogOut, User, Bell, Info, Pencil, Clock } from 'lucide-react'
+import { DEFAULT_AVATAR_URL } from '@/utils/avatar'
+import { getCountryFlagPath } from '@/utils/flags'
 
 const TABS = ['profile', 'notifications', 'info'] as const
 type TabId = (typeof TABS)[number]
@@ -19,14 +22,52 @@ interface Profile {
   email: string
   profile_image_url: string | null
   date_of_birth: string | null
-  age: number | null
-  city: string | null
-  state: string | null
   country: string | null
-  show_state_on_profile?: boolean | null
-  show_age_on_profile?: boolean | null
+  show_country_on_profile?: boolean | null
+  username_updated_at?: string | null
   instagram_username: string | null
   social_links?: Record<string, string> | null
+}
+
+const USERNAME_COOLDOWN_DAYS = 14
+
+function normalizeUsername(input: string) {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 50)
+}
+
+function getUsernameCooldownInfo(usernameUpdatedAt?: string | null) {
+  if (!usernameUpdatedAt) {
+    return { canEdit: true, remainingMs: 0, nextAllowedAt: null as Date | null }
+  }
+
+  const updatedAt = new Date(usernameUpdatedAt)
+  if (Number.isNaN(updatedAt.getTime())) {
+    return { canEdit: true, remainingMs: 0, nextAllowedAt: null as Date | null }
+  }
+
+  const nextAllowedAt = new Date(updatedAt.getTime() + USERNAME_COOLDOWN_DAYS * 24 * 60 * 60 * 1000)
+  const remainingMs = nextAllowedAt.getTime() - Date.now()
+  return {
+    canEdit: remainingMs <= 0,
+    remainingMs: Math.max(0, remainingMs),
+    nextAllowedAt,
+  }
+}
+
+function formatRemainingDuration(ms: number) {
+  const totalHours = Math.ceil(ms / (1000 * 60 * 60))
+  const days = Math.floor(totalHours / 24)
+  const hours = totalHours % 24
+  if (days <= 0) return `${hours}h remaining`
+  if (hours === 0) return `${days}d remaining`
+  return `${days}d ${hours}h remaining`
 }
 
 export default function SettingsPage() {
@@ -37,15 +78,14 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({
     username: '',
     dateOfBirth: '',
-    city: '',
-    state: '',
     country: '',
     instagramUsername: '',
   })
-  const [doesShowStateOnProfile, setDoesShowStateOnProfile] = useState(false)
-  const [doesShowAgeOnProfile, setDoesShowAgeOnProfile] = useState(false)
+  const [doesShowCountryOnProfile, setDoesShowCountryOnProfile] = useState(true)
+  const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
+  const [imageScale, setImageScale] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const searchParams = useSearchParams()
@@ -102,13 +142,10 @@ export default function SettingsPage() {
       setFormData({
         username: data.username || '',
         dateOfBirth: data.date_of_birth || '',
-        city: data.city || '',
-        state: data.state || '',
         country: data.country || '',
         instagramUsername: data.instagram_username || igFromSocial || '',
       })
-      setDoesShowStateOnProfile(data.show_state_on_profile !== false)
-      setDoesShowAgeOnProfile(data.show_age_on_profile !== false)
+      setDoesShowCountryOnProfile(data.show_country_on_profile !== false)
       setProfileImagePreview(data.profile_image_url)
     }
     setLoading(false)
@@ -118,12 +155,46 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (file) {
       setProfileImage(file)
+      setImageScale(1)
       const reader = new FileReader()
       reader.onloadend = () => {
         setProfileImagePreview(reader.result as string)
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  async function cropImageToBlob(dataUrl: string, zoom: number): Promise<Blob> {
+    const size = 512
+    return new Promise((resolve, reject) => {
+      const img = new window.Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('No canvas context'))
+          return
+        }
+        const w = img.naturalWidth
+        const h = img.naturalHeight
+        const coverScale = size / Math.min(w, h)
+        const drawW = w * coverScale * zoom
+        const drawH = h * coverScale * zoom
+        const dx = (size - drawW) / 2
+        const dy = (size - drawH) / 2
+        ctx.drawImage(img, 0, 0, w, h, dx, dy, drawW, drawH)
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+          'image/jpeg',
+          0.92
+        )
+      }
+      img.onerror = () => reject(new Error('Image load failed'))
+      img.src = dataUrl
+    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -146,11 +217,26 @@ export default function SettingsPage() {
       return
     }
 
-    if (formData.username !== profile?.username) {
+    const normalizedUsername = normalizeUsername(formData.username)
+    if (!normalizedUsername) {
+      setErrors({ username: 'Username is required' })
+      setIsSubmitting(false)
+      return
+    }
+
+    const usernameCooldown = getUsernameCooldownInfo(profile?.username_updated_at)
+    const usernameChanged = normalizedUsername !== (profile?.username || '')
+    if (usernameChanged && !usernameCooldown.canEdit) {
+      setErrors({ username: 'Username is on cooldown. Please wait before changing again.' })
+      setIsSubmitting(false)
+      return
+    }
+
+    if (usernameChanged) {
       const { data: existing } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', formData.username.trim())
+        .eq('username', normalizedUsername)
         .maybeSingle()
 
       if (existing) {
@@ -162,14 +248,24 @@ export default function SettingsPage() {
 
     let imageUrl = profile?.profile_image_url || null
 
-    if (profileImage) {
-      const fileExt = profileImage.name.split('.').pop()
-      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
+    if (profileImage && profileImagePreview) {
+      const fileName = `${session.user.id}-${Date.now()}.jpg`
       const filePath = `profile-images/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, profileImage, { upsert: true })
+      let imageBlob: Blob
+      try {
+        imageBlob = await cropImageToBlob(profileImagePreview, imageScale)
+      } catch (error) {
+        console.error('Error processing profile image:', error)
+        setErrors({ image: 'Failed to process image' })
+        setIsSubmitting(false)
+        return
+      }
+
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, imageBlob, {
+        upsert: true,
+        contentType: 'image/jpeg',
+      })
 
       if (uploadError) {
         console.error('Error uploading image:', uploadError)
@@ -186,29 +282,14 @@ export default function SettingsPage() {
 
     const instagramUsername = formData.instagramUsername.replace(/^@/, '').trim() || null
 
-    let age = null
-    if (formData.dateOfBirth) {
-      const birthDate = new Date(formData.dateOfBirth)
-      const today = new Date()
-      age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--
-      }
-    }
-
     const profileData = {
       id: session.user.id,
-      username: formData.username.trim(),
+      username: normalizedUsername,
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,
-      age: age,
-      city: formData.city.trim() || null,
-      state: formData.state.trim() || null,
       country: formData.country.trim() || null,
-      show_state_on_profile: doesShowStateOnProfile,
-      show_age_on_profile: doesShowAgeOnProfile,
+      show_country_on_profile: doesShowCountryOnProfile,
       instagram_username: instagramUsername,
     }
 
@@ -220,7 +301,8 @@ export default function SettingsPage() {
       console.error('Error saving profile:', error)
       setErrors({ submit: 'Failed to save profile' })
     } else {
-      router.push(`/u/${formData.username.trim()}`)
+      setIsEditingUsername(false)
+      router.push(`/u/${normalizedUsername}`)
     }
     setIsSubmitting(false)
   }
@@ -239,6 +321,10 @@ export default function SettingsPage() {
       </div>
     )
   }
+
+  const usernameCooldown = getUsernameCooldownInfo(profile?.username_updated_at)
+  const countryFlagPath = getCountryFlagPath(formData.country)
+  const hasCustomProfileImage = Boolean(profileImagePreview?.trim())
 
   function setTab(tab: TabId) {
     setActiveTab(tab)
@@ -291,49 +377,114 @@ export default function SettingsPage() {
           {activeTab === 'profile' && (
         <section className="rounded-lg border border-white/20 bg-white/5 p-6 min-w-0">
           <form onSubmit={handleSubmit} className="space-y-6 min-w-0">
+            {/* Username */}
+            <div className="rounded-md border border-white/20 bg-white/5 p-4">
+              <div className="mb-3 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-white">Username *</p>
+                  <p className="text-xs text-white/60">
+                    Username changes are limited to once every {USERNAME_COOLDOWN_DAYS} days.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={!usernameCooldown.canEdit && !isEditingUsername}
+                  onClick={() => {
+                    setIsEditingUsername((prev) => !prev)
+                    setErrors((prev) => {
+                      const next = { ...prev }
+                      delete next.username
+                      return next
+                    })
+                  }}
+                  className="flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {usernameCooldown.canEdit ? <Pencil className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
+                  {isEditingUsername ? 'Done' : usernameCooldown.canEdit ? 'Edit' : 'Cooldown'}
+                </button>
+              </div>
+
+              {isEditingUsername ? (
+                <input
+                  type="text"
+                  id="username"
+                  value={formData.username}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, username: normalizeUsername(e.target.value) }))
+                  }
+                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                  required
+                />
+              ) : (
+                <p className="text-base font-medium text-white">@{formData.username}</p>
+              )}
+
+              <p className="mt-2 text-xs text-white/70">
+                {usernameCooldown.canEdit
+                  ? 'Username is available to edit.'
+                  : `Next change available ${usernameCooldown.nextAllowedAt?.toLocaleString() || ''} (${formatRemainingDuration(usernameCooldown.remainingMs)}).`}
+              </p>
+              {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
+            </div>
+
             {/* Profile Image */}
             <div>
               <label className="block text-sm font-medium text-white/90">Profile Image</label>
-              <div className="mt-2 flex items-center space-x-4">
-                {profileImagePreview && (
-                  <img
-                    src={profileImagePreview}
-                    alt="Profile preview"
-                    className="h-20 w-20 rounded-full object-cover ring-2 ring-white/20"
-                  />
+              <div className="mt-2 flex flex-wrap items-center gap-5">
+                <div className="relative">
+                  {hasCustomProfileImage ? (
+                    <div className="h-28 w-28 overflow-hidden rounded-full border-2 border-white/20 bg-white/10">
+                      <img
+                        src={profileImagePreview || ''}
+                        alt="Profile preview"
+                        className="h-full w-full object-cover transition-transform duration-150"
+                        style={{ transform: `scale(${imageScale})` }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-white/20 bg-white/10">
+                      <img
+                        src={DEFAULT_AVATAR_URL}
+                        alt="Default profile"
+                        className="h-16 w-16 object-contain opacity-90"
+                      />
+                    </div>
+                  )}
+                  <label className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-black bg-[#25B4B1] text-white shadow-lg transition-colors hover:bg-[#25B4B1]/90">
+                    <Pencil className="h-4 w-4" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {hasCustomProfileImage ? (
+                  <div className="w-full max-w-[12rem]">
+                    <p className="mb-1 text-xs text-white/70">Adjust zoom</p>
+                    <input
+                      type="range"
+                      min={0.5}
+                      max={2}
+                      step={0.05}
+                      value={imageScale}
+                      onChange={(e) => setImageScale(Number(e.target.value))}
+                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-[#25B4B1] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#25B4B1] [&::-webkit-slider-thumb]:shadow"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-sm text-white/70">
+                    Upload a profile photo using the pencil icon.
+                  </p>
                 )}
-                <label className="flex cursor-pointer items-center space-x-2 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors">
-                  <Upload className="h-4 w-4" />
-                  <span>Upload Image</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
               </div>
               {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
             </div>
 
-            {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-white/90">
-                Username *
-              </label>
-              <input
-                type="text"
-                id="username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-                required
-              />
-              {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
-            </div>
-
             {/* Date of Birth */}
-            <div>
+            <div className="min-w-0">
               <label htmlFor="dateOfBirth" className="block text-sm font-medium text-white/90">
                 Date of Birth
               </label>
@@ -343,64 +494,22 @@ export default function SettingsPage() {
                 value={formData.dateOfBirth}
                 onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                 max={new Date().toISOString().split('T')[0]}
-                className="mt-1 mb-6 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] [color-scheme:dark]"
+                className="mt-1 block w-full min-w-0 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] [color-scheme:dark]"
               />
-              <div className="rounded-md border border-white/20 bg-white/5 p-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-[#25B4B1] focus:ring-[#25B4B1] focus:ring-offset-0"
-                    checked={doesShowAgeOnProfile}
-                    onChange={(e) => setDoesShowAgeOnProfile(e.target.checked)}
-                  />
-                  <span>
-                    <span className="block text-sm font-medium text-white">Show my age on my profile</span>
-                    <span className="block text-sm text-white/70">
-                      If enabled, your age will be visible to other users on your public profile.
-                    </span>
-                  </span>
-                </label>
-              </div>
             </div>
 
-            {/* Location */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-white/90">
-                  City <span className="text-white/50">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-                />
-              </div>
-              <div>
-                <label htmlFor="state" className="block text-sm font-medium text-white/90">
-                  State <span className="text-white/50">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  id="state"
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-                />
-              </div>
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-white/90">
-                  Country <span className="text-white/50">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-                />
-              </div>
+            {/* Country */}
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-white/90">
+                Country <span className="text-white/50">(optional)</span>
+              </label>
+              <input
+                type="text"
+                id="country"
+                value={formData.country}
+                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+              />
             </div>
 
             {/* Privacy */}
@@ -410,13 +519,18 @@ export default function SettingsPage() {
                   <input
                     type="checkbox"
                     className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-[#25B4B1] focus:ring-[#25B4B1] focus:ring-offset-0"
-                    checked={doesShowStateOnProfile}
-                    onChange={(e) => setDoesShowStateOnProfile(e.target.checked)}
+                    checked={doesShowCountryOnProfile}
+                    onChange={(e) => setDoesShowCountryOnProfile(e.target.checked)}
                   />
                   <span>
-                    <span className="block text-sm font-medium text-white">Show my state on my profile</span>
+                    <span className="flex items-center gap-2 text-sm font-medium text-white">
+                      {countryFlagPath ? (
+                        <Image src={countryFlagPath} alt="Country flag" width={16} height={16} />
+                      ) : null}
+                      Show my country on my profile
+                    </span>
                     <span className="block text-sm text-white/70">
-                      If enabled, your state may be visible to other users on your public profile.
+                      If enabled, your country may be visible to other users on your public profile.
                     </span>
                   </span>
                 </label>

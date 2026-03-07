@@ -15,7 +15,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     username: '',
     dateOfBirth: '',
   })
-  const [doesShowAgeOnProfile, setDoesShowAgeOnProfile] = useState(true)
   const [agreeToPrivacy, setAgreeToPrivacy] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [profileImage, setProfileImage] = useState<File | null>(null)
@@ -55,7 +54,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('username, date_of_birth, profile_image_url, show_age_on_profile')
+      .select('username, date_of_birth, profile_image_url')
       .eq('id', session.user.id)
       .maybeSingle()
 
@@ -64,7 +63,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
         username: profile.username || '',
         dateOfBirth: profile.date_of_birth || '',
       })
-      setDoesShowAgeOnProfile(profile.show_age_on_profile !== false)
       setProfileImagePreview(profile.profile_image_url)
     }
 
@@ -223,8 +221,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,
-      age,
-      show_age_on_profile: doesShowAgeOnProfile,
     }
 
     const { error } = await supabase.from('profiles').upsert(profileData, { onConflict: 'id' })
@@ -306,7 +302,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
           {errors.image && <p className="mt-1 text-sm text-red-400">{errors.image}</p>}
         </div>
 
-        {/* Username + Date of Birth + Show age - right 2/3, stacked */}
+        {/* Username + Date of Birth - right 2/3, stacked */}
         <div className="sm:col-span-2 flex flex-col">
           <div className="p-8 backdrop-blur-sm space-y-6">
             <div>
@@ -340,18 +336,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
               />
               {errors.dateOfBirth && <p className="mt-1 text-sm text-red-400">{errors.dateOfBirth}</p>}
             </div>
-
-            <label className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-5 w-5 shrink-0 rounded border-white/20 bg-white/5 text-[#25B4B1] focus:ring-[#25B4B1]"
-                checked={doesShowAgeOnProfile}
-                onChange={(e) => setDoesShowAgeOnProfile(e.target.checked)}
-              />
-              <span>
-                <span className="block text-sm font-medium pt-1 text-white">Show my age on my profile</span>
-              </span>
-            </label>
 
             <label className="flex items-start gap-3">
               <input

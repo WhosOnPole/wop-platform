@@ -43,11 +43,11 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
     if (session && (pathname === '/login' || pathname === '/signup')) {
       supabase
         .from('profiles')
-        .select('username, date_of_birth, age')
+        .select('username, date_of_birth')
         .eq('id', session.user.id)
         .maybeSingle()
         .then(({ data: profile }) => {
-          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+          const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
           if (isMounted) router.replace(isProfileComplete ? '/feed' : '/onboarding')
         })
     }
