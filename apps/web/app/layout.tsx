@@ -5,7 +5,7 @@ import './globals.css'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { BotIDProviderWrapper } from '@/components/providers/botid-provider'
 import { AuthSessionProvider } from '@/components/providers/auth-session-provider'
-import { LayoutWrapper } from '@/components/layout-wrapper'
+import { LayoutSwitch } from '@/components/layout-switch'
 import { LoadingScreen } from '@/components/loading-screen'
 import { Analytics } from "@vercel/analytics/next"
 
@@ -75,7 +75,7 @@ export default function RootLayout({
           <BotIDProviderWrapper>
             <AuthSessionProvider>
               <LoadingScreen />
-              <LayoutWrapper>{children}</LayoutWrapper>
+              <LayoutSwitch>{children}</LayoutSwitch>
             </AuthSessionProvider>
           </BotIDProviderWrapper>
         </QueryProvider>
