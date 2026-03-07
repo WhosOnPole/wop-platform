@@ -8,11 +8,8 @@ interface ProfileHeroSectionWrapperProps {
     id: string
     username: string
     profile_image_url: string | null
-    city?: string | null
-    state?: string | null
-    age?: number | null
-    show_state_on_profile?: boolean | null
-    show_age_on_profile?: boolean | null
+    country?: string | null
+    show_country_on_profile?: boolean | null
     instagram_username?: string | null
   }
   isOwnProfile: boolean

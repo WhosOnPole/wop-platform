@@ -2,6 +2,7 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { matchRedirect } from './redirect-map'
 
 const PUBLIC_PATHS = [
   '/onboarding',
@@ -25,6 +26,26 @@ const PUBLIC_PATHS = [
  * 3. Create one Supabase client and call getSession() once per request when we do need auth.
  */
 export async function proxy(req: NextRequest) {
+  const url = req.nextUrl.clone()
+  const hostname = url.hostname.toLowerCase()
+  const forwardedProto = req.headers.get('x-forwarded-proto')
+
+  // Canonicalize host/protocol for SEO: www -> apex, http -> https.
+  if (hostname === 'www.whosonpole.org' || forwardedProto === 'http') {
+    url.protocol = 'https'
+    if (hostname === 'www.whosonpole.org') {
+      url.hostname = 'whosonpole.org'
+    }
+    return NextResponse.redirect(url, 308)
+  }
+
+  // Centralized redirect-map pattern for legacy URLs.
+  const redirect = matchRedirect(url.pathname)
+  if (redirect) {
+    const redirectUrl = new URL(redirect.destination, req.url)
+    return NextResponse.redirect(redirectUrl, redirect.permanent === false ? 307 : 308)
+  }
+
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
@@ -63,10 +84,10 @@ export async function proxy(req: NextRequest) {
           const client = supabase as SupabaseClient
           const { data: profile } = await client
             .from('profiles')
-            .select('username, date_of_birth, age')
+            .select('username, date_of_birth')
             .eq('id', sess.user.id)
             .maybeSingle()
-          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+          const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
           const redirectUrl = req.nextUrl.clone()
           redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
           return NextResponse.redirect(redirectUrl)
@@ -87,10 +108,10 @@ export async function proxy(req: NextRequest) {
           const client = supabase as SupabaseClient
           const { data: profile } = await client
             .from('profiles')
-            .select('username, date_of_birth, age')
+            .select('username, date_of_birth')
             .eq('id', sess.user.id)
             .maybeSingle()
-          const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+          const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
           const redirectUrl = req.nextUrl.clone()
           redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
           return NextResponse.redirect(redirectUrl)
@@ -110,7 +131,7 @@ export async function proxy(req: NextRequest) {
       const client = supabase as SupabaseClient
       const { data: profile } = await client
         .from('profiles')
-        .select('banned_until, username, date_of_birth, age')
+        .select('banned_until, username, date_of_birth')
         .eq('id', sess.user.id)
         .maybeSingle()
 
@@ -124,7 +145,7 @@ export async function proxy(req: NextRequest) {
         }
       }
 
-      const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+      const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
       if (!isProfileComplete) {
         const redirectUrl = req.nextUrl.clone()
         redirectUrl.pathname = '/onboarding'

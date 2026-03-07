@@ -34,14 +34,14 @@ export default function OnboardingPage() {
     }
 
     // Onboarding is only for users missing required profile fields.
-    // A completed profile requires: username + dob/age.
+    // A completed profile requires: username + date_of_birth.
     const { data: profile } = await supabase
       .from('profiles')
-      .select('username, date_of_birth, age')
+      .select('username, date_of_birth')
       .eq('id', session.user.id)
       .single()
 
-    const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth || profile?.age))
+    const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
     if (isProfileComplete) {
       router.push('/feed')
       return

@@ -31,7 +31,6 @@ export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardPr
         profile_image_url,
         weekly_points,
         points,
-        city,
         country
       )
     `
@@ -75,9 +74,9 @@ export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardPr
             >
               {fan.username}
             </Link>
-            {(fan.city || fan.country) && (
+            {fan.country && (
               <p className="text-sm text-gray-600">
-                {[fan.city, fan.country].filter(Boolean).join(', ')}
+                {fan.country}
               </p>
             )}
           </div>

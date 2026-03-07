@@ -11,11 +11,8 @@ interface Profile {
   email: string
   profile_image_url: string | null
   date_of_birth: string | null
-  age: number | null
-  city: string | null
-  state: string | null
   country: string | null
-  show_state_on_profile?: boolean | null
+  show_country_on_profile?: boolean | null
   instagram_username: string | null
   social_links?: Record<string, string> | null
 }
@@ -28,12 +25,10 @@ export default function EditProfilePage() {
   const [formData, setFormData] = useState({
     username: '',
     dateOfBirth: '',
-    city: '',
-    state: '',
     country: '',
     instagramUsername: '',
   })
-  const [doesShowStateOnProfile, setDoesShowStateOnProfile] = useState(false)
+  const [doesShowCountryOnProfile, setDoesShowCountryOnProfile] = useState(true)
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -82,12 +77,10 @@ export default function EditProfilePage() {
       setFormData({
         username: data.username || '',
         dateOfBirth: data.date_of_birth || '',
-        city: data.city || '',
-        state: data.state || '',
         country: data.country || '',
         instagramUsername: data.instagram_username || igFromSocial || '',
       })
-      setDoesShowStateOnProfile(Boolean(data.show_state_on_profile))
+      setDoesShowCountryOnProfile(data.show_country_on_profile !== false)
       setProfileImagePreview(data.profile_image_url)
     }
     setLoading(false)
@@ -168,18 +161,6 @@ export default function EditProfilePage() {
 
     const instagramUsername = formData.instagramUsername.replace(/^@/, '').trim() || null
 
-    // Calculate age from date of birth
-    let age = null
-    if (formData.dateOfBirth) {
-      const birthDate = new Date(formData.dateOfBirth)
-      const today = new Date()
-      age = today.getFullYear() - birthDate.getFullYear()
-      const monthDiff = today.getMonth() - birthDate.getMonth()
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--
-      }
-    }
-
     // Upsert profile (create if doesn't exist, update if it does)
     const profileData = {
       id: session.user.id,
@@ -187,11 +168,8 @@ export default function EditProfilePage() {
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,
-      age: age,
-      city: formData.city.trim() || null,
-      state: formData.state.trim() || null,
       country: formData.country.trim() || null,
-      show_state_on_profile: doesShowStateOnProfile,
+      show_country_on_profile: doesShowCountryOnProfile,
       instagram_username: instagramUsername,
     }
 
@@ -283,43 +261,17 @@ export default function EditProfilePage() {
         </div>
 
         {/* Location */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div>
-            <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-              City <span className="text-gray-400">(optional)</span>
-            </label>
-            <input
-              type="text"
-              id="city"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-              State <span className="text-gray-400">(optional)</span>
-            </label>
-            <input
-              type="text"
-              id="state"
-              value={formData.state}
-              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-              Country <span className="text-gray-400">(optional)</span>
-            </label>
-            <input
-              type="text"
-              id="country"
-              value={formData.country}
-              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
-          </div>
+        <div>
+          <label htmlFor="country" className="block text-sm font-medium text-gray-700">
+            Country <span className="text-gray-400">(optional)</span>
+          </label>
+          <input
+            type="text"
+            id="country"
+            value={formData.country}
+            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          />
         </div>
 
         {/* Privacy */}
@@ -328,13 +280,13 @@ export default function EditProfilePage() {
             <input
               type="checkbox"
               className="mt-1 h-4 w-4 rounded border-gray-300"
-              checked={doesShowStateOnProfile}
-              onChange={(e) => setDoesShowStateOnProfile(e.target.checked)}
+                checked={doesShowCountryOnProfile}
+                onChange={(e) => setDoesShowCountryOnProfile(e.target.checked)}
             />
             <span>
-              <span className="block text-sm font-medium text-gray-900">Show my state on my profile</span>
+              <span className="block text-sm font-medium text-gray-900">Show my country on my profile</span>
               <span className="block text-sm text-gray-600">
-                If enabled, your state may be visible to other users on your public profile.
+                If enabled, your country may be visible to other users on your public profile.
               </span>
             </span>
           </label>

@@ -50,11 +50,11 @@ function AuthCallbackContent() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username, date_of_birth, age')
+        .select('username, date_of_birth')
         .eq('id', session.user.id)
         .maybeSingle()
 
-      const isProfileComplete = Boolean(profile?.username && (profile?.date_of_birth ?? profile?.age))
+      const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
       router.replace(isProfileComplete ? '/feed' : '/onboarding')
     }
 
