@@ -128,6 +128,9 @@ interface FeedContentProps {
   supabaseUrl?: string
   currentUserId?: string
   isNewUser?: boolean
+  /** When true, show Load more button for Pit Crew tab */
+  hasMore?: boolean
+  currentPage?: number
 }
 
 type FeedItem =
@@ -142,12 +145,6 @@ const FEED_TAB_STORAGE_KEY = 'feed-active-tab'
 
 type FeedTab = 'pit crew' | 'discovery'
 
-function getStoredFeedTab(): FeedTab {
-  if (typeof window === 'undefined') return 'pit crew'
-  const stored = window.localStorage.getItem(FEED_TAB_STORAGE_KEY)
-  return stored === 'discovery' ? 'discovery' : 'pit crew'
-}
-
 export function FeedContent({
   posts,
   grids,
@@ -161,6 +158,8 @@ export function FeedContent({
   supabaseUrl,
   currentUserId,
   isNewUser = false,
+  hasMore = false,
+  currentPage = 1,
 }: FeedContentProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -175,7 +174,7 @@ export function FeedContent({
   const [activeTab, setActiveTab] = useState<FeedTab>(() => {
     const tabParam = searchParams.get('tab')
     if (tabParam === 'discovery' || tabParam === 'pit crew') return tabParam
-    return getStoredFeedTab()
+    return 'pit crew'
   })
 
   const setFeedTab = useCallback((tab: FeedTab) => {
@@ -183,8 +182,11 @@ export function FeedContent({
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(FEED_TAB_STORAGE_KEY, tab)
     }
-    router.replace(`/feed?tab=${tab}`, { scroll: false })
-  }, [router])
+    const params = new URLSearchParams()
+    params.set('tab', tab)
+    if (tab === 'pit crew' && currentPage > 1) params.set('page', String(currentPage))
+    router.replace(`/feed?${params.toString()}`, { scroll: false })
+  }, [router, currentPage])
 
   const excludePostIds = useMemo(() => posts.map((p) => p.id), [posts])
   const excludeGridIds = useMemo(() => grids.map((g) => g.id), [grids])
@@ -849,6 +851,17 @@ export function FeedContent({
 
         return null
       })}
+          {hasContent && hasMore && (
+            <div className="flex justify-center py-6">
+              <button
+                type="button"
+                onClick={() => router.push(`/feed?page=${currentPage + 1}`)}
+                className="rounded-lg border border-white/20 bg-white/5 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+              >
+                Load more
+              </button>
+            </div>
+          )}
         </>
       )}
 

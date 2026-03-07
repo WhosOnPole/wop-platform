@@ -125,7 +125,20 @@ function getSpotlightFeaturedGrid(params: { grid: unknown }) {
   }
 }
 
-export default async function FeedPage() {
+const INITIAL_POSTS_LIMIT = 8
+const INITIAL_GRIDS_LIMIT = 8
+const LOAD_MORE_INCREMENT = 8
+
+export default async function FeedPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const resolvedParams = await searchParams
+  const page = Math.max(1, parseInt(resolvedParams?.page ?? '1', 10) || 1)
+  const postsLimit = INITIAL_POSTS_LIMIT + (page - 1) * LOAD_MORE_INCREMENT
+  const gridsLimit = INITIAL_GRIDS_LIMIT + (page - 1) * LOAD_MORE_INCREMENT
+
   const cookieStore = await cookies()
   const supabase = createServerComponentClient(
     { cookies: () => cookieStore as any },
@@ -181,7 +194,7 @@ export default async function FeedPage() {
           )
           .in('user_id', userIds)
           .order('created_at', { ascending: false })
-          .limit(20)
+          .limit(postsLimit)
         return { data: posts || [] }
       }),
     // Grids from current user + users they follow (ordered by updated_at so updates appear chronologically)
@@ -206,7 +219,7 @@ export default async function FeedPage() {
           )
           .in('user_id', userIds)
           .order('updated_at', { ascending: false, nullsFirst: false })
-          .limit(20)
+          .limit(gridsLimit)
         return { data: grids || [] }
       }),
     // Grid slot comments on current user's grids (owner sees these in feed)
@@ -1097,6 +1110,11 @@ export default async function FeedPage() {
             currentUserId={session.user.id}
             featuredNews={featuredStory ? featuredNewsList.slice(1) : featuredNewsList}
             isNewUser={isNewUser}
+            hasMore={
+              followingPostsList.length >= postsLimit ||
+              (followingGrids.data?.length ?? 0) >= gridsLimit
+            }
+            currentPage={page}
           />
         </div>
         </div>
