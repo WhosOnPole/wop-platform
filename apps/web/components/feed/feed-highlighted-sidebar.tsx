@@ -158,33 +158,38 @@ export function FeedHighlightedSidebar({
       </div>
 
       {isDiscussionOpen && spotlight?.hot_take?.id && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
-            <div className="mb-4 flex items-start justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-white/90">
-                  <Radio className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold text-white">Hot Take Discussion</h3>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-4 pt-[calc(5rem+env(safe-area-inset-top))] pb-4">
+          <div className="flex h-[calc(100vh-6rem)] max-h-[70vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-white/10 bg-black/90 shadow-2xl backdrop-blur-sm text-white">
+            <div className="shrink-0 p-6 pb-0">
+              <div className="mb-4 flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 text-white/90">
+                    <Radio className="h-5 w-5" />
+                    <h3 className="text-lg font-semibold text-white">Hot Take Discussion</h3>
+                  </div>
+                  <div className="mt-6 flex w-full justify-center">
+                    <p className="text-center text-2xl tracking-wide text-white/90 rounded-lg border border-[#25B4B1] bg-sunset-gradient p-4 w-fit">{spotlight.hot_take.content_text}</p>
+                  </div>
                 </div>
-                <div className="mt-6 flex w-full justify-center">
-                  <p className="text-center text-2xl tracking-wide text-white/90 rounded-lg border border-[#25B4B1] bg-sunset-gradient p-4 w-fit">{spotlight.hot_take.content_text}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDiscussionOpen(false)}
+                  className="rounded-md border border-white/30 bg-transparent px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                >
+                  Close
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsDiscussionOpen(false)}
-                className="rounded-md border border-white/30 bg-transparent px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-white/10"
-              >
-                Close
-              </button>
             </div>
-            <DiscussionSection
-              posts={discussionPosts || []}
-              parentPageType="hot_take"
-              parentPageId={spotlight.hot_take.id}
-              variant="dark"
-              compact
-            />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">
+              <DiscussionSection
+                posts={discussionPosts || []}
+                parentPageType="hot_take"
+                parentPageId={spotlight.hot_take.id}
+                variant="dark"
+                compact
+                fixedInput
+              />
+            </div>
           </div>
         </div>
       )}

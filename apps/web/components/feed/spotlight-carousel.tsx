@@ -360,31 +360,36 @@ export function SpotlightCarousel({
       </div>
 
       {isDiscussionOpen && spotlight?.hot_take?.id && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-          <div className="h-[80vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
-            <div className="mb-3 flex items-start justify-between">
-              <div>
-                <div className="flex items-center space-x-2 text-white/90">
-                  <Radio className="h-5 w-5" />
-                  <h3 className="text-xl font-semibold text-white">Hot Take Discussion</h3>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4 pt-[calc(5rem+env(safe-area-inset-top))] pb-4">
+          <div className="flex h-[calc(100vh-6rem)] max-h-[70vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-white/10 bg-black/90 shadow-2xl backdrop-blur-sm text-white">
+            <div className="shrink-0 p-6 pb-0">
+              <div className="mb-3 flex items-start justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 text-white/90">
+                    <Radio className="h-5 w-5" />
+                    <h3 className="text-xl font-semibold text-white">Hot Take Discussion</h3>
+                  </div>
+                  <p className="mt-4 text-white/90">{spotlight.hot_take.content_text}</p>
                 </div>
-                <p className="mt-4 text-white/90">{spotlight.hot_take.content_text}</p>
+                <button
+                  type="button"
+                  onClick={() => setIsDiscussionOpen(false)}
+                  className="rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
+                >
+                  X
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsDiscussionOpen(false)}
-                className="rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
-              >
-                X
-              </button>
             </div>
-            <DiscussionSection
-              posts={discussionPosts || []}
-              parentPageType="hot_take"
-              parentPageId={spotlight.hot_take.id}
-              variant="dark"
-              compact
-            />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">
+              <DiscussionSection
+                posts={discussionPosts || []}
+                parentPageType="hot_take"
+                parentPageId={spotlight.hot_take.id}
+                variant="dark"
+                compact
+                fixedInput
+              />
+            </div>
           </div>
         </div>
       )}

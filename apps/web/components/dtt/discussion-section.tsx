@@ -44,6 +44,8 @@ interface DiscussionSectionProps {
   variant?: 'light' | 'dark'
   /** When true, uses smaller height for modal contexts (e.g. poll/hot take modals) */
   compact?: boolean
+  /** When true, comment input is fixed at bottom and comments area scrolls (for modals) */
+  fixedInput?: boolean
 }
 
 export function DiscussionSection({
@@ -52,6 +54,7 @@ export function DiscussionSection({
   parentPageId,
   variant = 'light',
   compact = false,
+  fixedInput = false,
 }: DiscussionSectionProps) {
   const isDark = variant === 'dark'
   const supabase = createClientComponentClient()
@@ -531,15 +534,19 @@ export function DiscussionSection({
   }
 
   const sectionClasses = isDark
-    ? 'flex flex-col gap-4 pb-8'
-    : 'flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow'
+    ? `flex flex-col gap-4 ${fixedInput ? 'flex-1 min-h-0 pb-0' : 'pb-8'}`
+    : `flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow ${fixedInput ? 'flex-1 min-h-0' : ''}`
   const headingClasses = isDark
     ? 'text-sm font-medium text-white/90 text-right'
     : 'text-sm font-medium text-gray-900 text-right'
-  const contentHeight = compact ? 'min-h-[6rem] max-h-[35vh]' : 'min-h-[6rem] max-h-[50vh]'
+  const contentHeight = fixedInput
+    ? 'flex-1 min-h-0 overflow-y-auto'
+    : compact
+      ? 'min-h-[6rem] max-h-[35vh]'
+      : 'min-h-[6rem] max-h-[50vh]'
   const contentBoxClasses = isDark
-    ? `mt-6 flex ${contentHeight} flex-col overflow-y-auto rounded-md border border-white/20 bg-transparent p-4`
-    : `mt-6 flex ${contentHeight} flex-col overflow-y-auto rounded-md border border-gray-200 bg-gray-50/50 p-4`
+    ? `mt-6 flex ${contentHeight} flex-col rounded-md border border-white/20 bg-transparent p-4`
+    : `mt-6 flex ${contentHeight} flex-col rounded-md border border-gray-200 bg-gray-50/50 p-4`
   const contentBoxEmptyClasses = isDark
     ? 'items-center justify-center'
     : 'items-center justify-center'
@@ -674,7 +681,7 @@ export function DiscussionSection({
 
                 {/* Comments List */}
                 {topLevel.length > 0 && (
-                  <div className="mt-4 ml-11 space-y-4 border-l-2 border-white/20 pl-4">
+                  <div className="mt-4 ml-8 space-y-4 border-l border-white/20 pl-2">
                     {topLevel.map((comment) => {
                       const commentReplies = repliesByParent[comment.id] || []
 
@@ -893,7 +900,7 @@ export function DiscussionSection({
       </div>
 
       {/* Create post form - same order and style as grid detail (input at bottom) */}
-      <form onSubmit={handleCreatePost} className="flex w-full items-stretch">
+      <form onSubmit={handleCreatePost} className={`flex w-full items-stretch ${fixedInput ? 'shrink-0 pt-4' : ''}`}>
         <textarea
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}
