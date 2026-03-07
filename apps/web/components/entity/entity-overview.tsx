@@ -40,7 +40,7 @@ export function EntityOverview(props: EntityOverviewProps) {
                 <>
                   <span
                     className="min-w-0 overflow-hidden leading-none"
-                    style={{ fontSize: 'clamp(19vw, 14vw, 10rem)' }}
+                    style={{ fontSize: 'clamp(17vw, 12vw, 9rem)' }}
                   >
                     {leftContent.value}
                   </span>
@@ -56,10 +56,10 @@ export function EntityOverview(props: EntityOverviewProps) {
               ) : (
                 <span
                   className="min-w-0 overflow-hidden leading-[1] pl-2"
-                  style={{ fontSize: 'clamp(2.2rem, 6vw, 5rem)' }}
+                  style={{ fontSize: 'clamp(2rem, 5.3vw, 4.5rem)' }}
                 >
                   Driver{' '}
-                  <span style={{ fontSize: 'clamp(20vw, 20vw, 10rem)' }}>
+                  <span style={{ fontSize: 'clamp(18vw, 18vw, 9rem)' }}>
                     {leftContent.value}
                   </span>
                   <span style={{ fontSize: 'clamp(1rem, 6vw, 3rem)', verticalAlign: 'top' }}>No.</span>
