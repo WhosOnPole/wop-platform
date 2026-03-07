@@ -47,8 +47,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: 'Users' },
-    { href: '/dashboard/data-enrichment', label: 'Data Enrichment', icon: 'Users' },
-    { href: '/dashboard/content', label: 'Content Creation', icon: 'FileText' },
+    { href: '/dashboard/data-enrichment', label: 'Edit Data', icon: 'Users' },
+    { href: '/dashboard/content', label: 'Create Content', icon: 'FileText' },
     { href: '/dashboard/highlights', label: 'Weekly Highlights', icon: 'Star' },
     { href: '/dashboard/reports', label: 'Reports', icon: 'Flag' },
     { href: '/dashboard/track-tips', label: 'Track Tips', icon: 'MessageSquare' },

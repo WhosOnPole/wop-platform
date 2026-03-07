@@ -7,6 +7,7 @@ import Link from 'next/link'
 
 interface RaceWeekendWidgetProps {
   initialRace: any
+  initialRaceStatus: 'live' | 'upcoming'
   initialMetrics: {
     totalMessages: number
     activeUsers: number
@@ -16,6 +17,7 @@ interface RaceWeekendWidgetProps {
 
 export function RaceWeekendWidget({
   initialRace,
+  initialRaceStatus,
   initialMetrics,
 }: RaceWeekendWidgetProps) {
   const supabase = createClientComponentClient()
@@ -112,12 +114,13 @@ export function RaceWeekendWidget({
   const now = new Date()
   const isWithinWindow =
     Boolean(startDate && endDate && now >= startDate && now <= endDate)
-  const isActive = isWithinWindow && chatEnabled
 
-  const isUpcoming = startDate && now < startDate
+  const isLive = initialRaceStatus === 'live'
+  const isUpcoming = initialRaceStatus === 'upcoming'
+  const isChatLive = isLive && chatEnabled
 
-  if (!isActive && !isUpcoming) {
-    return null // Don't show widget if race weekend is not active or upcoming
+  if (!isLive && !isUpcoming) {
+    return null
   }
 
   return (
@@ -126,7 +129,7 @@ export function RaceWeekendWidget({
         <div className="flex items-center space-x-2">
           <Calendar className="h-5 w-5 text-blue-500" />
           <h2 className="text-xl font-semibold text-gray-900">
-            {isUpcoming ? 'Upcoming Race Weekend' : 'Live Race'}
+            {isLive ? 'Live Race' : 'Upcoming Race Weekend'}
           </h2>
         </div>
         <Link
@@ -196,7 +199,7 @@ export function RaceWeekendWidget({
             ) : null}
           </div>
 
-          {isActive && metrics && (
+          {isChatLive && metrics && (
             <div className="space-y-3">
               <div className="flex items-center justify-between rounded-md bg-gray-50 p-3">
                 <div className="flex items-center space-x-2">
@@ -230,9 +233,11 @@ export function RaceWeekendWidget({
             </div>
           )}
 
-          {!isActive && (
+          {!isChatLive && (
             <p className="text-sm text-gray-500">
-              {isUpcoming
+              {isLive && !chatEnabled
+                ? 'Race is live, but chat is currently disabled'
+                : isUpcoming
                 ? 'Chat will be available when the race weekend starts'
                 : 'Chat is currently inactive'}
             </p>

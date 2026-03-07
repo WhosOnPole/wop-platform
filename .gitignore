@@ -112,3 +112,4 @@ apps/web/.env.local
 /migrations
 .cursor/mcp.json
 /.cursor
+/supabase

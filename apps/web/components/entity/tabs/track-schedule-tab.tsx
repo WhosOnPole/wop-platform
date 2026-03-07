@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { formatWeekendRange, formatTimezoneVsEst } from '@/utils/date-utils'
 
 export interface TrackScheduleEvent {
@@ -19,16 +22,45 @@ interface TrackScheduleTabProps {
   } | null
 }
 
-function formatEventDateTime(iso: string, timezone?: string | null): string {
+function formatEventDateAndTime(iso: string, timezone?: string | null): string {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
-  return d.toLocaleString('en-US', {
-    month: 'short',
+
+  const datePart = new Intl.DateTimeFormat('en-US', {
+    month: 'numeric',
     day: 'numeric',
+    timeZone: timezone || 'UTC',
+  }).format(d)
+
+  const hourMinute = new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: '2-digit',
+    hour12: false,
     timeZone: timezone || 'UTC',
-  })
+  }).format(d)
+
+  const [hourRaw, minuteRaw] = hourMinute.split(':')
+  const hour = Number(hourRaw)
+  const minute = Number(minuteRaw)
+
+  if (hour === 0 && minute === 0) return `${datePart} - Midnight`
+  if (hour === 12 && minute === 0) return `${datePart} - Noon`
+
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  const ampm = hour >= 12 ? 'pm' : 'am'
+  return `${datePart} - ${hour12}:${String(minute).padStart(2, '0')}${ampm}`
+}
+
+function getTimezoneShortLabel(iso: string, timezone: string): string {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return timezone
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    timeZoneName: 'short',
+  }).formatToParts(d)
+  const tzName = parts.find((part) => part.type === 'timeZoneName')?.value
+  return tzName || timezone
 }
 
 function eventTypeLabel(eventType: string): string {
@@ -47,6 +79,13 @@ function eventTypeLabel(eventType: string): string {
 }
 
 export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
+  const [userTimezone, setUserTimezone] = useState<string | null>(null)
+
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    setUserTimezone(tz || null)
+  }, [])
+
   const weekendRange = track
     ? formatWeekendRange(track.start_date ?? null, track.end_date ?? null, { year: false })
     : null
@@ -74,13 +113,14 @@ export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
           <ul className="space-y-4">
             {events.map((ev, i) => {
               const label = eventTypeLabel(ev.event_type)
-              const dateTime = formatEventDateTime(ev.scheduled_at, track?.timezone)
-              const withDuration =
-                ev.event_type === 'qualifying' || ev.event_type === 'sprint_qualifying'
-              const durationPart =
-                withDuration && ev.duration_minutes != null
-                  ? ` • ${ev.duration_minutes} min`
-                  : ''
+              const localTime = formatEventDateAndTime(ev.scheduled_at, track?.timezone || undefined)
+              const userTime =
+                userTimezone && userTimezone !== track?.timezone
+                  ? formatEventDateAndTime(ev.scheduled_at, userTimezone)
+                  : null
+              const userTzLabel = userTimezone
+                ? getTimezoneShortLabel(ev.scheduled_at, userTimezone)
+                : null
               return (
                 <li
                   key={i}
@@ -88,8 +128,8 @@ export function TrackScheduleTab({ events, track }: TrackScheduleTabProps) {
                 >
                   <span className="shrink-0 font-medium text-white">{label}:</span>
                   <span className="text-right">
-                    {dateTime}
-                    {durationPart}
+                    {localTime}
+                    {userTime && userTzLabel ? ` • ${userTime} (${userTzLabel})` : ''}
                   </span>
                 </li>
               )
