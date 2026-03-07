@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
-import { Send, MessageSquare, AlertCircle, Wifi, WifiOff } from 'lucide-react'
+import { Send, MessageSquare, AlertCircle, Wifi, WifiOff, Users } from 'lucide-react'
 import { useBatchedChat } from '@/hooks/use-batched-chat'
 import { useChatPolling } from '@/hooks/use-chat-polling'
 import { ChatMessageItem } from './chat-message-item'
@@ -31,6 +31,12 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const prevMessageCountRef = useRef(0)
+
+  const handleBatchedChatError = useCallback((error: Error) => {
+    console.error('Batched chat error, falling back to polling:', error)
+    // Use functional update so this callback can stay stable.
+    setUsePolling((prev) => prev || true)
+  }, [])
 
   // Get current user and admin status
   useEffect(() => {
@@ -64,18 +70,13 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
     sendMessage,
     deleteMessage,
     isConnected,
+    onlineCount,
     status,
     error: chatError,
   } = useBatchedChat({
     trackId,
     enabled: !usePolling,
-    onError: (error) => {
-      console.error('Batched chat error, falling back to polling:', error)
-      // Fallback to polling if realtime fails
-      if (!usePolling) {
-        setUsePolling(true)
-      }
-    },
+    onError: handleBatchedChatError,
   })
 
   // Use polling hook (fallback)
@@ -91,6 +92,8 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
   // Use appropriate messages source
   const messages = usePolling ? polledMessages : batchedMessages
   const isConnectedState = usePolling ? isPolling : isConnected
+  const pollingParticipantCount = new Set(messages.map((m) => m.user_id)).size
+  const participantCount = usePolling ? pollingParticipantCount : onlineCount
 
   // Debounce connection display to prevent rapid blinking
   const [displayConnected, setDisplayConnected] = useState(false)
@@ -219,6 +222,10 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
                 </span>
               </div>
             )}
+          </div>
+          <div className={`flex items-center space-x-1 text-sm ${isLiveLayout ? 'text-white/70' : 'text-gray-600'}`}>
+            <Users className="h-4 w-4" />
+            <span>{participantCount} in chat</span>
           </div>
         </div>
       </div>

@@ -27,6 +27,7 @@ interface UseBatchedChatReturn {
   sendMessage: (message: string, clientNonce?: string) => Promise<void>
   deleteMessage: (messageId: number) => Promise<void>
   isConnected: boolean
+  onlineCount: number
   status: ChatStatus | null
   error: Error | null
 }
@@ -39,6 +40,7 @@ export function useBatchedChat({
   const supabase = createClientComponentClient()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isConnected, setIsConnected] = useState(false)
+  const [onlineCount, setOnlineCount] = useState(0)
   const [status, setStatus] = useState<ChatStatus | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
@@ -90,14 +92,26 @@ export function useBatchedChat({
   }, [chatStatus])
 
   // Connect to realtime (unsubscribe when tab hidden to reduce realtime.list_changes)
+  const updatePresenceCount = useCallback((ch: RealtimeChannel | null) => {
+    if (!ch) {
+      setOnlineCount(0)
+      return
+    }
+    const state = ch.presenceState() as Record<string, unknown[]>
+    // Count unique presence keys (typically one key per user).
+    setOnlineCount(Object.keys(state).length)
+  }, [])
+
   useEffect(() => {
     if (!enabled || !trackId || !chatStatus) {
       setIsConnected(false)
+      setOnlineCount(0)
       return
     }
 
     if (chatStatus.mode !== 'open' && chatStatus.mode !== 'read_only') {
       setIsConnected(false)
+      setOnlineCount(0)
       return
     }
 
@@ -127,6 +141,7 @@ export function useBatchedChat({
         const topic = `f1:race:${trackId}`
         channel = supabase.channel(topic, {
           config: {
+            presence: { key: session.user.id },
             // private: true, // Uncomment when Realtime Authorization is enabled
           },
         })
@@ -202,6 +217,19 @@ export function useBatchedChat({
           }
         )
 
+        channel.on('presence', { event: 'sync' }, () => {
+          if (!mounted) return
+          updatePresenceCount(channel)
+        })
+        channel.on('presence', { event: 'join' }, () => {
+          if (!mounted) return
+          updatePresenceCount(channel)
+        })
+        channel.on('presence', { event: 'leave' }, () => {
+          if (!mounted) return
+          updatePresenceCount(channel)
+        })
+
         // Subscribe to channel
         channel.subscribe((status, err) => {
           if (!mounted) return
@@ -209,14 +237,21 @@ export function useBatchedChat({
           if (status === 'SUBSCRIBED') {
             setIsConnected(true)
             setError(null)
+            channel
+              ?.track({ online_at: new Date().toISOString() })
+              .catch((presenceErr) => {
+                console.error('Error tracking chat presence:', presenceErr)
+              })
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             setIsConnected(false)
+            setOnlineCount(0)
             const error = err || new Error(`Channel ${status}`)
             setError(error)
             console.error('Channel subscription error:', status, err)
             onError?.(error)
           } else if (status === 'CLOSED') {
             setIsConnected(false)
+            setOnlineCount(0)
             console.warn('Channel closed')
           }
         })
@@ -230,6 +265,7 @@ export function useBatchedChat({
             supabase.removeChannel(ch)
             channelRef.current = null
             setIsConnected(false)
+            setOnlineCount(0)
           } else if (isVisible && mounted && !channelRef.current) {
             connect()
           }
@@ -242,6 +278,7 @@ export function useBatchedChat({
         console.error('Error connecting to chat:', err)
         setError(err)
         setIsConnected(false)
+        setOnlineCount(0)
         onError?.(err)
       }
     }
@@ -257,8 +294,9 @@ export function useBatchedChat({
         channelRef.current = null
       }
       setIsConnected(false)
+      setOnlineCount(0)
     }
-  }, [trackId, enabled, chatStatus, supabase, onError])
+  }, [trackId, enabled, chatStatus, supabase, onError, updatePresenceCount])
 
   // Send message via RPC
   const sendMessage = useCallback(
@@ -341,6 +379,7 @@ export function useBatchedChat({
     sendMessage,
     deleteMessage,
     isConnected,
+    onlineCount,
     status,
     error,
   }
