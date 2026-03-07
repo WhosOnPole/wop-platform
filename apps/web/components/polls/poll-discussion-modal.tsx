@@ -38,39 +38,44 @@ export function PollDiscussionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/80 px-4 pt-[calc(3.75rem+env(safe-area-inset-top))] pb-4 overflow-y-auto">
-      <div className="max-h-[calc(100vh-6rem)] w-full max-w-4xl overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-6 shadow-2xl backdrop-blur-sm text-white">
-        <div className="mb-4 flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
-          >
-            X
-          </button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4 pt-[calc(5rem+env(safe-area-inset-top))] pb-4">
+      <div className="flex h-[calc(100vh-6rem)] max-h-[70vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-white/10 bg-black/90 shadow-2xl backdrop-blur-sm text-white">
+        <div className="shrink-0 p-6 pb-0">
+          <div className="mb-4 flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
+            >
+              X
+            </button>
+          </div>
+          <div className="mb-6">
+            <PollCard
+              poll={{
+                ...poll,
+                is_featured_podium: poll.is_featured_podium ?? false,
+              }}
+              userResponse={userResponse}
+              voteCounts={voteCounts}
+              onVote={handleVote}
+              variant="dark"
+              className="min-h-0 border-0 bg-transparent p-0 shadow-none"
+              showRepost={false}
+              showFeaturedChip={false}
+            />
+          </div>
         </div>
-        <div className="mb-6">
-          <PollCard
-            poll={{
-              ...poll,
-              is_featured_podium: poll.is_featured_podium ?? false,
-            }}
-            userResponse={userResponse}
-            voteCounts={voteCounts}
-            onVote={handleVote}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">
+          <DiscussionSection
+            posts={discussionPosts}
+            parentPageType="poll"
+            parentPageId={poll.id}
             variant="dark"
-            className="min-h-0 border-0 bg-transparent p-0 shadow-none"
-            showRepost={false}
-            showFeaturedChip={false}
+            compact
+            fixedInput
           />
         </div>
-        <DiscussionSection
-          posts={discussionPosts}
-          parentPageType="poll"
-          parentPageId={poll.id}
-          variant="dark"
-          compact
-        />
       </div>
     </div>
   )
