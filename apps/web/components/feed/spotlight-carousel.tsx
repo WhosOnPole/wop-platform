@@ -175,9 +175,9 @@ export function SpotlightCarousel({
   const gradientCardStyle = {
     background: 'linear-gradient(90deg, #EC6D00 0%, #FF006F 50%, #25B4B1 100%)',
   }
-  const gradientCardOuter = 'h-full rounded-lg p-[2px]'
+  const gradientCardOuter = 'h-full w-full rounded-lg p-[2px]'
   const gradientCardInner =
-    'flex h-full min-h-0 flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1]'
+    'flex h-full w-full min-h-0 flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1]'
 
   function renderCard(card: CardItem) {
     if (card.type === 'hot_take') {
@@ -186,7 +186,7 @@ export function SpotlightCarousel({
           <button
             type="button"
             onClick={() => card.data.hot_take?.id && setIsDiscussionOpen(true)}
-            className={gradientCardInner + ' cursor-pointer'}
+            className={gradientCardInner + ' cursor-pointer appearance-none border-0'}
           >
             <div className="flex shrink-0 items-center space-x-2">
               <Radio className="h-5 w-5 text-white/90" />
@@ -225,7 +225,7 @@ export function SpotlightCarousel({
           <button
             type="button"
             onClick={() => setActivePollId(poll.id)}
-            className={gradientCardInner + ' cursor-pointer'}
+            className={gradientCardInner + ' cursor-pointer appearance-none border-0'}
           >
             <span className="text-[0.6em] uppercase tracking-widest text-white/60 align-super">
               Admin Poll
