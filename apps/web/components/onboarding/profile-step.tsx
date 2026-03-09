@@ -143,7 +143,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     const trimmedUsername = formData.username.trim()
     const usernameValidation = validateUsername(trimmedUsername)
     if (!usernameValidation.valid) {
-      setErrors({ username: usernameValidation.error })
+      setErrors({ username: usernameValidation.error ?? 'Invalid username' })
       setIsSubmitting(false)
       return
     }
