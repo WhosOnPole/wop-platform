@@ -30,16 +30,43 @@ interface Profile {
 }
 
 const USERNAME_COOLDOWN_DAYS = 14
+const COUNTRY_OPTIONS = [
+  'Argentina',
+  'Australia',
+  'Austria',
+  'Azerbaijan',
+  'Bahrain',
+  'Belgium',
+  'Brazil',
+  'Canada',
+  'China',
+  'France',
+  'Germany',
+  'Hungary',
+  'Italy',
+  'Japan',
+  'Mexico',
+  'Monaco',
+  'Netherlands',
+  'Qatar',
+  'Saudi Arabia',
+  'Singapore',
+  'Spain',
+  'United Arab Emirates',
+  'United Kingdom',
+  'United States',
+] as const
 
-function normalizeUsername(input: string) {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/['']/g, '')
-    .replace(/[^a-z0-9_]+/g, '_')
-    .replace(/_{2,}/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .slice(0, 50)
+/** Validates username without transforming. Allows letters (including capitals), numbers, underscores. */
+function validateUsername(input: string): { valid: boolean; error?: string } {
+  const trimmed = input.trim()
+  if (!trimmed) return { valid: false, error: 'Username is required' }
+  if (/\s/.test(trimmed)) return { valid: false, error: 'Usernames cannot contain spaces.' }
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+    return { valid: false, error: 'Username can only include letters, numbers, and underscores.' }
+  }
+  if (trimmed.length > 50) return { valid: false, error: 'Username must be 50 characters or less.' }
+  return { valid: true }
 }
 
 function getUsernameCooldownInfo(usernameUpdatedAt?: string | null) {
@@ -212,28 +239,15 @@ export default function SettingsPage() {
     }
 
     const trimmedUsername = formData.username.trim()
-
-    if (!trimmedUsername) {
-      setErrors({ username: 'Username is required' })
-      setIsSubmitting(false)
-      return
-    }
-
-    if (/\s/.test(trimmedUsername)) {
-      setErrors({ username: 'Usernames cannot contain spaces.' })
-      setIsSubmitting(false)
-      return
-    }
-
-    const normalizedUsername = normalizeUsername(trimmedUsername)
-    if (!normalizedUsername) {
-      setErrors({ username: 'Username is required' })
+    const usernameValidation = validateUsername(trimmedUsername)
+    if (!usernameValidation.valid) {
+      setErrors({ username: usernameValidation.error ?? 'Invalid username' })
       setIsSubmitting(false)
       return
     }
 
     const usernameCooldown = getUsernameCooldownInfo(profile?.username_updated_at)
-    const usernameChanged = normalizedUsername !== (profile?.username || '')
+    const usernameChanged = trimmedUsername !== (profile?.username || '')
     if (usernameChanged && !usernameCooldown.canEdit) {
       setErrors({ username: 'Username is on cooldown. Please wait before changing again.' })
       setIsSubmitting(false)
@@ -244,7 +258,7 @@ export default function SettingsPage() {
       const { data: existing } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', normalizedUsername)
+        .eq('username', trimmedUsername)
         .maybeSingle()
 
       if (existing) {
@@ -290,12 +304,14 @@ export default function SettingsPage() {
 
     const instagramUsername = formData.instagramUsername.replace(/^@/, '').trim() || null
 
+    const dateOfBirthToSave = profile?.date_of_birth || formData.dateOfBirth || null
+
     const profileData = {
       id: session.user.id,
-      username: normalizedUsername,
+      username: trimmedUsername,
       email: session.user.email || '',
       profile_image_url: imageUrl,
-      date_of_birth: formData.dateOfBirth || null,
+      date_of_birth: dateOfBirthToSave,
       country: formData.country.trim() || null,
       show_country_on_profile: doesShowCountryOnProfile,
       instagram_username: instagramUsername,
@@ -310,7 +326,7 @@ export default function SettingsPage() {
       setErrors({ submit: 'Failed to save profile' })
     } else {
       setIsEditingUsername(false)
-      router.push(`/u/${normalizedUsername}`)
+      router.push(`/u/${trimmedUsername}`)
     }
     setIsSubmitting(false)
   }
@@ -331,8 +347,16 @@ export default function SettingsPage() {
   }
 
   const usernameCooldown = getUsernameCooldownInfo(profile?.username_updated_at)
+  const usernameValidation = validateUsername(formData.username.trim())
+  const isUsernameValid = usernameValidation.valid
   const countryFlagPath = getCountryFlagPath(formData.country)
   const hasCustomProfileImage = Boolean(profileImagePreview?.trim())
+  const isDateOfBirthLocked = Boolean(profile?.date_of_birth)
+  const hasCountryInList = COUNTRY_OPTIONS.some((country) => country === formData.country)
+  const dropdownCountryOptions =
+    formData.country && !hasCountryInList
+      ? [...COUNTRY_OPTIONS, formData.country]
+      : [...COUNTRY_OPTIONS]
 
   function setTab(tab: TabId) {
     setActiveTab(tab)
@@ -396,7 +420,10 @@ export default function SettingsPage() {
                 </div>
                 <button
                   type="button"
-                  disabled={!usernameCooldown.canEdit && !isEditingUsername}
+                  disabled={
+                    (!usernameCooldown.canEdit && !isEditingUsername) ||
+                    (isEditingUsername && !isUsernameValid)
+                  }
                   onClick={() => {
                     setIsEditingUsername((prev) => !prev)
                     setErrors((prev) => {
@@ -417,9 +444,7 @@ export default function SettingsPage() {
                   type="text"
                   id="username"
                   value={formData.username}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, username: normalizeUsername(e.target.value) }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, username: e.target.value }))}
                   className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
                   required
                 />
@@ -432,13 +457,16 @@ export default function SettingsPage() {
                   ? 'Username is available to edit.'
                   : `Next change available ${usernameCooldown.nextAllowedAt?.toLocaleString() || ''} (${formatRemainingDuration(usernameCooldown.remainingMs)}).`}
               </p>
+              {isEditingUsername && !isUsernameValid && (
+                <p className="mt-1 text-sm text-red-400">{usernameValidation.error}</p>
+              )}
               {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
             </div>
 
             {/* Profile Image */}
             <div>
               <label className="block text-sm font-medium text-white/90">Profile Image</label>
-              <div className="mt-2 flex flex-wrap items-center gap-5">
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-5 text-center">
                 <div className="relative">
                   {hasCustomProfileImage ? (
                     <div className="h-28 w-28 overflow-hidden rounded-full border-2 border-white/20 bg-white/10">
@@ -502,8 +530,14 @@ export default function SettingsPage() {
                 value={formData.dateOfBirth}
                 onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                 max={new Date().toISOString().split('T')[0]}
-                className="mt-1 block w-full min-w-0 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] [color-scheme:dark]"
+                disabled={isDateOfBirthLocked}
+                className="mt-1 block w-full min-w-0 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] disabled:cursor-not-allowed disabled:opacity-60 [color-scheme:dark]"
               />
+              {isDateOfBirthLocked && (
+                <p className="mt-1 text-xs text-white/60">
+                  Date of birth can only be set once.
+                </p>
+              )}
             </div>
 
             {/* Country */}
@@ -511,13 +545,26 @@ export default function SettingsPage() {
               <label htmlFor="country" className="block text-sm font-medium text-white/90">
                 Country <span className="text-white/50">(optional)</span>
               </label>
-              <input
-                type="text"
+              <select
                 id="country"
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-              />
+                className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+              >
+                <option value="" className="bg-[#1f1f1f] text-white/70">
+                  Select a country
+                </option>
+                {dropdownCountryOptions.map((country) => (
+                  <option key={country} value={country} className="bg-[#1f1f1f] text-white">
+                    {country}
+                  </option>
+                ))}
+              </select>
+              {!countryFlagPath && formData.country && (
+                <p className="mt-1 text-xs text-white/60">
+                  No flag available for this country.
+                </p>
+              )}
             </div>
 
             {/* Privacy */}

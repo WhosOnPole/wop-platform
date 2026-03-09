@@ -112,19 +112,34 @@ export default function EditProfilePage() {
       return
     }
 
-    // Validate username
-    if (!formData.username.trim()) {
+    const trimmedUsername = formData.username.trim()
+    if (!trimmedUsername) {
       setErrors({ username: 'Username is required' })
+      setIsSubmitting(false)
+      return
+    }
+    if (/\s/.test(trimmedUsername)) {
+      setErrors({ username: 'Usernames cannot contain spaces.' })
+      setIsSubmitting(false)
+      return
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
+      setErrors({ username: 'Username can only include letters, numbers, and underscores.' })
+      setIsSubmitting(false)
+      return
+    }
+    if (trimmedUsername.length > 50) {
+      setErrors({ username: 'Username must be 50 characters or less.' })
       setIsSubmitting(false)
       return
     }
 
     // Check username uniqueness (if changed or new profile)
-    if (formData.username !== profile?.username) {
+    if (trimmedUsername !== profile?.username) {
       const { data: existing } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', formData.username.trim())
+        .eq('username', trimmedUsername)
         .maybeSingle()
 
       if (existing) {
@@ -164,7 +179,7 @@ export default function EditProfilePage() {
     // Upsert profile (create if doesn't exist, update if it does)
     const profileData = {
       id: session.user.id,
-      username: formData.username.trim(),
+      username: trimmedUsername,
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,
@@ -181,7 +196,7 @@ export default function EditProfilePage() {
       console.error('Error saving profile:', error)
       setErrors({ submit: 'Failed to save profile' })
     } else {
-      router.push(`/u/${formData.username.trim()}`)
+      router.push(`/u/${trimmedUsername}`)
     }
     setIsSubmitting(false)
   }
