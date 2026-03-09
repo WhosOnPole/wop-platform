@@ -280,7 +280,7 @@ export function TopNav() {
                     }
                     setIsMenuOpen((prev) => !prev)
                   }}
-                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm ${showNavGlow ? 'animate-nav-profile-pulse' : ''}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20  bg-white/10 shadow-sm ${showNavGlow ? 'animate-nav-profile-pulse' : ''}`}
                   aria-label="Open profile menu"
                 >
                   <img

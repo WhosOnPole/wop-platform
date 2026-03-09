@@ -131,7 +131,7 @@ export function FeedHighlightedSidebar({
                   className={gradientCardInner + ' min-h-[140px]'}
                 >
                   <div className="flex shrink-0 items-start justify-between gap-2">
-                    <h2 className="text-xl font-bold text-white leading-snug line-clamp-4 min-h-0 flex-1">
+                    <h2 className="text-base sm:text-xl font-bold text-white leading-snug line-clamp-4 min-h-0 flex-1">
                       {poll.question || 'Poll'}
                     </h2>
                     {hasVoted && (

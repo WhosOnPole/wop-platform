@@ -211,13 +211,21 @@ export default function SettingsPage() {
       return
     }
 
-    if (!formData.username.trim()) {
+    const trimmedUsername = formData.username.trim()
+
+    if (!trimmedUsername) {
       setErrors({ username: 'Username is required' })
       setIsSubmitting(false)
       return
     }
 
-    const normalizedUsername = normalizeUsername(formData.username)
+    if (/\s/.test(trimmedUsername)) {
+      setErrors({ username: 'Usernames cannot contain spaces.' })
+      setIsSubmitting(false)
+      return
+    }
+
+    const normalizedUsername = normalizeUsername(trimmedUsername)
     if (!normalizedUsername) {
       setErrors({ username: 'Username is required' })
       setIsSubmitting(false)

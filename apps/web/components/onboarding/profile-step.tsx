@@ -140,8 +140,23 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     if (!session) return
 
-    if (!formData.username.trim()) {
+    const trimmedUsername = formData.username.trim()
+
+    if (!trimmedUsername) {
       setErrors({ username: 'Username is required' })
+      setIsSubmitting(false)
+      return
+    }
+
+    if (/\s/.test(trimmedUsername)) {
+      setErrors({ username: 'Usernames cannot contain spaces.' })
+      setIsSubmitting(false)
+      return
+    }
+
+    const normalizedUsername = normalizeUsername(trimmedUsername)
+    if (!normalizedUsername) {
+      setErrors({ username: 'Username can only include letters, numbers, and underscores.' })
       setIsSubmitting(false)
       return
     }
@@ -175,7 +190,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
-      .eq('username', formData.username.trim())
+      .eq('username', normalizedUsername)
       .maybeSingle()
 
     if (existing && existing.id !== session.user.id) {
@@ -217,7 +232,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     const profileData = {
       id: session.user.id,
-      username: formData.username.trim(),
+      username: normalizedUsername,
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,

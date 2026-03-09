@@ -100,7 +100,12 @@ export function SchedulesTable() {
 
       {scheduleTrack && (
         <TrackScheduleModal
-          track={{ id: scheduleTrack.id, name: scheduleTrack.name }}
+          track={{
+            id: scheduleTrack.id,
+            name: scheduleTrack.name,
+            start_date: scheduleTrack.start_date,
+            end_date: scheduleTrack.end_date,
+          }}
           timezone={scheduleTrack.timezone}
           onClose={() => setScheduleTrack(null)}
           onSaved={loadTracks}

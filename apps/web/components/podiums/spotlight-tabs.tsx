@@ -217,7 +217,7 @@ export function SpotlightTabs({
                           className={gradientCardInner}
                         >
                           <div className="flex shrink-0 items-start justify-between gap-2">
-                            <h3 className="text-xl font-bold text-white leading-snug line-clamp-5 min-h-0 flex-1">
+                            <h3 className="text-base sm:text-xl font-bold text-white leading-snug line-clamp-5 min-h-0 flex-1">
                               {poll.question || 'Poll'}
                             </h3>
                             {hasVoted && (

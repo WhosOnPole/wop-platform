@@ -231,7 +231,7 @@ export function SpotlightCarousel({
               Admin Poll
             </span>
             <div className="flex shrink-0 items-start justify-between gap-2 mt-0.5">
-              <h2 className="text-xl font-bold text-white leading-snug line-clamp-5 min-h-0 flex-1">
+              <h2 className="text-base sm:text-xl font-bold text-white leading-snug line-clamp-5 min-h-0 flex-1">
                 {poll.question || 'Poll'}
               </h2>
               {hasVoted && (
