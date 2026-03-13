@@ -45,8 +45,18 @@ export async function proxy(req: NextRequest) {
   let supabase: ReturnType<typeof createMiddlewareClient> | null = null
   let session: Awaited<ReturnType<ReturnType<typeof createMiddlewareClient>['auth']['getSession']>>['data']['session'] | undefined = undefined
 
+  /** If the request has no Supabase auth cookies, skip getSession() to avoid a /token request. */
+  function hasAuthCookies(): boolean {
+    const all = req.cookies.getAll()
+    return all.some((c) => c.name.startsWith('sb-') && c.name.includes('auth'))
+  }
+
   async function getSessionOnce() {
     if (session !== undefined) return session
+    if (!hasAuthCookies()) {
+      session = null
+      return session
+    }
     if (!supabase) {
       supabase = createMiddlewareClient(
         { req: req as any, res: res as any },
@@ -91,7 +101,11 @@ export async function proxy(req: NextRequest) {
 
     const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 
+    // Skip getSession on OAuth callback so only the client's exchangeCodeForSession runs (avoids 429)
+    const isOAuthCallback = pathname === '/auth/callback' && req.nextUrl.searchParams.has('code')
+
     if (isPublic) {
+      if (isOAuthCallback) return res
       const sess = await getSessionOnce()
       if (sess && (pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
         try {

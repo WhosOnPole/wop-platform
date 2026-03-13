@@ -68,7 +68,7 @@ export default function LoginPage() {
       } else if (err === 'auth_callback_failed') {
         setError('Sign-in could not be completed. Please try again.')
       } else if (err === 'rate_limit' || err === 'over_request_rate_limit') {
-        setError('Too many sign-in attempts. Please wait a minute and try again.')
+        setError('Too many sign-in attempts. Please wait 2–3 minutes and try again.')
       } else {
         setError('Login failed. Please try another method or try again.')
       }

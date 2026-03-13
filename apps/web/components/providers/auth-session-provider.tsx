@@ -50,7 +50,17 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     const supabase = createClientComponentClient()
     supabaseRef.current = supabase
 
+    // Skip getSession() on OAuth callback so only exchangeCodeForSession runs (avoids 429 from 2 concurrent token requests)
+    const isOAuthCallback =
+      typeof window !== 'undefined' &&
+      window.location.pathname === '/auth/callback' &&
+      window.location.search.includes('code=')
+
     async function initSession() {
+      if (isOAuthCallback) {
+        setIsLoading(false)
+        return
+      }
       const { data, error } = await supabase.auth.getSession()
 
       if (error) {
