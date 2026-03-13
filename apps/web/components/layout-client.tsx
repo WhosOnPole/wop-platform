@@ -94,7 +94,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
           Desktop version coming soon.
         </p>
         <p className="mt-2 max-w-md text-base text-white/80">
-          Please join us on a smaller screen.
+          Please join us on a smaller screen or resize your browser window.
         </p>
       </div>
     )
