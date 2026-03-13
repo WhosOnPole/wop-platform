@@ -279,15 +279,31 @@ export function FeedContent({
             .map((p) => p.parent_page_id as string)
         ),
       ]
+      const pollIds = [
+        ...new Set(
+          postsList
+            .filter(
+              (p) =>
+                p.parent_page_type === 'poll' &&
+                p.parent_page_id &&
+                typeof p.parent_page_id === 'string'
+            )
+            .map((p) => p.parent_page_id as string)
+        ),
+      ]
       let discoveryParentPageByKey: Record<
         string,
         { name: string; href: string; type: string; content_text?: string }
       > = {}
-      if (hotTakeIds.length > 0) {
-        const { data: hotTakes } = await supabase
-          .from('hot_takes')
-          .select('id, content_text')
-          .in('id', hotTakeIds)
+      if (hotTakeIds.length > 0 || pollIds.length > 0) {
+        const [{ data: hotTakes }, { data: polls }] = await Promise.all([
+          hotTakeIds.length > 0
+            ? supabase.from('hot_takes').select('id, content_text').in('id', hotTakeIds)
+            : Promise.resolve({ data: [] }),
+          pollIds.length > 0
+            ? supabase.from('polls').select('id, question').in('id', pollIds)
+            : Promise.resolve({ data: [] }),
+        ])
         const truncate = (s: string, len: number) =>
           s.length <= len ? s : s.slice(0, len).trimEnd() + '…'
         ;(hotTakes || []).forEach((ht: { id: string; content_text: string }) => {
@@ -296,6 +312,13 @@ export function FeedContent({
             href: '/feed',
             type: 'hot_take',
             content_text: ht.content_text || 'Hot take',
+          }
+        })
+        ;(polls || []).forEach((poll: { id: string; question: string }) => {
+          discoveryParentPageByKey[`poll:${poll.id}`] = {
+            name: truncate(poll.question || 'Poll', 80),
+            href: `/podiums?poll=${encodeURIComponent(poll.id)}`,
+            type: 'poll',
           }
         })
       }
@@ -620,16 +643,18 @@ export function FeedContent({
                 parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] &&
                 (() => {
                   const ctx = parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
-                  // Poll and hot take show embedded context; no "Replied to" line needed
-                  if (ctx.type === 'poll' || ctx.type === 'hot_take') return null
                   return (
                     <p className="mb-2 text-xs text-white/70">
-                      Discussion on{' '}
+                      {ctx.type === 'poll' ? 'Reposted poll: ' : 'Discussion on '}
                       <Link
                         href={ctx.href}
                         className="text-[#25B4B1] hover:underline"
                       >
-                        {ctx.name}
+                        {ctx.type === 'poll'
+                          ? `"${ctx.name}"`
+                          : ctx.type === 'hot_take'
+                            ? `Hot take: "${ctx.name}"`
+                            : ctx.name}
                       </Link>
                     </p>
                   )
@@ -953,12 +978,15 @@ export function FeedContent({
                             discoveryParentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] ??
                             parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
                           if (!ctx) return null
-                          if (ctx.type === 'hot_take') return null
                           return (
                             <p className="mb-2 text-xs text-white/70">
-                              Discussion on{' '}
+                              {ctx.type === 'poll' ? 'Reposted poll: ' : 'Discussion on '}
                               <Link href={ctx.href} className="text-[#25B4B1] hover:underline">
-                                {ctx.name}
+                                {ctx.type === 'poll'
+                                  ? `"${ctx.name}"`
+                                  : ctx.type === 'hot_take'
+                                    ? `Hot take: "${ctx.name}"`
+                                    : ctx.name}
                               </Link>
                             </p>
                           )

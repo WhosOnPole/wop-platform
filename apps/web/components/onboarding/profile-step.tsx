@@ -34,15 +34,16 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     loadExistingData()
   }, [])
 
-  function normalizeUsername(input: string) {
-    return input
-      .toLowerCase()
-      .trim()
-      .replace(/['']/g, '')
-      .replace(/[^a-z0-9_]+/g, '_')
-      .replace(/_{2,}/g, '_')
-      .replace(/^_+|_+$/g, '')
-      .slice(0, 50)
+  /** Validates username without transforming. Allows letters (including capitals), numbers, underscores. */
+  function validateUsername(input: string): { valid: boolean; error?: string } {
+    const trimmed = input.trim()
+    if (!trimmed) return { valid: false, error: 'Username is required' }
+    if (/\s/.test(trimmed)) return { valid: false, error: 'Usernames cannot contain spaces.' }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      return { valid: false, error: 'Username can only include letters, numbers, and underscores.' }
+    }
+    if (trimmed.length > 50) return { valid: false, error: 'Username must be 50 characters or less.' }
+    return { valid: true }
   }
 
   async function loadExistingData() {
@@ -76,9 +77,8 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       (typeof userMeta.name === 'string' && userMeta.name) ||
       ''
 
-    const normalized = preferred ? normalizeUsername(preferred) : ''
-    if (!profile?.username && normalized) {
-      setFormData((prev) => ({ ...prev, username: prev.username || normalized }))
+    if (!profile?.username && preferred) {
+      setFormData((prev) => ({ ...prev, username: prev.username || preferred }))
     }
     setLoading(false)
   }
@@ -140,8 +140,10 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     if (!session) return
 
-    if (!formData.username.trim()) {
-      setErrors({ username: 'Username is required' })
+    const trimmedUsername = formData.username.trim()
+    const usernameValidation = validateUsername(trimmedUsername)
+    if (!usernameValidation.valid) {
+      setErrors({ username: usernameValidation.error ?? 'Invalid username' })
       setIsSubmitting(false)
       return
     }
@@ -175,7 +177,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
-      .eq('username', formData.username.trim())
+      .eq('username', trimmedUsername)
       .maybeSingle()
 
     if (existing && existing.id !== session.user.id) {
@@ -217,7 +219,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     const profileData = {
       id: session.user.id,
-      username: formData.username.trim(),
+      username: trimmedUsername,
       email: session.user.email || '',
       profile_image_url: imageUrl,
       date_of_birth: formData.dateOfBirth || null,
@@ -245,6 +247,9 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       </div>
     )
   }
+
+  const usernameValidation = validateUsername(formData.username.trim())
+  const isUsernameValid = usernameValidation.valid
 
   return (
     <form onSubmit={handleSubmit} className="space-y-12">
@@ -318,6 +323,9 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
                 className={inputClass}
                 placeholder="Choose a username"
               />
+              {!isUsernameValid && formData.username.trim() && (
+                <p className="mt-1 text-sm text-red-400">{usernameValidation.error}</p>
+              )}
               {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username}</p>}
             </div>
 
@@ -385,7 +393,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
       <div className="flex justify-center">
         <button
           type="submit"
-          disabled={isSubmitting || !agreeToPrivacy || !agreeToTerms}
+          disabled={isSubmitting || !agreeToPrivacy || !agreeToTerms || !isUsernameValid || !formData.dateOfBirth}
           className="w-full max-w-md flex items-center justify-center gap-2 rounded-lg bg-[#25B4B1] px-6 py-3 text-sm font-medium text-white hover:bg-[#25B4B1]/90 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />

@@ -22,7 +22,12 @@ interface TrackEvent {
 }
 
 interface TrackScheduleModalProps {
-  track: { id: string; name: string }
+  track: {
+    id: string
+    name: string
+    start_date?: string | null
+    end_date?: string | null
+  }
   timezone?: string | null
   onClose: () => void
   onSaved?: () => void
@@ -48,6 +53,23 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
   useEffect(() => {
     loadEvents()
   }, [track.id, seasonYear])
+
+  async function preserveWeekendDates() {
+    // Keep weekend dates authoritative on tracks and decoupled from event edits.
+    if (track.start_date == null && track.end_date == null) return
+
+    const { error: trackUpdateError } = await supabase
+      .from('tracks')
+      .update({
+        start_date: track.start_date ?? null,
+        end_date: track.end_date ?? null,
+      })
+      .eq('id', track.id)
+
+    if (trackUpdateError) {
+      throw trackUpdateError
+    }
+  }
 
   async function loadEvents() {
     setLoading(true)
@@ -116,6 +138,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
         const { error: insertErr } = await supabase.from('track_events').insert(payload)
         if (insertErr) throw insertErr
       }
+      await preserveWeekendDates()
       setShowForm(false)
       loadEvents()
       onSaved?.()
@@ -132,6 +155,11 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
     const { error: e } = await supabase.from('track_events').delete().eq('id', id)
     if (e) setError(e.message)
     else {
+      try {
+        await preserveWeekendDates()
+      } catch (err: any) {
+        setError(err.message ?? 'Failed to preserve weekend dates')
+      }
       loadEvents()
       onSaved?.()
     }

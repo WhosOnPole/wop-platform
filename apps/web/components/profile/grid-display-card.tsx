@@ -70,6 +70,7 @@ export function GridDisplayCard({
   const firstItem = filledItems[0]
   const otherItems = filledItems.slice(1, 10) // Items 2-10
   const isPlaceholderGrid = grid.id.startsWith('__placeholder__')
+  const isEmptyTeamGrid = grid.type === 'team' && rankedItems.length === 0
 
   const [firstTrackSvgFailed, setFirstTrackSvgFailed] = useState(false)
   const [failedTrackIds, setFailedTrackIds] = useState<Set<string>>(new Set())
@@ -444,6 +445,12 @@ export function GridDisplayCard({
           })}
         </div>
       </div>
+      )}
+
+      {isOwnProfile && isEmptyTeamGrid && (
+        <p className="mb-4 text-xs text-white/70">
+          Your profile&apos;s background colors are set based on your top team
+        </p>
       )}
 
       {/* Actions: Like, Comment, View More - same order and size as feed posts */}
