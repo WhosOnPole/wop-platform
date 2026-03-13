@@ -81,6 +81,8 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
     pathname?.startsWith('/grid/') || pathname?.startsWith('/profile/edit-grid/')
   const isHome = pathname === '/'
   const mainPadTop = !isGridFullBleed && !isHome ? 'pt-16' : ''
+  const shouldConstrainContent = isAuthenticated && !isGridFullBleed
+  const contentWrapperClass = shouldConstrainContent ? 'mx-auto w-full max-w-[430px]' : 'w-full'
 
   return (
     <CreateModalProvider>
@@ -89,10 +91,10 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
       <main className={`min-h-screen ${mainPadTop}`}>
         {pathname === '/feed' ? (
           <PullToRefreshFeed onRefresh={() => router.refresh()} enabled={!isDesktop}>
-            {children}
+            <div className={contentWrapperClass}>{children}</div>
           </PullToRefreshFeed>
         ) : (
-          <>{children}</>
+          <div className={contentWrapperClass}>{children}</div>
         )}
       </main>
       {showFooter ? <Footer /> : null}
