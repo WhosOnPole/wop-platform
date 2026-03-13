@@ -1043,7 +1043,7 @@ export async function FeedPageContent({
       </div>
 
       {sponsorsList.length > 0 && (
-        <div className="relative z-10 hidden w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="relative z-10 hidden w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:block lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-hidden justify-center items-center">
             {desktopBannerItems.map((item) => (
               <div
@@ -1059,8 +1059,8 @@ export async function FeedPageContent({
       )}
 
       <div className="mx-auto max-w-7xl px-4 pt-0 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-6 pt-6">
-        <aside className="hidden">
+        <div className="grid grid-cols-1 gap-6 lg:pt-6 lg:grid-cols-12">
+        <aside className="hidden lg:block lg:col-span-4 lg:space-y-4">
           <FeedHighlightedSidebar
             spotlight={{ hot_take: activeHotTake.data || null }}
             featuredGrid={enrichedFeaturedGrid}
@@ -1073,8 +1073,8 @@ export async function FeedPageContent({
             pollDiscussionPostsByPollId={pollDiscussionPostsByPollId}
           />
         </aside>
-        <div className="space-y-6 md:space-y-0">
-          <div className="relative z-10 md:mb-10">
+        <div className="lg:col-span-8 space-y-6 md:space-y-0">
+          <div className="relative z-10 lg:hidden md:mb-10">
             <SpotlightCarousel
               spotlight={{
                 hot_take: activeHotTake.data || null,
