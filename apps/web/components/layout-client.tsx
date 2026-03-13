@@ -9,6 +9,7 @@ import { LiveRaceBanner } from '@/components/live-race-banner'
 import { AddToHomeScreenPrompt } from '@/components/add-to-home-screen-prompt'
 import { PullToRefreshFeed } from '@/components/feed/pull-to-refresh-feed'
 import { FullscreenHandler } from '@/components/fullscreen-handler'
+import { Logo } from '@/components/ui/logo'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useAuthSession } from '@/components/providers/auth-session-provider'
 
@@ -27,6 +28,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useAuthSession()
   const supabase = createClientComponentClient()
   const [isDesktop, setIsDesktop] = useState(false)
+  const [isAboveIpad, setIsAboveIpad] = useState(false)
   const isAuthenticated = !!session
 
   // Scroll to top on route change so the nav gradient isn’t active (except in-feed interactions, which don’t change pathname)
@@ -65,15 +67,37 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   }, [session, isLoading, pathname, router])
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const update = () => setIsDesktop(mq.matches)
+    const desktopMq = window.matchMedia('(min-width: 768px)')
+    const aboveIpadMq = window.matchMedia('(min-width: 1025px)')
+    const update = () => {
+      setIsDesktop(desktopMq.matches)
+      setIsAboveIpad(aboveIpadMq.matches)
+    }
     update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
+    desktopMq.addEventListener('change', update)
+    aboveIpadMq.addEventListener('change', update)
+    return () => {
+      desktopMq.removeEventListener('change', update)
+      aboveIpadMq.removeEventListener('change', update)
+    }
   }, [])
 
   if (isComingSoon) {
     return <>{children}</>
+  }
+
+  if (isAuthenticated && isAboveIpad) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-black px-6 text-center">
+        <Logo variant="white" href="/feed" className="mb-8 h-14 w-auto" />
+        <p className="max-w-md text-lg text-white">
+          Desktop version coming soon.
+        </p>
+        <p className="mt-2 max-w-md text-base text-white/80">
+          Please join us on a smaller screen or resize your browser window.
+        </p>
+      </div>
+    )
   }
 
   const showFooter = isDesktop || !isAuthenticated
