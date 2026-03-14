@@ -157,6 +157,8 @@ export function FeedPostCommentSection({
       .select(
         `
         *,
+        like_count,
+        parent_comment_id,
         user:profiles!user_id (
           id,
           username,
@@ -172,7 +174,7 @@ export function FeedPostCommentSection({
       return
     }
 
-    setComments((prev) => [...prev, data as Comment])
+    setComments((prev) => [...prev, { ...data, like_count: (data as { like_count?: number })?.like_count ?? 0 } as Comment])
     setCommentCount((prev) => prev + 1)
     setReplyContent('')
     setIsSubmitting(false)

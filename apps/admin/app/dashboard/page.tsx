@@ -16,10 +16,10 @@ export default async function DashboardPage() {
     }
   )
 
-  // Get scheduled races
+  // Get scheduled races (include timezone for start/end time display)
   const { data: scheduledRaces } = await supabase
     .from('tracks')
-    .select('id, name, location, start_date, end_date, chat_enabled')
+    .select('id, name, location, start_date, end_date, timezone, chat_enabled')
     .not('start_date', 'is', null)
     .order('start_date', { ascending: true })
 

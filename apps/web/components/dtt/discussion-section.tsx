@@ -433,6 +433,8 @@ export function DiscussionSection({
       .select(
         `
         *,
+        like_count,
+        parent_comment_id,
         user:profiles!user_id (
           id,
           username,
@@ -447,10 +449,11 @@ export function DiscussionSection({
       alert('Failed to create comment')
     } else {
       // Add the new comment to the comments state
+      const newComment = { ...data, like_count: (data as { like_count?: number })?.like_count ?? 0 } as Comment
       const currentComments = comments[postId] || []
       setComments({
         ...comments,
-        [postId]: [...currentComments, data as Comment],
+        [postId]: [...currentComments, newComment],
       })
       setShowReplyForm(null)
       setReplyContent({ ...replyContent, [postId]: '' })
@@ -490,6 +493,8 @@ export function DiscussionSection({
       .select(
         `
         *,
+        like_count,
+        parent_comment_id,
         user:profiles!user_id (
           id,
           username,
@@ -504,10 +509,11 @@ export function DiscussionSection({
       alert('Failed to create reply')
     } else {
       // Add the new reply to the comments state
+      const newReply = { ...data, like_count: (data as { like_count?: number })?.like_count ?? 0 } as Comment
       const currentComments = comments[postId] || []
       setComments({
         ...comments,
-        [postId]: [...currentComments, data as Comment],
+        [postId]: [...currentComments, newReply],
       })
       setShowReplyToComment(null)
       setReplyContent({ ...replyContent, [commentId]: '' })
@@ -540,7 +546,7 @@ export function DiscussionSection({
     ? 'text-sm font-medium text-white/90 text-right'
     : 'text-sm font-medium text-gray-900 text-right'
   const contentHeight = fixedInput
-    ? 'flex-1 min-h-0 overflow-y-auto'
+    ? 'flex-1 min-h-0 min-h-[40vh] sm:min-h-0 overflow-y-auto'
     : compact
       ? 'min-h-[6rem] max-h-[35vh]'
       : 'min-h-[6rem] max-h-[50vh]'
@@ -566,7 +572,7 @@ export function DiscussionSection({
     ? 'font-medium text-white hover:text-white/80'
     : 'font-medium text-gray-900 hover:text-blue-600'
   const timestampClasses = isDark ? 'text-xs text-white/60' : 'text-xs text-gray-500'
-  const contentClasses = isDark ? 'mb-3 text-white/90' : 'mb-3 text-gray-700'
+  const contentClasses = isDark ? 'my-3 text-white/90' : 'mb-3 text-gray-700'
   const replyButtonClasses = isDark
     ? 'text-sm text-white/80 hover:text-white'
     : 'text-sm text-blue-600 hover:text-blue-800'
