@@ -168,7 +168,7 @@ export function PollCard({
                     {isSelected && ' ✓ (Your vote)'}
                   </span>
                   <span className={isDark ? 'text-white/80' : 'text-gray-600'}>
-                    {option.votes} ({option.percentage}%)
+                    ({option.percentage}%)
                   </span>
                 </div>
                 <div

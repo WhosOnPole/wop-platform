@@ -32,6 +32,54 @@ interface UseBatchedChatReturn {
   error: Error | null
 }
 
+interface ChatSendError extends Error {
+  isRateLimited?: boolean
+  retryAfterMs?: number
+}
+
+function parseRetryAfterMs(input: string | null | undefined): number | undefined {
+  if (!input) return undefined
+
+  // Common DB/RPC phrasing: "try again in 2 seconds"
+  const secondsMatch = input.match(/(\d+)\s*second/i)
+  if (secondsMatch) {
+    const seconds = Number(secondsMatch[1])
+    if (!Number.isNaN(seconds) && seconds > 0) return seconds * 1000
+  }
+
+  // Fallback if message already includes milliseconds
+  const msMatch = input.match(/(\d+)\s*ms/i)
+  if (msMatch) {
+    const ms = Number(msMatch[1])
+    if (!Number.isNaN(ms) && ms > 0) return ms
+  }
+
+  return undefined
+}
+
+function buildChatSendError(params: {
+  message?: string | null
+  details?: string | null
+  fallbackRetryAfterMs?: number
+}): ChatSendError {
+  const source = `${params.message ?? ''} ${params.details ?? ''}`.toLowerCase()
+  const isRateLimited =
+    source.includes('rate limit') ||
+    source.includes('too fast') ||
+    source.includes('slow mode') ||
+    source.includes('try again')
+
+  const retryAfterMs =
+    parseRetryAfterMs(params.message) ??
+    parseRetryAfterMs(params.details) ??
+    params.fallbackRetryAfterMs
+
+  const error = new Error(params.message || params.details || 'Failed to send message') as ChatSendError
+  error.isRateLimited = isRateLimited
+  if (retryAfterMs && retryAfterMs > 0) error.retryAfterMs = retryAfterMs
+  return error
+}
+
 export function useBatchedChat({
   trackId,
   enabled = true,
@@ -315,7 +363,11 @@ export function useBatchedChat({
 
         if (rpcError) {
           console.error('RPC error details:', rpcError)
-          throw new Error(rpcError.message || rpcError.details || 'Failed to send message')
+          throw buildChatSendError({
+            message: rpcError.message,
+            details: rpcError.details,
+            fallbackRetryAfterMs: status?.slow_mode_ms ?? undefined,
+          })
         }
 
         // Message will appear via broadcast, but we can optimistically add it
@@ -346,7 +398,7 @@ export function useBatchedChat({
         throw err
       }
     },
-    [trackId, supabase, onError]
+    [trackId, supabase, onError, status?.slow_mode_ms]
   )
 
   // Delete message (admin only)

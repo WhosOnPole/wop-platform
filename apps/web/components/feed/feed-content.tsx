@@ -524,16 +524,21 @@ export function FeedContent({
     if (activeTab === 'discovery') fetchDiscovery()
   }, [activeTab, fetchDiscovery])
 
-  // Combine and sort all content (posts, grids, grid comments, news, community polls) chronologically
-  const allContent: FeedItem[] = [
+  // Pit Crew: posts, grids, grid comments, news only (no community poll cards; those appear in Discovery)
+  const pitCrewContent: FeedItem[] = [
     ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
     ...grids.map((g) => ({ ...g, contentType: 'grid' as const })),
     ...gridComments.map((c) => ({ ...c, contentType: 'grid_comment' as const })),
     ...featuredNews.map((n) => ({ ...n, contentType: 'news' as const })),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  // Discovery: discovery items plus community polls, sorted chronologically
+  const discoveryContentWithPolls: FeedItem[] = [
+    ...discoveryItems,
     ...communityPolls.map((p) => ({ ...p, contentType: 'poll' as const })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-  const hasContent = allContent.length > 0
+  const hasContent = pitCrewContent.length > 0
 
   const emptyStateBlock = (
     <div className="rounded-lg border border-white/10 bg-black/40 p-12 text-center shadow backdrop-blur-sm">
@@ -598,7 +603,7 @@ export function FeedContent({
         <>
           {!hasContent && emptyStateBlock}
           {hasContent &&
-            allContent.map((item) => {
+            pitCrewContent.map((item) => {
         if (item.contentType === 'post') {
           const post = item
           return (
@@ -643,9 +648,15 @@ export function FeedContent({
                 parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] &&
                 (() => {
                   const ctx = parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
+                  const pollLabel =
+                    ctx.type === 'poll'
+                      ? post.content && String(post.content).trim().length > 0
+                        ? 'Poll Comment: '
+                        : 'Reposted poll: '
+                      : 'Discussion on '
                   return (
                     <p className="mb-2 text-xs text-white/70">
-                      {ctx.type === 'poll' ? 'Reposted poll: ' : 'Discussion on '}
+                      {pollLabel}
                       <Link
                         href={ctx.href}
                         className="text-[#25B4B1] hover:underline"
@@ -930,7 +941,30 @@ export function FeedContent({
             </div>
           ) : (
             <div className="space-y-6">
-              {discoveryItems.map((item) => {
+              {discoveryContentWithPolls.map((item) => {
+                if (item.contentType === 'poll') {
+                  const poll = item as StandalonePoll & { contentType: 'poll' }
+                  return (
+                    <div
+                      key={`discover-poll-${poll.id}`}
+                      className="rounded-lg border border-white/10 bg-black/40 p-4 shadow backdrop-blur-sm"
+                    >
+                      <PollCard
+                        poll={{
+                          ...poll,
+                          options: Array.isArray(poll.options) ? poll.options : [],
+                          is_featured_podium: poll.is_featured_podium ?? false,
+                          ends_at: poll.ends_at ?? undefined,
+                        }}
+                        userResponse={pollUserResponses[poll.id]}
+                        voteCounts={pollVoteCounts[poll.id] ?? {}}
+                        onVote={() => router.refresh()}
+                        variant="dark"
+                        className="min-h-0 border-0 bg-transparent p-0 shadow-none backdrop-blur-none"
+                      />
+                    </div>
+                  )
+                }
                 if (item.contentType === 'post') {
                   const post = item as Post & { contentType: 'post' }
                   return (
@@ -978,9 +1012,15 @@ export function FeedContent({
                             discoveryParentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] ??
                             parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
                           if (!ctx) return null
+                          const pollLabel =
+                            ctx.type === 'poll'
+                              ? post.content && String(post.content).trim().length > 0
+                                ? 'Poll Comment: '
+                                : 'Reposted poll: '
+                              : 'Discussion on '
                           return (
                             <p className="mb-2 text-xs text-white/70">
-                              {ctx.type === 'poll' ? 'Reposted poll: ' : 'Discussion on '}
+                              {pollLabel}
                               <Link href={ctx.href} className="text-[#25B4B1] hover:underline">
                                 {ctx.type === 'poll'
                                   ? `"${ctx.name}"`

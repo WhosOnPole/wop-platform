@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Calendar, MessageSquare, Users, Power, PowerOff, Clock } from 'lucide-react'
 import Link from 'next/link'
+import { parseDateOnly } from '@/utils/date-utils'
 
 interface RaceWeekendWidgetProps {
   initialRace: any
@@ -15,6 +16,12 @@ interface RaceWeekendWidgetProps {
   } | null
 }
 
+/** First and last event times (UTC) for the weekend; used to show start/end in user's local time. */
+interface WeekendTimes {
+  firstEventAt: string | null
+  lastEventEndAt: string | null
+}
+
 export function RaceWeekendWidget({
   initialRace,
   initialRaceStatus,
@@ -24,6 +31,42 @@ export function RaceWeekendWidget({
   const [chatEnabled, setChatEnabled] = useState(initialRace?.chat_enabled ?? true)
   const [isToggling, setIsToggling] = useState(false)
   const [metrics, setMetrics] = useState(initialMetrics)
+  const [weekendTimes, setWeekendTimes] = useState<WeekendTimes>({
+    firstEventAt: null,
+    lastEventEndAt: null,
+  })
+
+  // Fetch first and last track_event for this track (for start/end times in user's locale)
+  useEffect(() => {
+    if (!initialRace?.id) return
+
+    const seasonYear = new Date().getFullYear()
+
+    async function loadWeekendTimes() {
+      const { data: events } = await supabase
+        .from('track_events')
+        .select('scheduled_at, duration_minutes')
+        .eq('track_id', initialRace.id)
+        .eq('season_year', seasonYear)
+        .order('scheduled_at', { ascending: true })
+
+      if (!events?.length) {
+        setWeekendTimes({ firstEventAt: null, lastEventEndAt: null })
+        return
+      }
+
+      const first = events[0]
+      const last = events[events.length - 1]
+      const firstEventAt = first.scheduled_at ?? null
+      const lastEventEndAt = last.scheduled_at && last.duration_minutes != null
+        ? new Date(new Date(last.scheduled_at).getTime() + last.duration_minutes * 60 * 1000).toISOString()
+        : last.scheduled_at ?? null
+
+      setWeekendTimes({ firstEventAt, lastEventEndAt })
+    }
+
+    loadWeekendTimes()
+  }, [initialRace?.id, supabase])
 
   // Refresh metrics periodically
   useEffect(() => {
@@ -104,16 +147,47 @@ export function RaceWeekendWidget({
     return null
   }
 
-  const startDate = initialRace.start_date
-    ? new Date(initialRace.start_date)
+  // Date-only values from DB: parse at noon UTC so the calendar day doesn't shift in any timezone
+  const startDateForDisplay = initialRace.start_date
+    ? parseDateOnly(initialRace.start_date)
     : null
-  const endDate = initialRace.end_date
-    ? new Date(new Date(initialRace.end_date).getTime() + 24 * 60 * 60 * 1000)
+  const endDateForDisplay = initialRace.end_date
+    ? parseDateOnly(initialRace.end_date)
+    : null
+  // Window boundaries (UTC) for "is within weekend" check
+  const windowStart = initialRace.start_date
+    ? new Date(initialRace.start_date + 'T00:00:00Z')
+    : null
+  const windowEnd = initialRace.end_date
+    ? new Date(initialRace.end_date + 'T23:59:59.999Z')
     : null
 
   const now = new Date()
   const isWithinWindow =
-    Boolean(startDate && endDate && now >= startDate && now <= endDate)
+    Boolean(windowStart && windowEnd && now >= windowStart && now <= windowEnd)
+
+  const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  /** Format a date for the user's locale (date only). */
+  function formatDateInUserLocale(date: Date | null): string {
+    if (!date || isNaN(date.getTime())) return ''
+    return date.toLocaleDateString(undefined, {
+      dateStyle: 'long',
+      timeZone: userTz,
+    })
+  }
+
+  /** Format a date+time for the user's locale (e.g. "March 6, 2026 at 2:00 PM"). */
+  function formatDateTimeInUserLocale(isoString: string | null): string {
+    if (!isoString) return ''
+    const date = new Date(isoString)
+    if (isNaN(date.getTime())) return ''
+    return date.toLocaleString(undefined, {
+      dateStyle: 'long',
+      timeStyle: 'short',
+      timeZone: userTz,
+    })
+  }
 
   const isLive = initialRaceStatus === 'live'
   const isUpcoming = initialRaceStatus === 'upcoming'
@@ -151,19 +225,23 @@ export function RaceWeekendWidget({
           )}
 
           <div className="mt-4 space-y-2">
-            {startDate && (
+            {(weekendTimes.firstEventAt || startDateForDisplay) && (
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Clock className="h-4 w-4" />
                 <span>
-                  Starts: {startDate.toLocaleString()}
+                  Starts: {weekendTimes.firstEventAt
+                    ? formatDateTimeInUserLocale(weekendTimes.firstEventAt)
+                    : formatDateInUserLocale(startDateForDisplay)}
                 </span>
               </div>
             )}
-            {endDate && (
+            {(weekendTimes.lastEventEndAt || endDateForDisplay) && (
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Clock className="h-4 w-4" />
                 <span>
-                  Ends: {endDate.toLocaleString()}
+                  Ends: {weekendTimes.lastEventEndAt
+                    ? formatDateTimeInUserLocale(weekendTimes.lastEventEndAt)
+                    : formatDateInUserLocale(endDateForDisplay)}
                 </span>
               </div>
             )}

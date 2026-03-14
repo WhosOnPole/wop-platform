@@ -79,7 +79,7 @@ export function DriverCard({ driver, slug }: DriverCardProps) {
           <p className="mb-2 text-sm text-gray-600">{driver.teams.name}</p>
         )}
 
-        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
           {driver.racing_number && (
             <span className="rounded-full bg-gray-100 px-2 py-1">
               #{driver.racing_number}
