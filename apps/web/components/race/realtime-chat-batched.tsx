@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
-import { useRouter } from 'next/navigation'
-import { Send, MessageSquare, AlertCircle, Wifi, WifiOff, Users } from 'lucide-react'
+import { Send, AlertCircle, Wifi, WifiOff, Users } from 'lucide-react'
 import { useBatchedChat } from '@/hooks/use-batched-chat'
 import { useChatPolling } from '@/hooks/use-chat-polling'
 import { ChatMessageItem } from './chat-message-item'
-import type { ChatStatus } from '@/utils/race-weekend'
 
 /** Debounce connection state to prevent rapid blinking between "Connecting..." and "Live" */
 const CONNECTED_DEBOUNCE_MS = 400
@@ -22,9 +20,11 @@ interface RealtimeChatBatchedProps {
 
 export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: RealtimeChatBatchedProps) {
   const supabase = createClientComponentClient()
-  const router = useRouter()
   const [newMessage, setNewMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null)
+  const [cooldownNowMs, setCooldownNowMs] = useState(Date.now())
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [usePolling, setUsePolling] = useState(false)
@@ -72,7 +72,6 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
     isConnected,
     onlineCount,
     status,
-    error: chatError,
   } = useBatchedChat({
     trackId,
     enabled: !usePolling,
@@ -83,7 +82,6 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
   const {
     messages: polledMessages,
     isPolling,
-    error: pollingError,
   } = useChatPolling({
     trackId,
     enabled: usePolling,
@@ -143,18 +141,54 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
   const isChatActive = status?.mode === 'open' || status?.mode === 'read_only'
   const isReadOnly = status?.mode === 'read_only'
   const isChatClosed = status?.mode === 'closed' || !isChatActive
+  const cooldownRemainingMs = Math.max(0, (cooldownUntil ?? 0) - cooldownNowMs)
+  const isCooldownActive = cooldownRemainingMs > 0
+  const cooldownRemainingSeconds = Math.ceil(cooldownRemainingMs / 1000)
+
+  useEffect(() => {
+    if (!cooldownUntil) return
+
+    const interval = setInterval(() => {
+      const now = Date.now()
+      setCooldownNowMs(now)
+      if (now >= cooldownUntil) {
+        setCooldownUntil(null)
+      }
+    }, 250)
+
+    return () => clearInterval(interval)
+  }, [cooldownUntil])
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault()
     if (!newMessage.trim() || isChatClosed || isReadOnly || isSubmitting) return
+    if (isCooldownActive) {
+      setSendError(`Please wait ${cooldownRemainingSeconds}s before sending another message.`)
+      return
+    }
 
     setIsSubmitting(true)
+    setSendError(null)
     try {
       await sendMessage(newMessage.trim())
       setNewMessage('')
+      if (status?.slow_mode_ms && status.slow_mode_ms > 0) {
+        setCooldownUntil(Date.now() + status.slow_mode_ms)
+      }
     } catch (error: any) {
       console.error('Error sending message:', error)
-      alert(error.message || 'Failed to send message')
+      const retryAfterMs =
+        (typeof error?.retryAfterMs === 'number' && error.retryAfterMs > 0
+          ? error.retryAfterMs
+          : undefined) ??
+        (status?.slow_mode_ms && status.slow_mode_ms > 0 ? status.slow_mode_ms : undefined)
+
+      if (error?.isRateLimited && retryAfterMs) {
+        setCooldownUntil(Date.now() + retryAfterMs)
+        setSendError(`Please wait ${Math.ceil(retryAfterMs / 1000)}s before sending another message.`)
+      } else {
+        setSendError(error?.message || 'Failed to send message')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -286,7 +320,7 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
             />
             <button
               type="submit"
-              disabled={isSubmitting || !newMessage.trim() || isReadOnly}
+              disabled={isSubmitting || !newMessage.trim() || isReadOnly || isCooldownActive}
               className={
                 isLiveLayout
                   ? 'flex items-center space-x-2 rounded-md bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:bg-[#2cc5c2] disabled:opacity-50 disabled:cursor-not-allowed'
@@ -297,13 +331,20 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
               <span>Send</span>
             </button>
           </div>
+          {(sendError || isCooldownActive) && (
+            <p className={`mt-2 text-xs ${isLiveLayout ? 'text-yellow-300' : 'text-amber-600'}`}>
+              {isCooldownActive
+                ? `Please wait ${cooldownRemainingSeconds}s before sending another message.`
+                : sendError}
+            </p>
+          )}
           <p className={`mt-1 text-xs ${isLiveLayout ? 'text-white/50' : 'text-gray-500'}`}>
             {newMessage.length}/500 characters
-            {/* {status?.slow_mode_ms && (
+            {status?.slow_mode_ms && status.slow_mode_ms > 0 && (
               <span className="ml-2">
                 • Slow mode: {status.slow_mode_ms / 1000}s
               </span>
-            )} */}
+            )}
           </p>
         </form>
       )}
