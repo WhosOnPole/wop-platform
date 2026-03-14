@@ -157,7 +157,7 @@ export function SpotlightTabs({
   }))
 
   return (
-    <div className="w-full min-w-0 space-y-6">
+    <div className="w-full min-w-0 ">
       <nav
         className="flex w-full overflow-hidden rounded-full"
         role="tablist"
@@ -193,7 +193,7 @@ export function SpotlightTabs({
 
       {activeTab === 'polls' && (
         <div className="w-full min-w-0 space-y-8">
-          <section className="w-full min-w-0 space-y-4">
+          <section className="w-full min-w-0 space-y-4 pt-6">
             <h2 className="text-xl font-semibold text-white">Admin polls</h2>
             {adminPollsWithFeatured.length > 0 ? (
               <div className="space-y-3">

@@ -38,8 +38,8 @@ export function PollDiscussionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4 pt-[calc(5rem+env(safe-area-inset-top))] pb-4">
-      <div className="flex h-[calc(100vh-6rem)] max-h-[70vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-white/10 bg-black/90 shadow-2xl backdrop-blur-sm text-white">
+    <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/80 px-4 pb-4">
+      <div className="mb-2 mt-[calc(4rem+env(safe-area-inset-top))] flex max-h-[calc(100dvh-5rem)] w-full max-w-4xl flex-col overflow-y-auto rounded-lg border border-white/10 bg-black/90 text-white shadow-2xl backdrop-blur-sm">
         <div className="shrink-0 p-6 pb-0">
           <div className="mb-4 flex justify-end">
             <button

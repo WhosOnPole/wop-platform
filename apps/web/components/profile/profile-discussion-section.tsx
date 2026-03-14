@@ -83,7 +83,7 @@ export function ProfileDiscussionSection({
 
     if (error) {
       console.error('Error creating post:', error)
-      alert('Failed to create post')
+      alert('Failed to create post. Please check your internet connection and try again.')
     } else {
       setPosts([data, ...posts])
       setNewPostContent('')

@@ -121,7 +121,7 @@ export function PostModal({ onClose, referencePollId, referencePollQuestion }: P
     const { error: insertError } = await supabase.from('posts').insert(payload)
 
     if (insertError) {
-      setError(insertError.message ?? 'Failed to create post')
+      setError(insertError.message ?? 'Failed to create post. Please check your internet connection and try again.')
       setSubmitting(false)
       return
     }
