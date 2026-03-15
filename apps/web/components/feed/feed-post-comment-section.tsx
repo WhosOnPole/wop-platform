@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { toast } from 'sonner'
 
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString)
@@ -133,7 +134,7 @@ export function FeedPostCommentSection({
       fieldName: 'Comment',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 

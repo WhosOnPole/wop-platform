@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Trash2, Play, Settings } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface CleanupDashboardProps {
   initialConfigs: Array<{
@@ -46,7 +47,7 @@ export function CleanupDashboard({ initialConfigs }: CleanupDashboardProps) {
       window.location.reload()
     } catch (error: any) {
       console.error('Failed to run cleanup:', error)
-      alert(`Failed to run cleanup: ${error.message}`)
+      toast.error(`Failed to run cleanup: ${error.message}`)
     } finally {
       setRunning(null)
     }
@@ -64,7 +65,7 @@ export function CleanupDashboard({ initialConfigs }: CleanupDashboardProps) {
       setConfigs(configs.map(c => c.id === id ? { ...c, enabled: !enabled } : c))
     } catch (error: any) {
       console.error('Failed to toggle:', error)
-      alert(`Failed to toggle: ${error.message}`)
+      toast.error(`Failed to toggle: ${error.message}`)
     }
   }
 

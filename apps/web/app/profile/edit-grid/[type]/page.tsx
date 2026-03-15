@@ -6,6 +6,7 @@ import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter, useParams } from 'next/navigation'
 import { GridDetailView } from '@/components/grids/grid-detail-view'
 import { getTeamIconUrl, getTrackSlug } from '@/utils/storage-urls'
+import { toast } from 'sonner'
 
 type RankItem = {
   id: string
@@ -163,7 +164,7 @@ export default function EditGridPage() {
   async function handleSave() {
     const realItems = rankedList.filter((i) => !i.is_placeholder).slice(0, 10)
     if (realItems.length === 0) {
-      alert('Please rank at least one item')
+      toast.error('Please rank at least one item')
       return
     }
     const { data: { session } } = await supabase.auth.getSession()
@@ -187,7 +188,7 @@ export default function EditGridPage() {
         fieldName: `Slot ${i} comment`,
       })
       if (!result.ok) {
-        alert(result.error)
+        toast.error(result.error)
         setIsSubmitting(false)
         return
       }
@@ -216,7 +217,7 @@ export default function EditGridPage() {
 
       if (updateError) {
         console.error('Error updating grid:', updateError)
-        alert('Failed to update grid')
+        toast.error('Failed to update grid')
         setIsSubmitting(false)
         return
       }
@@ -260,7 +261,7 @@ export default function EditGridPage() {
         .single()
       if (error) {
         console.error('Error saving grid:', error)
-        alert('Failed to save grid')
+        toast.error('Failed to save grid')
         setIsSubmitting(false)
         return
       }
@@ -278,7 +279,7 @@ export default function EditGridPage() {
 
     if (slotBlurbsError) {
       console.error('Error saving grid slot comments:', slotBlurbsError)
-      alert('Grid saved but comments could not be saved. Please try again.')
+      toast.error('Grid saved but comments could not be saved. Please try again.')
     }
 
     router.push(`/u/${profileData?.username || session.user.id}`)

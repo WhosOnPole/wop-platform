@@ -19,6 +19,7 @@ import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Send } from 'lucide-re
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { toast } from 'sonner'
 
 export type GridType = 'driver' | 'team' | 'track'
 
@@ -128,7 +129,7 @@ function OwnProfileBlurbBlock({
       fieldName: 'Blurb',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
     const value = result.value
@@ -959,7 +960,7 @@ export function GridDetailView({
                           fieldName: 'Comment',
                         })
                         if (!result.ok) {
-                          alert(result.error)
+                          toast.error(result.error)
                           return
                         }
                         const value = result.value

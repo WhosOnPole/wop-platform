@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Flag } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface DiscussionReportButtonProps {
   targetId: string
@@ -60,15 +61,15 @@ export function DiscussionReportButton({
       // Check if it's a duplicate report error (unique constraint violation)
       if (error.code === '23505') {
         setIsReported(true)
-        alert("Thank you for reporting. We'll review this content.")
+        toast.success("Thank you for reporting. We'll review this content.")
         setShowModal(false)
       } else {
         console.error('Error reporting:', error)
-        alert('Failed to submit report. Please try again.')
+        toast.error('Failed to submit report. Please try again.')
       }
     } else {
       setIsReported(true)
-      alert("Thank you for reporting. We'll review this content.")
+      toast.success("Thank you for reporting. We'll review this content.")
       setShowModal(false)
       setReason('')
       setSelectedReason('')

@@ -6,6 +6,7 @@ import { Send, AlertCircle, Wifi, WifiOff, Users } from 'lucide-react'
 import { useBatchedChat } from '@/hooks/use-batched-chat'
 import { useChatPolling } from '@/hooks/use-chat-polling'
 import { ChatMessageItem } from './chat-message-item'
+import { toast } from 'sonner'
 
 /** Debounce connection state to prevent rapid blinking between "Connecting..." and "Live" */
 const CONNECTED_DEBOUNCE_MS = 400
@@ -199,7 +200,7 @@ export function RealtimeChatBatched({ trackId, raceName, liveLayout = false }: R
       await deleteMessage(messageId)
     } catch (error: any) {
       console.error('Error deleting message:', error)
-      alert(error.message || 'Failed to delete message')
+      toast.error(error.message || 'Failed to delete message')
       throw error
     }
   }

@@ -12,6 +12,7 @@ import { DiscussionReportButton } from '@/components/discussion/report-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { FeedPostActionsMenu } from '@/components/feed/feed-post-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { toast } from 'sonner'
 
 interface User {
   id: string
@@ -356,7 +357,7 @@ export function DiscussionSection({
       fieldName: 'Post',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -392,7 +393,7 @@ export function DiscussionSection({
 
     if (error) {
       console.error('Error creating post:', error)
-      alert('Failed to create post. Please check your internet connection and try again.')
+      toast.error('Failed to create post. Please check your internet connection and try again.')
     } else {
       setPosts([data, ...posts])
       setNewPostContent('')
@@ -409,7 +410,7 @@ export function DiscussionSection({
       fieldName: 'Comment',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -446,7 +447,7 @@ export function DiscussionSection({
 
     if (error) {
       console.error('Error creating comment:', error)
-      alert('Failed to create comment')
+      toast.error('Failed to create comment')
     } else {
       // Add the new comment to the comments state
       const newComment = { ...data, like_count: (data as { like_count?: number })?.like_count ?? 0 } as Comment
@@ -469,7 +470,7 @@ export function DiscussionSection({
       fieldName: 'Reply',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -506,7 +507,7 @@ export function DiscussionSection({
 
     if (error) {
       console.error('Error creating reply:', error)
-      alert('Failed to create reply')
+      toast.error('Failed to create reply')
     } else {
       // Add the new reply to the comments state
       const newReply = { ...data, like_count: (data as { like_count?: number })?.like_count ?? 0 } as Comment

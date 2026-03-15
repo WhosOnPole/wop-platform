@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Flag } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface ReportButtonProps {
   targetId: string
@@ -51,9 +52,9 @@ export function ReportButton({ targetId, targetType }: ReportButtonProps) {
 
     if (error) {
       console.error('Error reporting:', error)
-      alert('Failed to submit report')
+      toast.error('Failed to submit report')
     } else {
-      alert('Report submitted. Thank you for helping keep our community safe.')
+      toast.success('Report submitted. Thank you for helping keep our community safe.')
       setShowModal(false)
       setReason('')
       setSelectedReason('')

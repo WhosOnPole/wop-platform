@@ -6,6 +6,7 @@ import { MoreVertical, Flag, Trash2, User } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { ChatReportButton } from './chat-report-button'
+import { toast } from 'sonner'
 
 interface ChatMessage {
   id: number
@@ -91,7 +92,7 @@ export function ChatMessageItem({
         setShowMenu(false)
       } catch (error) {
         console.error('Error deleting message:', error)
-        alert('Failed to delete message')
+        toast.error('Failed to delete message')
       }
     }
   }

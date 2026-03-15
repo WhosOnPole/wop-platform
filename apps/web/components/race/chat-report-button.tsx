@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
 interface ChatReportButtonProps {
@@ -55,9 +56,9 @@ export function ChatReportButton({ messageId, onClose }: ChatReportButtonProps) 
     if (!response.ok) {
       const error = await response.json()
       console.error('Error reporting:', error)
-      alert('Failed to submit report. Please try again.')
+      toast.error('Failed to submit report. Please try again.')
     } else {
-      alert("Thank you for reporting. We'll review this content.")
+      toast.success("Thank you for reporting. We'll review this content.")
       onClose()
       setReason('')
       setSelectedReason('')

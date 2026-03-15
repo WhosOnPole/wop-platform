@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Check, X, Loader2, Pencil } from 'lucide-react'
 import { sanitizeTipContent } from '@/utils/sanitize'
+import { toast } from 'sonner'
 
 type TrackTipType = 'tips' | 'stays' | 'meetups' | 'transit'
 
@@ -54,7 +55,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
 
     if (error) {
       console.error('Error updating tip type:', error)
-      alert('Failed to update tip type')
+      toast.error('Failed to update tip type')
     } else {
       setTips(tips.map((t) => (t.id === tipId ? { ...t, type: newType } : t)))
     }
@@ -70,7 +71,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
 
     if (error) {
       console.error('Error approving tip:', error)
-      alert('Failed to approve tip')
+      toast.error('Failed to approve tip')
     } else {
       setTips(tips.filter((t) => t.id !== tipId))
     }
@@ -90,7 +91,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
   async function handleSaveEdit(tipId: string) {
     const result = sanitizeTipContent(editDraft)
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -102,7 +103,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
 
     if (error) {
       console.error('Error updating tip content:', error)
-      alert('Failed to update tip content')
+      toast.error('Failed to update tip content')
     } else {
       setTips(tips.map((t) => (t.id === tipId ? { ...t, tip_content: result.value } : t)))
       cancelEditing()
@@ -126,7 +127,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
 
     if (error) {
       console.error('Error rejecting tip:', error)
-      alert('Failed to reject tip')
+      toast.error('Failed to reject tip')
     } else {
       setTips(tips.filter((t) => t.id !== tipId))
     }

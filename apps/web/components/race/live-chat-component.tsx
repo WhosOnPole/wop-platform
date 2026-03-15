@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@/utils/supabase-client'
 import { getAvatarUrl } from '@/utils/avatar'
 import { useRouter } from 'next/navigation'
 import { Send, MessageSquare, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface User {
   id: string
@@ -135,7 +136,7 @@ export function LiveChatComponent({ trackId, raceTime }: LiveChatComponentProps)
 
     if (error) {
       console.error('Error sending message:', error)
-      alert('Failed to send message')
+      toast.error('Failed to send message')
     } else {
       setNewMessage('')
     }

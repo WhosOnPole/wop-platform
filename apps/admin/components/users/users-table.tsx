@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { ShieldX, RotateCcw, PlusCircle, Eye, Ban, Check } from 'lucide-react'
+import { toast } from 'sonner'
 import UserReportsDrawer from './user-reports-drawer'
 
 interface AdminUser {
@@ -82,7 +83,7 @@ export default function UsersTable() {
       const data = await res.json()
       if (data.profile) updateUserInState(user.id, data.profile)
     } catch (err: any) {
-      alert(err.message || 'Action failed')
+      toast.error(err.message || 'Action failed')
     }
   }
 
@@ -95,7 +96,7 @@ export default function UsersTable() {
     const input = prompt('Enter point adjustment (e.g., -5 or 10):', '0')
     if (input === null) return
     const delta = Number(input)
-    if (Number.isNaN(delta) || delta === 0) return alert('Enter a non-zero number')
+    if (Number.isNaN(delta) || delta === 0) return toast.error('Enter a non-zero number')
     performAction(user, 'adjust_points', delta)
   }
 

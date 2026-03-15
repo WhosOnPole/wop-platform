@@ -6,6 +6,7 @@ import { createClientComponentClient } from '@/utils/supabase-client'
 import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { useRouter } from 'next/navigation'
 import { MoreVertical, Pencil, Trash2, Flag } from 'lucide-react'
+import { toast } from 'sonner'
 
 const REPORT_REASONS = [
   'Spam',
@@ -97,7 +98,7 @@ export function CommentActionsMenu({
       fieldName: 'Comment',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -141,14 +142,14 @@ export function CommentActionsMenu({
     setReportOtherText('')
     if (error) {
       if (error.code === '23505') {
-        alert("Thank you for reporting. We'll review this content.")
+        toast.success("Thank you for reporting. We'll review this content.")
       } else {
         console.error('Error submitting report:', error)
-        alert('Failed to submit report. Please try again.')
+        toast.error('Failed to submit report. Please try again.')
       }
       return
     }
-    alert("Thank you for reporting. We'll review this content.")
+    toast.success("Thank you for reporting. We'll review this content.")
   }
 
   if (!currentUserId) return null

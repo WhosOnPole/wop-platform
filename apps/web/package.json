@@ -6,7 +6,7 @@
     "dev": "next dev",
     "verify-env": "node scripts/verify-build-env.js",
     "generate-pwa-icons": "node scripts/generate-pwa-icons.js",
-    "build": "pnpm verify-env && pnpm exec next build --webpack",
+    "build": "pnpm verify-env && pnpm exec next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -33,6 +33,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-markdown": "^9.0.1",
+    "sonner": "^2.0.7",
     "zod": "^3.22.4"
   },
   "devDependencies": {

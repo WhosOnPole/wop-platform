@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { ArticleModal } from './article-modal'
@@ -39,7 +40,7 @@ export function ArticlesTab() {
 
     if (error) {
       console.error('Error deleting article:', error)
-      alert('Failed to delete article')
+      toast.error('Failed to delete article')
     } else {
       loadArticles()
     }

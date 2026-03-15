@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { toast } from 'sonner'
 
 interface User {
   id: string
@@ -47,7 +48,7 @@ export function ProfileDiscussionSection({
       fieldName: 'Post',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -83,7 +84,7 @@ export function ProfileDiscussionSection({
 
     if (error) {
       console.error('Error creating post:', error)
-      alert('Failed to create post. Please check your internet connection and try again.')
+      toast.error('Failed to create post. Please check your internet connection and try again.')
     } else {
       setPosts([data, ...posts])
       setNewPostContent('')

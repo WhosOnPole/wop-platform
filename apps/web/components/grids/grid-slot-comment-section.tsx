@@ -9,6 +9,7 @@ import { Send } from 'lucide-react'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { toast } from 'sonner'
 
 interface CommentUser {
   id: string
@@ -117,7 +118,7 @@ export function GridSlotCommentSection({
       fieldName: 'Comment',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 

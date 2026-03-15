@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Heart } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface VoteButtonProps {
   targetId: string
@@ -39,7 +40,7 @@ export function VoteButton({
 
     // Check if user is the owner
     if (ownerUserId && ownerUserId === session.user.id) {
-      alert("You can't vote on your own content")
+      toast.error("You can't vote on your own content")
       setIsLoading(false)
       return
     }

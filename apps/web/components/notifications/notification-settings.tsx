@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { Bell, Mail, Smartphone, Save } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface NotificationSettingsProps {
   initialPreferences: any
@@ -56,7 +57,7 @@ export function NotificationSettings({ initialPreferences }: NotificationSetting
       setTimeout(() => setSaved(false), 3000)
     } catch (error: any) {
       console.error('Failed to save preferences:', error)
-      alert(`Failed to save: ${error.message}`)
+      toast.error(`Failed to save: ${error.message}`)
     } finally {
       setLoading(false)
     }
