@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "verify-env": "node scripts/verify-build-env.js",
     "generate-pwa-icons": "node scripts/generate-pwa-icons.js",
-    "build": "pnpm verify-env && pnpm exec next build",
+    "build": "pnpm verify-env && pnpm exec next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",

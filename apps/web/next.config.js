@@ -7,6 +7,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
   output: 'standalone',
   // Set tracing root for monorepo builds
   outputFileTracingRoot: path.join(__dirname, '../../'),
@@ -49,5 +50,10 @@ if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUB
   }
 }
 
-module.exports = withPWA(withBotId(nextConfig))
+const config = withPWA(withBotId(nextConfig))
+// Ensure turbopack config is present (plugins may strip it); silences Next.js 16 warning
+if (config && typeof config === 'object') {
+  config.turbopack = config.turbopack ?? {}
+}
+module.exports = config
 
