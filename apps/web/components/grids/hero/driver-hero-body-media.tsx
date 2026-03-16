@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { getDriverBodyImageUrl } from '@/utils/storage-urls'
+import { getDriverBodyImageUrl, getDriverProfileImageUrl } from '@/utils/storage-urls'
 
 /** Position so shoulders and up stay in frame when zoomed */
 const BODY_OBJECT_POSITION = '50% -8%'
@@ -18,7 +18,7 @@ interface DriverHeroBodyMediaProps {
 
 /**
  * Hero display using driver body.png from storage (top-half crop, like grid squares),
- * with fallback to headshot/image_url or initial letter when body is missing.
+ * with fallback to profile.jpg from storage, then headshot/image_url from DB, or initial letter.
  */
 export function DriverHeroBodyMedia({
   driverName,
@@ -26,10 +26,17 @@ export function DriverHeroBodyMedia({
   fallbackSrc,
   className = '',
 }: DriverHeroBodyMediaProps) {
-  const [useFallback, setUseFallback] = useState(false)
+  const [useBodyFallback, setUseBodyFallback] = useState(false)
+  const [useProfileFallback, setUseProfileFallback] = useState(false)
   const bodyUrl = supabaseUrl ? getDriverBodyImageUrl(driverName, supabaseUrl) : null
-  const showBody = bodyUrl && !useFallback
-  const showFallback = (useFallback && fallbackSrc) || (!bodyUrl && fallbackSrc)
+  const profileUrl = supabaseUrl ? getDriverProfileImageUrl(driverName, supabaseUrl) : null
+  const showBody = bodyUrl && !useBodyFallback
+  const showProfile = profileUrl && useBodyFallback && !useProfileFallback
+  const showDbFallback =
+    (useBodyFallback && (useProfileFallback || !profileUrl) && fallbackSrc) ||
+    (!bodyUrl && !profileUrl && fallbackSrc)
+
+  const showInitial = !showBody && !showProfile && !showDbFallback
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -41,11 +48,23 @@ export function DriverHeroBodyMedia({
           sizes="360px"
           className="object-cover"
           style={{ objectPosition: BODY_OBJECT_POSITION, transform: `scale(${BODY_SCALE})` }}
-          onError={() => setUseFallback(true)}
+          onError={() => setUseBodyFallback(true)}
           aria-hidden
         />
       )}
-      {showFallback && fallbackSrc && (
+      {showProfile && profileUrl && (
+        <Image
+          src={profileUrl}
+          alt=""
+          fill
+          sizes="360px"
+          className="object-cover object-top"
+          style={{ objectPosition: BODY_OBJECT_POSITION, transform: `scale(${BODY_SCALE})` }}
+          onError={() => setUseProfileFallback(true)}
+          aria-hidden
+        />
+      )}
+      {showDbFallback && fallbackSrc && (
         <Image
           src={fallbackSrc}
           alt=""
@@ -57,7 +76,7 @@ export function DriverHeroBodyMedia({
           unoptimized={typeof fallbackSrc === 'string' && fallbackSrc.startsWith('http')}
         />
       )}
-      {!showBody && !showFallback && (
+      {showInitial && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#d9d9d9]/25 text-white text-2xl font-bold">
           {driverName.charAt(0)}
         </div>

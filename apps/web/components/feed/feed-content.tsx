@@ -127,6 +127,8 @@ interface FeedContentProps {
   pollVoteCounts?: Record<string, Record<string, number>>
   supabaseUrl?: string
   currentUserId?: string
+  /** User IDs to exclude from Discovery (self + followed); Discovery shows only non-followed users */
+  excludeFromDiscoveryUserIds?: string[]
   isNewUser?: boolean
   /** When true, show Load more button for Pit Crew tab */
   hasMore?: boolean
@@ -159,6 +161,7 @@ export function FeedContent({
   pollVoteCounts = {},
   supabaseUrl,
   currentUserId,
+  excludeFromDiscoveryUserIds = [],
   isNewUser = false,
   hasMore = false,
   currentPage = 1,
@@ -249,9 +252,11 @@ export function FeedContent({
         .order('updated_at', { ascending: false, nullsFirst: false })
         .limit(DISCOVERY_FETCH_BUFFER)
 
+      const excludeUserIdsSet = new Set(excludeFromDiscoveryUserIds)
       const allowedPostParentTypes = ['hot_take', 'poll', 'profile', 'driver', 'team'] as const
       const postsList = ((discoverPosts || []) as Array<Record<string, unknown> & { id: string; like_count?: number | null; user_id?: string }>)
         .filter((p) => !combinedExcludePostIds.includes(p.id))
+        .filter((p) => !excludeUserIdsSet.has(p.user_id ?? ''))
         .filter(
           (p) =>
             p.parent_page_type == null ||
@@ -259,6 +264,7 @@ export function FeedContent({
         )
       const gridsList = ((discoverGrids || []) as Array<Record<string, unknown> & { id: string; type: string; ranked_items: any[]; user_id?: string }>)
         .filter((g) => !combinedExcludeGridIds.includes(g.id))
+        .filter((g) => !excludeUserIdsSet.has(g.user_id ?? ''))
         .filter(
           (g) =>
             g.type === 'driver' &&
@@ -509,7 +515,7 @@ export function FeedContent({
       setIsLoadingDiscovery(false)
       setIsLoadingDiscoveryMore(false)
     }
-  }, [excludePostIds, excludeGridIds])
+  }, [excludePostIds, excludeGridIds, excludeFromDiscoveryUserIds])
 
   // Sync tab from URL (e.g. back/forward or shared link)
   useEffect(() => {
@@ -634,7 +640,9 @@ export function FeedContent({
                       {post.user?.username || 'Unknown'}
                     </Link>
                     <p className="text-xs text-white/70">
-                      {new Date(post.created_at).toLocaleDateString()}
+                      {post.embeddedGrid
+                        ? `Updated their Top ${post.embeddedGrid.type === 'driver' ? 'Drivers' : post.embeddedGrid.type === 'team' ? 'Teams' : 'Tracks'} grid · ${new Date(post.created_at).toLocaleDateString()}`
+                        : new Date(post.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -688,7 +696,7 @@ export function FeedContent({
                     </Link>
                   )
                 })()}
-              {post.content ? <p className="text-white/90">{post.content}</p> : null}
+              {post.content && !post.embeddedGrid ? <p className="text-white/90">{post.content}</p> : null}
               {post.image_url && (
                 <div className="mt-3 overflow-hidden rounded-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -804,7 +812,7 @@ export function FeedContent({
                       {grid.user?.username || 'Unknown'}
                     </Link>
                     <p className="text-xs text-white/70">
-                      Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
+                      Updated their Top {typeLabel} grid · {new Date(grid.updated_at ?? grid.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -995,7 +1003,9 @@ export function FeedContent({
                               {post.user?.username || 'Unknown'}
                             </Link>
                             <p className="text-xs text-white/70">
-                              {new Date(post.created_at).toLocaleDateString()}
+                              {(post as Post).embeddedGrid
+                                ? `Updated their Top ${(post as Post).embeddedGrid!.type === 'driver' ? 'Drivers' : (post as Post).embeddedGrid!.type === 'team' ? 'Teams' : 'Tracks'} grid · ${new Date(post.created_at).toLocaleDateString()}`
+                                : new Date(post.created_at).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -1049,7 +1059,7 @@ export function FeedContent({
                             </Link>
                           )
                         })()}
-                      {post.content ? <p className="text-white/90">{post.content}</p> : null}
+                      {post.content && !(post as Post).embeddedGrid ? <p className="text-white/90">{post.content}</p> : null}
                       {post.image_url && (
                         <div className="mt-3 overflow-hidden rounded-lg">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1139,7 +1149,7 @@ export function FeedContent({
                               {grid.user?.username || 'Unknown'}
                             </Link>
                             <p className="text-xs text-white/70">
-                              Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
+                              Updated their Top {typeLabel} grid · {new Date(grid.updated_at ?? grid.created_at).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
