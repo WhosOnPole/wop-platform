@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { getDriverBodyImageUrl, getDriverProfileImageUrl } from '@/utils/storage-urls'
+import {
+  getDriverBodyImageUrl,
+  getDriverLocalBodyUrl,
+  getDriverProfileImageUrl,
+} from '@/utils/storage-urls'
 
 /** Position so shoulders and up stay in frame when zoomed */
 const BODY_OBJECT_POSITION = '50% -8%'
@@ -18,7 +22,8 @@ interface DriverHeroBodyMediaProps {
 
 /**
  * Hero display using driver body.png from storage (top-half crop, like grid squares),
- * with fallback to profile.jpg from storage, then headshot/image_url from DB, or initial letter.
+ * with fallback to local body.png, then profile.jpg from storage, then headshot/image_url from DB, or initial letter.
+ * Local body images are only requested when remote fails (e.g. Vercel image optimization limits).
  */
 export function DriverHeroBodyMedia({
   driverName,
@@ -27,16 +32,22 @@ export function DriverHeroBodyMedia({
   className = '',
 }: DriverHeroBodyMediaProps) {
   const [useBodyFallback, setUseBodyFallback] = useState(false)
+  const [useLocalBodyFallback, setUseLocalBodyFallback] = useState(false)
   const [useProfileFallback, setUseProfileFallback] = useState(false)
   const bodyUrl = supabaseUrl ? getDriverBodyImageUrl(driverName, supabaseUrl) : null
+  const localBodyUrl = getDriverLocalBodyUrl(driverName)
   const profileUrl = supabaseUrl ? getDriverProfileImageUrl(driverName, supabaseUrl) : null
   const showBody = bodyUrl && !useBodyFallback
-  const showProfile = profileUrl && useBodyFallback && !useProfileFallback
+  const showLocalBody = useBodyFallback && !useLocalBodyFallback
+  const showProfile = useBodyFallback && useLocalBodyFallback && !useProfileFallback
   const showDbFallback =
-    (useBodyFallback && (useProfileFallback || !profileUrl) && fallbackSrc) ||
+    (useBodyFallback &&
+      useLocalBodyFallback &&
+      (useProfileFallback || !profileUrl) &&
+      fallbackSrc) ||
     (!bodyUrl && !profileUrl && fallbackSrc)
 
-  const showInitial = !showBody && !showProfile && !showDbFallback
+  const showInitial = !showBody && !showLocalBody && !showProfile && !showDbFallback
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -50,6 +61,19 @@ export function DriverHeroBodyMedia({
           style={{ objectPosition: BODY_OBJECT_POSITION, transform: `scale(${BODY_SCALE})` }}
           onError={() => setUseBodyFallback(true)}
           aria-hidden
+        />
+      )}
+      {showLocalBody && (
+        <Image
+          src={localBodyUrl}
+          alt=""
+          fill
+          sizes="360px"
+          className="object-cover object-top"
+          style={{ objectPosition: BODY_OBJECT_POSITION, transform: `scale(${BODY_SCALE})` }}
+          onError={() => setUseLocalBodyFallback(true)}
+          aria-hidden
+          unoptimized
         />
       )}
       {showProfile && profileUrl && (

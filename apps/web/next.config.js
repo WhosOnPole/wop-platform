@@ -27,6 +27,9 @@ const nextConfig = {
         hostname: 'www.formula1.com',
       },
     ],
+    // Reduce Image Optimization usage (Vercel limits) - see https://vercel.com/docs/image-optimization/managing-image-optimization-costs
+    minimumCacheTTL: 2678400, // 31 days - fewer transformations when images rarely change
+    formats: ['image/webp'], // Single format reduces transformations vs ['image/avif', 'image/webp']
   },
 }
 

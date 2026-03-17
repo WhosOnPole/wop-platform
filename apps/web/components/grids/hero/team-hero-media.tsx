@@ -3,13 +3,55 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { createClientComponentClient } from '@/utils/supabase-client'
-import { getDriverBodyImageUrl } from '@/utils/storage-urls'
+import { getDriverBodyImageUrl, getDriverLocalBodyUrl } from '@/utils/storage-urls'
 
 interface TeamHeroMediaProps {
   teamId: string
   teamName: string
   supabaseUrl?: string
   className?: string
+}
+
+function TeamDriverImage({
+  driverName,
+  supabaseUrl,
+}: {
+  driverName: string
+  supabaseUrl: string
+}) {
+  const [useLocalFallback, setUseLocalFallback] = useState(false)
+  const bodyUrl = getDriverBodyImageUrl(driverName, supabaseUrl)
+  const localBodyUrl = getDriverLocalBodyUrl(driverName)
+
+  if (useLocalFallback) {
+    return (
+      <Image
+        src={localBodyUrl}
+        alt=""
+        fill
+        sizes="(max-width: 768px) 50vw, 380px"
+        className="object-contain object-bottom"
+        onError={(e) => {
+          const t = e.target as HTMLImageElement
+          if (t) t.style.display = 'none'
+        }}
+        aria-hidden
+        unoptimized
+      />
+    )
+  }
+
+  return (
+    <Image
+      src={bodyUrl}
+      alt=""
+      fill
+      sizes="(max-width: 768px) 50vw, 380px"
+      className="object-contain object-bottom"
+      onError={() => setUseLocalFallback(true)}
+      aria-hidden
+    />
+  )
 }
 
 export function TeamHeroMedia({
@@ -61,17 +103,7 @@ export function TeamHeroMedia({
           className="relative flex items-end justify-center min-h-0 w-full"
         >
           <div className="relative w-full h-full min-h-[220px]">
-            <Image
-              src={getDriverBodyImageUrl(d.name, supabaseUrl)}
-              alt=""
-              fill
-              sizes="(max-width: 768px) 50vw, 380px"
-              className="object-contain object-bottom"
-              onError={(e) => {
-                const t = e.target as HTMLImageElement
-                if (t) t.style.display = 'none'
-              }}
-            />
+            <TeamDriverImage driverName={d.name} supabaseUrl={supabaseUrl} />
           </div>
         </div>
       ))}
