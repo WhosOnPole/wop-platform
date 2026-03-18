@@ -55,7 +55,7 @@ export function EntityOverview(props: EntityOverviewProps) {
                 </>
               ) : (
                 <span
-                  className="min-w-0 overflow-hidden leading-[1] pl-2"
+                  className="min-w-0 overflow-visible leading-[1.1] pl-2 pt-0.5"
                   style={{ fontSize: 'clamp(2rem, 5.3vw, 4.5rem)' }}
                 >
                   Driver{' '}
@@ -69,7 +69,7 @@ export function EntityOverview(props: EntityOverviewProps) {
           </div>
         )} 
         {overviewText && (
-          <div className="flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden">
+          <div className="flex min-w-0 flex-1 flex-col items-center justify-center self-stretch overflow-hidden">
             <p className="text-base text-white/90 leading-relaxed font-light">
               {overviewText}
             </p>

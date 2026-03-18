@@ -103,9 +103,14 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   const showFooter = isDesktop || !isAuthenticated
   const isGridFullBleed =
     pathname?.startsWith('/grid/') || pathname?.startsWith('/profile/edit-grid/')
+  const isEntityOrProfilePath =
+    pathname?.startsWith('/drivers/') ||
+    pathname?.startsWith('/teams/') ||
+    pathname?.startsWith('/tracks/') ||
+    pathname?.startsWith('/u/')
   const isHome = pathname === '/'
   const mainPadTop = !isGridFullBleed && !isHome ? 'pt-16' : ''
-  const shouldConstrainContent = isAuthenticated && !isGridFullBleed
+  const shouldConstrainContent = isAuthenticated && !isGridFullBleed && !isEntityOrProfilePath
   const contentWrapperClass = shouldConstrainContent ? 'mx-auto w-full max-w-[430px]' : 'w-full'
 
   return (
