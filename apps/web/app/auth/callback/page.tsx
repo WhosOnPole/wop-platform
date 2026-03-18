@@ -1,13 +1,13 @@
 'use client'
 
-import { useRef, useEffect, useState, Suspense } from 'react'
+import { useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { LoadingLogo } from '@/components/loading-logo'
 
 function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'error'>('loading')
   const hasRun = useRef(false)
   const code = searchParams.get('code')
   const type = searchParams.get('type')
@@ -37,7 +37,6 @@ function AuthCallbackContent() {
       if (!isMounted) return
 
       if (exchangeError) {
-        setStatus('error')
         router.replace('/login?error=auth_callback_failed')
         return
       }
@@ -65,10 +64,8 @@ function AuthCallbackContent() {
   }, [code, type, router])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black">
-      <p className="text-white/80">
-        {status === 'error' ? 'Redirecting…' : 'Completing sign-in…'}
-      </p>
+    <div className="flex min-h-screen items-center justify-center bg-black" aria-hidden>
+      <LoadingLogo />
     </div>
   )
 }
@@ -77,8 +74,8 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-black">
-          <p className="text-white/80">Completing sign-in…</p>
+        <div className="flex min-h-screen items-center justify-center bg-black" aria-hidden>
+          <LoadingLogo />
         </div>
       }
     >

@@ -52,7 +52,7 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
   // Build counter text
   let counterText = ''
   if (timeUntilRace > 0) {
-    counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+    counterText = `${daysUntil > 0 ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} ` : ''}${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until live chat is open`
   }
 
   const backgroundImage = race.image_url || '/images/race_banner.jpeg'

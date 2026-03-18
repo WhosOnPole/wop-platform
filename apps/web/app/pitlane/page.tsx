@@ -113,8 +113,8 @@ export default async function PitlanePage() {
       const hoursUntil = Math.floor((timeUntil % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       counterText =
         daysUntil > 0
-          ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} until race start`
-          : `${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until race start`
+          ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} until live chat is open`
+          : `${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until live chat is open`
     }
   }
 

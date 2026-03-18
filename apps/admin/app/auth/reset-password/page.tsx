@@ -3,6 +3,7 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
+import { LoadingLogo } from '@/components/loading-logo'
 
 function ResetPasswordForm() {
   const router = useRouter()
@@ -186,17 +187,8 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-green-600">
-              Password Updated!
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Your password has been successfully updated. Redirecting to login...
-            </p>
-          </div>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-black" aria-hidden>
+        <LoadingLogo />
       </div>
     )
   }
@@ -287,14 +279,8 @@ export default function AdminResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gray-50">
-          <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
-            <div>
-              <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-                Loading...
-              </h2>
-            </div>
-          </div>
+        <div className="flex min-h-screen items-center justify-center bg-black" aria-hidden>
+          <LoadingLogo />
         </div>
       }
     >

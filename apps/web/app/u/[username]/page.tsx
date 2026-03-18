@@ -380,9 +380,9 @@ export default async function UserProfilePage({ params }: PageProps) {
   const teamGrid = enrichedGrids.find((g) => g.type === 'team')
 
   return (
-    <div className="min-h-screen bg-black -mt-14">
-      {/* Hero Section - in flow, 60vh height */}
-      <div className="relative w-full h-[50vh] z-0">
+    <div className="min-h-screen bg-black -mt-16">
+      {/* Hero Section - flush to top of view */}
+      <div className="relative w-full h-[50vh] z-0 min-h-[280px]">
         <ProfileHeroSectionWrapper
           profile={profile}
           isOwnProfile={isOwnProfile}
