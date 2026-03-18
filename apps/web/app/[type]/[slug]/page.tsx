@@ -368,7 +368,7 @@ export default async function DynamicPage({ params }: PageProps) {
     tabs.push({
       id: 'drivers',
       label: 'Drivers',
-      content: <TeamDriversTab drivers={relatedData || []} />,
+      content: <TeamDriversTab drivers={relatedData || []} supabaseUrl={supabaseUrl} />,
     })
   } else {
     // Drivers: no tabs; only Discussions section is rendered below
