@@ -31,15 +31,15 @@ export function EntityOverview(props: EntityOverviewProps) {
   if (!hasContent) return null
 
   return (
-    <div className="w-full overflow-hidden bg-black p-4 pt-10">
-      <div className="mx-auto flex max-w-6xl flex-row items-center gap-2 sm:gap-8">
+    <div className="w-full overflow-x-hidden overflow-y-visible bg-black p-4 pt-10">
+      <div className="mx-auto flex max-w-6xl flex-row items-start gap-2 sm:gap-8">
         {leftContent != null && (
-          <div className="flex w-1/3 flex-col overflow-hidden font-sageva text-sunset-gradient border-r border-white/10 pr-4 mr-4">
+          <div className="flex w-1/3 flex-col overflow-visible font-sageva text-sunset-gradient border-r border-white/10 pr-4 mr-4">
             <div className="flex flex-col items-center pt-4">
               {isTrack ? (
                 <>
                   <span
-                    className="min-w-0 overflow-hidden leading-none"
+                    className="min-w-0 overflow-visible leading-[1.1] pt-0.5"
                     style={{ fontSize: 'clamp(17vw, 12vw, 9rem)' }}
                   >
                     {leftContent.value}

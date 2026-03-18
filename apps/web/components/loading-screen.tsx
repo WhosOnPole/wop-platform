@@ -9,6 +9,8 @@ const FADE_DURATION_MS = 300
 const NAV_SHOW_DELAY_MS = 300
 const NAV_HIDE_SETTLE_MS = 150
 
+const AUTH_LOADING_PATHS = ['/auth/callback', '/auth/reset-password']
+
 function isSameOriginLink(target: Element | null): boolean {
   const anchor = target?.closest?.('a[href]')
   if (!anchor) return false
@@ -125,6 +127,11 @@ export function LoadingScreen() {
 
   const show = isVisible || showNavOverlay
   if (!show) return null
+
+  // Auth routes show their own LoadingLogo; avoid double loading overlay
+  if (pathname && AUTH_LOADING_PATHS.some((p) => pathname === p || pathname.startsWith(p + '?'))) {
+    return null
+  }
 
   return (
     <div
