@@ -48,6 +48,7 @@ export function FeaturedNewsCard({ newsStory, variant = 'compact' }: FeaturedNew
                 fill
                 sizes="40px"
                 className="object-cover"
+                unoptimized
               />
             </div>
           </div>
@@ -126,6 +127,7 @@ export function FeaturedNewsCard({ newsStory, variant = 'compact' }: FeaturedNew
             fill
             sizes="40px"
             className="object-cover"
+            unoptimized
           />
         </div>
       )}

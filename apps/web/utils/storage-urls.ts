@@ -111,6 +111,17 @@ export function getDriverLocalBodyUrl(driverName: string): string {
 }
 
 /**
+ * Gets the local (public folder) URL for a driver's profile.jpg fallback.
+ * Used when remote Supabase image fails (e.g. Vercel image optimization limits).
+ * Only requested when remote fails—does not load on normal page views.
+ */
+export function getDriverLocalProfileUrl(driverName: string): string {
+  const rawSlug = getDriverSlug(driverName)
+  const slug = DRIVER_PROFILE_SLUG_OVERRIDES[rawSlug] ?? rawSlug
+  return `/drivers/${slug}/profile.jpg`
+}
+
+/**
  * Normalizes accented characters to ASCII (é→e, ó→o, etc.)
  */
 function normalizeAccents(text: string): string {

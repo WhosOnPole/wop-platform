@@ -32,6 +32,7 @@ export function BannerHighlightedFanCard({ fan }: BannerHighlightedFanCardProps)
           fill
           className="object-cover"
           sizes="56px"
+          unoptimized
         />
       </div>
       <div className="mt-3 flex items-center gap-1.5 text-sm font-medium text-white/90">

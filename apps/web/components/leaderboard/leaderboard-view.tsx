@@ -96,6 +96,7 @@ export function LeaderboardView({
                 width={48}
                 height={48}
                 className="rounded-full"
+                unoptimized
               />
 
               <div className="flex-1">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { cropAvatarToBlob } from '@/utils/avatar-upload'
 import { Pencil, Save } from 'lucide-react'
 
 interface OnboardingProfileStepProps {
@@ -96,39 +97,6 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
     }
   }
 
-  async function cropImageToBlob(dataUrl: string, zoom: number): Promise<Blob> {
-    const size = 512
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = size
-        canvas.height = size
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          reject(new Error('No canvas context'))
-          return
-        }
-        const w = img.naturalWidth
-        const h = img.naturalHeight
-        const coverScale = size / Math.min(w, h)
-        const drawW = w * coverScale * zoom
-        const drawH = h * coverScale * zoom
-        const dx = (size - drawW) / 2
-        const dy = (size - drawH) / 2
-        ctx.drawImage(img, 0, 0, w, h, dx, dy, drawW, drawH)
-        canvas.toBlob(
-          (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
-          'image/jpeg',
-          0.92
-        )
-      }
-      img.onerror = () => reject(new Error('Image load failed'))
-      img.src = dataUrl
-    })
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsSubmitting(true)
@@ -190,7 +158,7 @@ export function OnboardingProfileStep({ onComplete }: OnboardingProfileStepProps
 
     if (profileImage && profileImagePreview) {
       try {
-        const blob = await cropImageToBlob(profileImagePreview, imageScale)
+        const blob = await cropAvatarToBlob(profileImagePreview, imageScale)
         const fileName = `${session.user.id}-${Date.now()}.jpg`
         const filePath = `profile-images/${fileName}`
 

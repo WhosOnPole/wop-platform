@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { cropAvatarToBlob } from '@/utils/avatar-upload'
 import { useRouter } from 'next/navigation'
 import { Save, Upload } from 'lucide-react'
 
@@ -151,27 +152,34 @@ export default function EditProfilePage() {
 
     let imageUrl = profile?.profile_image_url || null
 
-    // Upload image if changed
-    if (profileImage) {
-      const fileExt = profileImage.name.split('.').pop()
-      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
-      const filePath = `profile-images/${fileName}`
+    // Upload image if changed (optimize once at upload)
+    if (profileImage && profileImagePreview) {
+      try {
+        const blob = await cropAvatarToBlob(profileImagePreview, 1)
+        const fileName = `${session.user.id}-${Date.now()}.jpg`
+        const filePath = `profile-images/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, profileImage, { upsert: true })
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, blob, { upsert: true, contentType: 'image/jpeg' })
 
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError)
-        setErrors({ image: 'Failed to upload image' })
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError)
+          setErrors({ image: 'Failed to upload image' })
+          setIsSubmitting(false)
+          return
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('avatars').getPublicUrl(filePath)
+        imageUrl = publicUrl
+      } catch (err) {
+        console.error('Error processing profile image:', err)
+        setErrors({ image: 'Failed to process image' })
         setIsSubmitting(false)
         return
       }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('avatars').getPublicUrl(filePath)
-      imageUrl = publicUrl
     }
 
     const instagramUsername = formData.instagramUsername.replace(/^@/, '').trim() || null

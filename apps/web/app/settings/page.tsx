@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { cropAvatarToBlob } from '@/utils/avatar-upload'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Save, LogOut, User, Bell, Info, Pencil, Clock } from 'lucide-react'
 import { DEFAULT_AVATAR_URL } from '@/utils/avatar'
@@ -191,39 +192,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function cropImageToBlob(dataUrl: string, zoom: number): Promise<Blob> {
-    const size = 512
-    return new Promise((resolve, reject) => {
-      const img = new window.Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = size
-        canvas.height = size
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          reject(new Error('No canvas context'))
-          return
-        }
-        const w = img.naturalWidth
-        const h = img.naturalHeight
-        const coverScale = size / Math.min(w, h)
-        const drawW = w * coverScale * zoom
-        const drawH = h * coverScale * zoom
-        const dx = (size - drawW) / 2
-        const dy = (size - drawH) / 2
-        ctx.drawImage(img, 0, 0, w, h, dx, dy, drawW, drawH)
-        canvas.toBlob(
-          (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
-          'image/jpeg',
-          0.92
-        )
-      }
-      img.onerror = () => reject(new Error('Image load failed'))
-      img.src = dataUrl
-    })
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsSubmitting(true)
@@ -276,7 +244,7 @@ export default function SettingsPage() {
 
       let imageBlob: Blob
       try {
-        imageBlob = await cropImageToBlob(profileImagePreview, imageScale)
+        imageBlob = await cropAvatarToBlob(profileImagePreview, imageScale)
       } catch (error) {
         console.error('Error processing profile image:', error)
         setErrors({ image: 'Failed to process image' })

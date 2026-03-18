@@ -281,6 +281,7 @@ export function SpotlightCarousel({
                 fill
                 sizes="40px"
                 className="object-cover"
+                unoptimized
               />
             </div>
             <div className="flex flex-1 flex-col min-h-0">

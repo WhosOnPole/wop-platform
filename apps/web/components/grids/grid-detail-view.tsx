@@ -165,6 +165,7 @@ function OwnProfileBlurbBlock({
             width={48}
             height={48}
             className="h-full w-full rounded-full object-cover"
+            unoptimized
           />
         </div>
         <div className="min-w-0 flex-1">
@@ -188,6 +189,7 @@ function OwnProfileBlurbBlock({
           width={48}
           height={48}
           className="h-full w-full rounded-full object-cover"
+          unoptimized
         />
       </div>
       <div className="min-w-0 flex-1">
@@ -461,6 +463,7 @@ function GridBlurbDisplay({
               width={48}
               height={48}
               className="h-full w-full rounded-full object-cover"
+              unoptimized
             />
           </div>
         </Link>

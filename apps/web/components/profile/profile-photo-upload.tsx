@@ -36,6 +36,7 @@ export function ProfilePhotoUpload({
           fill
           className="rounded-full object-cover"
           sizes={useDefault ? '144px' : '128px'}
+          unoptimized
         />
       </div>
     )
@@ -49,6 +50,7 @@ export function ProfilePhotoUpload({
         fill
         className="rounded-full object-cover"
         sizes="144px"
+        unoptimized
       />
     </div>
   )

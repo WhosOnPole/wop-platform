@@ -64,6 +64,7 @@ export async function WeeklyHighlightsCard({ weekStart }: WeeklyHighlightsCardPr
                 fill
                 sizes="80px"
                 className="object-cover"
+                unoptimized
               />
             </div>
           </Link>

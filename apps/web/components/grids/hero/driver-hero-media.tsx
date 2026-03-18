@@ -2,7 +2,10 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { getDriverProfileImageUrl } from '@/utils/storage-urls'
+import {
+  getDriverLocalProfileUrl,
+  getDriverProfileImageUrl,
+} from '@/utils/storage-urls'
 
 interface DriverHeroMediaProps {
   driverName: string
@@ -20,10 +23,16 @@ export function DriverHeroMedia({
   className = '',
   size,
 }: DriverHeroMediaProps) {
-  const [useFallback, setUseFallback] = useState(false)
+  const [useProfileFallback, setUseProfileFallback] = useState(false)
+  const [useLocalProfileFallback, setUseLocalProfileFallback] = useState(false)
   const profileUrl = supabaseUrl ? getDriverProfileImageUrl(driverName, supabaseUrl) : null
-  const showProfile = profileUrl && !useFallback
-  const showFallback = (useFallback && fallbackSrc) || (!profileUrl && fallbackSrc)
+  const localProfileUrl = getDriverLocalProfileUrl(driverName)
+  const showProfile = profileUrl && !useProfileFallback
+  const showLocalProfile =
+    (useProfileFallback || !profileUrl) && !useLocalProfileFallback
+  const showFallback =
+    (useProfileFallback && useLocalProfileFallback && fallbackSrc) ||
+    (!profileUrl && fallbackSrc)
 
   const sizeStyle =
     size != null
@@ -35,12 +44,21 @@ export function DriverHeroMedia({
       className={`relative overflow-hidden rounded-full ${className}`}
       style={sizeStyle}
     >
-      {showProfile && (
+      {showProfile && profileUrl && (
         <img
           src={profileUrl}
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-top"
-          onError={() => setUseFallback(true)}
+          onError={() => setUseProfileFallback(true)}
+          aria-hidden
+        />
+      )}
+      {showLocalProfile && (
+        <img
+          src={localProfileUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-top"
+          onError={() => setUseLocalProfileFallback(true)}
           aria-hidden
         />
       )}
@@ -55,7 +73,7 @@ export function DriverHeroMedia({
           unoptimized={typeof fallbackSrc === 'string' && fallbackSrc.startsWith('http')}
         />
       )}
-      {!showProfile && !showFallback && (
+      {!showProfile && !showLocalProfile && !showFallback && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#d9d9d9]/25 text-white text-2xl font-bold">
           {driverName.charAt(0)}
         </div>
