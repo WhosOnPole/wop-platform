@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
 import { toast } from 'sonner'
 
 interface User {
@@ -131,17 +132,22 @@ export function ProfileDiscussionSection({
           posts.map((post) => (
             <div key={post.id} className="border-b border-gray-200 pb-6 last:border-0">
               <div className="mb-3 flex items-center space-x-3">
-                <div
-                  className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
-                    isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
-                  }`}
+                <Link
+                  href={`/u/${post.user?.username || 'unknown'}`}
+                  className="shrink-0"
                 >
-                  <img
-                    src={getAvatarUrl(post.user?.profile_image_url)}
-                    alt={post.user?.username ?? ''}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                </div>
+                  <div
+                    className={`h-8 w-8 rounded-full overflow-hidden ${
+                      isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
+                    }`}
+                  >
+                    <img
+                      src={getAvatarUrl(post.user?.profile_image_url)}
+                      alt={post.user?.username ?? ''}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
+                </Link>
                 <div>
                   <Link
                     href={`/u/${post.user?.username || 'unknown'}`}
@@ -150,7 +156,7 @@ export function ProfileDiscussionSection({
                     {post.user?.username || 'Unknown'}
                   </Link>
                   <p className="text-xs text-gray-500">
-                    {new Date(post.created_at).toLocaleString()}
+                    {formatTimeAgo(post.created_at)}
                   </p>
                 </div>
               </div>

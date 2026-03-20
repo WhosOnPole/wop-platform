@@ -11,20 +11,8 @@ import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
 import { toast } from 'sonner'
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-  if (diffInSeconds < 60) return 'just now'
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) return `${diffInHours}h ago`
-  const diffInDays = Math.floor(diffInHours / 24)
-  return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`
-}
 
 interface CommentUser {
   id: string
@@ -203,17 +191,22 @@ export function FeedPostCommentSection({
                     return (
                       <div key={comment.id} className="py-1">
                         <div className="mb-1 flex items-center gap-2">
-                          <div
-                            className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                              isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
-                            }`}
+                          <Link
+                            href={`/u/${comment.user?.username || 'unknown'}`}
+                            className="shrink-0"
                           >
-                            <img
-                              src={getAvatarUrl(comment.user?.profile_image_url)}
-                              alt={comment.user?.username ?? ''}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          </div>
+                            <div
+                              className={`h-6 w-6 rounded-full overflow-hidden ${
+                                isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
+                              }`}
+                            >
+                              <img
+                                src={getAvatarUrl(comment.user?.profile_image_url)}
+                                alt={comment.user?.username ?? ''}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            </div>
+                          </Link>
                           <Link
                             href={`/u/${comment.user?.username || 'unknown'}`}
                             className="text-sm font-medium text-white/90 hover:text-white"
@@ -221,7 +214,7 @@ export function FeedPostCommentSection({
                             {comment.user?.username || 'Unknown'}
                           </Link>
                           <span className="text-xs text-white/70">
-                            {new Date(comment.created_at).toLocaleString()}
+                            {formatTimeAgo(comment.created_at)}
                           </span>
                         </div>
                         <p className="text-sm text-white/90">{comment.content}</p>
@@ -268,17 +261,22 @@ export function FeedPostCommentSection({
                               <div key={reply.id} className="relative">
                                 <div className="mb-0.5 flex items-center justify-between gap-2">
                                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                                    <div
-                                      className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                                        isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
-                                      }`}
+                                    <Link
+                                      href={`/u/${reply.user?.username || 'unknown'}`}
+                                      className="shrink-0"
                                     >
-                                      <img
-                                        src={getAvatarUrl(reply.user?.profile_image_url)}
-                                        alt={reply.user?.username ?? ''}
-                                        className="h-full w-full rounded-full object-cover"
-                                      />
-                                    </div>
+                                      <div
+                                        className={`h-5 w-5 rounded-full overflow-hidden ${
+                                          isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
+                                        }`}
+                                      >
+                                        <img
+                                          src={getAvatarUrl(reply.user?.profile_image_url)}
+                                          alt={reply.user?.username ?? ''}
+                                          className="h-full w-full rounded-full object-cover"
+                                        />
+                                      </div>
+                                    </Link>
                                     <Link
                                       href={`/u/${reply.user?.username || 'unknown'}`}
                                       className="text-xs font-medium text-white/90 hover:text-white shrink-0"

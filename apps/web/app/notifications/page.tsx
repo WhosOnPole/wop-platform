@@ -3,57 +3,34 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { Heart, MessageSquare, UserPlus, AtSign, Vote, Settings, Check } from 'lucide-react'
+import { Heart, MessageSquare, UserPlus, AtSign, Vote, Settings, Check, AlertCircle } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
 import Link from 'next/link'
 import { getAvatarUrl } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
 import { createClientComponentClient } from '@/utils/supabase-client'
 
 type FilterType = 'all' | 'unread' | 'likes' | 'comments' | 'follows'
 
-const notificationIcons = {
+const notificationIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   like_grid: Heart,
   like_post: Heart,
   comment: MessageSquare,
   follow: UserPlus,
   mention: AtSign,
   poll_vote: Vote,
+  tip_denied: AlertCircle,
 }
 
-const notificationMessages = {
-  like_grid: (actor: string) => `${actor} liked your grid`,
-  like_post: (actor: string) => `${actor} liked your post`,
-  comment: (actor: string) => `${actor} commented on your post`,
-  follow: (actor: string) => `${actor} started following you`,
-  mention: (actor: string) => `${actor} mentioned you`,
-  poll_vote: (actor: string) => `${actor} voted on a poll you're following`,
-}
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (diffInSeconds < 60) {
-    return 'just now'
-  }
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) {
-    return `${diffInHours}h ago`
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 7) {
-    return `${diffInDays}d ago`
-  }
-
-  return date.toLocaleDateString()
+const notificationMessages: Record<string, (actor: string, metadata?: { message?: string }) => string> = {
+  like_grid: (actor) => `${actor} liked your grid`,
+  like_post: (actor) => `${actor} liked your post`,
+  comment: (actor) => `${actor} commented on your post`,
+  follow: (actor) => `${actor} started following you`,
+  mention: (actor) => `${actor} mentioned you`,
+  poll_vote: (actor) => `${actor} voted on a poll you're following`,
+  tip_denied: (_actor, metadata) =>
+    metadata?.message ?? "Your track tip was not approved. You can try again or reach out to us for appeal.",
 }
 
 function getNotificationUrl(notification: any, currentUsername?: string | null): string {
@@ -81,6 +58,8 @@ function getNotificationUrl(notification: any, currentUsername?: string | null):
       return '/feed'
     case 'poll_vote':
       return `/podiums`
+    case 'tip_denied':
+      return '/feed'
     default:
       return '/'
   }
@@ -197,9 +176,12 @@ export default function NotificationsPage() {
         ) : (
           <div className="space-y-2">
             {filteredNotifications.map((notification) => {
-              const Icon = notificationIcons[notification.type]
+              const Icon = notificationIcons[notification.type] ?? AlertCircle
               const actor = notification.actor?.username || 'Someone'
-              const message = notificationMessages[notification.type](actor)
+              const messageFn = notificationMessages[notification.type]
+              const message = messageFn
+                ? messageFn(actor, notification.metadata)
+                : (notification.metadata?.message ?? 'Notification')
               const isUnread = !notification.read_at
 
               return (

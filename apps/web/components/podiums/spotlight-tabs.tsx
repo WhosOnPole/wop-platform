@@ -311,7 +311,7 @@ export function SpotlightTabs({
       )}
 
       {activeTab === 'stories' && (
-        <div className="space-y-8">
+        <div className="space-y-8 pt-6">
           <div className="grid gap-4 sm:grid-cols-2">
             {stories.length > 0 ? (
               stories.map((story) => (
@@ -337,7 +337,7 @@ export function SpotlightTabs({
       )}
 
       {activeTab === 'our-picks' && (
-        <div className="space-y-8">
+        <div className="space-y-8 pt-6">
           {sponsors.length > 0 && (
             <section className="space-y-4">
               <h2 className="text-xl font-semibold text-white">Sponsors</h2>

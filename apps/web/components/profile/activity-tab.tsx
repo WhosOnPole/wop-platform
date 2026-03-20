@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MessageSquare, MapPin, Grid3x3 } from 'lucide-react'
 import { getViewGridLabel } from '@/utils/grid-labels'
+import { formatTimeAgo } from '@/utils/date-utils'
 
 interface ActivityItem {
   id: string
@@ -136,7 +137,7 @@ export function ActivityTab({
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs text-white/70">
-                      {new Date(item.created_at).toLocaleDateString()}
+                      {formatTimeAgo(item.created_at)}
                     </p>
                   </div>
                   <div className="flex-shrink-0">{getActivityIcon(item)}</div>
