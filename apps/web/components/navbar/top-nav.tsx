@@ -39,6 +39,7 @@ interface Profile {
   id: string
   username: string
   profile_image_url: string | null
+  date_of_birth?: string | null
   nav_glow_dismissed_at?: string | null
 }
 
@@ -60,8 +61,12 @@ export function TopNav() {
   const [hasScrolled, setHasScrolled] = useState(false)
   const [navGlowDismissedInSession, setNavGlowDismissedInSession] = useState(false)
 
+  const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
   const showNavGlow =
-    !!profile && profile.nav_glow_dismissed_at == null && !navGlowDismissedInSession
+    !!profile &&
+    isProfileComplete &&
+    profile.nav_glow_dismissed_at == null &&
+    !navGlowDismissedInSession
 
   const { liveRace } = useLiveRace()
   const showJoinLiveChat =
@@ -78,7 +83,7 @@ export function TopNav() {
     let isMounted = true
     supabase
       .from('profiles')
-      .select('id, username, profile_image_url, nav_glow_dismissed_at')
+      .select('id, username, profile_image_url, date_of_birth, nav_glow_dismissed_at')
       .eq('id', user.id)
       .single()
       .then(({ data: profileData }) => {
@@ -267,10 +272,11 @@ export function TopNav() {
               <NotificationBell currentUsername={profile?.username} />
               <div className="relative">
               <span
-                className={`inline-flex rounded-full bg-sunset-start/55 ${showNavGlow ? 'animate-nav-glow' : ''}`}
+                className={`inline-flex rounded-full ${isProfileComplete ? 'bg-sunset-start/55' : ''} ${showNavGlow ? 'animate-nav-glow' : ''}`}
               >
                 <button
                   onClick={async () => {
+                    if (!isProfileComplete) return
                     if (showNavGlow && user) {
                       setNavGlowDismissedInSession(true)
                       await supabase
@@ -280,8 +286,9 @@ export function TopNav() {
                     }
                     setIsMenuOpen((prev) => !prev)
                   }}
-                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20  bg-white/10 shadow-sm ${showNavGlow ? 'animate-nav-profile-pulse' : ''}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 shadow-sm ${showNavGlow ? 'animate-nav-profile-pulse' : ''} ${!isProfileComplete ? 'cursor-not-allowed opacity-60 pointer-events-none' : ''}`}
                   aria-label="Open profile menu"
+                  aria-disabled={!isProfileComplete}
                 >
                   <img
                     src={getAvatarUrl(profile?.profile_image_url)}
