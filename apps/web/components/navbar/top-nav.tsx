@@ -90,7 +90,7 @@ export function TopNav() {
         if (isMounted && profileData) setProfile(profileData)
       })
     return () => { isMounted = false }
-  }, [user, supabase])
+  }, [user, supabase, pathname])
 
   useEffect(() => {
     if (!isMenuOpen) return
