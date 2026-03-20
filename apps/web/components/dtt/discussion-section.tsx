@@ -586,8 +586,8 @@ export function DiscussionSection({
     ? 'min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
     : 'min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
   const replySubmitClasses = isDark
-    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
-    : 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
+    ? 'flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
+    : 'flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
   const replyContentClasses = isDark ? 'mb-1 text-xs text-white/90' : 'mb-1 text-xs text-gray-700'
 
   return (
@@ -805,9 +805,9 @@ export function DiscussionSection({
                                 onClick={() => handleCreateReplyToComment(comment.id, post.id)}
                                 disabled={!replyContent[comment.id]?.trim()}
                                 className={replySubmitClasses}
+                                aria-label="Post reply"
                               >
                                 <Send className="h-4 w-4" />
-                                Post Reply
                               </button>
                             </div>
                           )}
@@ -915,9 +915,9 @@ export function DiscussionSection({
                       onClick={() => handleCreateReply(post.id)}
                       disabled={!replyContent[post.id]?.trim()}
                       className={replySubmitClasses}
+                      aria-label="Post reply"
                     >
                       <Send className="h-4 w-4" />
-                      Post Reply
                     </button>
                   </div>
                 )}

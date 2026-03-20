@@ -352,10 +352,10 @@ export function FeedPostCommentSection({
                 <button
                   type="submit"
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1] disabled:opacity-50"
+                  className="flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1] disabled:opacity-50"
+                  aria-label="Post reply"
                 >
                   <Send className="h-4 w-4" />
-                  Post Reply
                 </button>
               </form>
             </>
