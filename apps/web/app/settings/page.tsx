@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { cropAvatarToBlob } from '@/utils/avatar-upload'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Save, LogOut, User, Bell, Info, Pencil, Clock } from 'lucide-react'
+import { Save, LogOut, User, Bell, Info, Pencil, Clock, Check } from 'lucide-react'
 import { DEFAULT_AVATAR_URL } from '@/utils/avatar'
 import { getCountryFlagPath } from '@/utils/flags'
 
@@ -379,13 +379,24 @@ export default function SettingsPage() {
           <form onSubmit={handleSubmit} className="space-y-6 min-w-0">
             {/* Username */}
             <div className="rounded-md border border-white/20 bg-white/5 p-4">
-              <div className="mb-3 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-white">Username *</p>
-                  <p className="text-xs text-white/60">
-                    Username changes are limited to once every {USERNAME_COOLDOWN_DAYS} days.
-                  </p>
-                </div>
+              <p className="mb-1 text-sm font-medium text-white">Username *</p>
+              <p className="mb-3 text-xs text-white/60">
+                Username changes are limited to once every {USERNAME_COOLDOWN_DAYS} days.
+              </p>
+
+              <div className="flex items-center gap-3">
+                {isEditingUsername ? (
+                  <input
+                    type="text"
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, username: e.target.value }))}
+                    className="h-10 min-w-0 flex-1 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                    required
+                  />
+                ) : (
+                  <p className="min-w-0 flex-1 text-base font-medium text-white">@{formData.username}</p>
+                )}
                 <button
                   type="button"
                   disabled={
@@ -400,25 +411,18 @@ export default function SettingsPage() {
                       return next
                     })
                   }}
-                  className="flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-10 shrink-0 flex items-center justify-center rounded-md border border-white/10 bg-white/10 px-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={isEditingUsername ? 'Done' : usernameCooldown.canEdit ? 'Edit' : 'Cooldown'}
                 >
-                  {usernameCooldown.canEdit ? <Pencil className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
-                  {isEditingUsername ? 'Done' : usernameCooldown.canEdit ? 'Edit' : 'Cooldown'}
+                  {isEditingUsername ? (
+                    <Check className="h-4 w-4" />
+                  ) : usernameCooldown.canEdit ? (
+                    <Pencil className="h-4 w-4" />
+                  ) : (
+                    <Clock className="h-4 w-4" />
+                  )}
                 </button>
               </div>
-
-              {isEditingUsername ? (
-                <input
-                  type="text"
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, username: e.target.value }))}
-                  className="mt-1 block w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder:text-white/50 shadow-sm focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
-                  required
-                />
-              ) : (
-                <p className="text-base font-medium text-white">@{formData.username}</p>
-              )}
 
               <p className="mt-2 text-xs text-white/70">
                 {usernameCooldown.canEdit

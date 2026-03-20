@@ -296,7 +296,7 @@ export function TopNav() {
               {/* Desktop: Settings + Logout only */}
               <div className="hidden md:block p-2 min-w-[12.5rem]">
                 <Link
-                  href="/settings?tab=notifications"
+                  href="/settings"
                   onClick={(e) => {
                     if (pathname.startsWith('/settings')) e.preventDefault()
                     setIsMenuOpen(false)
@@ -304,7 +304,7 @@ export function TopNav() {
                   className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#6B6B6B] hover:bg-gray-100"
                 >
                   <Settings className="h-5 w-5 shrink-0" />
-                  <span>Notifications</span>
+                  <span>Settings</span>
                 </Link>
                 <button
                   type="button"
@@ -332,13 +332,13 @@ export function TopNav() {
                       <Search className="h-5 w-5 text-white" />
                     </button>
                     <Link
-                      href="/settings?tab=notifications"
+                      href="/settings"
                       onClick={(e) => {
                         if (pathname.startsWith('/settings')) e.preventDefault()
                         setIsMenuOpen(false)
                       }}
                       className="relative flex h-8 w-8 items-center justify-center rounded-full transition-all shadow-sm hover:bg-sunset-gradient"
-                      aria-label="Notifications"
+                      aria-label="Settings"
                     >
                       <Settings className="h-5 w-5 text-white" strokeWidth={1.25} />
                     </Link>
