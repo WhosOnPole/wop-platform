@@ -103,19 +103,19 @@ export function ProfileDiscussionSection({
       </div>
 
       {/* Create Post Form */}
-      <form onSubmit={handleCreatePost} className="mb-6">
+      <form onSubmit={handleCreatePost} className="mb-6 flex w-full items-center">
         <textarea
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}
           placeholder={`Write something about ${profileUsername}...`}
-          rows={4}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          rows={1}
+          className="min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5 text-sm text-black placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
           required
         />
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-2 flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           <span>Post</span>

@@ -560,11 +560,11 @@ export function DiscussionSection({
     : 'items-center justify-center'
   const isCompactInput = fixedInput || compact
   const textareaClasses = isDark
-    ? `min-w-0 flex-1 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-0 ${isCompactInput ? 'rounded-l-2xl rounded-r-none border-0 bg-white/10 px-4 py-1.5' : 'rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 focus:border-[#25B4B1] focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset'}`
-    : `min-w-0 flex-1 text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-0 ${isCompactInput ? 'rounded-l-2xl rounded-r-none border-0 bg-gray-100 px-4 py-1.5' : 'rounded-l-md rounded-r-none border border-r-0 border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'}`
+    ? 'min-w-0 flex-1 resize-none text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-0 rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5'
+    : 'min-w-0 flex-1 resize-none text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-0 rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5'
   const submitButtonClasses = isDark
-    ? `flex shrink-0 items-center justify-center gap-1.5 border border-white/30 bg-transparent text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50 ${isCompactInput ? 'rounded-r-2xl rounded-l-none px-4 py-1.5' : 'rounded-r-md rounded-l-none px-4 py-2'}`
-    : `flex shrink-0 items-center justify-center gap-1.5 border border-gray-300 bg-gray-100 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50 ${isCompactInput ? 'rounded-r-2xl rounded-l-none px-4 py-1.5' : 'rounded-r-md rounded-l-none px-4 py-2'}`
+    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
+    : 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
   const emptyTextClasses = isDark
     ? 'text-sm text-white/60 text-center'
     : 'text-sm text-gray-500 text-center'
@@ -583,11 +583,11 @@ export function DiscussionSection({
   const commentTextClasses = isDark ? 'mb-2 text-sm text-white/90' : 'mb-2 text-sm text-gray-700'
   const replyTextClasses = isDark ? 'text-xs text-white/80 hover:text-white' : 'text-xs text-blue-600 hover:text-blue-800'
   const replyTextareaClasses = isDark
-    ? 'w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
-    : 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
+    ? 'min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
+    : 'min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
   const replySubmitClasses = isDark
-    ? 'mt-2 rounded-md bg-white/20 px-3 py-1 text-xs text-white hover:bg-white/30'
-    : 'mt-2 rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700'
+    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
+    : 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
   const replyContentClasses = isDark ? 'mb-1 text-xs text-white/90' : 'mb-1 text-xs text-gray-700'
 
   return (
@@ -787,7 +787,7 @@ export function DiscussionSection({
 
                           {/* Reply to Comment Form */}
                           {showReplyToComment === comment.id && (
-                            <div className="mt-2 ml-4">
+                            <div className="mt-2 ml-8 flex w-full items-center">
                               <textarea
                                 value={replyContent[comment.id] || ''}
                                 onChange={(e) =>
@@ -797,13 +797,16 @@ export function DiscussionSection({
                                   })
                                 }
                                 placeholder="Write a reply..."
-                                rows={2}
+                                rows={isCompactInput ? 1 : 2}
                                 className={replyTextareaClasses}
                               />
                               <button
+                                type="button"
                                 onClick={() => handleCreateReplyToComment(comment.id, post.id)}
+                                disabled={!replyContent[comment.id]?.trim()}
                                 className={replySubmitClasses}
                               >
+                                <Send className="h-4 w-4" />
                                 Post Reply
                               </button>
                             </div>
@@ -897,22 +900,23 @@ export function DiscussionSection({
 
                 {/* Reply Form (for post) */}
                 {showReplyForm === post.id && (
-                  <div className="mt-3 ml-11">
+                  <div className="mt-3 flex w-full items-center">
                     <textarea
                       value={replyContent[post.id] || ''}
                       onChange={(e) =>
                         setReplyContent({ ...replyContent, [post.id]: e.target.value })
                       }
                       placeholder="Write a reply..."
-                      rows={2}
+                      rows={isCompactInput ? 1 : 2}
                       className={replyTextareaClasses}
                     />
                     <button
+                      type="button"
                       onClick={() => handleCreateReply(post.id)}
-                      className={isDark
-                        ? 'mt-2 rounded-md bg-white/20 px-3 py-1 text-sm text-white hover:bg-white/30'
-                        : 'mt-2 rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700'}
+                      disabled={!replyContent[post.id]?.trim()}
+                      className={replySubmitClasses}
                     >
+                      <Send className="h-4 w-4" />
                       Post Reply
                     </button>
                   </div>
@@ -928,14 +932,14 @@ export function DiscussionSection({
         {fixedInput ? (
           <form
             onSubmit={handleCreatePost}
-            className={`flex shrink-0 w-full items-stretch p-4 pt-3 pb-4 border-t ${isDark ? 'border-white/20' : 'border-gray-200'}`}
+            className={`flex shrink-0 w-full items-center p-4 pt-3 pb-4 border-t ${isDark ? 'border-white/20' : 'border-gray-200'}`}
           >
           <textarea
             value={newPostContent}
             onChange={(e) => setNewPostContent(e.target.value)}
             placeholder="Add a comment..."
             rows={isCompactInput ? 1 : 2}
-            className={`${textareaClasses} ${isCompactInput ? 'resize-none' : ''}`}
+            className={textareaClasses}
           />
           <button
             type="submit"
@@ -950,12 +954,12 @@ export function DiscussionSection({
       </div>
 
       {!fixedInput ? (
-        <form onSubmit={handleCreatePost} className="mt-4 flex w-full items-stretch">
+        <form onSubmit={handleCreatePost} className="mt-4 flex w-full items-center">
           <textarea
             value={newPostContent}
             onChange={(e) => setNewPostContent(e.target.value)}
             placeholder="Add a comment..."
-            rows={2}
+            rows={isCompactInput ? 1 : 2}
             className={textareaClasses}
           />
           <button

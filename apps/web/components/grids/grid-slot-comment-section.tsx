@@ -347,18 +347,18 @@ export function GridSlotCommentSection({
         )}
       </div>
 
-      <form onSubmit={handleAddComment} className="flex w-full items-stretch">
+      <form onSubmit={handleAddComment} className="flex w-full items-center">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Add a comment..."
-          rows={2}
-          className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
+          rows={1}
+          className="min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
         />
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50"
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           Post

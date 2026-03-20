@@ -179,7 +179,7 @@ export function FeedPostCommentSection({
   })
 
   const panelContent = isOpen ? (
-    <div className="rounded-md border border-white/10 bg-black/40 p-3 backdrop-blur-sm">
+    <div className="rounded-mdbg-black/40 p-3 backdrop-blur-sm">
           {isLoading ? (
             <p className="text-sm text-white/90">Loading comments...</p>
           ) : (
@@ -341,18 +341,18 @@ export function FeedPostCommentSection({
                 </div>
               )}
 
-              <form onSubmit={handleAddComment}>
+              <form onSubmit={handleAddComment} className="flex w-full items-center">
                 <textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder="Write a reply..."
-                  rows={2}
-                  className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                  rows={1}
+                  className="min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                  className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1] disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
                   Post Reply
