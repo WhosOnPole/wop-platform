@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { NewsStoryModal } from './news-story-modal'
@@ -39,7 +40,7 @@ export function NewsStoriesTab() {
 
     if (error) {
       console.error('Error deleting news story:', error)
-      alert('Failed to delete news story')
+      toast.error('Failed to delete news story')
     } else {
       loadStories()
     }

@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@/utils/supabase-client'
 import { Save } from 'lucide-react'
 import { getTrackSlug } from '@/utils/storage-urls'
 import { GridEditCanvas, type GridEditCanvasRankItem } from '@/components/grids/grid-edit-canvas'
+import { toast } from 'sonner'
 import type { GridType } from '@/components/grids/grid-edit-canvas'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,7 +144,7 @@ export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridS
   async function handleSave() {
     const realItems = rankedList.filter((i) => !i.is_placeholder)
     if (realItems.length === 0) {
-      alert(config.emptyAlert)
+      toast.error(config.emptyAlert)
       return
     }
 
@@ -188,7 +189,7 @@ export function OnboardingGridStep({ type, onComplete, onSkip }: OnboardingGridS
 
     if (error) {
       console.error('Error saving grid:', error)
-      alert('Failed to save grid')
+      toast.error('Failed to save grid')
     } else {
       onComplete()
     }

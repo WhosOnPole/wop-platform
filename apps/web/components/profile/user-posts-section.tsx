@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MessageSquare, MapPin, Users, Trophy } from 'lucide-react'
+import { formatTimeAgo } from '@/utils/date-utils'
 
 interface Post {
   id: string
@@ -80,7 +81,7 @@ export function UserPostsSection({ posts, username }: UserPostsSectionProps) {
                   </div>
                 )}
                 <p className="mt-2 text-xs text-gray-500">
-                  {new Date(post.created_at).toLocaleString()}
+                  {formatTimeAgo(post.created_at)}
                 </p>
               </div>
             )

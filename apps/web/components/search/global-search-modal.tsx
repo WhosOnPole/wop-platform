@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Search, X, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Search, X, Loader2, ChevronRight } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { getAvatarUrl } from '@/utils/avatar'
 import { getTeamIconUrl } from '@/utils/storage-urls'
@@ -40,7 +41,15 @@ interface GlobalSearchModalProps {
   onClose: () => void
 }
 
+const VIEW_MORE_ROUTES: Record<string, string> = {
+  drivers: '/pitlane#drivers',
+  teams: '/pitlane#teams',
+  tracks: '/pitlane#tracks',
+  users: '/feed?tab=discovery',
+}
+
 export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
+  const router = useRouter()
   const supabase = createClientComponentClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const requestIdRef = useRef(0)
@@ -197,9 +206,9 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-full max-w-4xl flex-col">
-        <div className="border-b border-white/10 px-4 pt-4 pb-3">
+        <div className="border-b border-white/10 px-4 pt-16 pb-3">
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
@@ -229,13 +238,13 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
             </button>
           </div>
 
-          <p className="mt-2 text-xs text-white/50">
+          <p className="mt-4 text-xs text-white/50">
             {hasQuery ? (
               <>
                 Showing results for <span className="text-white/80">&quot;{activeQuery}&quot;</span>
               </>
             ) : (
-              <>Start typing for instant matches (suggestions shown below).</>
+              <p className="text-xs text-white/50">Start typing for instant matches (suggestions shown below).</p>
             )}
           </p>
         </div>
@@ -246,31 +255,44 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
               {hasQuery ? 'No matches yet.' : 'Try searching for a driver, team, track, or username.'}
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {activeResults.drivers.length > 0 ? (
-                <ResultSection title={`Drivers (${activeResults.drivers.length})`}>
+                <ResultSection
+                  title={`Drivers (${activeResults.drivers.length})`}
+                  viewMoreHref={VIEW_MORE_ROUTES.drivers}
+                  onViewMore={() => {
+                    onClose()
+                    router.push(VIEW_MORE_ROUTES.drivers)
+                  }}
+                >
                   {activeResults.drivers.map((d) => (
-                    <ResultRow
+                    <ResultCard
                       key={d.id}
                       href={`/drivers/${slugify(d.name)}`}
                       label={d.name}
-                      sublabel="Driver"
                       imageUrl={d.headshot_url || d.image_url || null}
                       fallback={d.name.charAt(0).toUpperCase()}
                       onSelect={onClose}
+                      imageVariant="default"
                     />
                   ))}
                 </ResultSection>
               ) : null}
 
               {activeResults.teams.length > 0 ? (
-                <ResultSection title={`Teams (${activeResults.teams.length})`}>
+                <ResultSection
+                  title={`Teams (${activeResults.teams.length})`}
+                  viewMoreHref={VIEW_MORE_ROUTES.teams}
+                  onViewMore={() => {
+                    onClose()
+                    router.push(VIEW_MORE_ROUTES.teams)
+                  }}
+                >
                   {activeResults.teams.map((t) => (
-                    <ResultRow
+                    <ResultCard
                       key={t.id}
                       href={`/teams/${slugify(t.name)}`}
                       label={t.name}
-                      sublabel="Team"
                       imageUrl={supabaseUrl ? getTeamIconUrl(t.name, supabaseUrl) : t.image_url || null}
                       fallback={t.name.charAt(0).toUpperCase()}
                       onSelect={onClose}
@@ -281,32 +303,46 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
               ) : null}
 
               {activeResults.tracks.length > 0 ? (
-                <ResultSection title={`Tracks (${activeResults.tracks.length})`}>
+                <ResultSection
+                  title={`Tracks (${activeResults.tracks.length})`}
+                  viewMoreHref={VIEW_MORE_ROUTES.tracks}
+                  onViewMore={() => {
+                    onClose()
+                    router.push(VIEW_MORE_ROUTES.tracks)
+                  }}
+                >
                   {activeResults.tracks.map((t) => (
-                    <ResultRow
+                    <ResultCard
                       key={t.id}
                       href={`/tracks/${slugify(t.name)}`}
                       label={t.circuit_ref ? `${t.circuit_ref} — ${t.name}` : t.name}
-                      sublabel="Track"
                       imageUrl={t.image_url || null}
                       fallback={t.name.charAt(0).toUpperCase()}
                       onSelect={onClose}
+                      imageVariant="default"
                     />
                   ))}
                 </ResultSection>
               ) : null}
 
               {activeResults.profiles.length > 0 ? (
-                <ResultSection title={`Users (${activeResults.profiles.length})`}>
+                <ResultSection
+                  title={`Users (${activeResults.profiles.length})`}
+                  viewMoreHref={VIEW_MORE_ROUTES.users}
+                  onViewMore={() => {
+                    onClose()
+                    router.push(VIEW_MORE_ROUTES.users)
+                  }}
+                >
                   {activeResults.profiles.map((p) => (
-                    <ResultRow
+                    <ResultCard
                       key={p.id}
                       href={`/u/${p.username}`}
                       label={p.username}
-                      sublabel="User"
                       imageUrl={getAvatarUrl(p.profile_image_url)}
                       fallback={p.username.charAt(0).toUpperCase()}
                       onSelect={onClose}
+                      imageVariant="default"
                     />
                   ))}
                 </ResultSection>
@@ -326,52 +362,71 @@ interface GlobalSearchResults {
   tracks: TrackResult[]
 }
 
-function ResultSection({ title, children }: { title: string; children: React.ReactNode }) {
+function ResultSection({
+  title,
+  viewMoreHref,
+  onViewMore,
+  children,
+}: {
+  title: string
+  viewMoreHref: string
+  onViewMore: () => void
+  children: React.ReactNode
+}) {
   return (
     <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/50">{title}</h3>
-      <div className="space-y-2">{children}</div>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-white/50">{title}</h3>
+        <Link
+          href={viewMoreHref}
+          onClick={onViewMore}
+          className="flex items-center gap-1 text-xs font-medium text-[#25B4B1] hover:text-[#3BEFEB]"
+        >
+          View more
+          <ChevronRight className="h-4 w-4" />
+        </Link>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {children}
+      </div>
     </section>
   )
 }
 
-function ResultRow(params: {
+function ResultCard(params: {
   href: string
   label: string
-  sublabel: string
   imageUrl: string | null
   fallback: string
   onSelect: () => void
   imageVariant?: 'default' | 'team'
 }) {
-  const { href, label, sublabel, imageUrl, fallback, onSelect, imageVariant = 'default' } = params
+  const { href, label, imageUrl, fallback, onSelect, imageVariant = 'default' } = params
   const isTeam = imageVariant === 'team'
 
   return (
     <Link
       href={href}
       onClick={onSelect}
-      className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5 hover:bg-white/10 transition-colors"
+      className="group flex shrink-0 flex-col items-center gap-2 w-[88px]"
     >
-      <div className={`h-10 w-10 overflow-hidden rounded-full ${isTeam ? 'bg-white/10 p-2' : 'bg-white/10'}`}>
+      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-white/10 transition-colors group-hover:bg-white/15">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
             alt={label}
-            className={`h-full w-full ${isTeam ? 'object-contain brightness-0 invert' : 'object-cover'}`}
+            className={`absolute inset-0 h-full w-full ${isTeam ? 'object-contain p-3 brightness-0 invert' : 'object-cover'}`}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-white/70">
+          <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-white/70">
             {fallback}
           </div>
         )}
       </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-white">{label}</div>
-        <div className="text-xs text-white/50">{sublabel}</div>
-      </div>
+      <p className="w-full truncate text-center text-xs font-medium text-white/90 group-hover:text-white">
+        {label}
+      </p>
     </Link>
   )
 }

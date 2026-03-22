@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Trophy, Play } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface LeaderboardDashboardProps {
   weeklyLastGenerated: string | null | undefined
@@ -38,11 +39,11 @@ export function LeaderboardDashboard({
         throw new Error('Failed to generate leaderboard')
       }
 
-      alert(`${periodType} leaderboard generated successfully!`)
+      toast.success(`${periodType} leaderboard generated successfully!`)
       window.location.reload()
     } catch (error: any) {
       console.error('Failed to generate leaderboard:', error)
-      alert(`Failed to generate: ${error.message}`)
+      toast.error(`Failed to generate: ${error.message}`)
     } finally {
       setGenerating(null)
     }

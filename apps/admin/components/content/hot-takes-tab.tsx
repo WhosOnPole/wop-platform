@@ -1,5 +1,6 @@
 'use client'
 
+import { toast } from 'sonner'
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
@@ -39,7 +40,7 @@ export function HotTakesTab() {
 
     if (error) {
       console.error('Error deleting hot take:', error)
-      alert('Failed to delete hot take')
+      toast.error('Failed to delete hot take')
     } else {
       loadHotTakes()
     }

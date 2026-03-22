@@ -9,6 +9,8 @@ import { Send } from 'lucide-react'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
+import { toast } from 'sonner'
 
 interface CommentUser {
   id: string
@@ -117,7 +119,7 @@ export function GridSlotCommentSection({
       fieldName: 'Comment',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -201,17 +203,22 @@ export function GridSlotCommentSection({
               <div key={comment.id} className="py-1">
                 <div className="mb-0.5 flex items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <div
-                      className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                        isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
-                      }`}
+                    <Link
+                      href={`/u/${comment.user?.username ?? 'unknown'}`}
+                      className="shrink-0"
                     >
-                      <img
-                        src={getAvatarUrl(comment.user?.profile_image_url)}
-                        alt={comment.user?.username ?? ''}
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    </div>
+                      <div
+                        className={`h-6 w-6 rounded-full overflow-hidden ${
+                          isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
+                        }`}
+                      >
+                        <img
+                          src={getAvatarUrl(comment.user?.profile_image_url)}
+                          alt={comment.user?.username ?? ''}
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      </div>
+                    </Link>
                     <Link
                       href={`/u/${comment.user?.username ?? 'unknown'}`}
                       className="text-sm font-medium text-white/90 hover:text-white"
@@ -219,7 +226,7 @@ export function GridSlotCommentSection({
                       {comment.user?.username ?? 'Unknown'}
                     </Link>
                     <span className="text-xs text-white/70">
-                      {new Date(comment.created_at).toLocaleString()}
+                      {formatTimeAgo(comment.created_at)}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -262,27 +269,32 @@ export function GridSlotCommentSection({
                   <div className="mt-2 ml-4 space-y-2 border-l border-white/10 pl-3">
                     {commentReplies.map((reply) => (
                       <div key={reply.id}>
-                        <div className="mb-0.5 flex items-center justify-between gap-2">
-                          <div className="flex min-w-0 flex-1 items-center gap-2">
-                            <div
-                              className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                                isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
-                              }`}
-                            >
-                              <img
-                                src={getAvatarUrl(reply.user?.profile_image_url)}
-                                alt={reply.user?.username ?? ''}
-                                className="h-full w-full rounded-full object-cover"
-                              />
-                            </div>
-                            <Link
-                              href={`/u/${reply.user?.username ?? 'unknown'}`}
+                          <div className="mb-0.5 flex items-center justify-between gap-2">
+                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                              <Link
+                                href={`/u/${reply.user?.username ?? 'unknown'}`}
+                                className="shrink-0"
+                              >
+                                <div
+                                  className={`h-5 w-5 rounded-full overflow-hidden ${
+                                    isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
+                                  }`}
+                                >
+                                  <img
+                                    src={getAvatarUrl(reply.user?.profile_image_url)}
+                                    alt={reply.user?.username ?? ''}
+                                    className="h-full w-full rounded-full object-cover"
+                                  />
+                                </div>
+                              </Link>
+                              <Link
+                                href={`/u/${reply.user?.username ?? 'unknown'}`}
                               className="text-xs font-medium text-white/90 hover:text-white"
                             >
                               {reply.user?.username ?? 'Unknown'}
                             </Link>
                             <span className="text-xs text-white/70">
-                              {new Date(reply.created_at).toLocaleString()}
+                              {formatTimeAgo(reply.created_at)}
                             </span>
                           </div>
                           <div className="flex shrink-0 items-center gap-2">
@@ -335,18 +347,18 @@ export function GridSlotCommentSection({
         )}
       </div>
 
-      <form onSubmit={handleAddComment} className="flex w-full items-stretch">
+      <form onSubmit={handleAddComment} className="flex w-full items-center">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Add a comment..."
-          rows={2}
-          className="min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
+          rows={1}
+          className="min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
         />
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50"
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           Post

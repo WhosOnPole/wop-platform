@@ -12,6 +12,8 @@ import { DiscussionReportButton } from '@/components/discussion/report-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { FeedPostActionsMenu } from '@/components/feed/feed-post-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
+import { toast } from 'sonner'
 
 interface User {
   id: string
@@ -356,7 +358,7 @@ export function DiscussionSection({
       fieldName: 'Post',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -392,7 +394,7 @@ export function DiscussionSection({
 
     if (error) {
       console.error('Error creating post:', error)
-      alert('Failed to create post')
+      toast.error('Failed to create post. Please check your internet connection and try again.')
     } else {
       setPosts([data, ...posts])
       setNewPostContent('')
@@ -409,7 +411,7 @@ export function DiscussionSection({
       fieldName: 'Comment',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -446,7 +448,7 @@ export function DiscussionSection({
 
     if (error) {
       console.error('Error creating comment:', error)
-      alert('Failed to create comment')
+      toast.error('Failed to create comment')
     } else {
       // Add the new comment to the comments state
       const newComment = { ...data, like_count: (data as { like_count?: number })?.like_count ?? 0 } as Comment
@@ -469,7 +471,7 @@ export function DiscussionSection({
       fieldName: 'Reply',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -506,7 +508,7 @@ export function DiscussionSection({
 
     if (error) {
       console.error('Error creating reply:', error)
-      alert('Failed to create reply')
+      toast.error('Failed to create reply')
     } else {
       // Add the new reply to the comments state
       const newReply = { ...data, like_count: (data as { like_count?: number })?.like_count ?? 0 } as Comment
@@ -546,22 +548,23 @@ export function DiscussionSection({
     ? 'text-sm font-medium text-white/90 text-right'
     : 'text-sm font-medium text-gray-900 text-right'
   const contentHeight = fixedInput
-    ? 'flex-1 min-h-0 min-h-[40vh] sm:min-h-0 overflow-y-auto'
+    ? 'flex-1 min-h-0 min-h-[40vh] sm:min-h-0'
     : compact
       ? 'min-h-[6rem] max-h-[35vh]'
       : 'min-h-[6rem] max-h-[50vh]'
   const contentBoxClasses = isDark
-    ? `mt-6 flex ${contentHeight} flex-col rounded-md border border-white/20 bg-transparent p-4`
-    : `mt-6 flex ${contentHeight} flex-col rounded-md border border-gray-200 bg-gray-50/50 p-4`
+    ? `mt-6 flex ${contentHeight} flex-col rounded-md border border-white/20 bg-transparent ${fixedInput ? 'overflow-hidden' : 'p-4'}`
+    : `mt-6 flex ${contentHeight} flex-col rounded-md border border-gray-200 bg-gray-50/50 ${fixedInput ? 'overflow-hidden' : 'p-4'}`
   const contentBoxEmptyClasses = isDark
     ? 'items-center justify-center'
     : 'items-center justify-center'
+  const isCompactInput = fixedInput || compact
   const textareaClasses = isDark
-    ? 'min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset'
-    : 'min-w-0 flex-1 rounded-l-md rounded-r-none border border-r-0 border-gray-300 px-3 py-2 text-sm text-black placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+    ? 'min-w-0 flex-1 resize-none text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-0 rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5'
+    : 'min-w-0 flex-1 resize-none text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-0 rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5'
   const submitButtonClasses = isDark
-    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-white/30 bg-transparent px-4 py-2 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
-    : 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-md rounded-l-none border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
+    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
+    : 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
   const emptyTextClasses = isDark
     ? 'text-sm text-white/60 text-center'
     : 'text-sm text-gray-500 text-center'
@@ -580,20 +583,21 @@ export function DiscussionSection({
   const commentTextClasses = isDark ? 'mb-2 text-sm text-white/90' : 'mb-2 text-sm text-gray-700'
   const replyTextClasses = isDark ? 'text-xs text-white/80 hover:text-white' : 'text-xs text-blue-600 hover:text-blue-800'
   const replyTextareaClasses = isDark
-    ? 'w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
-    : 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
+    ? 'min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm shadow-sm focus:border-white/40 focus:outline-none focus:ring-white/20 text-white placeholder:text-white/50'
+    : 'min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 text-black'
   const replySubmitClasses = isDark
-    ? 'mt-2 rounded-md bg-white/20 px-3 py-1 text-xs text-white hover:bg-white/30'
-    : 'mt-2 rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700'
+    ? 'flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
+    : 'flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
   const replyContentClasses = isDark ? 'mb-1 text-xs text-white/90' : 'mb-1 text-xs text-gray-700'
 
   return (
     <section className={sectionClasses}>
 
-      {/* Posts list - scrollable, same layout as grid detail comment section */}
-      <div
-        className={`${contentBoxClasses} ${posts.length === 0 ? contentBoxEmptyClasses : ''}`}
-      >
+      {/* Posts list - scrollable; when fixedInput, form is inside the bordered box at bottom */}
+      <div className={contentBoxClasses}>
+        <div
+          className={`${fixedInput ? 'flex-1 min-h-0 overflow-y-auto p-4 pb-0' : ''} ${posts.length === 0 ? contentBoxEmptyClasses : ''}`}
+        >
         {posts.length === 0 ? (
           <p className={emptyTextClasses}>No discussions yet. Be the first to post!</p>
         ) : (
@@ -606,17 +610,22 @@ export function DiscussionSection({
               <div key={post.id} id={`post-${post.id}`} className={`${postBorderClasses} pb-6 last:border-0`}>
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-start space-x-3">
-                    <div
-                      className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
-                        isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
-                      }`}
+                    <Link
+                      href={`/u/${post.user?.username || 'unknown'}`}
+                      className="shrink-0"
                     >
-                      <img
-                        src={getAvatarUrl(post.user?.profile_image_url)}
-                        alt={post.user?.username ?? ''}
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    </div>
+                      <div
+                        className={`h-8 w-8 rounded-full overflow-hidden ${
+                          isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
+                        }`}
+                      >
+                        <img
+                          src={getAvatarUrl(post.user?.profile_image_url)}
+                          alt={post.user?.username ?? ''}
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      </div>
+                    </Link>
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/u/${post.user?.username || 'unknown'}`}
@@ -625,7 +634,7 @@ export function DiscussionSection({
                         {post.user?.username || 'Unknown'}
                       </Link>
                       <p className={timestampClasses}>
-                        {new Date(post.created_at).toLocaleString()}
+                        {formatTimeAgo(post.created_at)}
                       </p>
                       {post.content ? <p className={contentClasses}>{post.content}</p> : null}
                     </div>
@@ -695,17 +704,22 @@ export function DiscussionSection({
                         <div key={comment.id} className="py-2">
                           <div className="mb-2 flex items-start justify-between gap-2">
                             <div className="flex min-w-0 flex-1 items-start space-x-2">
-                              <div
-                                className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                                  isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
-                                }`}
+                              <Link
+                                href={`/u/${comment.user?.username || 'unknown'}`}
+                                className="shrink-0"
                               >
-                                <img
-                                  src={getAvatarUrl(comment.user?.profile_image_url)}
-                                  alt={comment.user?.username ?? ''}
-                                  className="h-full w-full rounded-full object-cover"
-                                />
-                              </div>
+                                <div
+                                  className={`h-6 w-6 rounded-full overflow-hidden ${
+                                    isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
+                                  }`}
+                                >
+                                  <img
+                                    src={getAvatarUrl(comment.user?.profile_image_url)}
+                                    alt={comment.user?.username ?? ''}
+                                    className="h-full w-full rounded-full object-cover"
+                                  />
+                                </div>
+                              </Link>
                               <div className="min-w-0 flex-1">
                                 <Link
                                   href={`/u/${comment.user?.username || 'unknown'}`}
@@ -714,7 +728,7 @@ export function DiscussionSection({
                                   {comment.user?.username || 'Unknown'}
                                 </Link>
                                 <p className={timestampClasses}>
-                                  {new Date(comment.created_at).toLocaleString()}
+                                  {formatTimeAgo(comment.created_at)}
                                 </p>
                                 <p className={commentTextClasses}>{comment.content}</p>
                               </div>
@@ -773,7 +787,7 @@ export function DiscussionSection({
 
                           {/* Reply to Comment Form */}
                           {showReplyToComment === comment.id && (
-                            <div className="mt-2 ml-4">
+                            <div className="mt-2 ml-8 flex w-full items-center">
                               <textarea
                                 value={replyContent[comment.id] || ''}
                                 onChange={(e) =>
@@ -783,14 +797,17 @@ export function DiscussionSection({
                                   })
                                 }
                                 placeholder="Write a reply..."
-                                rows={2}
+                                rows={isCompactInput ? 1 : 2}
                                 className={replyTextareaClasses}
                               />
                               <button
+                                type="button"
                                 onClick={() => handleCreateReplyToComment(comment.id, post.id)}
+                                disabled={!replyContent[comment.id]?.trim()}
                                 className={replySubmitClasses}
+                                aria-label="Post reply"
                               >
-                                Post Reply
+                                <Send className="h-4 w-4" />
                               </button>
                             </div>
                           )}
@@ -802,17 +819,22 @@ export function DiscussionSection({
                                 <div key={reply.id} className="py-1">
                                   <div className="mb-1 flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 flex-1 items-start space-x-2">
-                                      <div
-                                        className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                                          isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
-                                        }`}
+                                      <Link
+                                        href={`/u/${reply.user?.username || 'unknown'}`}
+                                        className="shrink-0"
                                       >
-                                        <img
-                                          src={getAvatarUrl(reply.user?.profile_image_url)}
-                                          alt={reply.user?.username ?? ''}
-                                          className="h-full w-full rounded-full object-cover"
-                                        />
-                                      </div>
+                                        <div
+                                          className={`h-5 w-5 rounded-full overflow-hidden ${
+                                            isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
+                                          }`}
+                                        >
+                                          <img
+                                            src={getAvatarUrl(reply.user?.profile_image_url)}
+                                            alt={reply.user?.username ?? ''}
+                                            className="h-full w-full rounded-full object-cover"
+                                          />
+                                        </div>
+                                      </Link>
                                       <div className="min-w-0 flex-1">
                                         <Link
                                           href={`/u/${reply.user?.username || 'unknown'}`}
@@ -821,7 +843,7 @@ export function DiscussionSection({
                                           {reply.user?.username || 'Unknown'}
                                         </Link>
                                         <p className={timestampClasses}>
-                                          {new Date(reply.created_at).toLocaleString()}
+                                          {formatTimeAgo(reply.created_at)}
                                         </p>
                                         <p className={replyContentClasses}>{reply.content}</p>
                                       </div>
@@ -878,23 +900,24 @@ export function DiscussionSection({
 
                 {/* Reply Form (for post) */}
                 {showReplyForm === post.id && (
-                  <div className="mt-3 ml-11">
+                  <div className="mt-3 flex w-full items-center">
                     <textarea
                       value={replyContent[post.id] || ''}
                       onChange={(e) =>
                         setReplyContent({ ...replyContent, [post.id]: e.target.value })
                       }
                       placeholder="Write a reply..."
-                      rows={2}
+                      rows={isCompactInput ? 1 : 2}
                       className={replyTextareaClasses}
                     />
                     <button
+                      type="button"
                       onClick={() => handleCreateReply(post.id)}
-                      className={isDark
-                        ? 'mt-2 rounded-md bg-white/20 px-3 py-1 text-sm text-white hover:bg-white/30'
-                        : 'mt-2 rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700'}
+                      disabled={!replyContent[post.id]?.trim()}
+                      className={replySubmitClasses}
+                      aria-label="Post reply"
                     >
-                      Post Reply
+                      <Send className="h-4 w-4" />
                     </button>
                   </div>
                 )}
@@ -903,26 +926,52 @@ export function DiscussionSection({
           })}
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Create post form - same order and style as grid detail (input at bottom) */}
-      <form onSubmit={handleCreatePost} className={`flex w-full items-stretch ${fixedInput ? 'shrink-0 pt-4' : ''}`}>
-        <textarea
-          value={newPostContent}
-          onChange={(e) => setNewPostContent(e.target.value)}
-          placeholder="Add a comment..."
-          rows={2}
-          className={textareaClasses}
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting || !newPostContent.trim()}
-          className={submitButtonClasses}
-        >
+        {/* Create post form - when fixedInput, inside the bordered box at bottom; otherwise sibling below */}
+        {fixedInput ? (
+          <form
+            onSubmit={handleCreatePost}
+            className={`flex shrink-0 w-full items-center p-4 pt-3 pb-4 border-t ${isDark ? 'border-white/20' : 'border-gray-200'}`}
+          >
+          <textarea
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            placeholder="Add a comment..."
+            rows={isCompactInput ? 1 : 2}
+            className={textareaClasses}
+          />
+          <button
+            type="submit"
+            disabled={isSubmitting || !newPostContent.trim()}
+            className={submitButtonClasses}
+          >
           <Send className="h-4 w-4" />
           Post
         </button>
-      </form>
+          </form>
+        ) : null}
+      </div>
+
+      {!fixedInput ? (
+        <form onSubmit={handleCreatePost} className="mt-4 flex w-full items-center">
+          <textarea
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            placeholder="Add a comment..."
+            rows={isCompactInput ? 1 : 2}
+            className={textareaClasses}
+          />
+          <button
+            type="submit"
+            disabled={isSubmitting || !newPostContent.trim()}
+            className={submitButtonClasses}
+          >
+            <Send className="h-4 w-4" />
+            Post
+          </button>
+        </form>
+      ) : null}
     </section>
   )
 }

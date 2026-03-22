@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { MessageSquare, Send } from 'lucide-react'
 import Link from 'next/link'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
+import { toast } from 'sonner'
 
 interface User {
   id: string
@@ -47,7 +49,7 @@ export function ProfileDiscussionSection({
       fieldName: 'Post',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -83,7 +85,7 @@ export function ProfileDiscussionSection({
 
     if (error) {
       console.error('Error creating post:', error)
-      alert('Failed to create post')
+      toast.error('Failed to create post. Please check your internet connection and try again.')
     } else {
       setPosts([data, ...posts])
       setNewPostContent('')
@@ -101,19 +103,19 @@ export function ProfileDiscussionSection({
       </div>
 
       {/* Create Post Form */}
-      <form onSubmit={handleCreatePost} className="mb-6">
+      <form onSubmit={handleCreatePost} className="mb-6 flex w-full items-center">
         <textarea
           value={newPostContent}
           onChange={(e) => setNewPostContent(e.target.value)}
           placeholder={`Write something about ${profileUsername}...`}
-          rows={4}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          rows={1}
+          className="min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5 text-sm text-black placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
           required
         />
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-2 flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           <span>Post</span>
@@ -130,17 +132,22 @@ export function ProfileDiscussionSection({
           posts.map((post) => (
             <div key={post.id} className="border-b border-gray-200 pb-6 last:border-0">
               <div className="mb-3 flex items-center space-x-3">
-                <div
-                  className={`h-8 w-8 shrink-0 rounded-full overflow-hidden ${
-                    isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
-                  }`}
+                <Link
+                  href={`/u/${post.user?.username || 'unknown'}`}
+                  className="shrink-0"
                 >
-                  <img
-                    src={getAvatarUrl(post.user?.profile_image_url)}
-                    alt={post.user?.username ?? ''}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                </div>
+                  <div
+                    className={`h-8 w-8 rounded-full overflow-hidden ${
+                      isDefaultAvatar(post.user?.profile_image_url) ? 'bg-white/10' : ''
+                    }`}
+                  >
+                    <img
+                      src={getAvatarUrl(post.user?.profile_image_url)}
+                      alt={post.user?.username ?? ''}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  </div>
+                </Link>
                 <div>
                   <Link
                     href={`/u/${post.user?.username || 'unknown'}`}
@@ -149,7 +156,7 @@ export function ProfileDiscussionSection({
                     {post.user?.username || 'Unknown'}
                   </Link>
                   <p className="text-xs text-gray-500">
-                    {new Date(post.created_at).toLocaleString()}
+                    {formatTimeAgo(post.created_at)}
                   </p>
                 </div>
               </div>

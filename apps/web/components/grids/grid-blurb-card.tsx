@@ -34,6 +34,7 @@ export function GridBlurbCard({
               width={20}
               height={20}
               className="h-6 w-6 rounded-full object-cover"
+              unoptimized
             />
           </Link>
           <span className="text-white truncate font-normal text-xs">{owner.username}</span>

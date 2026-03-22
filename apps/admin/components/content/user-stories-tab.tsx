@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Check, X, Loader2, Pencil } from 'lucide-react'
+import { toast } from 'sonner'
 import { UserStoryEditModal } from './user-story-edit-modal'
 
 interface UserStorySubmission {
@@ -64,7 +65,7 @@ export function UserStoriesTab() {
       data: { session },
     } = await supabase.auth.getSession()
     if (!session) {
-      alert('Session expired. Please log in again.')
+      toast.error('Session expired. Please log in again.')
       setProcessing(null)
       return
     }
@@ -76,7 +77,7 @@ export function UserStoriesTab() {
 
     if (error) {
       console.error('Error approving story:', error)
-      alert('Failed to approve story')
+      toast.error('Failed to approve story')
       setProcessing(null)
       return
     }
@@ -91,7 +92,7 @@ export function UserStoriesTab() {
 
     if (insertError) {
       console.error('Error promoting to news story:', insertError)
-      alert('Story approved but failed to add to feed. You can create it manually from News Stories.')
+      toast.error('Story approved but failed to add to feed. You can create it manually from News Stories.')
     }
 
     setSubmissions(submissions.filter((s) => s.id !== id))
@@ -110,7 +111,7 @@ export function UserStoriesTab() {
 
     if (error) {
       console.error('Error rejecting story:', error)
-      alert('Failed to reject story')
+      toast.error('Failed to reject story')
     } else {
       setSubmissions(submissions.filter((s) => s.id !== id))
     }

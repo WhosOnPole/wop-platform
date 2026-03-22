@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Heart, MessageSquare, UserPlus, AtSign, Vote, X, AlertCircle } from 'lucide-react'
 import { useNotifications } from '@/hooks/use-notifications'
 import { getAvatarUrl } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
 import Link from 'next/link'
 
 interface NotificationDropdownProps {
@@ -36,33 +37,6 @@ const notificationMessages: Record<
   poll_vote: (actor) => `${actor} voted on a poll you're following`,
   tip_denied: (_actor, metadata) =>
     metadata?.message ?? 'Your track tip was not approved. You can try again or reach out to us for appeal.',
-}
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (diffInSeconds < 60) {
-    return 'just now'
-  }
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) {
-    return `${diffInHours}h ago`
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 7) {
-    return `${diffInDays}d ago`
-  }
-
-  return date.toLocaleDateString()
 }
 
 function getNotificationUrl(notification: any, currentUsername?: string | null): string {

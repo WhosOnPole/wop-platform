@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getAvatarUrl } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
 
 interface User {
   id: string
@@ -40,7 +41,7 @@ export function FeaturedDiscussions({ posts }: FeaturedDiscussionsProps) {
                 {post.user?.username || 'Unknown'}
               </Link>
               <p className="text-xs text-gray-500">
-                {new Date(post.created_at).toLocaleDateString()}
+                {formatTimeAgo(post.created_at)}
               </p>
             </div>
           </div>

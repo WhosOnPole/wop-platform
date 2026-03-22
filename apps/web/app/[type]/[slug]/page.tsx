@@ -368,16 +368,16 @@ export default async function DynamicPage({ params }: PageProps) {
     tabs.push({
       id: 'drivers',
       label: 'Drivers',
-      content: <TeamDriversTab drivers={relatedData || []} />,
+      content: <TeamDriversTab drivers={relatedData || []} supabaseUrl={supabaseUrl} />,
     })
   } else {
     // Drivers: no tabs; only Discussions section is rendered below
   }
 
   return (
-    <div className="relative min-h-screen -mt-14">
-      {/* Top Section with Background Image - extends to top of view */}
-      <div className="relative z-10 h-[60vh] min-h-[60vh] pt-16">
+    <div className="relative min-h-screen -mt-16">
+      {/* Top Section with Background Image - flush to top of view */}
+      <div className="relative z-10 h-[60vh] min-h-[60vh]">
         {/* Hero Background */}
         <EntityHeroBackground
           imageUrl={backgroundImage}
@@ -392,7 +392,7 @@ export default async function DynamicPage({ params }: PageProps) {
         />
         
         {/* Content over background */}
-        <div className="relative z-10 h-full flex flex-col">
+        <div className="relative z-10 h-full flex flex-col pt-16">
           <div className="shrink-0 pt-4 px-4 sm:px-6 md:px-8">
             {type === 'tracks' && (
               <h1 className="mb-4 font-display text-2xl tracking-wider text-white sm:text-3xl md:text-4xl">

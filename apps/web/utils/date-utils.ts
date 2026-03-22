@@ -136,3 +136,21 @@ export function localToUtc(localDatetime: string, timezone: string): string {
   const utcMs = localAsUtc - offsetMin * 60 * 1000
   return new Date(utcMs).toISOString()
 }
+
+/**
+ * Format a date string as relative time (e.g. "just now", "13h ago", "1 day ago").
+ * For dates older than 7 days, falls back to toLocaleDateString().
+ */
+export function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  if (diffInSeconds < 60) return 'just now'
+  const diffInMinutes = Math.floor(diffInSeconds / 60)
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) return `${diffInHours}h ago`
+  const diffInDays = Math.floor(diffInHours / 24)
+  if (diffInDays < 7) return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`
+  return date.toLocaleDateString()
+}

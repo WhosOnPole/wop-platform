@@ -83,6 +83,7 @@ export function getDriverProfileImageUrl(
   return `${supabaseUrl}/storage/v1/object/public/drivers/${path}`
 }
 
+/** Overrides when storage folder name differs from getDriverSlug (e.g. legacy casing in S3) */
 const DRIVER_BODY_SLUG_OVERRIDES: Record<string, string> = {}
 
 /**
@@ -96,6 +97,28 @@ export function getDriverBodyImageUrl(driverName: string, supabaseUrl: string): 
   const slug = DRIVER_BODY_SLUG_OVERRIDES[rawSlug] ?? rawSlug
   const path = `${slug}/body.png`
   return `${supabaseUrl}/storage/v1/object/public/drivers/${path}`
+}
+
+/**
+ * Gets the local (public folder) URL for a driver's body.png fallback.
+ * Used when remote Supabase image fails (e.g. Vercel image optimization limits).
+ * Only requested when remote fails—does not load on normal page views.
+ */
+export function getDriverLocalBodyUrl(driverName: string): string {
+  const rawSlug = getDriverSlug(driverName)
+  const slug = DRIVER_BODY_SLUG_OVERRIDES[rawSlug] ?? rawSlug
+  return `/drivers/${slug}/body.png`
+}
+
+/**
+ * Gets the local (public folder) URL for a driver's profile.jpg fallback.
+ * Used when remote Supabase image fails (e.g. Vercel image optimization limits).
+ * Only requested when remote fails—does not load on normal page views.
+ */
+export function getDriverLocalProfileUrl(driverName: string): string {
+  const rawSlug = getDriverSlug(driverName)
+  const slug = DRIVER_PROFILE_SLUG_OVERRIDES[rawSlug] ?? rawSlug
+  return `/drivers/${slug}/profile.jpg`
 }
 
 /**

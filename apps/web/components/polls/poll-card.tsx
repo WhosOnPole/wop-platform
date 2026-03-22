@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { useRouter } from 'next/navigation'
 import { Trophy, Repeat2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useCreateModal } from '@/components/providers/create-modal-provider'
 
 interface Poll {
@@ -108,7 +109,7 @@ export function PollCard({
         router.refresh()
       } else {
         console.error('Error voting:', error)
-        alert(`Failed to record vote: ${error.message}`)
+        toast.error(`Failed to record vote: ${error.message}`)
       }
     } else {
       setLocalResponse(selectedOptionId)

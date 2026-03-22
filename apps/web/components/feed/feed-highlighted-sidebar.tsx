@@ -164,8 +164,7 @@ export function FeedHighlightedSidebar({
               <div className="mb-4 flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-white/90">
-                    <Radio className="h-5 w-5" />
-                    <h3 className="text-lg font-semibold text-white">Hot Take Discussion</h3>
+                    <p className="text-xl font-semibold text-white/70 font-sans tracking-wider [font-variant:all-small-caps;]">Hot Take Discussion</p>
                   </div>
                   <div className="mt-6 flex w-full justify-center">
                     <p className="text-center text-2xl tracking-wide text-white/90 rounded-lg border border-[#25B4B1] bg-sunset-gradient p-4 w-fit">{spotlight.hot_take.content_text}</p>

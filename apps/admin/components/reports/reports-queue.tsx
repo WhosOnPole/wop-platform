@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Check, X, Loader2, Eye } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Report {
   id: number
@@ -47,7 +48,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
 
     if (error) {
       console.error('Error ignoring report:', error)
-      alert('Failed to ignore report')
+      toast.error('Failed to ignore report')
     } else {
       setReports(reports.filter((r) => r.id !== reportId))
     }
@@ -81,7 +82,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
       setReports(reports.filter((r) => r.id !== reportId))
     } catch (error: any) {
       console.error('Error removing content:', error)
-      alert('Failed to remove content: ' + (error?.message || 'Unknown error'))
+      toast.error('Failed to remove content: ' + (error?.message || 'Unknown error'))
     } finally {
       setProcessing(null)
     }

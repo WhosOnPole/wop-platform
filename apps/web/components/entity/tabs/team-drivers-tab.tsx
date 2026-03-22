@@ -1,5 +1,12 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
+import {
+  getDriverProfileImageUrl,
+  getDriverLocalProfileUrl,
+} from '@/utils/storage-urls'
 
 interface Driver {
   id: string
@@ -11,6 +18,7 @@ interface Driver {
 
 interface TeamDriversTabProps {
   drivers: Driver[]
+  supabaseUrl?: string | null
 }
 
 function getNationalityFlagPath(nationality?: string | null): string | null {
@@ -73,7 +81,44 @@ function slugify(name: string) {
   return name.toLowerCase().trim().replace(/\s+/g, '-')
 }
 
-export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
+function DriverImageWithFallback({
+  driver,
+  supabaseUrl,
+}: {
+  driver: Driver
+  supabaseUrl?: string | null
+}) {
+  const [fallbackIndex, setFallbackIndex] = useState(0)
+  const profileUrl = supabaseUrl ? getDriverProfileImageUrl(driver.name, supabaseUrl) : null
+  const localProfileUrl = getDriverLocalProfileUrl(driver.name)
+  const dbUrl = driver.headshot_url || driver.image_url
+
+  const sources = [profileUrl, localProfileUrl, dbUrl].filter(Boolean) as string[]
+  const imageSrc = sources[fallbackIndex]
+
+  if (!imageSrc) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-4xl font-semibold text-white/60">
+        {driver.name.charAt(0)}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={imageSrc}
+      alt={driver.name}
+      className="h-full w-full object-cover"
+      onError={() => {
+        if (fallbackIndex < sources.length - 1) {
+          setFallbackIndex((i) => i + 1)
+        }
+      }}
+    />
+  )
+}
+
+export function TeamDriversTab({ drivers, supabaseUrl }: TeamDriversTabProps) {
   if (drivers.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-white/20 bg-white/5 p-8 text-center">
@@ -86,7 +131,6 @@ export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
     <div className="grid grid-cols-2 gap-4">
       {drivers.map((driver) => {
         const slug = slugify(driver.name)
-        const imageSrc = driver.headshot_url || driver.image_url
         const flagPath = getNationalityFlagPath(driver.nationality)
 
         return (
@@ -96,19 +140,7 @@ export function TeamDriversTab({ drivers }: TeamDriversTabProps) {
             className="group flex flex-col"
           >
             <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-white/20 bg-white/10 transition-all group-hover:border-white/40">
-              {imageSrc ? (
-                <Image
-                  src={imageSrc}
-                  alt={driver.name}
-                  fill
-                  sizes="50vw"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-4xl font-semibold text-white/60">
-                  {driver.name.charAt(0)}
-                </div>
-              )}
+              <DriverImageWithFallback driver={driver} supabaseUrl={supabaseUrl} />
             </div>
             <div className="mt-2 flex items-start gap-2">
               {flagPath && (

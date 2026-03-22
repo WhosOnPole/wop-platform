@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Radio, Check } from 'lucide-react'
+import { Radio, Check, X } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { SponsorCard } from './sponsor-card'
@@ -281,6 +281,7 @@ export function SpotlightCarousel({
                 fill
                 sizes="40px"
                 className="object-cover"
+                unoptimized
               />
             </div>
             <div className="flex flex-1 flex-col min-h-0">
@@ -366,17 +367,17 @@ export function SpotlightCarousel({
               <div className="mb-3 flex items-start justify-between">
                 <div>
                   <div className="flex items-center space-x-2 text-white/90">
-                    <Radio className="h-5 w-5" />
-                    <h3 className="text-xl font-semibold text-white">Hot Take Discussion</h3>
+                    <p className="text-xl font-semibold text-white/70 font-sans tracking-wider [font-variant:all-small-caps;]">Hot Take Discussion</p>
                   </div>
-                  <p className="mt-4 text-white/90">{spotlight.hot_take.content_text}</p>
+                  <h1 className="mt-4 text-white/90 text-xl tracking-tight font-bold">{spotlight.hot_take.content_text}</h1>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsDiscussionOpen(false)}
                   className="rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
+                  aria-label="Close"
                 >
-                  X
+                  <X className="h-5 w-5" />
                 </button>
               </div>
             </div>

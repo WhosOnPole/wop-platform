@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { SponsorModal } from './sponsor-modal'
@@ -39,7 +40,7 @@ export function SponsorsTab() {
 
     if (error) {
       console.error('Error deleting sponsor:', error)
-      alert('Failed to delete endorsement')
+      toast.error('Failed to delete endorsement')
     } else {
       loadSponsors()
     }

@@ -11,19 +11,8 @@ import Link from 'next/link'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-  if (diffInSeconds < 60) return 'just now'
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) return `${diffInHours}h ago`
-  const diffInDays = Math.floor(diffInHours / 24)
-  return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`
-}
+import { formatTimeAgo } from '@/utils/date-utils'
+import { toast } from 'sonner'
 
 interface CommentUser {
   id: string
@@ -133,7 +122,7 @@ export function FeedPostCommentSection({
       fieldName: 'Comment',
     })
     if (!result.ok) {
-      alert(result.error)
+      toast.error(result.error)
       return
     }
 
@@ -190,7 +179,7 @@ export function FeedPostCommentSection({
   })
 
   const panelContent = isOpen ? (
-    <div className="rounded-md border border-white/10 bg-black/40 p-3 backdrop-blur-sm">
+    <div className="rounded-mdbg-black/40 p-3 backdrop-blur-sm">
           {isLoading ? (
             <p className="text-sm text-white/90">Loading comments...</p>
           ) : (
@@ -202,17 +191,22 @@ export function FeedPostCommentSection({
                     return (
                       <div key={comment.id} className="py-1">
                         <div className="mb-1 flex items-center gap-2">
-                          <div
-                            className={`h-6 w-6 shrink-0 rounded-full overflow-hidden ${
-                              isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
-                            }`}
+                          <Link
+                            href={`/u/${comment.user?.username || 'unknown'}`}
+                            className="shrink-0"
                           >
-                            <img
-                              src={getAvatarUrl(comment.user?.profile_image_url)}
-                              alt={comment.user?.username ?? ''}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          </div>
+                            <div
+                              className={`h-6 w-6 rounded-full overflow-hidden ${
+                                isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
+                              }`}
+                            >
+                              <img
+                                src={getAvatarUrl(comment.user?.profile_image_url)}
+                                alt={comment.user?.username ?? ''}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            </div>
+                          </Link>
                           <Link
                             href={`/u/${comment.user?.username || 'unknown'}`}
                             className="text-sm font-medium text-white/90 hover:text-white"
@@ -220,7 +214,7 @@ export function FeedPostCommentSection({
                             {comment.user?.username || 'Unknown'}
                           </Link>
                           <span className="text-xs text-white/70">
-                            {new Date(comment.created_at).toLocaleString()}
+                            {formatTimeAgo(comment.created_at)}
                           </span>
                         </div>
                         <p className="text-sm text-white/90">{comment.content}</p>
@@ -267,17 +261,22 @@ export function FeedPostCommentSection({
                               <div key={reply.id} className="relative">
                                 <div className="mb-0.5 flex items-center justify-between gap-2">
                                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                                    <div
-                                      className={`h-5 w-5 shrink-0 rounded-full overflow-hidden ${
-                                        isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
-                                      }`}
+                                    <Link
+                                      href={`/u/${reply.user?.username || 'unknown'}`}
+                                      className="shrink-0"
                                     >
-                                      <img
-                                        src={getAvatarUrl(reply.user?.profile_image_url)}
-                                        alt={reply.user?.username ?? ''}
-                                        className="h-full w-full rounded-full object-cover"
-                                      />
-                                    </div>
+                                      <div
+                                        className={`h-5 w-5 rounded-full overflow-hidden ${
+                                          isDefaultAvatar(reply.user?.profile_image_url) ? 'bg-white/10' : ''
+                                        }`}
+                                      >
+                                        <img
+                                          src={getAvatarUrl(reply.user?.profile_image_url)}
+                                          alt={reply.user?.username ?? ''}
+                                          className="h-full w-full rounded-full object-cover"
+                                        />
+                                      </div>
+                                    </Link>
                                     <Link
                                       href={`/u/${reply.user?.username || 'unknown'}`}
                                       className="text-xs font-medium text-white/90 hover:text-white shrink-0"
@@ -342,21 +341,21 @@ export function FeedPostCommentSection({
                 </div>
               )}
 
-              <form onSubmit={handleAddComment}>
+              <form onSubmit={handleAddComment} className="flex w-full items-center">
                 <textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder="Write a reply..."
-                  rows={2}
-                  className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1]"
+                  rows={1}
+                  className="min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                  className="flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1] disabled:opacity-50"
+                  aria-label="Post reply"
                 >
                   <Send className="h-4 w-4" />
-                  Post Reply
                 </button>
               </form>
             </>

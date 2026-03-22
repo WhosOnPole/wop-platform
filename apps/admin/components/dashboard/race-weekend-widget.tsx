@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Calendar, MessageSquare, Users, Power, PowerOff, Clock } from 'lucide-react'
+import { toast } from 'sonner'
 import Link from 'next/link'
 import { parseDateOnly } from '@/utils/date-utils'
 
@@ -137,7 +138,7 @@ export function RaceWeekendWidget({
       setChatEnabled(data.enabled)
     } catch (error) {
       console.error('Error toggling chat:', error)
-      alert('Failed to toggle chat')
+      toast.error('Failed to toggle chat')
     } finally {
       setIsToggling(false)
     }

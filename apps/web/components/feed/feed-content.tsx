@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { LikeButton } from '@/components/discussion/like-button'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
+import { formatTimeAgo } from '@/utils/date-utils'
 import { FeedPostCommentSection } from './feed-post-comment-section'
 import { FeedPostActionsMenu } from './feed-post-actions-menu'
 import { FeedDiscoverGridActionsMenu } from './feed-discover-grid-actions-menu'
@@ -127,6 +128,8 @@ interface FeedContentProps {
   pollVoteCounts?: Record<string, Record<string, number>>
   supabaseUrl?: string
   currentUserId?: string
+  /** User IDs to exclude from Discovery (self + followed); Discovery shows only non-followed users */
+  excludeFromDiscoveryUserIds?: string[]
   isNewUser?: boolean
   /** When true, show Load more button for Pit Crew tab */
   hasMore?: boolean
@@ -159,6 +162,7 @@ export function FeedContent({
   pollVoteCounts = {},
   supabaseUrl,
   currentUserId,
+  excludeFromDiscoveryUserIds = [],
   isNewUser = false,
   hasMore = false,
   currentPage = 1,
@@ -249,9 +253,11 @@ export function FeedContent({
         .order('updated_at', { ascending: false, nullsFirst: false })
         .limit(DISCOVERY_FETCH_BUFFER)
 
+      const excludeUserIdsSet = new Set(excludeFromDiscoveryUserIds)
       const allowedPostParentTypes = ['hot_take', 'poll', 'profile', 'driver', 'team'] as const
       const postsList = ((discoverPosts || []) as Array<Record<string, unknown> & { id: string; like_count?: number | null; user_id?: string }>)
         .filter((p) => !combinedExcludePostIds.includes(p.id))
+        .filter((p) => !excludeUserIdsSet.has(p.user_id ?? ''))
         .filter(
           (p) =>
             p.parent_page_type == null ||
@@ -259,6 +265,7 @@ export function FeedContent({
         )
       const gridsList = ((discoverGrids || []) as Array<Record<string, unknown> & { id: string; type: string; ranked_items: any[]; user_id?: string }>)
         .filter((g) => !combinedExcludeGridIds.includes(g.id))
+        .filter((g) => !excludeUserIdsSet.has(g.user_id ?? ''))
         .filter(
           (g) =>
             g.type === 'driver' &&
@@ -509,7 +516,7 @@ export function FeedContent({
       setIsLoadingDiscovery(false)
       setIsLoadingDiscoveryMore(false)
     }
-  }, [excludePostIds, excludeGridIds])
+  }, [excludePostIds, excludeGridIds, excludeFromDiscoveryUserIds])
 
   // Sync tab from URL (e.g. back/forward or shared link)
   useEffect(() => {
@@ -613,19 +620,24 @@ export function FeedContent({
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center space-x-3">
-                  <div
-                    className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
-                      isDefaultAvatar(post.user?.profile_image_url)
-                        ? 'border border-white/20 bg-white/10'
-                        : ''
-                    }`}
+                  <Link
+                    href={`/u/${post.user?.username || 'unknown'}`}
+                    className="shrink-0"
                   >
-                    <img
-                      src={getAvatarUrl(post.user?.profile_image_url)}
-                      alt={post.user?.username ?? ''}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  </div>
+                    <div
+                      className={`h-10 w-10 rounded-full overflow-hidden ${
+                        isDefaultAvatar(post.user?.profile_image_url)
+                          ? 'border border-white/20 bg-white/10'
+                          : ''
+                      }`}
+                    >
+                      <img
+                        src={getAvatarUrl(post.user?.profile_image_url)}
+                        alt={post.user?.username ?? ''}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    </div>
+                  </Link>
                   <div className="min-w-0">
                     <Link
                       href={`/u/${post.user?.username || 'unknown'}`}
@@ -634,7 +646,9 @@ export function FeedContent({
                       {post.user?.username || 'Unknown'}
                     </Link>
                     <p className="text-xs text-white/70">
-                      {new Date(post.created_at).toLocaleDateString()}
+                      {post.embeddedGrid
+                        ? `Updated their Top ${post.embeddedGrid.type === 'driver' ? 'Drivers' : post.embeddedGrid.type === 'team' ? 'Teams' : 'Tracks'} grid · ${formatTimeAgo(post.created_at)}`
+                        : formatTimeAgo(post.created_at)}
                     </p>
                   </div>
                 </div>
@@ -648,6 +662,10 @@ export function FeedContent({
                 parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] &&
                 (() => {
                   const ctx = parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
+                  // Skip for hot_take — the hot take is quoted in the block below
+                  if (ctx.type === 'hot_take') return null
+                  // Skip for poll — the poll is quoted in the block below
+                  if (ctx.type === 'poll' && post.parent_page_id && embeddedPollsByPollId[post.parent_page_id]) return null
                   const pollLabel =
                     ctx.type === 'poll'
                       ? post.content && String(post.content).trim().length > 0
@@ -663,9 +681,7 @@ export function FeedContent({
                       >
                         {ctx.type === 'poll'
                           ? `"${ctx.name}"`
-                          : ctx.type === 'hot_take'
-                            ? `Hot take: "${ctx.name}"`
-                            : ctx.name}
+                          : ctx.name}
                       </Link>
                     </p>
                   )
@@ -688,7 +704,7 @@ export function FeedContent({
                     </Link>
                   )
                 })()}
-              {post.content ? <p className="text-white/90">{post.content}</p> : null}
+              {post.content && !post.embeddedGrid ? <p className="text-white/90">{post.content}</p> : null}
               {post.image_url && (
                 <div className="mt-3 overflow-hidden rounded-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -704,22 +720,27 @@ export function FeedContent({
                 embeddedPollsByPollId[post.parent_page_id] && (() => {
                   const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
                   return (
-                    <div className="mt-4">
-                      <PollCard
-                        poll={{
-                          ...poll,
-                          options: Array.isArray(poll.options) ? poll.options : [],
-                          is_featured_podium: !!poll.is_featured_podium,
-                          ends_at: poll.ends_at ?? undefined,
-                        }}
-                        userResponse={userResponse}
-                        voteCounts={voteCounts}
-                        onVote={() => router.refresh()}
-                        variant="dark"
-                        className="rounded-md border border-white/10 bg-black/30 p-3"
-                        compact
-                        showRepost={false}
-                      />
+                    <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4">
+                      <p className="text-xs font-medium uppercase tracking-wide text-white/60">
+                        {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
+                      </p>
+                      <div className="mt-2">
+                        <PollCard
+                          poll={{
+                            ...poll,
+                            options: Array.isArray(poll.options) ? poll.options : [],
+                            is_featured_podium: !!poll.is_featured_podium,
+                            ends_at: poll.ends_at ?? undefined,
+                          }}
+                          userResponse={userResponse}
+                          voteCounts={voteCounts}
+                          onVote={() => router.refresh()}
+                          variant="dark"
+                          className="min-h-0 border-0 bg-transparent p-0"
+                          compact
+                          showRepost={false}
+                        />
+                      </div>
                     </div>
                   )
                 })()}
@@ -783,19 +804,24 @@ export function FeedContent({
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center space-x-3">
-                  <div
-                    className={`h-10 w-10 shrink-0 rounded-full ${
-                      grid.user?.profile_image_url
-                        ? 'overflow-hidden'
-                        : 'bg-white border border-gray-200'
-                    }`}
+                  <Link
+                    href={`/u/${grid.user?.username || 'unknown'}`}
+                    className="shrink-0"
                   >
-                    <img
-                      src={getAvatarUrl(grid.user?.profile_image_url)}
-                      alt={grid.user?.username ?? ''}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  </div>
+                    <div
+                      className={`h-10 w-10 rounded-full ${
+                        grid.user?.profile_image_url
+                          ? 'overflow-hidden'
+                          : 'bg-white border border-gray-200'
+                      }`}
+                    >
+                      <img
+                        src={getAvatarUrl(grid.user?.profile_image_url)}
+                        alt={grid.user?.username ?? ''}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    </div>
+                  </Link>
                   <div className="min-w-0">
                     <Link
                       href={`/u/${grid.user?.username || 'unknown'}`}
@@ -804,7 +830,7 @@ export function FeedContent({
                       {grid.user?.username || 'Unknown'}
                     </Link>
                     <p className="text-xs text-white/70">
-                      Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
+                      Updated their Top {typeLabel} grid · {formatTimeAgo(grid.updated_at ?? grid.created_at)}
                     </p>
                   </div>
                 </div>
@@ -873,7 +899,7 @@ export function FeedContent({
                   </p>
                   <p className="mt-2 text-xs text-white/60">
                     {comment.user?.username ?? 'Someone'} ·{' '}
-                    {new Date(comment.created_at).toLocaleDateString()}
+                    {formatTimeAgo(comment.created_at)}
                   </p>
                 </div>
                 <Link
@@ -974,19 +1000,24 @@ export function FeedContent({
                     >
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <div className="flex min-w-0 flex-1 items-center space-x-3">
-                          <div
-                            className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
-                              isDefaultAvatar(post.user?.profile_image_url)
-                                ? 'border border-white/20 bg-white/10'
-                                : ''
-                            }`}
+                          <Link
+                            href={`/u/${post.user?.username || 'unknown'}`}
+                            className="shrink-0"
                           >
-                            <img
-                              src={getAvatarUrl(post.user?.profile_image_url)}
-                              alt={post.user?.username ?? ''}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          </div>
+                            <div
+                              className={`h-10 w-10 rounded-full overflow-hidden ${
+                                isDefaultAvatar(post.user?.profile_image_url)
+                                  ? 'border border-white/20 bg-white/10'
+                                  : ''
+                              }`}
+                            >
+                              <img
+                                src={getAvatarUrl(post.user?.profile_image_url)}
+                                alt={post.user?.username ?? ''}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            </div>
+                          </Link>
                           <div className="min-w-0">
                             <Link
                               href={`/u/${post.user?.username || 'unknown'}`}
@@ -995,7 +1026,9 @@ export function FeedContent({
                               {post.user?.username || 'Unknown'}
                             </Link>
                             <p className="text-xs text-white/70">
-                              {new Date(post.created_at).toLocaleDateString()}
+                              {(post as Post).embeddedGrid
+                                ? `Updated their Top ${(post as Post).embeddedGrid!.type === 'driver' ? 'Drivers' : (post as Post).embeddedGrid!.type === 'team' ? 'Teams' : 'Tracks'} grid · ${formatTimeAgo(post.created_at)}`
+                                : formatTimeAgo(post.created_at)}
                             </p>
                           </div>
                         </div>
@@ -1012,6 +1045,10 @@ export function FeedContent({
                             discoveryParentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`] ??
                             parentPageByKey[`${post.parent_page_type}:${post.parent_page_id}`]
                           if (!ctx) return null
+                          // Skip for hot_take — the hot take is quoted in the block below
+                          if (ctx.type === 'hot_take') return null
+                          // Skip for poll — the poll is quoted in the block below
+                          if (ctx.type === 'poll' && post.parent_page_id && embeddedPollsByPollId[post.parent_page_id]) return null
                           const pollLabel =
                             ctx.type === 'poll'
                               ? post.content && String(post.content).trim().length > 0
@@ -1024,9 +1061,7 @@ export function FeedContent({
                               <Link href={ctx.href} className="text-[#25B4B1] hover:underline">
                                 {ctx.type === 'poll'
                                   ? `"${ctx.name}"`
-                                  : ctx.type === 'hot_take'
-                                    ? `Hot take: "${ctx.name}"`
-                                    : ctx.name}
+                                  : ctx.name}
                               </Link>
                             </p>
                           )
@@ -1049,7 +1084,37 @@ export function FeedContent({
                             </Link>
                           )
                         })()}
-                      {post.content ? <p className="text-white/90">{post.content}</p> : null}
+                      {post.parent_page_type === 'poll' &&
+                        post.parent_page_id &&
+                        embeddedPollsByPollId[post.parent_page_id] &&
+                        (() => {
+                          const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
+                          return (
+                            <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4">
+                              <p className="text-xs font-medium uppercase tracking-wide text-white/60">
+                                {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
+                              </p>
+                              <div className="mt-2">
+                                <PollCard
+                                  poll={{
+                                    ...poll,
+                                    options: Array.isArray(poll.options) ? poll.options : [],
+                                    is_featured_podium: !!poll.is_featured_podium,
+                                    ends_at: poll.ends_at ?? undefined,
+                                  }}
+                                  userResponse={userResponse}
+                                  voteCounts={voteCounts}
+                                  onVote={() => router.refresh()}
+                                  variant="dark"
+                                  className="min-h-0 border-0 bg-transparent p-0"
+                                  compact
+                                  showRepost={false}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })()}
+                      {post.content && !(post as Post).embeddedGrid ? <p className="text-white/90">{post.content}</p> : null}
                       {post.image_url && (
                         <div className="mt-3 overflow-hidden rounded-lg">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1118,19 +1183,24 @@ export function FeedContent({
                     >
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <div className="flex min-w-0 flex-1 items-center space-x-3">
-                          <div
-                            className={`h-10 w-10 shrink-0 rounded-full overflow-hidden ${
-                              isDefaultAvatar(grid.user?.profile_image_url)
-                                ? 'border border-white/20 bg-white/10'
-                                : ''
-                            }`}
+                          <Link
+                            href={`/u/${grid.user?.username || 'unknown'}`}
+                            className="shrink-0"
                           >
-                            <img
-                              src={getAvatarUrl(grid.user?.profile_image_url)}
-                              alt={grid.user?.username ?? ''}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          </div>
+                            <div
+                              className={`h-10 w-10 rounded-full overflow-hidden ${
+                                isDefaultAvatar(grid.user?.profile_image_url)
+                                  ? 'border border-white/20 bg-white/10'
+                                  : ''
+                              }`}
+                            >
+                              <img
+                                src={getAvatarUrl(grid.user?.profile_image_url)}
+                                alt={grid.user?.username ?? ''}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            </div>
+                          </Link>
                           <div className="min-w-0">
                             <Link
                               href={`/u/${grid.user?.username || 'unknown'}`}
@@ -1139,7 +1209,7 @@ export function FeedContent({
                               {grid.user?.username || 'Unknown'}
                             </Link>
                             <p className="text-xs text-white/70">
-                              Updated their Top {typeLabel} grid · {new Date(grid.created_at).toLocaleDateString()}
+                              Updated their Top {typeLabel} grid · {formatTimeAgo(grid.updated_at ?? grid.created_at)}
                             </p>
                           </div>
                         </div>

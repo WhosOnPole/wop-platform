@@ -6,6 +6,7 @@ import { getAvatarUrl } from '@/utils/avatar'
 import { useRouter } from 'next/navigation'
 import { MapPin, Users, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface User {
   id: string
@@ -61,7 +62,7 @@ export function CheckInSection({
         setIsCheckedIn(true)
       } else {
         console.error('Error checking in:', error)
-        alert('Failed to check in')
+        toast.error('Failed to check in')
       }
     } else {
       setIsCheckedIn(true)

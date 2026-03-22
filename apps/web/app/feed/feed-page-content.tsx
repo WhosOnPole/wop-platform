@@ -1101,6 +1101,7 @@ export async function FeedPageContent({
             pollVoteCounts={feedPollVoteCounts}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
             currentUserId={session.user.id}
+            excludeFromDiscoveryUserIds={userIds}
             featuredNews={featuredStory ? featuredNewsList.slice(1) : featuredNewsList}
             isNewUser={isNewUser}
             hasMore={

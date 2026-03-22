@@ -194,6 +194,7 @@ export default async function StoryPage({ params }: PageProps) {
               fill
               sizes="80px"
               className="object-cover"
+              unoptimized
             />
           </div>
           <div className="flex flex-col">

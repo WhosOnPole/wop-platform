@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Mail, CheckCircle, XCircle, Clock, RefreshCw, Eye } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface EmailQueueDashboardProps {
   pendingCount: number
@@ -44,7 +45,7 @@ export function EmailQueueDashboard({
       window.location.reload()
     } catch (error: any) {
       console.error('Failed to retry email:', error)
-      alert(`Failed to retry: ${error.message}`)
+      toast.error(`Failed to retry: ${error.message}`)
     } finally {
       setRetrying(null)
     }

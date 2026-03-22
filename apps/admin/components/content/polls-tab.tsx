@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { PollModal } from './poll-modal'
@@ -39,7 +40,7 @@ export function PollsTab() {
 
     if (error) {
       console.error('Error deleting poll:', error)
-      alert('Failed to delete poll')
+      toast.error('Failed to delete poll')
     } else {
       loadPolls()
     }

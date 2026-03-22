@@ -8,6 +8,7 @@ import { AuthSessionProvider } from '@/components/providers/auth-session-provide
 import { LayoutSwitch } from '@/components/layout-switch'
 import { LoadingScreen } from '@/components/loading-screen'
 import { Analytics } from "@vercel/analytics/next"
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -86,6 +87,7 @@ export default function RootLayout({
         </QueryProvider>
         <Analytics />
         <SpeedInsights />
+        <Toaster />
       </body>
     </html>
   )

@@ -1,6 +1,9 @@
 'use client'
 
-import { getDriverProfileImageUrl } from '@/utils/storage-urls'
+import {
+  getDriverLocalProfileUrl,
+  getDriverProfileImageUrl,
+} from '@/utils/storage-urls'
 import { DriverHeroPanel } from './driver-hero-panel'
 
 interface TeamDriverHeroProps {
@@ -34,6 +37,7 @@ export function TeamDriverHero({
         const profileImageUrl = supabaseUrl
           ? getDriverProfileImageUrl(driver.name, supabaseUrl)
           : null
+        const localProfileUrl = getDriverLocalProfileUrl(driver.name)
 
         return (
           <DriverHeroPanel
@@ -41,6 +45,7 @@ export function TeamDriverHero({
             driver={driver}
             driverSlug={driverSlug}
             profileImageUrl={profileImageUrl}
+            localProfileUrl={localProfileUrl}
           />
         )
       })}
