@@ -4,6 +4,58 @@ import { clearSupabaseAuthStorage } from '@/utils/clear-auth-storage'
 
 let clientInstance: SupabaseClient | null = null
 
+/** Token PKCE dedupe: only one POST .../token?grant_type=pkce is sent. Installed before client is created. */
+let tokenPkceUninstall: (() => void) | null = null
+export function uninstallTokenPkceDedupe(): void {
+  tokenPkceUninstall?.()
+  tokenPkceUninstall = null
+}
+
+function installTokenPkceDedupe(): () => void {
+  const originalFetch = window.fetch
+  let pkceInFlight: Promise<Response> | null = null
+  let pkceCached: Response | null = null
+  let refreshInFlight: Promise<Response> | null = null
+  let refreshCached: Response | null = null
+  window.fetch = function dedupedFetch(
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url
+    if (!url.includes('/auth/v1/token')) return originalFetch.call(window, input, init)
+    const isPkce = url.includes('grant_type=pkce') || url.includes('grant_type%3Dpkce')
+    const isRefresh = url.includes('grant_type=refresh_token') || url.includes('grant_type%3Drefresh_token')
+    if (isPkce) {
+      if (pkceInFlight) {
+        return pkceInFlight.then(() => (pkceCached ? pkceCached.clone() : originalFetch.call(window, input, init)))
+      }
+      pkceInFlight = originalFetch.call(window, input, init).then((r) => {
+        pkceCached = r.clone()
+        return r
+      })
+      return pkceInFlight
+    }
+    if (isRefresh) {
+      if (refreshInFlight) {
+        return refreshInFlight.then(() => (refreshCached ? refreshCached.clone() : originalFetch.call(window, input, init)))
+      }
+      refreshInFlight = originalFetch.call(window, input, init).then((r) => {
+        refreshCached = r.clone()
+        return r
+      })
+      return refreshInFlight
+    }
+    return originalFetch.call(window, input, init)
+  }
+  return function uninstall() {
+    window.fetch = originalFetch
+  }
+}
+
+if (typeof window !== 'undefined') {
+  tokenPkceUninstall = installTokenPkceDedupe()
+}
+
 /** When true, getSession() returns null immediately without calling /token (stops retry storm). */
 let sessionInvalidated = false
 
