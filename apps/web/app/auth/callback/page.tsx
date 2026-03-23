@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClientComponentClient } from '@/utils/supabase-client'
+import { createClientComponentClient, uninstallTokenPkceDedupe } from '@/utils/supabase-client'
 import { LoadingLogo } from '@/components/loading-logo'
 
 /**
@@ -71,9 +71,12 @@ function AuthCallbackContent() {
     runExchangeOnce(code).then((result) => {
       if (!isMounted) return
 
-      if (exchangeError) {
+      if ('error' in result && result.error) {
         router.replace('/login?error=auth_callback_failed')
         return
+      }
+      if ('destination' in result && result.destination) {
+        router.replace(result.destination)
       }
     })
     return () => {
