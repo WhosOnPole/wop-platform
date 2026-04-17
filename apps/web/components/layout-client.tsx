@@ -11,6 +11,7 @@ import { PullToRefreshFeed } from '@/components/feed/pull-to-refresh-feed'
 import { FullscreenHandler } from '@/components/fullscreen-handler'
 import { Logo } from '@/components/ui/logo'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { isMobileClientDevice } from '@/utils/is-mobile-client-device'
 import { useAuthSession } from '@/components/providers/auth-session-provider'
 
 const AUTH_PATHS = ['/login', '/signup', '/auth/', '/auth/callback', '/auth/reset-password']
@@ -28,7 +29,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useAuthSession()
   const supabase = createClientComponentClient()
   const [isDesktop, setIsDesktop] = useState(false)
-  const [isAboveIpad, setIsAboveIpad] = useState(false)
+  const [isMobileClient, setIsMobileClient] = useState<boolean | null>(null)
   const isAuthenticated = !!session
 
   // Scroll to top on route change so the nav gradient isn’t active (except in-feed interactions, which don’t change pathname)
@@ -67,18 +68,18 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
   }, [session, isLoading, pathname, router])
 
   useEffect(() => {
+    setIsMobileClient(isMobileClientDevice())
+  }, [])
+
+  useEffect(() => {
     const desktopMq = window.matchMedia('(min-width: 768px)')
-    const aboveIpadMq = window.matchMedia('(min-width: 1025px)')
     const update = () => {
       setIsDesktop(desktopMq.matches)
-      setIsAboveIpad(aboveIpadMq.matches)
     }
     update()
     desktopMq.addEventListener('change', update)
-    aboveIpadMq.addEventListener('change', update)
     return () => {
       desktopMq.removeEventListener('change', update)
-      aboveIpadMq.removeEventListener('change', update)
     }
   }, [])
 
@@ -86,7 +87,15 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  if (isAuthenticated && isAboveIpad) {
+  if (isAuthenticated && isMobileClient === null) {
+    return (
+      <div className="min-h-screen bg-black" aria-busy="true">
+        <span className="sr-only">Loading</span>
+      </div>
+    )
+  }
+
+  if (isAuthenticated && !isMobileClient) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-black px-6 text-center">
         <Logo variant="white" href="/feed" className="mb-8 h-14 w-auto" />
@@ -94,7 +103,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
           Desktop version coming soon.
         </p>
         <p className="mt-2 max-w-md text-base text-white/80">
-          Please join us on a smaller screen or resize your browser window.
+          Please use Women of Pressing on a phone or tablet. This experience is not available in a desktop web browser.
         </p>
       </div>
     )
