@@ -215,15 +215,8 @@ export function PollCard({
 
       {createModal && showRepost && (
         <div
-          className={`flex items-center justify-between border-t ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} ${isDark ? 'border-white/10' : 'border-gray-200'}`}
+          className={`flex items-center justify-end border-t ${compact ? 'mt-2 pt-2' : 'mt-4 pt-4'} ${isDark ? 'border-white/10' : 'border-gray-200'}`}
         >
-          {showResults ? (
-            <p className={`text-sm ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
-              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} total
-            </p>
-          ) : (
-            <span />
-          )}
           <button
             type="button"
             onClick={handleRepost}
