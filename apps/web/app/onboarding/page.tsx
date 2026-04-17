@@ -39,7 +39,7 @@ export default function OnboardingPage() {
       .from('profiles')
       .select('username, date_of_birth')
       .eq('id', session.user.id)
-      .single()
+      .maybeSingle()
 
     const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
     if (isProfileComplete) {
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
       .from('profiles')
       .select('username')
       .eq('id', session.user.id)
-      .single()
+      .maybeSingle()
 
     const username = profile?.username?.trim()
     if (username) {

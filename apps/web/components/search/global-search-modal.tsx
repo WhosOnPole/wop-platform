@@ -238,7 +238,7 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-white/50">
+          <p className="mt-4Whre text-xs text-white/50">
             {hasQuery ? (
               <>
                 Showing results for <span className="text-white/80">&quot;{activeQuery}&quot;</span>
