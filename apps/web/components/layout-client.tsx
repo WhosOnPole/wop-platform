@@ -103,7 +103,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
           Desktop version coming soon.
         </p>
         <p className="mt-2 max-w-md text-base text-white/80">
-          Please use Women of Pressing on a phone or tablet. This experience is not available in a desktop web browser.
+          Please use Who's on Pole on a phone or tablet. <br/><br/> This experience is not available in a desktop web browser.
         </p>
       </div>
     )
