@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getTeamBackgroundUrl } from '@/utils/storage-urls'
@@ -15,7 +15,7 @@ import { GridSlotCommentSection } from './grid-slot-comment-section'
 import { GridHeartButton } from '@/components/profile/grid-heart-button'
 import { StepperBar } from '@/components/stepper-bar'
 import { PageBackButton } from '@/components/page-back-button'
-import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Send } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
@@ -73,8 +73,6 @@ interface GridDetailViewProps {
   onBlurbChange?: (value: string) => void
   /** Edit mode: per-slot blurb change; when set, grid.slotBlurbs is used for current slot value */
   onSlotBlurbChange?: (rankIndex: number, value: string) => void
-  /** Edit mode: persist a single slot blurb (e.g. when Done is clicked). No redirect. */
-  onSlotBlurbSave?: (rankIndex: number, value: string) => Promise<void>
   /** Edit mode: full catalog for change-pick modal */
   availableItems?: RankItem[]
 }
@@ -509,7 +507,6 @@ export function GridDetailView({
   blurb: blurbOverride,
   onBlurbChange,
   onSlotBlurbChange,
-  onSlotBlurbSave,
   availableItems,
 }: GridDetailViewProps) {
   const items = mode === 'edit' && rankedList ? rankedList : grid.ranked_items
@@ -535,7 +532,11 @@ export function GridDetailView({
   const ownBlurbDisplay = ownBlurbLocal !== null ? ownBlurbLocal : currentSlotBlurbFromData
   const [isEditingEditBlurb, setIsEditingEditBlurb] = useState(false)
   const [editBlurbDraft, setEditBlurbDraft] = useState('')
-  const [editBlurbJustSaved, setEditBlurbJustSaved] = useState(false)
+  const editBlurbDraftRef = useRef(editBlurbDraft)
+  editBlurbDraftRef.current = editBlurbDraft
+
+  const blurbForCurrentRank =
+    (slotBlurbsFromProps ?? {})[rankIndex] ?? (rankIndex === 1 ? (grid.blurb ?? '') : '')
 
   useEffect(() => {
     setOwnBlurbLocal(null)
@@ -544,9 +545,36 @@ export function GridDetailView({
   useEffect(() => {
     if (mode === 'edit') {
       setIsEditingEditBlurb(false)
-      setEditBlurbDraft((slotBlurbsFromProps ?? {})[rankIndex] ?? '')
+      setEditBlurbDraft(blurbForCurrentRank)
     }
-  }, [mode, selectedIndex, rankIndex])
+  }, [mode, selectedIndex, rankIndex, blurbForCurrentRank])
+
+  function commitSlotDraftToParent(rank: number, draft: string): boolean {
+    if (!onSlotBlurbChange) return true
+    const result = sanitizeUserContent(draft, {
+      maxLength: CONTENT_MAX_LENGTHS.blurb,
+      fieldName: 'Comment',
+    })
+    if (!result.ok) {
+      toast.error(result.error)
+      return false
+    }
+    onSlotBlurbChange(rank, result.value)
+    setSlotBlurbsLocal(null)
+    return true
+  }
+
+  const changeSelectedSlot = useCallback(
+    (nextIndex: number) => {
+      if (nextIndex === selectedIndex) return
+      if (mode === 'edit' && onSlotBlurbChange) {
+        const currentRank = selectedIndex + 1
+        if (!commitSlotDraftToParent(currentRank, editBlurbDraftRef.current)) return
+      }
+      setSelectedIndex(nextIndex)
+    },
+    [mode, onSlotBlurbChange, selectedIndex]
+  )
 
   const heroBackground =
     type === 'team' && selectedItem
@@ -709,7 +737,7 @@ export function GridDetailView({
             type="button"
             onClick={(e) => {
               e.preventDefault()
-              setSelectedIndex(Math.max(0, selectedIndex - 1))
+              changeSelectedSlot(Math.max(0, selectedIndex - 1))
               ;(e.currentTarget as HTMLButtonElement).blur()
             }}
             disabled={selectedIndex === 0}
@@ -731,7 +759,7 @@ export function GridDetailView({
             type="button"
             onClick={(e) => {
               e.preventDefault()
-              setSelectedIndex(Math.min(items.length - 1, selectedIndex + 1))
+              changeSelectedSlot(Math.min(items.length - 1, selectedIndex + 1))
               ;(e.currentTarget as HTMLButtonElement).blur()
             }}
             disabled={selectedIndex >= items.length - 1}
@@ -923,7 +951,7 @@ export function GridDetailView({
               availableItems={availableItems}
               supabaseUrl={supabaseUrl}
               activeSlotIndex={selectedIndex}
-              onActiveSlotChange={setSelectedIndex}
+              onActiveSlotChange={changeSelectedSlot}
             />
 
             {onSlotBlurbChange && (
@@ -957,39 +985,18 @@ export function GridDetailView({
                     />
                     <button
                       type="button"
-                      onClick={async () => {
-                        const result = sanitizeUserContent(editBlurbDraft, {
-                          maxLength: CONTENT_MAX_LENGTHS.blurb,
-                          fieldName: 'Comment',
-                        })
-                        if (!result.ok) {
-                          toast.error(result.error)
-                          return
-                        }
-                        const value = result.value
-                        onSlotBlurbChange(rankIndex, value)
-                        setSlotBlurbsLocal((prev) => ({ ...(prev ?? {}), [rankIndex]: value }))
-                        setEditBlurbJustSaved(true)
-                        if (grid.id && onSlotBlurbSave) await onSlotBlurbSave(rankIndex, value)
-                        setTimeout(() => {
-                          setEditBlurbJustSaved(false)
-                          setIsEditingEditBlurb(false)
-                        }, 1200)
+                      onClick={() => {
+                        if (!commitSlotDraftToParent(rankIndex, editBlurbDraft)) return
+                        setIsEditingEditBlurb(false)
                       }}
-                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] min-w-[4.5rem]"
+                      className="flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1]"
+                      aria-label="Done editing comment"
                     >
-                      {editBlurbJustSaved ? (
-                        'Saved!'
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4" />
-                          Save
-                        </>
-                      )}
+                      <Check className="h-5 w-5" />
                     </button>
                   </div>
                 )}
-                {isEditingEditBlurb && (
+                {(!doesHaveBlurb || isEditingEditBlurb) && (
                   <p className="mt-1 text-xs text-white/60">{editBlurbDraft.length}/140</p>
                 )}
               </div>
@@ -1006,7 +1013,10 @@ export function GridDetailView({
                 </button>
                 <button
                   type="button"
-                  onClick={onSave}
+                  onClick={() => {
+                    if (onSlotBlurbChange && !commitSlotDraftToParent(rankIndex, editBlurbDraft)) return
+                    onSave()
+                  }}
                   disabled={items.filter((i) => !i.is_placeholder).length === 0}
                   className="w-1/2 min-w-0 rounded-full bg-[#25B4B1] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                 >

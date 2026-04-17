@@ -29,20 +29,30 @@ function installTokenPkceDedupe(): () => void {
       if (pkceInFlight) {
         return pkceInFlight.then(() => (pkceCached ? pkceCached.clone() : originalFetch.call(window, input, init)))
       }
-      pkceInFlight = originalFetch.call(window, input, init).then((r) => {
-        pkceCached = r.clone()
-        return r
-      })
+      pkceInFlight = originalFetch
+        .call(window, input, init)
+        .then((r) => {
+          pkceCached = r.clone()
+          return r
+        })
+        .finally(() => {
+          pkceInFlight = null
+        })
       return pkceInFlight
     }
     if (isRefresh) {
       if (refreshInFlight) {
         return refreshInFlight.then(() => (refreshCached ? refreshCached.clone() : originalFetch.call(window, input, init)))
       }
-      refreshInFlight = originalFetch.call(window, input, init).then((r) => {
-        refreshCached = r.clone()
-        return r
-      })
+      refreshInFlight = originalFetch
+        .call(window, input, init)
+        .then((r) => {
+          refreshCached = r.clone()
+          return r
+        })
+        .finally(() => {
+          refreshInFlight = null
+        })
       return refreshInFlight
     }
     return originalFetch.call(window, input, init)

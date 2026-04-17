@@ -32,17 +32,23 @@ export function LikeButton({
   // Use targetId as key to ensure we reset when switching between different items
   useEffect(() => {
     setIsLiked(initialIsLiked)
-    setLikeCount(initialLikeCount)
+    // Don't overwrite likeCount with stale 0 from parent (e.g. realtime before DB trigger).
+    // Parent may report count=0 while user just liked; keep our optimistic count until DB catches up.
+    const parentStaleAfterLike =
+      initialIsLiked && likeCount >= 1 && (initialLikeCount === 0 || initialLikeCount == null)
+    if (!parentStaleAfterLike) {
+      setLikeCount(initialLikeCount)
+    }
   }, [targetId, initialIsLiked, initialLikeCount])
 
   // Also sync when props change (for same targetId but different user session).
-  // Do not overwrite likeCount with stale 0 from parent after user just liked—parent may not have refetched yet.
   useEffect(() => {
     if (isLiked !== initialIsLiked) {
       setIsLiked(initialIsLiked)
     }
     if (likeCount !== initialLikeCount) {
-      const parentStaleAfterLike = isLiked && likeCount >= 1 && initialLikeCount === 0
+      const parentStaleAfterLike =
+        initialIsLiked && likeCount >= 1 && (initialLikeCount === 0 || initialLikeCount == null)
       if (parentStaleAfterLike) return
       setLikeCount(initialLikeCount)
     }

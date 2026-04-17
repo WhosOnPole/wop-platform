@@ -316,18 +316,6 @@ export default function EditGridPage() {
       onSlotBlurbChange={(rankIndex, value) =>
         setSlotBlurbs((prev) => ({ ...prev, [rankIndex]: value }))
       }
-      onSlotBlurbSave={
-        existingGridId
-          ? async (rankIndex, value) => {
-              await supabase
-                .from('grid_slot_blurbs')
-                .upsert(
-                  { grid_id: existingGridId, rank_index: rankIndex, content: value.trim().slice(0, 140) },
-                  { onConflict: 'grid_id,rank_index' }
-                )
-            }
-          : undefined
-      }
       onSave={handleSave}
       availableItems={availableItems}
     />
