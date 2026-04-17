@@ -5,9 +5,33 @@ import { useRouter } from 'next/navigation'
 import { X, Plus } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface StoryModalProps {
   onClose: () => void
+}
+
+/** Right after signup, getSession() can be empty briefly; refresh restores JWT. */
+async function resolveActiveSession(supabase: SupabaseClient) {
+  let {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) {
+    const { data } = await supabase.auth.refreshSession()
+    session = data.session ?? null
+  }
+  return session
+}
+
+function isAuthOrSessionError(err: { message?: string; code?: string } | null): boolean {
+  if (!err) return false
+  const m = (err.message ?? '').toLowerCase()
+  const code = String(err.code ?? '')
+  return (
+    code === '42501' ||
+    code === 'PGRST301' ||
+    /jwt|session|not authenticated|permission denied|invalid|expired|refresh/i.test(m)
+  )
 }
 
 export function StoryModal({ onClose }: StoryModalProps) {
@@ -48,9 +72,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
     setSubmitting(true)
     setError(null)
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const session = await resolveActiveSession(supabase)
     if (!session) {
       setError('You must be signed in to submit a story.')
       setSubmitting(false)
@@ -81,12 +103,23 @@ export function StoryModal({ onClose }: StoryModalProps) {
     if (image) {
       const fileExt = image.name.split('.').pop() || 'jpg'
       const fileName = `${session.user.id}-${Date.now()}.${fileExt}`
-      const { error: uploadError } = await supabase.storage
-        .from('story-images')
-        .upload(fileName, image, { upsert: true })
+      let uploadError = (
+        await supabase.storage.from('story-images').upload(fileName, image, { upsert: true })
+      ).error
+
+      if (uploadError && isAuthOrSessionError(uploadError)) {
+        await supabase.auth.refreshSession()
+        uploadError = (
+          await supabase.storage.from('story-images').upload(fileName, image, { upsert: true })
+        ).error
+      }
 
       if (uploadError) {
-        setError('Failed to upload image. Please try again.')
+        setError(
+          isAuthOrSessionError(uploadError)
+            ? 'Session not ready yet. Wait a few seconds after signing in and try again.'
+            : 'Failed to upload image. Please try again.'
+        )
         setSubmitting(false)
         return
       }
@@ -108,18 +141,35 @@ export function StoryModal({ onClose }: StoryModalProps) {
       safeSummary = summaryResult.value
     }
 
-    const { error: insertError } = await supabase.from('user_story_submissions').insert({
+    const row = {
       user_id: session.user.id,
       title: titleResult.value,
       summary: safeSummary,
       content: bodyResult.value,
       image_url: imageUrl,
-      status: 'pending_approval',
+      status: 'pending_approval' as const,
       is_anonymous: isAnonymous,
-    })
+    }
+
+    let { error: insertError } = await supabase.from('user_story_submissions').insert(row)
+
+    if (insertError && isAuthOrSessionError(insertError)) {
+      await supabase.auth.refreshSession()
+      const retrySession = await resolveActiveSession(supabase)
+      if (retrySession) {
+        ;({ error: insertError } = await supabase.from('user_story_submissions').insert({
+          ...row,
+          user_id: retrySession.user.id,
+        }))
+      }
+    }
 
     if (insertError) {
-      setError(insertError.message ?? 'Failed to submit story.')
+      setError(
+        isAuthOrSessionError(insertError)
+          ? 'Session not ready yet. Wait a few seconds after signing in and try again.'
+          : insertError.message ?? 'Failed to submit story.'
+      )
       setSubmitting(false)
       return
     }
