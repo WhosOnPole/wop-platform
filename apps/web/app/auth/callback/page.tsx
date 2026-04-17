@@ -2,44 +2,70 @@
 
 import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClientComponentClient, uninstallTokenPkceDedupe } from '@/utils/supabase-client'
+import {
+  createClientComponentClient,
+  resetSessionInvalidated,
+  uninstallTokenPkceDedupe,
+} from '@/utils/supabase-client'
 import { LoadingLogo } from '@/components/loading-logo'
 
 /**
- * Module-level lock: only one exchange runs per code in the entire app.
- * Second run (e.g. Strict Mode) waits on the same promise instead of calling the API again.
+ * One exchange per OAuth `code` for the lifetime of the page load.
+ * React Strict Mode runs effects twice in dev; clearing a lock in `finally` after the first
+ * exchange caused a second `exchangeCodeForSession` with the same code → invalid_grant →
+ * auth_callback_failed. Cached promises reuse success (or failure) for the same code.
  */
-let exchangePromise: Promise<{ destination: string } | { error: true; rateLimited?: boolean }> | null = null
-let exchangeCode: string | null = null
+const exchangeByCode = new Map<
+  string,
+  Promise<{ destination: string } | { error: true; rateLimited?: boolean }>
+>()
 
 function runExchangeOnce(code: string) {
-  if (exchangeCode === code && exchangePromise) return exchangePromise
-  exchangeCode = code
-  exchangePromise = (async () => {
+  let p = exchangeByCode.get(code)
+  if (p) return p
+
+  p = (async () => {
     try {
       const supabase = createClientComponentClient()
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       if (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[auth/callback] exchangeCodeForSession failed:', error.message, error)
+        }
         const status = (error as { status?: number })?.status
         const isRateLimit = status === 429 || /rate limit|too many requests/i.test(error?.message ?? '')
         return { error: true as const, rateLimited: isRateLimit }
       }
       const session = data?.session
-      if (!session) return { error: true as const }
-      const { data: profile } = await supabase
+      if (!session) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[auth/callback] No session after exchange')
+        }
+        return { error: true as const }
+      }
+      resetSessionInvalidated()
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('username, date_of_birth')
         .eq('id', session.user.id)
         .maybeSingle()
+      if (profileError && process.env.NODE_ENV === 'development') {
+        console.error('[auth/callback] Profile fetch failed:', profileError.message)
+      }
       const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
       return { destination: isProfileComplete ? '/feed' : '/onboarding' }
+    } catch (e) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[auth/callback] Unexpected error:', e)
+      }
+      return { error: true as const }
     } finally {
-      exchangePromise = null
-      exchangeCode = null
       queueMicrotask(() => uninstallTokenPkceDedupe())
     }
   })()
-  return exchangePromise
+
+  exchangeByCode.set(code, p)
+  return p
 }
 
 /**
@@ -66,21 +92,19 @@ function AuthCallbackContent() {
       return
     }
 
-    let isMounted = true
+    // Do not gate navigation on isMounted: Strict Mode unmounts before the exchange
+    // promise settles, which skipped router.replace and left users on a blank callback.
     runExchangeOnce(code).then((result) => {
-      if (!isMounted) return
-
       if ('error' in result && result.error) {
-        router.replace('/login?error=auth_callback_failed')
+        router.replace(
+          result.rateLimited ? '/login?error=rate_limit' : '/login?error=auth_callback_failed'
+        )
         return
       }
       if ('destination' in result && result.destination) {
         router.replace(result.destination)
       }
     })
-    return () => {
-      isMounted = false
-    }
   }, [code, type, router])
 
   return (
