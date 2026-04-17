@@ -2,13 +2,15 @@
 
 import { useState, FormEvent, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, CheckCircle2 } from 'lucide-react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface StoryModalProps {
   onClose: () => void
+  /** When set, navigates here after the user closes the success step (Done or X). Use when the modal is opened from elsewhere (e.g. nav) so they return to Podiums → Stories. */
+  redirectAfterSuccess?: string
 }
 
 /** Right after signup, getSession() can be empty briefly; refresh restores JWT. */
@@ -34,7 +36,7 @@ function isAuthOrSessionError(err: { message?: string; code?: string } | null): 
   )
 }
 
-export function StoryModal({ onClose }: StoryModalProps) {
+export function StoryModal({ onClose, redirectAfterSuccess }: StoryModalProps) {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [title, setTitle] = useState('')
@@ -45,6 +47,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAnonymous, setIsAnonymous] = useState(true)
+  const [step, setStep] = useState<'form' | 'success'>('form')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -177,6 +180,25 @@ export function StoryModal({ onClose }: StoryModalProps) {
     reset()
     setSubmitting(false)
     router.refresh()
+    setStep('success')
+  }
+
+  function handleSuccessDone() {
+    setStep('form')
+    if (redirectAfterSuccess) {
+      router.push(redirectAfterSuccess)
+    }
+    onClose()
+  }
+
+  function handleDismiss() {
+    const leavingSuccess = step === 'success'
+    if (leavingSuccess) {
+      setStep('form')
+      if (redirectAfterSuccess) {
+        router.push(redirectAfterSuccess)
+      }
+    }
     onClose()
   }
 
@@ -184,10 +206,12 @@ export function StoryModal({ onClose }: StoryModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#1D1D1D] p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Submit a story</h2>
+          <h2 className="text-lg font-semibold text-white">
+            {step === 'success' ? 'Story received' : 'Submit a story'}
+          </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleDismiss}
             className="rounded-md p-1 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Close"
           >
@@ -195,6 +219,30 @@ export function StoryModal({ onClose }: StoryModalProps) {
           </button>
         </div>
 
+        {step === 'success' ? (
+          <div className="space-y-5 py-2">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <CheckCircle2 className="h-14 w-14 text-[#25B4B1]" aria-hidden />
+              <p className="font-display text-2xl font-normal tracking-tight text-white">
+                Submitted! Thank you.
+              </p>
+            </div>
+            <p className="text-center text-sm leading-relaxed text-white/70">
+              All stories go to our admins for review before they are posted. Nothing appears on the
+              site until it has been approved. If your piece fits our community guidelines,
+              we&apos;ll publish it when we can.
+            </p>
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={handleSuccessDone}
+                className="rounded-lg bg-[#25B4B1] px-5 py-2.5 text-sm font-semibold text-white shadow transition-colors hover:bg-[#25B4B1]/90"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : (
         <form className="space-y-4" onSubmit={handleSubmit}>
           {error && (
             <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
@@ -202,8 +250,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
             </p>
           )}
           <p className="text-xs text-white/60">
-            Story will go to admin dashboard as “user story” for approval. Once approved, it will
-            appear in the feed.
+            After you submit, our team reviews every story before it can appear in the feed.
           </p>
           <div>
             <label className="block text-sm font-medium text-white/90">Title</label>
@@ -273,7 +320,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleDismiss}
               className="rounded-lg border border-white/20 bg-transparent px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10"
             >
               Cancel
@@ -287,6 +334,7 @@ export function StoryModal({ onClose }: StoryModalProps) {
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   )

@@ -419,7 +419,9 @@ export function TopNav() {
         </div>
       </div>
 
-      {activeModal === 'story' ? <StoryModal onClose={closeModal} /> : null}
+      {activeModal === 'story' ? (
+        <StoryModal onClose={closeModal} redirectAfterSuccess="/podiums?tab=stories" />
+      ) : null}
       {activeModal === 'poll' ? <PollModal onClose={closeModal} /> : null}
       {activeModal === 'tip' ? <TipModal onClose={closeModal} /> : null}
       {activeModal === 'post' ? (

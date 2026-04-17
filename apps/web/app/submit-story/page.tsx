@@ -7,7 +7,7 @@ export default function SubmitStoryPage() {
   const router = useRouter()
 
   function handleClose() {
-    router.push('/podiums')
+    router.push('/podiums?tab=stories')
   }
 
   return (
