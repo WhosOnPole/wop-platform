@@ -9,6 +9,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface StoryModalProps {
   onClose: () => void
+  /** When set, navigates here after the user closes the success step (Done or X). Use when the modal is opened from elsewhere (e.g. nav) so they return to Podiums → Stories. */
+  redirectAfterSuccess?: string
 }
 
 /** Right after signup, getSession() can be empty briefly; refresh restores JWT. */
@@ -34,7 +36,7 @@ function isAuthOrSessionError(err: { message?: string; code?: string } | null): 
   )
 }
 
-export function StoryModal({ onClose }: StoryModalProps) {
+export function StoryModal({ onClose, redirectAfterSuccess }: StoryModalProps) {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [title, setTitle] = useState('')
@@ -183,12 +185,19 @@ export function StoryModal({ onClose }: StoryModalProps) {
 
   function handleSuccessDone() {
     setStep('form')
+    if (redirectAfterSuccess) {
+      router.push(redirectAfterSuccess)
+    }
     onClose()
   }
 
   function handleDismiss() {
-    if (step === 'success') {
+    const leavingSuccess = step === 'success'
+    if (leavingSuccess) {
       setStep('form')
+      if (redirectAfterSuccess) {
+        router.push(redirectAfterSuccess)
+      }
     }
     onClose()
   }
