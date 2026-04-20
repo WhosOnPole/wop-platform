@@ -291,9 +291,6 @@ export function SpotlightCarousel({
               <h2 className="text-xl font-bold text-white leading-snug line-clamp-3 my-0.5">
                 {story.title || 'Story'}
               </h2>
-              {firstLine && (
-                <p className=" text-sm text-white/90 line-clamp-1">{firstLine}</p>
-              )}
               {story.username && !story.is_anonymous && (
                 <p className="mt-1 text-sm text-white/70">by @{story.username}</p>
               )}
