@@ -59,9 +59,6 @@ export function FeaturedNewsCard({ newsStory, variant = 'compact' }: FeaturedNew
             <h2 className="text-xl font-bold text-white leading-snug line-clamp-3 my-0.5">
               {newsStory.title || 'Story'}
             </h2>
-            {firstLine && (
-              <p className="text-sm text-white/90 line-clamp-1">{firstLine}</p>
-            )}
             {newsStory.username && (
               <p className="mt-1 text-sm text-white/70">by @{newsStory.username}</p>
             )}
