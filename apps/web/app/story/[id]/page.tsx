@@ -8,6 +8,7 @@ import type { Metadata } from 'next'
 import { ArrowLeft, PenLine } from 'lucide-react'
 import { getAvatarUrl } from '@/utils/avatar'
 import { getStoryBylineProfile, type StoryProfileRow } from '@/utils/story-byline-profile'
+import { resolveNewsStorySubmitterProfile } from '@/utils/resolve-news-story-submitter'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 
 export const runtime = 'nodejs'
@@ -39,11 +40,6 @@ const getStory = cache(async (id: string) => {
           id,
           username,
           profile_image_url
-        ),
-        submitter:profiles!submitter_id (
-          id,
-          username,
-          profile_image_url
         )
       `
       )
@@ -66,7 +62,15 @@ const getStory = cache(async (id: string) => {
       .maybeSingle(),
   ])
 
-  return newsResult.data ?? userStoryResult.data ?? null
+  if (newsResult.data) {
+    const submitterProfile = await resolveNewsStorySubmitterProfile(supabase, newsResult.data)
+    return {
+      ...newsResult.data,
+      ...(submitterProfile ? { submitter: submitterProfile } : {}),
+    }
+  }
+
+  return userStoryResult.data ?? null
 })
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
