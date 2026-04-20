@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowLeft, PenLine } from 'lucide-react'
 import { getAvatarUrl } from '@/utils/avatar'
+import { getStoryBylineProfile, type StoryProfileRow } from '@/utils/story-byline-profile'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 
 export const runtime = 'nodejs'
@@ -35,6 +36,11 @@ const getStory = cache(async (id: string) => {
         `
         *,
         author:profiles!admin_id (
+          id,
+          username,
+          profile_image_url
+        ),
+        submitter:profiles!submitter_id (
           id,
           username,
           profile_image_url
@@ -131,13 +137,12 @@ export default async function StoryPage({ params }: PageProps) {
     ? `${story.summary}\n\n${story.content}`
     : story.content
 
-  type AuthorRow = { id: string; username: string; profile_image_url: string | null }
-  const rawAuthor =
-    'author' in story && story.author != null
-      ? Array.isArray(story.author)
-        ? (story.author as AuthorRow[])[0]
-        : (story.author as AuthorRow)
-      : null
+  const rawAuthor = getStoryBylineProfile(
+    story as {
+      submitter?: StoryProfileRow | StoryProfileRow[] | null
+      author?: StoryProfileRow | StoryProfileRow[] | null
+    }
+  )
 
   const author =
     rawAuthor &&

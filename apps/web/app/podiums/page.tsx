@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { SpotlightTabs } from '@/components/podiums/spotlight-tabs'
+import { getStoryBylineProfile } from '@/utils/story-byline-profile'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -67,7 +68,24 @@ export default async function PodiumsPage() {
     weeklyHighlightsResult,
   ] = await Promise.all([
     supabase.from('polls').select('*').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: false }),
-    supabase.from('news_stories').select('*').order('created_at', { ascending: false }),
+    supabase
+      .from('news_stories')
+      .select(
+        `
+        *,
+        author:profiles!admin_id (
+          id,
+          username,
+          profile_image_url
+        ),
+        submitter:profiles!submitter_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .order('created_at', { ascending: false }),
     supabase
       .from('user_story_submissions')
       .select(
@@ -190,6 +208,7 @@ export default async function PodiumsPage() {
     }
   }
 
+  type AuthorRow = { id: string; username: string; profile_image_url: string | null }
   const newsStories = (newsStoriesResult.data || []) as Array<{
     id: string
     title: string
@@ -197,8 +216,9 @@ export default async function PodiumsPage() {
     content: string
     created_at: string
     is_featured?: boolean
+    author?: AuthorRow | AuthorRow[] | null
+    submitter?: AuthorRow | AuthorRow[] | null
   }>
-  type AuthorRow = { id: string; username: string; profile_image_url: string | null }
   const approvedUserStories = (approvedUserStoriesResult.data || []) as Array<{
     id: string
     title: string
@@ -235,17 +255,23 @@ export default async function PodiumsPage() {
         profile_image_url: rawAuthor?.profile_image_url ?? null,
       }
     })
-  const newsStoriesForTab = newsStories.map((n) => ({
-    id: n.id,
-    title: n.title,
-    image_url: n.image_url,
-    content: n.content,
-    created_at: n.created_at,
-    href: `/story/${n.id}`,
-    is_featured: n.is_featured ?? false,
-    username: null as string | null,
-    profile_image_url: null as string | null,
-  }))
+  const newsStoriesForTab = newsStories.map((n) => {
+    const byline = getStoryBylineProfile({
+      submitter: n.submitter,
+      author: n.author,
+    })
+    return {
+      id: n.id,
+      title: n.title,
+      image_url: n.image_url,
+      content: n.content,
+      created_at: n.created_at,
+      href: `/story/${n.id}`,
+      is_featured: n.is_featured ?? false,
+      username: byline?.username ?? null,
+      profile_image_url: byline?.profile_image_url ?? null,
+    }
+  })
   const stories = [...userStoriesForTab, ...newsStoriesForTab].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )

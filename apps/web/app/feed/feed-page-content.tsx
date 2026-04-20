@@ -276,7 +276,8 @@ export async function FeedPageContent({
       .select(
         `
         *,
-        author:profiles!admin_id (id, username, profile_image_url)
+        author:profiles!admin_id (id, username, profile_image_url),
+        submitter:profiles!submitter_id (id, username, profile_image_url)
       `
       )
       .eq('is_featured', true)
@@ -815,17 +816,20 @@ export async function FeedPageContent({
     content: string
     created_at: string
     author?: { id: string; username: string; profile_image_url: string | null } | Array<{ id: string; username: string; profile_image_url: string | null }>
+    submitter?: { id: string; username: string; profile_image_url: string | null } | Array<{ id: string; username: string; profile_image_url: string | null }>
   }>
   const featuredNewsList = featuredNewsRaw.map((n) => {
+    const submitter = Array.isArray(n.submitter) ? n.submitter[0] : n.submitter
     const author = Array.isArray(n.author) ? n.author[0] : n.author
+    const byline = submitter ?? author
     return {
       id: n.id,
       title: n.title,
       image_url: n.image_url,
       content: n.content,
       created_at: n.created_at,
-      username: author?.username ?? null,
-      profile_image_url: author?.profile_image_url ?? null,
+      username: byline?.username ?? null,
+      profile_image_url: byline?.profile_image_url ?? null,
     }
   })
 

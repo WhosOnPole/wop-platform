@@ -87,6 +87,7 @@ export function UserStoriesTab() {
       content: sub.summary ? `${sub.summary}\n\n${sub.content}` : sub.content,
       image_url: sub.image_url,
       admin_id: session.user.id,
+      submitter_id: sub.user_id,
       is_featured: false,
     })
 
