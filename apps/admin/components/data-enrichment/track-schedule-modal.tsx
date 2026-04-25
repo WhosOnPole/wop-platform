@@ -183,31 +183,31 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-lg bg-white shadow-xl flex flex-col">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+    <div className="admin-drawer-overlay">
+      <div className="admin-drawer-panel">
+        <div className="admin-drawer-header">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Schedule: {track.name}</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">Schedule: {track.name}</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500">
               Times in track local time{tz !== 'UTC' ? ` (${tz})` : ' (UTC)'}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="Close"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">Season</label>
+        <div className="flex items-center gap-4 border-b border-slate-100 px-6 py-3">
+          <label className="admin-form-label">Season</label>
           <select
             value={seasonYear}
             onChange={(e) => setSeasonYear(parseInt(e.target.value, 10))}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
           >
             {[2026, 2025, 2027].map((y) => (
               <option key={y} value={y}>
@@ -218,7 +218,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
           <button
             type="button"
             onClick={openAddForm}
-            className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-sm font-bold text-white transition hover:bg-teal-700"
           >
             <Plus className="h-4 w-4" />
             Add Event
@@ -226,23 +226,23 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
         </div>
 
         {error && (
-          <div className="mx-6 mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
+          <div className="mx-6 mt-3 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</div>
         )}
 
         {showForm && (
           <form
             onSubmit={handleSubmit}
-            className="mx-6 mt-4 p-4 rounded-lg border border-gray-200 bg-gray-50 space-y-3"
+            className="mx-6 mt-4 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"
           >
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Event type</label>
+                <label className="admin-form-label">Event type</label>
                 <select
                   value={formData.event_type}
                   onChange={(e) =>
                     setFormData({ ...formData, event_type: e.target.value as typeof formData.event_type })
                   }
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="admin-form-input"
                   required
                 >
                   {EVENT_TYPES.map((t) => (
@@ -253,26 +253,26 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Duration (min)</label>
+                <label className="admin-form-label">Duration (min)</label>
                 <input
                   type="number"
                   value={formData.duration_minutes}
                   onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className="admin-form-input font-mono tabular-nums"
                   placeholder="60"
                   min={1}
                 />
               </div>
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="admin-form-label">
                 Date & time (track local)
               </label>
               <input
                 type="datetime-local"
                 value={formData.scheduled_at}
                 onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="admin-form-input"
                 required
               />
             </div>
@@ -280,14 +280,14 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700"
+                className="admin-button-secondary px-3 py-1.5"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="admin-button-primary px-3 py-1.5"
               >
                 {saving ? (
                   <span className="flex items-center gap-1">
@@ -304,33 +304,38 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
         <div className="flex-1 overflow-auto px-6 py-4">
           {loading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
             </div>
           ) : events.length === 0 ? (
-            <p className="text-sm text-gray-500 py-6">
-              No events for {seasonYear}. Add qualifying and race sessions.
-            </p>
+            <div className="flex flex-col items-center py-12 text-center">
+              <div className="mb-3 rounded-full bg-teal-50 p-3 text-teal-600">
+                <Plus className="h-6 w-6" />
+              </div>
+              <p className="font-bold text-slate-900">No events for {seasonYear}</p>
+              <p className="mt-1 text-sm text-slate-500">Add qualifying and race sessions.</p>
+            </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="admin-table">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-gray-600">
-                  <th className="pb-2 font-medium">Type</th>
-                  <th className="pb-2 font-medium">Scheduled</th>
-                  <th className="pb-2 font-medium">Duration</th>
-                  <th className="pb-2 font-medium w-24">Actions</th>
+                <tr>
+                  <th>Type</th>
+                  <th>Scheduled</th>
+                  <th>Duration</th>
+                  <th className="w-24">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {events.map((ev) => (
-                  <tr key={ev.id} className="border-b border-gray-100">
-                    <td className="py-2">{formatEventType(ev.event_type)}</td>
-                    <td className="py-2">{formatScheduledAt(ev.scheduled_at)}</td>
-                    <td className="py-2">{ev.duration_minutes ?? '—'} min</td>
-                    <td className="py-2 flex gap-2">
+                  <tr key={ev.id}>
+                    <td>{formatEventType(ev.event_type)}</td>
+                    <td>{formatScheduledAt(ev.scheduled_at)}</td>
+                    <td className="font-mono tabular-nums">{ev.duration_minutes ?? '—'} min</td>
+                    <td>
+                      <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => openEditForm(ev)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="rounded-lg p-1.5 text-teal-600 transition hover:bg-teal-50"
                         aria-label="Edit"
                       >
                         <Pencil className="h-4 w-4" />
@@ -338,11 +343,12 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
                       <button
                         type="button"
                         onClick={() => handleDelete(ev.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="rounded-lg p-1.5 text-red-600 transition hover:bg-red-50"
                         aria-label="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

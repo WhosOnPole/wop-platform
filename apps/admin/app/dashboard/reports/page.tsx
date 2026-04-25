@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 import { ReportsQueue } from '@/components/reports/reports-queue'
+import { AdminPageHeader } from '@/components/admin/page-header'
 
 export default async function ReportsPage() {
   const cookieStore = await cookies()
@@ -257,13 +258,12 @@ export default async function ReportsPage() {
     }) || []
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Reports Queue</h1>
-      <p className="mb-8 text-gray-600">
-        Review and resolve user reports. Removing content will deduct 5 points and add 1 strike to
-        the content owner.
-      </p>
-
+    <div className="space-y-8">
+      <AdminPageHeader
+        eyebrow="Moderation"
+        title="Reports Queue"
+        description="Review and resolve user reports. Removing content deducts 5 points and adds 1 strike to the content owner."
+      />
       <ReportsQueue initialReports={enrichedReports} />
     </div>
   )

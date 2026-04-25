@@ -96,40 +96,47 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
 
   if (reports.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
-        <p className="text-gray-500">No pending reports. All clear! 🎉</p>
+      <div className="admin-table-card flex flex-col items-center p-12 text-center">
+        <div className="mb-3 rounded-full bg-teal-50 p-3 text-teal-600">
+          <Check className="h-7 w-7" />
+        </div>
+        <p className="text-lg font-bold text-slate-900">No pending reports</p>
+        <p className="mt-1 text-sm text-slate-500">Moderation queue is clear.</p>
       </div>
     )
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 xl:grid-cols-2">
       {reports.map((report) => (
         <div
           key={report.id}
-          className="rounded-lg border border-gray-200 bg-white p-6 shadow"
+          className="rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
         >
-          <div className="mb-4 flex items-start justify-between">
+          <div className="border-b border-slate-200 p-5">
             <div>
-              <div className="mb-2">
-                <span className="inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="admin-status-disabled">
                   {getTargetTypeLabel(report.target_type)}
                 </span>
-                <span className="ml-2 mr-8 text-sm text-gray-500">
+                <span className="text-sm font-medium text-slate-500">
                   Reported by {report.reporter?.username || 'Unknown'}
                 </span>
-                <span className="text-gray-500 text-sm  text-right">
-                  <strong>Reason:</strong> {report.reason || 'No reason provided'}
-                </span>
               </div>
-              
-              <div className="mt-1 text-xs text-gray-500">
+              <h3 className="text-lg font-bold tracking-tight text-slate-900">
+                {report.reason || 'No reason provided'}
+              </h3>
+              <div className="mt-2 text-xs font-medium text-slate-500">
                 Reported on {new Date(report.created_at).toLocaleString()}
               </div>
+            </div>
+          </div>
+
+          <div className="p-5">
               {report.targetPreview ? (
-                <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold">
+                <div className="rounded-2xl border border-slate-200 bg-[#F8F9FB] p-4 text-sm text-slate-800">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="font-bold text-slate-900">
                       Reported{' '}
                       {report.targetPreview.type === 'comment' ||
                       report.targetPreview.type === 'grid_slot_comment'
@@ -139,22 +146,22 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                           : 'Content'}
                     </span>
                     {report.targetPreview.username && (
-                      <span className="text-xs text-gray-500">by {report.targetPreview.username}</span>
+                      <span className="text-xs font-medium text-slate-500">by {report.targetPreview.username}</span>
                     )}
                   </div>
                   {report.targetPreview.image ? (
                     <img
                       src={report.targetPreview.image}
                       alt="Reported item"
-                      className="max-h-48 w-full rounded object-cover"
+                      className="max-h-56 w-full rounded-xl border border-slate-200 object-cover"
                     />
                   ) : (
-                    <p className="whitespace-pre-line text-sm text-gray-700">
+                    <p className="whitespace-pre-line border-l-4 border-teal-500 bg-white p-3 text-sm leading-6 text-slate-700">
                       {report.targetPreview.content || 'No preview available'}
                     </p>
                   )}
                   {report.targetPreview.parent_page_type && report.targetPreview.parent_page_id && (
-                    <p className="mt-2 text-xs text-gray-500">
+                    <p className="mt-3 text-xs font-medium text-slate-500">
                       {report.targetPreview.parent_name
                         ? `${getTargetTypeLabel(report.targetPreview.parent_page_type)}: ${report.targetPreview.parent_name}`
                         : `${report.targetPreview.parent_page_type} (${report.targetPreview.parent_page_id})`}
@@ -162,24 +169,28 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
                   )}
                 </div>
               ) : (
-                <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800">
                   Content no longer available (may have been deleted)
                 </div>
               )}
-              <div className="text-sm text-gray-600 flex justify-between gap-3 mt-3">
-                <span>
-                  <strong>Target ID:</strong> {report.target_id}
-                </span>
-              
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Target ID</p>
+                  <p className="mt-1 break-all font-mono text-xs text-slate-700">{report.target_id}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Reporter ID</p>
+                  <p className="mt-1 break-all font-mono text-xs text-slate-700">{report.reporter_id}</p>
+                </div>
               </div>
-            </div>
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex gap-3 border-t border-slate-200 bg-slate-50 p-5">
             <button
               onClick={() => handleIgnore(report.id)}
               disabled={processing === report.id}
-              className="flex items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+              className="admin-button-secondary flex-1"
             >
               {processing === report.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -191,7 +202,7 @@ export function ReportsQueue({ initialReports }: ReportsQueueProps) {
             <button
               onClick={() => handleRemove(report.id, report.target_type, report.target_id)}
               disabled={processing === report.id}
-              className="flex items-center space-x-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
+              className="admin-button-danger flex-1"
             >
               {processing === report.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -3,7 +3,21 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, LogOut, Users, FileText, Flag, MessageSquare, Star, Calendar } from 'lucide-react'
+import {
+  Bell,
+  Calendar,
+  FileText,
+  Flag,
+  Gauge,
+  LogOut,
+  Menu,
+  MessageSquare,
+  PencilLine,
+  Star,
+  Trophy,
+  Users,
+  X,
+} from 'lucide-react'
 
 interface NavItem {
   href: string
@@ -18,12 +32,16 @@ interface MobileMenuProps {
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Users,
-  FileText,
-  Star,
-  Flag,
-  MessageSquare,
+  Bell,
   Calendar,
+  FileText,
+  Flag,
+  Gauge,
+  MessageSquare,
+  PencilLine,
+  Star,
+  Trophy,
+  Users,
 }
 
 export function MobileMenu({ navItems, userEmail }: MobileMenuProps) {
@@ -35,7 +53,7 @@ export function MobileMenu({ navItems, userEmail }: MobileMenuProps) {
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 right-4 z-50 p-2 rounded-md bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+        className="fixed right-4 top-4 z-50 rounded-full bg-[#0F172A] p-2 text-white shadow-lg transition-colors hover:bg-slate-800 lg:hidden"
         aria-label="Toggle menu"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -46,35 +64,48 @@ export function MobileMenu({ navItems, userEmail }: MobileMenuProps) {
         <>
           {/* Backdrop */}
           <div
-            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Mobile menu sidebar */}
-          <aside className="lg:hidden fixed left-0 top-0 h-full w-64 bg-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out">
+          <aside className="fixed left-0 top-0 z-50 h-full w-[260px] transform bg-[#0F172A] text-white transition-transform duration-300 ease-in-out lg:hidden">
             <div className="flex h-full flex-col">
               {/* Header */}
-              <div className="flex h-16 items-center justify-between border-b border-gray-800 px-6">
-                <h1 className="text-xl font-bold">Admin Dashboard</h1>
+              <div className="flex h-16 items-center justify-between border-b border-white/10 px-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#25B4B1]">
+                    Who&apos;s on Pole?
+                  </p>
+                  <h1 className="mt-1 text-lg font-bold tracking-tight">Control Center</h1>
+                </div>
               </div>
 
               {/* Navigation */}
-              <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+              <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-6">
                 {navItems.map((item) => {
                   const Icon = iconMap[item.icon] || Users
-                  const isActive = pathname === item.href
+                  const isActive =
+                    item.href === '/dashboard'
+                      ? pathname === item.href
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`)
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center space-x-3 rounded-lg px-3 py-2 transition-colors ${
+                      className={`relative flex min-h-12 items-center space-x-3 rounded-xl px-4 py-3 text-[15px] font-semibold transition-all duration-300 ${
                         isActive
-                          ? 'bg-[#25B4B1] text-white'
-                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                          ? 'bg-white/10 text-white'
+                          : 'text-slate-400 hover:bg-white/5 hover:text-white'
                       }`}
                     >
-                      <Icon className="h-5 w-5" />
+                      <span
+                        className={`absolute left-0 h-6 w-1 rounded-r-full ${
+                          isActive ? 'bg-[#25B4B1]' : 'bg-transparent'
+                        }`}
+                      />
+                      <Icon className={`h-5 w-5 ${isActive ? 'text-[#25B4B1]' : 'text-slate-500'}`} />
                       <span>{item.label}</span>
                     </Link>
                   )
@@ -82,15 +113,18 @@ export function MobileMenu({ navItems, userEmail }: MobileMenuProps) {
               </nav>
 
               {/* Footer with user email and sign out */}
-              <div className="border-t border-gray-800 p-4">
-                <div className="mb-2 text-sm text-gray-400 truncate">
-                  {userEmail}
+              <div className="border-t border-white/10 p-4">
+                <div className="mb-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                    Signed in
+                  </p>
+                  <p className="mt-1 truncate text-sm text-gray-300">{userEmail}</p>
                 </div>
                 <form action="/api/auth/signout" method="post">
                   <button
                     type="submit"
                     onClick={() => setIsOpen(false)}
-                    className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+                    className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
                   >
                     <LogOut className="h-5 w-5" />
                     <span>Sign Out</span>

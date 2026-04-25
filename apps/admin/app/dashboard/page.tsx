@@ -3,7 +3,15 @@ import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
-import { Users, Flag, MessageSquare, FileText } from 'lucide-react'
+import {
+  ArrowUpRight,
+  FileText,
+  Flag,
+  Gauge,
+  MessageSquare,
+  PencilLine,
+  Star,
+} from 'lucide-react'
 import { RaceWeekendWidget } from '@/components/dashboard/race-weekend-widget'
 
 export default async function DashboardPage() {
@@ -121,41 +129,95 @@ export default async function DashboardPage() {
       value: pendingReports.count || 0,
       icon: Flag,
       href: '/dashboard/reports',
-      color: 'bg-red-500',
+      accent: 'border-l-red-500',
+      iconClassName: 'bg-red-50 text-red-600',
+      badgeClassName: 'bg-red-100 text-red-800',
+      priority: 'Urgent',
     },
     {
       name: 'Pending Track Tips',
       value: pendingTips.count || 0,
       icon: MessageSquare,
       href: '/dashboard/track-tips',
-      color: 'bg-yellow-500',
+      accent: 'border-l-amber-400',
+      iconClassName: 'bg-amber-50 text-amber-600',
+      badgeClassName: 'bg-amber-100 text-amber-800',
+      priority: 'Review',
     },
     {
       name: 'Pending User Stories',
       value: pendingStories.count || 0,
       icon: FileText,
       href: '/dashboard/content?tab=stories',
-      color: 'bg-purple-500',
+      accent: 'border-l-[#25B4B1]',
+      iconClassName: 'bg-teal-50 text-[#25B4B1]',
+      badgeClassName: 'bg-teal-100 text-teal-800',
+      priority: 'Review',
     },
     {
       name: 'Published Stories',
       value: recentNews.count || 0,
       icon: FileText,
       href: '/dashboard/content',
-      color: 'bg-blue-500',
+      accent: 'border-l-blue-500',
+      iconClassName: 'bg-blue-50 text-blue-600',
+      badgeClassName: 'bg-blue-100 text-blue-800',
+      priority: 'Content',
     },
     {
       name: 'Published Articles',
       value: recentArticles.count || 0,
       icon: FileText,
       href: '/dashboard/content',
-      color: 'bg-green-500',
+      accent: 'border-l-[#25B4B1]',
+      iconClassName: 'bg-teal-50 text-[#25B4B1]',
+      badgeClassName: 'bg-teal-100 text-teal-800',
+      priority: 'Content',
+    },
+  ]
+
+  const quickActions = [
+    {
+      href: '/dashboard/data-enrichment',
+      title: 'Enrich Driver, Team, Track Data',
+      description: 'Add imagery, bios, schedules, and profile metadata.',
+      icon: PencilLine,
+    },
+    {
+      href: '/dashboard/content',
+      title: 'Create Content',
+      description: 'Publish stories, polls, articles, sponsors, and hot takes.',
+      icon: FileText,
+    },
+    {
+      href: '/dashboard/highlights',
+      title: 'Set Weekly Highlights',
+      description: 'Feature a fan and sponsor endorsement for the week.',
+      icon: Star,
     },
   ]
 
   return (
-    <div>
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">Dashboard</h1>
+    <div className="space-y-8">
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-6 border-l-4 border-l-[#25B4B1] p-6 md:flex-row md:items-center md:justify-between md:p-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+              Admin Control Center
+            </h1>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-right">
+            <div className="rounded-xl border border-gray-200 text-center bg-gray-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Status
+              </p>
+              <p className="mt-1 text-sm font-bold text-teal-700">
+                {currentRaceStatus === 'live' ? 'Race Live' : 'Ready'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Race Weekend Widget */}
       {currentRace && (
@@ -166,61 +228,114 @@ export default async function DashboardPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
+              Operations
+            </p>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-gray-900">
+              Priority Metrics
+            </h2>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
             <Link
               key={stat.name}
               href={stat.href}
-              className="group relative overflow-hidden rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
+              className={`group rounded-2xl border border-gray-200 border-l-4 ${stat.accent} bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
+              <div className="flex items-start justify-between gap-4">
+                <div className={`rounded-xl p-2.5 ${stat.iconClassName}`}>
+                  <Icon className="h-5 w-5" />
                 </div>
-                <div className={`rounded-full ${stat.color} p-3`}>
-                  <Icon className="h-6 w-6 text-white" />
+                <ArrowUpRight className="h-4 w-4 text-gray-300 transition group-hover:text-[#25B4B1]" />
+              </div>
+              <p className="mt-5 text-xs font-bold uppercase tracking-[0.16em] text-gray-500">
+                {stat.name}
+              </p>
+              <div className="mt-2 flex items-end justify-between">
+                <p className="font-mono text-4xl font-bold tabular-nums tracking-tight text-gray-900">
+                  {stat.value}
+                </p>
+                <div className={`rounded-full px-2.5 py-1 text-xs font-bold ${stat.badgeClassName}`}>
+                  {stat.priority}
                 </div>
               </div>
             </Link>
           )
         })}
-      </div>
-
-      <div className="mt-8">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link
-            href="/dashboard/data-enrichment"
-            className="rounded-lg border border-gray-200 bg-white p-6 shadow transition-shadow hover:shadow-md"
-          >
-            <h3 className="font-semibold text-gray-900">Enrich Driver/Team/Track Data</h3>
-            <p className="mt-2 text-sm text-gray-600">
-              Add images, bios, and other enriched content
-            </p>
-          </Link>
-          <Link
-            href="/dashboard/content"
-            className="rounded-lg border border-gray-200 bg-white p-6 shadow transition-shadow hover:shadow-md"
-          >
-            <h3 className="font-semibold text-gray-900">Create Content</h3>
-            <p className="mt-2 text-sm text-gray-600">
-              Create stories, polls, articles, and more
-            </p>
-          </Link>
-          <Link
-            href="/dashboard/highlights"
-            className="rounded-lg border border-gray-200 bg-white p-6 shadow transition-shadow hover:shadow-md"
-          >
-            <h3 className="font-semibold text-gray-900">Set Weekly Highlights</h3>
-            <p className="mt-2 text-sm text-gray-600">
-              Highlight a fan and endorsement for the week
-            </p>
-          </Link>
         </div>
-      </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_420px]">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
+              Command shortcuts
+            </p>
+            <h2 className="mt-1 text-lg font-bold text-gray-900">Quick Actions</h2>
+          </div>
+          <div className="grid grid-cols-1 divide-y divide-gray-100 md:grid-cols-3 md:divide-x md:divide-y-0">
+            {quickActions.map((action) => {
+              const Icon = action.icon
+              return (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="group p-6 transition duration-300 hover:bg-gray-50"
+                >
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-[#25B4B1]">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-bold text-gray-900">{action.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-gray-600">{action.description}</p>
+                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-[#25B4B1]">
+                    Open module
+                    <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-6 py-4">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
+              Queue table
+            </p>
+            <h2 className="mt-1 text-lg font-bold text-gray-900">Review Load</h2>
+          </div>
+          <div className="overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Queue
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Count
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {stats.slice(0, 3).map((stat) => (
+                  <tr key={stat.name} className="transition hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{stat.name}</td>
+                    <td className="px-6 py-4 text-right font-mono text-sm font-bold tabular-nums text-gray-900">
+                      {stat.value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

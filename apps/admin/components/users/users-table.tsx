@@ -88,8 +88,8 @@ export default function UsersTable() {
   }
 
   function renderStatus(user: AdminUser) {
-    if (user.banned_until) return <span className="text-red-600 text-sm">Banned</span>
-    return <span className="text-green-600 text-sm">Active</span>
+    if (user.banned_until) return <span className="admin-status-disabled">Banned</span>
+    return <span className="admin-status-active">Active</span>
   }
 
   function askAdjustPoints(user: AdminUser) {
@@ -106,12 +106,12 @@ export default function UsersTable() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-4">
+      <div className="admin-table-card flex flex-wrap items-center gap-3 p-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-700">Filter:</label>
+          <label className="admin-form-label">Filter</label>
           <select
-            className="rounded border border-gray-300 px-2 py-1 text-sm"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
             value={filterMode}
             onChange={(e) => setFilterMode(e.target.value as FilterMode)}
           >
@@ -144,82 +144,80 @@ export default function UsersTable() {
         )}
         <button
           onClick={loadUsers}
-          className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+          className="admin-button-primary py-2"
         >
           Refresh
         </button>
       </div>
 
-      {loading && <p className="text-sm text-gray-500">Loading users…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {loading && <div className="admin-table-card p-6 text-sm text-slate-500">Loading users...</div>}
+      {error && <div className="admin-table-card p-6 text-sm font-medium text-red-600">{error}</div>}
 
       {!loading && !error && (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="admin-table-card overflow-x-auto">
+          <table className="admin-table min-w-full">
+            <thead>
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">User</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Points</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Strikes</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Status</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">
-                  Recent reports
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Actions</th>
+                <th>User</th>
+                <th className="text-right">Points</th>
+                <th className="text-right">Strikes</th>
+                <th>Status</th>
+                <th className="text-right">Recent reports</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
+                <tr key={user.id}>
+                  <td>
                     <div className="flex items-center space-x-3">
                       {user.profile_image_url ? (
                         <img
                           src={user.profile_image_url}
                           alt={user.username}
-                          className="h-8 w-8 rounded-full object-cover"
+                          className="h-8 w-8 rounded-full border border-slate-200 object-cover"
                         />
                       ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-700">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700">
                           {user.username?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                       )}
                       <div>
-                        <div className="text-sm font-semibold text-gray-900">{user.username}</div>
-                        <div className="text-xs text-gray-500">{user.email || 'N/A'}</div>
+                        <div className="text-sm font-bold text-slate-900">{user.username}</div>
+                        <div className="text-xs text-slate-500">{user.email || 'N/A'}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-800">{user.points}</td>
-                  <td className="px-4 py-3 text-sm text-gray-800">{user.strikes}</td>
-                  <td className="px-4 py-3 text-sm text-gray-800">{renderStatus(user)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-800">{user.recent_reports || 0}</td>
-                  <td className="px-4 py-3">
+                  <td className="text-right font-mono tabular-nums text-slate-900">{user.points}</td>
+                  <td className="text-right font-mono tabular-nums text-slate-900">{user.strikes}</td>
+                  <td>{renderStatus(user)}</td>
+                  <td className="text-right font-mono tabular-nums text-slate-900">{user.recent_reports || 0}</td>
+                  <td>
                     <div className="flex flex-wrap gap-2 text-xs">
                       <button
                         onClick={() => performAction(user, user.banned_until ? 'unban' : 'ban')}
-                        className="inline-flex items-center gap-1 rounded bg-red-100 px-2 py-1 text-red-700 hover:bg-red-200"
+                        className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 font-bold text-red-700 transition hover:bg-red-100"
                       >
                         {user.banned_until ? <Check className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
                         {user.banned_until ? 'Unban' : 'Ban'}
                       </button>
                       <button
                         onClick={() => performAction(user, 'reset_strikes')}
-                        className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 hover:bg-gray-200"
+                        className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 font-bold text-slate-700 transition hover:bg-slate-200"
                       >
                         <RotateCcw className="h-4 w-4" />
                         Reset strikes
                       </button>
                       <button
                         onClick={() => askAdjustPoints(user)}
-                        className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-blue-700 hover:bg-blue-200"
+                        className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2.5 py-1.5 font-bold text-teal-700 transition hover:bg-teal-100"
                       >
                         <PlusCircle className="h-4 w-4" />
                         Adjust points
                       </button>
                       <button
                         onClick={() => openReports(user)}
-                        className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-gray-700 hover:bg-gray-200"
+                        className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 font-bold text-slate-700 transition hover:bg-slate-200"
                       >
                         <Eye className="h-4 w-4" />
                         View reports
@@ -230,8 +228,9 @@ export default function UsersTable() {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500">
-                    No users match the current filter.
+                  <td colSpan={6} className="py-12 text-center">
+                    <p className="font-bold text-slate-900">No users match the current filter</p>
+                    <p className="mt-1 text-sm text-slate-500">Adjust thresholds or refresh the queue.</p>
                   </td>
                 </tr>
               )}

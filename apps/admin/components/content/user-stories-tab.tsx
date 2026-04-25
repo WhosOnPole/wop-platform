@@ -121,8 +121,8 @@ export function UserStoriesTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="admin-table-card flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     )
   }
@@ -130,39 +130,40 @@ export function UserStoriesTab() {
   return (
     <div className="space-y-6">
       {submissions.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
-          <p className="text-gray-500">No pending story submissions. All caught up! 🎉</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+          <p className="font-bold text-slate-900">No pending story submissions</p>
+          <p className="mt-1 text-sm text-slate-500">All caught up.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {submissions.map((sub) => (
             <div
               key={sub.id}
-              className="rounded-lg border border-gray-200 bg-white p-6 shadow"
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="mb-4">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="text-lg font-semibold text-gray-900">{sub.title}</span>
-                  <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                  <span className="text-lg font-bold text-slate-900">{sub.title}</span>
+                  <span className="admin-status-pending">
                     by {sub.user?.username || 'Unknown User'}
                   </span>
                 </div>
                 {sub.summary && (
-                  <p className="mb-2 text-sm text-gray-600">{sub.summary}</p>
+                  <p className="mb-2 text-sm text-slate-600">{sub.summary}</p>
                 )}
-                <div className="rounded-md bg-gray-50 p-4">
-                  <p className="whitespace-pre-wrap text-sm text-gray-900">{sub.content}</p>
+                <div className="rounded-2xl border border-slate-200 bg-[#F8F9FB] p-4">
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-slate-900">{sub.content}</p>
                 </div>
                 {sub.image_url && (
                   <div className="mt-3">
                     <img
                       src={sub.image_url}
                       alt="Story"
-                      className="max-h-48 rounded-lg object-cover"
+                      className="max-h-48 rounded-2xl border border-slate-200 object-cover"
                     />
                   </div>
                 )}
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs font-medium text-slate-500">
                   Submitted on {new Date(sub.created_at).toLocaleString()}
                 </div>
               </div>
@@ -170,7 +171,7 @@ export function UserStoriesTab() {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setEditingSubmission(sub)}
-                  className="flex items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                  className="admin-button-secondary"
                 >
                   <Pencil className="h-4 w-4" />
                   <span>Edit</span>
@@ -178,7 +179,7 @@ export function UserStoriesTab() {
                 <button
                   onClick={() => handleReject(sub.id)}
                   disabled={processing === sub.id}
-                  className="flex items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+                  className="admin-button-secondary"
                 >
                   {processing === sub.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -190,7 +191,7 @@ export function UserStoriesTab() {
                 <button
                   onClick={() => handleApprove(sub.id)}
                   disabled={processing === sub.id}
-                  className="flex items-center space-x-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 disabled:opacity-50"
+                  className="admin-button-primary"
                 >
                   {processing === sub.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

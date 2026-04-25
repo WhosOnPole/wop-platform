@@ -61,51 +61,44 @@ export function TracksTable() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="admin-table-card flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     )
   }
 
   return (
     <>
-      <div className="rounded-lg border border-gray-200 bg-white shadow">
+      <div className="admin-table-card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Track
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Weekend
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Events
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
+                <th>Track</th>
+                <th>Weekend</th>
+                <th>Events</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {tracks.map((track) => (
                 <tr key={track.id}>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{track.name}</div>
+                  <td>
+                    <div className="text-sm font-bold text-slate-900">{track.name}</div>
+                    {track.country && <div className="text-xs text-slate-500">{track.country}</div>}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                  <td>
                     {formatWeekendRange(track.start_date, track.end_date) ?? '—'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                  <td className="font-mono tabular-nums text-slate-900">
                     {eventCountByTrackId[track.id] ?? '—'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                  <td>
                     <button
                       onClick={() => setEditingTrack(track)}
-                      className="flex items-center text-blue-600 hover:text-blue-900"
+                      className="admin-action-link"
                     >
-                      <Edit className="mr-1 h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                       Edit
                     </button>
                   </td>

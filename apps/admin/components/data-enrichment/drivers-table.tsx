@@ -9,6 +9,7 @@ interface Driver {
   id: string
   name: string
   team_id: string | null
+  headshot_url: string | null
   image_url: string | null
   team_icon_url: string | null
   active: boolean
@@ -55,84 +56,78 @@ export function DriversTable() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="admin-table-card flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     )
   }
 
   return (
     <>
-      <div className="rounded-lg border border-gray-200 bg-white shadow">
+      <div className="admin-table-card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Driver
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Team
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Number
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Active
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
+                <th>Driver</th>
+                <th>Team</th>
+                <th>Number</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {drivers.map((driver) => (
-                <tr key={driver.id}>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center">
-                      {driver.image_url && (
-                        <img
-                          src={driver.image_url}
-                          alt={driver.name}
-                          className="mr-3 h-10 w-10 rounded-full object-cover"
-                        />
-                      )}
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{driver.name}</div>
-                        {driver.nationality && (
-                          <div className="text-sm text-gray-500">{driver.nationality}</div>
+            <tbody>
+              {drivers.map((driver) => {
+                const portraitUrl = driver.headshot_url || driver.image_url
+
+                return (
+                  <tr key={driver.id}>
+                    <td>
+                      <div className="flex items-center">
+                        {portraitUrl && (
+                          <img
+                            src={portraitUrl}
+                            alt={driver.name}
+                            className="mr-3 h-8 w-8 rounded-full border border-slate-200 object-cover object-top"
+                          />
                         )}
+                        <div>
+                          <div className="text-sm font-bold text-slate-900">{driver.name}</div>
+                          {driver.nationality && (
+                            <div className="text-xs text-slate-500">{driver.nationality}</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {driver.teams?.name || 'N/A'}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {driver.racing_number || 'N/A'}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                        driver.active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {driver.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                    <button
-                      onClick={() => setEditingDriver(driver)}
-                      className="flex items-center text-blue-600 hover:text-blue-900"
-                    >
-                      <Edit className="mr-1 h-4 w-4" />
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>
+                      {driver.teams?.name || 'N/A'}
+                    </td>
+                    <td className="font-mono tabular-nums text-slate-900">
+                      {driver.racing_number || 'N/A'}
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          driver.active
+                            ? 'admin-status-active'
+                            : 'admin-status-pending'
+                        }
+                      >
+                        {driver.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => setEditingDriver(driver)}
+                        className="admin-action-link"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

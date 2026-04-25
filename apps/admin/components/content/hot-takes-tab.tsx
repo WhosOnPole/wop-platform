@@ -48,8 +48,8 @@ export function HotTakesTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="admin-table-card flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     )
   }
@@ -59,38 +59,32 @@ export function HotTakesTab() {
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="admin-button-primary"
         >
           <Plus className="h-4 w-4" />
           <span>Create Hot Take</span>
         </button>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white shadow">
+      <div className="admin-table-card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Content
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Active Window
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
+                <th>Content</th>
+                <th>Active Window</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {hotTakes.map((hotTake) => (
                 <tr key={hotTake.id}>
-                  <td className="px-6 py-4">
-                    <div className="max-w-md truncate text-sm text-gray-900">
+                  <td>
+                    <div className="max-w-md truncate text-md text-slate-900">
                       {hotTake.content_text}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td>
                     <div className="space-y-1">
                       <div>
                         <span className="font-medium">Start: </span>
@@ -101,23 +95,23 @@ export function HotTakesTab() {
                         {hotTake.ends_at ? new Date(hotTake.ends_at).toLocaleString() : '—'}
                       </div>
                       {hotTake.active_date && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-slate-500">
                           Legacy active_date: {new Date(hotTake.active_date).toLocaleDateString()}
                         </div>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">
+                  <td>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setEditingHotTake(hotTake)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="rounded-lg p-1.5 text-teal-600 transition hover:bg-teal-50"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(hotTake.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="rounded-lg p-1.5 text-red-600 transition hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

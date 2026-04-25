@@ -1,11 +1,12 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { LogOut, Mail, Bell, Image, Trash2, Trophy } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { PasswordRecoveryCheck } from './password-recovery-check'
 import { MobileMenu } from './mobile-menu'
 import { DesktopNav } from './desktop-nav'
+import { TopBar } from './top-bar'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,44 +47,46 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: 'Users' },
-    { href: '/dashboard/data-enrichment', label: 'Edit Data', icon: 'Users' },
-    { href: '/dashboard/content', label: 'Create Content', icon: 'FileText' },
+    { href: '/dashboard', label: 'Dashboard', icon: 'Gauge' },
+    { href: '/dashboard/reports', label: 'Moderation', icon: 'Flag' },
+    { href: '/dashboard/data-enrichment', label: 'Data Management', icon: 'PencilLine' },
+    { href: '/dashboard/users', label: 'User Control', icon: 'Users' },
+    { href: '/dashboard/content', label: 'Content Studio', icon: 'FileText' },
     { href: '/dashboard/highlights', label: 'Weekly Highlights', icon: 'Star' },
-    { href: '/dashboard/reports', label: 'Reports', icon: 'Flag' },
     { href: '/dashboard/track-tips', label: 'Track Tips', icon: 'MessageSquare' },
     { href: '/dashboard/chat-logs', label: 'Chat Logs', icon: 'Calendar' },
-    { href: '/dashboard/users', label: 'Users (Points/Strikes)', icon: 'Users' },
-  ]
-
-  const workerNavItems = [
-    { href: '/dashboard/emails', label: 'Email Queue', icon: Mail },
-    { href: '/dashboard/notifications', label: 'Notifications', icon: Bell },
-    { href: '/dashboard/images', label: 'Image Processing', icon: Image },
-    { href: '/dashboard/cleanup', label: 'Data Cleanup', icon: Trash2 },
-    { href: '/dashboard/leaderboards', label: 'Leaderboards', icon: Trophy },
+    { href: '/dashboard/notifications', label: 'Notifications', icon: 'Bell' },
+    { href: '/dashboard/leaderboards', label: 'Leaderboards', icon: 'Trophy' },
   ]
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-[#F8F9FB] text-gray-900">
       {/* Mobile Menu */}
       <MobileMenu navItems={navItems} userEmail={session.user.email || ''} />
 
       {/* Desktop Sidebar - hidden on mobile */}
-      <aside className="hidden lg:block w-64 bg-black text-white">
+      <aside className="hidden w-[260px] shrink-0 bg-[#0F172A] text-white lg:block">
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center border-b border-gray-800 p-6">
-            <h1 className="text-xl font-bold">Admin Dashboard</h1>
+          <div className="flex h-20 items-center border-b border-white/10 px-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#25B4B1]">
+                Who&apos;s on Pole?
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight">Control Center</h1>
+            </div>
           </div>
           <DesktopNav navItems={navItems} />
-          <div className="border-t border-gray-800 p-4">
-            <div className="mb-2 text-sm text-gray-400 text-center">
-              {session.user.email}
+          <div className="border-t border-white/10 p-4">
+            <div className="mb-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                Signed in
+              </p>
+              <p className="mt-1 truncate text-sm text-gray-300">{session.user.email}</p>
             </div>
             <form action="/api/auth/signout" method="post">
               <button
                 type="submit"
-                className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
+                className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <LogOut className="h-5 w-5" />
                 <span>Sign Out</span>
@@ -94,9 +97,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto lg:ml-0">
+      <main className="flex min-w-0 flex-1 flex-col">
         <PasswordRecoveryCheck />
-        <div className="p-4 lg:p-8">{children}</div>
+        <TopBar />
+        <div className="mx-auto w-full max-w-[1440px] flex-1 p-4 md:p-8">{children}</div>
       </main>
     </div>
   )

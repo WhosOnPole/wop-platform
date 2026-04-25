@@ -48,8 +48,8 @@ export function PollsTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="admin-table-card flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     )
   }
@@ -66,7 +66,7 @@ export function PollsTab() {
   return (
     <>
       {featuredPollExpired && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
           <p className="text-sm font-medium">
             Your featured poll has expired. Create a new featured poll to keep it visible on Spotlight.
           </p>
@@ -76,67 +76,57 @@ export function PollsTab() {
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="admin-button-primary"
         >
           <Plus className="h-4 w-4" />
           <span>Create Poll</span>
         </button>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white shadow">
+      <div className="admin-table-card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Question
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Options
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Active Until
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Featured
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
+                <th>Question</th>
+                <th>Options</th>
+                <th>Active Until</th>
+                <th>Featured</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {polls.map((poll) => (
                 <tr key={poll.id}>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{poll.question}</div>
+                  <td>
+                    <div className="text-md text-slate-900">{poll.question}</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-500">
+                  <td>
+                    <div className="text-sm text-slate-500">
                       {Array.isArray(poll.options) ? poll.options.length : 0} options
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td>
                     {poll.ends_at ? new Date(poll.ends_at).toLocaleString() : 'No end date'}
                   </td>
-                  <td className="px-6 py-4">
+                  <td>
                     {poll.is_featured_podium && (
-                      <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
+                      <span className="admin-status-review">
                         Featured
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">
+                  <td>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setEditingPoll(poll)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="rounded-lg p-1.5 text-teal-600 transition hover:bg-teal-50"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(poll.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="rounded-lg p-1.5 text-red-600 transition hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

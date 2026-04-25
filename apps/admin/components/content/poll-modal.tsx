@@ -134,7 +134,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
               value={formData.question}
               onChange={(e) => setFormData({ ...formData, question: e.target.value })}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -150,7 +150,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
                   onChange={(e) => updateOption(index, e.target.value)}
                   required
                   placeholder={`Option ${index + 1}`}
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="admin-form-input"
                 />
                 {formData.options.length > 2 && (
                   <button
@@ -166,7 +166,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             <button
               type="button"
               onClick={addOption}
-              className="mt-2 flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-900"
+              className="mt-2 flex items-center space-x-1 text-sm font-bold text-teal-600 hover:text-teal-800"
             >
               <Plus className="h-4 w-4" />
               <span>Add Option</span>
@@ -179,7 +179,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
               id="is_featured_podium"
               checked={formData.is_featured_podium}
               onChange={(e) => setFormData({ ...formData, is_featured_podium: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="admin-checkbox"
             />
             <label htmlFor="is_featured_podium" className="ml-2 text-sm text-gray-700">
               Featured Podium
@@ -195,7 +195,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
                 type="datetime-local"
                 value={formData.ends_at}
                 onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Poll is active while ends_at is empty or in the future.
@@ -216,7 +216,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {loading ? (
                 <span className="flex items-center">

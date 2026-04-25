@@ -57,7 +57,7 @@ export function AutoCalculateButton({ weekStart }: AutoCalculateButtonProps) {
       <button
         onClick={handleAutoCalculate}
         disabled={loading}
-        className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+        className="admin-button-primary"
       >
         {loading ? (
           <>

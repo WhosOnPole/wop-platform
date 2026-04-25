@@ -114,7 +114,7 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
               onChange={(e) => setFormData({ ...formData, content_text: e.target.value })}
               required
               rows={6}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -125,7 +125,7 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
               value={formData.featured_grid_id}
               onChange={(e) => setFormData({ ...formData, featured_grid_id: e.target.value })}
               placeholder="Optional: UUID of a grid to feature"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -137,7 +137,7 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
                 value={formData.starts_at}
                 onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
               />
             </div>
             <div>
@@ -147,7 +147,7 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
                 value={formData.ends_at}
                 onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
               />
             </div>
           </div>
@@ -158,7 +158,7 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
               type="date"
               value={formData.active_date}
               onChange={(e) => setFormData({ ...formData, active_date: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
             <p className="mt-1 text-xs text-gray-500">
               Optional legacy field. Scheduling now uses start/end date-times.
@@ -176,7 +176,7 @@ export function HotTakeModal({ hotTake, onClose }: HotTakeModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {loading ? (
                 <span className="flex items-center">

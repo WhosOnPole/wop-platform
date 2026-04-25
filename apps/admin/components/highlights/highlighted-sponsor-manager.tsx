@@ -89,33 +89,33 @@ export function HighlightedSponsorManager({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
+          <div className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</div>
         )}
 
         {success && (
-          <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800">
+          <div className="rounded-lg bg-teal-50 p-3 text-sm font-medium text-teal-800">
             Highlighted endorsement saved successfully!
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="admin-form-label mb-2">
             Highlighted Endorsement
           </label>
           {selectedSponsor ? (
-            <div className="mb-2 flex items-center space-x-3 rounded-md border border-gray-300 bg-gray-50 p-3">
+            <div className="mb-2 flex items-center space-x-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
               {selectedSponsor.logo_url && (
                 <img
                   src={selectedSponsor.logo_url}
                   alt={selectedSponsor.name}
-                  className="h-10 w-10 rounded object-contain"
+                  className="h-10 w-10 rounded-lg border border-slate-200 object-contain"
                 />
               )}
               <div>
-                <div className="font-medium text-gray-900">{selectedSponsor.name}</div>
+                <div className="font-bold text-slate-900">{selectedSponsor.name}</div>
               </div>
               <button
                 type="button"
@@ -123,7 +123,7 @@ export function HighlightedSponsorManager({
                   setSelectedSponsor(null)
                   setSponsorSearch('')
                 }}
-                className="ml-auto text-sm text-red-600 hover:text-red-900"
+                className="ml-auto text-sm font-bold text-red-600 hover:text-red-900"
               >
                 Remove
               </button>
@@ -131,22 +131,22 @@ export function HighlightedSponsorManager({
           ) : (
             <div className="relative">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={sponsorSearch}
                   onChange={(e) => setSponsorSearch(e.target.value)}
                   placeholder="Search for an endorsement by name..."
-                  className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="admin-form-input pl-10"
                 />
               </div>
               {searchingSponsors && (
                 <div className="mt-2 flex items-center justify-center py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                 </div>
               )}
               {sponsorResults.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
                   {sponsorResults.map((sponsor) => (
                     <button
                       key={sponsor.id}
@@ -156,17 +156,17 @@ export function HighlightedSponsorManager({
                         setSponsorSearch('')
                         setSponsorResults([])
                       }}
-                      className="flex w-full items-center space-x-3 px-4 py-2 hover:bg-gray-50"
+                      className="flex w-full items-center space-x-3 px-4 py-2 hover:bg-slate-50"
                     >
                       {sponsor.logo_url && (
                         <img
                           src={sponsor.logo_url}
                           alt={sponsor.name}
-                          className="h-8 w-8 rounded object-contain"
+                          className="h-8 w-8 rounded-lg border border-slate-200 object-contain"
                         />
                       )}
                       <div className="text-left">
-                        <div className="font-medium text-gray-900">{sponsor.name}</div>
+                        <div className="font-bold text-slate-900">{sponsor.name}</div>
                       </div>
                     </button>
                   ))}
@@ -176,11 +176,11 @@ export function HighlightedSponsorManager({
           )}
         </div>
 
-        <div className="rounded-md bg-blue-50 p-4">
-          <p className="text-sm text-blue-800">
+        <div className="rounded-xl bg-teal-50 p-4">
+          <p className="text-sm text-teal-800">
             <strong>Week Start Date:</strong> {new Date(currentWeekStart).toLocaleDateString()}
           </p>
-          <p className="mt-1 text-xs text-blue-700">
+          <p className="mt-1 text-xs text-teal-700">
             This will update or create the highlighted endorsement for the week starting on this Monday.
           </p>
         </div>
@@ -189,7 +189,7 @@ export function HighlightedSponsorManager({
           <button
             type="submit"
             disabled={loading || !selectedSponsor}
-            className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="admin-button-primary px-6"
           >
             {loading ? (
               <span className="flex items-center">

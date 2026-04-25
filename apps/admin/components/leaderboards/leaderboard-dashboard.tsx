@@ -51,15 +51,15 @@ export function LeaderboardDashboard({
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+      <div className="rounded-2xl border border-slate-200 border-l-4 border-l-amber-400 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center space-x-2">
               <Trophy className="h-5 w-5 text-yellow-500" />
-              <h3 className="text-lg font-semibold text-gray-900">Weekly Leaderboard</h3>
+              <h3 className="text-lg font-bold text-slate-900">Weekly Leaderboard</h3>
             </div>
             {weeklyLastGenerated && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-slate-600">
                 Last generated: {new Date(weeklyLastGenerated).toLocaleString()}
               </p>
             )}
@@ -67,7 +67,7 @@ export function LeaderboardDashboard({
           <button
             onClick={() => handleGenerate('weekly')}
             disabled={generating === 'weekly'}
-            className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="admin-button-primary"
           >
             <Play className="h-4 w-4" />
             <span>{generating === 'weekly' ? 'Generating...' : 'Generate'}</span>
@@ -75,15 +75,15 @@ export function LeaderboardDashboard({
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+      <div className="rounded-2xl border border-slate-200 border-l-4 border-l-teal-500 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center space-x-2">
-              <Trophy className="h-5 w-5 text-gray-400" />
-              <h3 className="text-lg font-semibold text-gray-900">Monthly Leaderboard</h3>
+              <Trophy className="h-5 w-5 text-teal-500" />
+              <h3 className="text-lg font-bold text-slate-900">Monthly Leaderboard</h3>
             </div>
             {monthlyLastGenerated && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-slate-600">
                 Last generated: {new Date(monthlyLastGenerated).toLocaleString()}
               </p>
             )}
@@ -91,7 +91,7 @@ export function LeaderboardDashboard({
           <button
             onClick={() => handleGenerate('monthly')}
             disabled={generating === 'monthly'}
-            className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="admin-button-primary"
           >
             <Play className="h-4 w-4" />
             <span>{generating === 'monthly' ? 'Generating...' : 'Generate'}</span>

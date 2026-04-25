@@ -136,8 +136,9 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
 
   if (tips.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-12 text-center shadow">
-        <p className="text-gray-500">No pending track tips. All caught up! 🎉</p>
+      <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+        <p className="font-bold text-slate-900">No pending track tips</p>
+        <p className="mt-1 text-sm text-slate-500">All caught up.</p>
       </div>
     )
   }
@@ -145,23 +146,23 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
   return (
     <div className="space-y-4">
       {tips.map((tip) => (
-        <div key={tip.id} className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+        <div key={tip.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
           <div className="mb-4">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+              <span className="admin-status-active">
                 {tip.track?.name || 'Unknown Track'}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm font-medium text-slate-500">
                 by {tip.user?.username || 'Unknown User'}
               </span>
             </div>
             <div className="mb-3">
-              <label className="mb-1 block text-xs font-medium text-gray-500">Tip type</label>
+              <label className="admin-form-label mb-1">Tip type</label>
               <select
                 value={tip.type ?? 'tips'}
                 onChange={(e) => handleTypeChange(tip.id, e.target.value as TrackTipType)}
                 disabled={processing === tip.id}
-                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 disabled:opacity-50"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 disabled:opacity-50"
               >
                 {TIP_TYPE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -170,7 +171,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
                 ))}
               </select>
             </div>
-            <div className="rounded-md bg-gray-50 p-4">
+            <div className="rounded-2xl border border-slate-200 bg-[#F8F9FB] p-4">
               {editingTipId === tip.id ? (
                 <div className="space-y-2">
                   <textarea
@@ -178,15 +179,15 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
                     onChange={(e) => setEditDraft(e.target.value)}
                     rows={4}
                     maxLength={2000}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="admin-form-input"
                     placeholder="Tip content..."
                   />
-                  <p className="text-xs text-gray-500">{editDraft.length}/2000</p>
+                  <p className="text-xs text-slate-500">{editDraft.length}/2000</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleSaveEdit(tip.id)}
                       disabled={processing === tip.id}
-                      className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="admin-button-primary px-3 py-1.5"
                     >
                       {processing === tip.id ? (
                         <Loader2 className="inline h-4 w-4 animate-spin" />
@@ -197,7 +198,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
                     <button
                       onClick={cancelEditing}
                       disabled={processing === tip.id}
-                      className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      className="admin-button-secondary px-3 py-1.5"
                     >
                       Cancel
                     </button>
@@ -205,11 +206,11 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
                 </div>
               ) : (
                 <div className="flex items-start justify-between gap-2">
-                  <p className="flex-1 text-sm text-gray-900">{tip.tip_content}</p>
+                  <p className="flex-1 text-sm leading-6 text-slate-900">{tip.tip_content}</p>
                   <button
                     onClick={() => startEditing(tip)}
                     disabled={processing === tip.id}
-                    className="shrink-0 rounded p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-700 disabled:opacity-50"
+                    className="shrink-0 rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 disabled:opacity-50"
                     aria-label="Edit tip content"
                   >
                     <Pencil className="h-4 w-4" />
@@ -219,12 +220,12 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
             </div>
             {tip.image_url && (
               <div className="mt-3">
-                <span className="mb-1 block text-xs font-medium text-gray-500">Submitted image</span>
+                <span className="admin-form-label mb-1">Submitted image</span>
                 <a
                   href={tip.image_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+                  className="block overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
                 >
                   <Image
                     src={tip.image_url}
@@ -237,16 +238,16 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
                 </a>
               </div>
             )}
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-xs font-medium text-slate-500">
               Submitted on {new Date(tip.created_at).toLocaleString()}
             </div>
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex gap-3">
             <button
               onClick={() => handleReject(tip.id)}
               disabled={processing === tip.id}
-              className="flex items-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+              className="admin-button-secondary"
             >
               {processing === tip.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -258,7 +259,7 @@ export function TrackTipsQueue({ initialTips }: TrackTipsQueueProps) {
             <button
               onClick={() => handleApprove(tip.id)}
               disabled={processing === tip.id}
-              className="flex items-center space-x-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {processing === tip.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

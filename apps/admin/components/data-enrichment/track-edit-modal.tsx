@@ -137,44 +137,53 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Track: {track.name}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+    <div className="admin-drawer-overlay">
+      <div className="admin-drawer-panel">
+        <div className="admin-drawer-header">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">Edit Track</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500">ID: {track.id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close track editor"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
-        )}
+        <form onSubmit={handleSubmit} className="contents">
+          <div className="admin-drawer-body space-y-6">
+            {error && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</div>
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="admin-form-section">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <label className="admin-form-label">Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Overview text</label>
+            <label className="admin-form-label">Overview text</label>
             <textarea
               value={formData.overview_text}
               onChange={(e) => setFormData({ ...formData, overview_text: e.target.value })}
               rows={4}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Website URL</label>
-            <p className="mt-0.5 text-xs text-gray-500">
+            <label className="admin-form-label">Website URL</label>
+            <p className="mt-0.5 text-xs text-slate-500">
               Shown under the overview section on the track page
             </p>
             <input
@@ -182,29 +191,29 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
               value={formData.website_url}
               onChange={(e) => setFormData({ ...formData, website_url: e.target.value })}
               placeholder="https://..."
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Laps</label>
+              <label className="admin-form-label">Laps</label>
               <input
                 type="number"
                 min={1}
                 step={1}
                 value={formData.laps}
                 onChange={(e) => setFormData({ ...formData, laps: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input font-mono tabular-nums"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Nickname</label>
+              <label className="admin-form-label">Nickname</label>
               <input
                 type="text"
                 value={formData.circuit_ref}
                 onChange={(e) => setFormData({ ...formData, circuit_ref: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
                 placeholder="e.g. Melbourne"
               />
             </div>
@@ -212,37 +221,38 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Location</label>
+              <label className="admin-form-label">Location</label>
               <input
                 type="text"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Country</label>
+              <label className="admin-form-label">Country</label>
               <input
                 type="text"
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
               />
             </div>
           </div>
+            </div>
 
-          <div className="border-t border-gray-200 pt-4 mt-4">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Weekend date range</h3>
-            <p className="text-xs text-gray-500 mb-3">
+          <div className="admin-form-section">
+            <h3 className="text-sm font-bold text-slate-900">Weekend date range</h3>
+            <p className="text-xs text-slate-500">
               Times are local to the track&apos;s timezone. Used for Pitlane upcoming and schedule tabs.
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                <label className="admin-form-label">Timezone</label>
                 <select
                   value={formData.timezone}
                   onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="admin-form-input"
                 >
                   {TRACK_TIMEZONES.map((tz) => (
                     <option key={tz.value} value={tz.value}>
@@ -253,59 +263,60 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start date</label>
+                  <label className="admin-form-label">Start date</label>
                   <input
                     type="date"
                     value={formData.start_date}
                     onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                    className="admin-form-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start time</label>
+                  <label className="admin-form-label">Start time</label>
                   <input
                     type="time"
                     value={formData.start_time}
                     onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                    className="admin-form-input"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End date</label>
+                  <label className="admin-form-label">End date</label>
                   <input
                     type="date"
                     value={formData.end_date}
                     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                    className="admin-form-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End time</label>
+                  <label className="admin-form-label">End time</label>
                   <input
                     type="time"
                     value={formData.end_time}
                     onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                    className="admin-form-input"
                   />
                 </div>
               </div>
             </div>
           </div>
+          </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="admin-drawer-footer">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="admin-button-secondary"
             >
-              Cancel
+              Discard
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {loading ? (
                 <span className="flex items-center">

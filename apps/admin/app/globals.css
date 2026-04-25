@@ -3,32 +3,145 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
+  --background: #f8f9fb;
+  --foreground: #1f2937;
+  --admin-accent: #25b4b1;
+  --admin-sidebar: #0f172a;
 }
 
 html {
-  scrollbar-width: none; /* Hide scrollbars in Firefox */
-  -ms-overflow-style: none; /* Hide scrollbars in IE/Edge */
+  background: var(--background);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  scrollbar-width: none; /* Hide scrollbars in Firefox */
-  -ms-overflow-style: none; /* Hide scrollbars in IE/Edge */
-}
-
-/* Hide scrollbars (WebKit) */
-*::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  font-family: var(--font-inter), Inter, Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer components {
+  .admin-table-card {
+    @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .admin-table {
+    @apply w-full;
+  }
+
+  .admin-table thead {
+    @apply bg-slate-50;
+  }
+
+  .admin-table th {
+    @apply px-6 py-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500;
+  }
+
+  .admin-table td {
+    @apply h-16 whitespace-nowrap px-6 py-3 align-middle text-sm text-slate-600;
+  }
+
+  .admin-table tbody {
+    @apply divide-y divide-slate-100 bg-white;
+  }
+
+  .admin-table tbody tr {
+    @apply transition-colors duration-300 hover:bg-slate-100;
+  }
+
+  .admin-status-active,
+  .admin-status-review,
+  .admin-status-disabled,
+  .admin-status-pending {
+    @apply inline-flex rounded-full px-2.5 py-1 text-xs font-bold;
+  }
+
+  .admin-status-active {
+    @apply bg-teal-50 text-teal-600;
+  }
+
+  .admin-status-review {
+    @apply bg-amber-50 text-amber-600;
+  }
+
+  .admin-status-disabled {
+    @apply bg-red-50 text-red-600;
+  }
+
+  .admin-status-pending {
+    @apply bg-slate-100 text-slate-700;
+  }
+
+  .admin-action-link {
+    @apply inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-bold text-teal-600 transition hover:bg-teal-50 hover:text-teal-700;
+  }
+
+  .admin-drawer-overlay {
+    @apply fixed inset-0 z-50 bg-black/40 backdrop-blur-sm;
+  }
+
+  .admin-drawer-panel {
+    @apply absolute right-0 top-0 flex h-full w-full max-w-[600px] flex-col bg-white shadow-2xl;
+    animation: admin-drawer-enter 300ms ease-out;
+  }
+
+  .admin-drawer-header {
+    @apply sticky top-0 z-10 flex items-start justify-between border-b border-slate-200 bg-white px-6 py-5;
+  }
+
+  .admin-drawer-body {
+    @apply flex-1 overflow-y-auto px-6 py-6;
+  }
+
+  .admin-drawer-footer {
+    @apply sticky bottom-0 z-10 flex justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4;
+  }
+
+  .admin-form-section {
+    @apply space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4;
+  }
+
+  .admin-form-label {
+    @apply block text-xs font-bold uppercase tracking-[0.14em] text-slate-500;
+  }
+
+  .admin-form-input {
+    @apply mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10;
+  }
+
+  .admin-checkbox {
+    @apply h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500;
+  }
+
+  .admin-button-primary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50;
+  }
+
+  .admin-button-secondary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50;
+  }
+
+  .admin-button-danger {
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50;
+  }
+
+  .admin-asset-preview {
+    @apply flex min-h-40 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50;
+  }
+}
+
+@keyframes admin-drawer-enter {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
   }
 }
 

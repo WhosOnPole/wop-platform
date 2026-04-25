@@ -48,8 +48,8 @@ export function SponsorsTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="admin-table-card flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     )
   }
@@ -59,70 +59,62 @@ export function SponsorsTab() {
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="admin-button-primary"
         >
           <Plus className="h-4 w-4" />
           <span>Create Endorsement</span>
         </button>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white shadow">
+      <div className="admin-table-card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Logo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Website
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
+                <th>Name</th>
+                <th>Logo</th>
+                <th>Website</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {sponsors.map((sponsor) => (
                 <tr key={sponsor.id}>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{sponsor.name}</div>
+                  <td>
+                    <div className="text-sm font-bold text-slate-900">{sponsor.name}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td>
                     {sponsor.logo_url && (
                       <img
                         src={sponsor.logo_url}
                         alt={sponsor.name}
-                        className="h-10 w-10 rounded object-contain"
+                        className="h-10 w-10 rounded-lg border border-slate-200 object-contain"
                       />
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td>
                     {sponsor.website_url && (
                       <a
                         href={sponsor.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-900"
+                        className="font-medium text-teal-600 hover:text-teal-800"
                       >
                         {sponsor.website_url}
                       </a>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">
+                  <td>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setEditingSponsor(sponsor)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="rounded-lg p-1.5 text-teal-600 transition hover:bg-teal-50"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(sponsor.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="rounded-lg p-1.5 text-red-600 transition hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

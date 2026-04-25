@@ -41,62 +41,56 @@ export function TeamsTable() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="admin-table-card flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     )
   }
 
   return (
     <>
-      <div className="rounded-lg border border-gray-200 bg-white shadow">
+      <div className="admin-table-card">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="admin-table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Team
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Active
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
+                <th>Team</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody>
               {teams.map((team) => (
                 <tr key={team.id}>
-                  <td className="whitespace-nowrap px-6 py-4">
+                  <td>
                     <div className="flex items-center">
                       {team.image_url && (
                         <img
                           src={team.image_url}
                           alt={team.name}
-                          className="mr-3 h-10 w-10 rounded object-cover"
+                          className="mr-3 h-8 w-8 rounded-full border border-slate-200 object-cover"
                         />
                       )}
-                      <div className="text-sm font-medium text-gray-900">{team.name}</div>
+                      <div className="text-md font-bold text-slate-900">{team.name}</div>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm">
+                  <td>
                     <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                      className={
                         team.active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
+                          ? 'admin-status-active'
+                          : 'admin-status-pending'
+                      }
                     >
                       {team.active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                  <td>
                     <button
                       onClick={() => setEditingTeam(team)}
-                      className="flex items-center text-blue-600 hover:text-blue-900"
+                      className="admin-action-link"
                     >
-                      <Edit className="mr-1 h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                       Edit
                     </button>
                   </td>

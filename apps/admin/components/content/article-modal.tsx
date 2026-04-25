@@ -118,7 +118,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               value={formData.title}
               onChange={(e) => handleTitleChange(e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -129,7 +129,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               value={formData.slug}
               onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
             <p className="mt-1 text-xs text-gray-500">
               URL-friendly version (auto-generated from title, but editable)
@@ -143,7 +143,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
               >
                 <option value="FEATURE_FAN">Fan Features</option>
                 <option value="FEATURE_WOMEN">Women in F1</option>
@@ -158,7 +158,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="admin-form-input"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -172,7 +172,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               type="url"
               value={formData.header_image_url}
               onChange={(e) => setFormData({ ...formData, header_image_url: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -183,7 +183,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               required
               rows={15}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input font-mono"
               placeholder="Write your article content in Markdown format..."
             />
             <p className="mt-1 text-xs text-gray-500">
@@ -202,7 +202,7 @@ export function ArticleModal({ article, onClose }: ArticleModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {loading ? (
                 <span className="flex items-center">
