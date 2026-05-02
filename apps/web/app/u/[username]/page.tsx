@@ -201,6 +201,7 @@ export default async function UserProfilePage({ params }: PageProps) {
         id: post.id,
         type: 'post',
         content: post.content,
+        image_url: post.image_url ?? null,
         created_at: post.created_at,
         target_id: post.parent_page_id,
         target_type: post.parent_page_type,
@@ -338,6 +339,65 @@ export default async function UserProfilePage({ params }: PageProps) {
   // Sort activities by created_at descending
   activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
+  const activityPollIds = Array.from(
+    new Set(
+      activities
+        .filter((item) => item.type === 'post' && item.target_type === 'poll' && typeof item.target_id === 'string')
+        .map((item) => item.target_id as string)
+    )
+  )
+  let activityPollsById: Record<
+    string,
+    { id: string; question: string; options?: unknown[]; is_featured_podium?: boolean; created_at: string; ends_at?: string | null }
+  > = {}
+  let activityPollUserResponses: Record<string, string> = {}
+  let activityPollVoteCounts: Record<string, Record<string, number>> = {}
+  if (activityPollIds.length > 0) {
+    const { data: pollRows } = await supabase
+      .from('polls')
+      .select('id, question, options, is_featured_podium, created_at, ends_at')
+      .in('id', activityPollIds)
+    activityPollsById = (pollRows || []).reduce(
+      (acc, poll) => {
+        acc[poll.id] = poll
+        return acc
+      },
+      {} as Record<string, { id: string; question: string; options?: unknown[]; is_featured_podium?: boolean; created_at: string; ends_at?: string | null }>
+    )
+
+    const { data: pollRespRows } = await supabase
+      .from('poll_responses')
+      .select('poll_id, selected_option_id')
+      .in('poll_id', activityPollIds)
+    if (pollRespRows) {
+      activityPollVoteCounts = pollRespRows.reduce(
+        (acc, row) => {
+          if (!acc[row.poll_id]) acc[row.poll_id] = {}
+          acc[row.poll_id][row.selected_option_id] = (acc[row.poll_id][row.selected_option_id] || 0) + 1
+          return acc
+        },
+        {} as Record<string, Record<string, number>>
+      )
+    }
+
+    if (session) {
+      const { data: myPollResponses } = await supabase
+        .from('poll_responses')
+        .select('poll_id, selected_option_id')
+        .eq('user_id', session.user.id)
+        .in('poll_id', activityPollIds)
+      if (myPollResponses) {
+        activityPollUserResponses = myPollResponses.reduce(
+          (acc, row) => {
+            acc[row.poll_id] = row.selected_option_id
+            return acc
+          },
+          {} as Record<string, string>
+        )
+      }
+    }
+  }
+
   // Fetch discussion posts on this profile
   const { data: profilePosts } = await supabase
     .from('posts')
@@ -457,6 +517,9 @@ export default async function UserProfilePage({ params }: PageProps) {
         trackGrid={trackGrid}
         teamGrid={teamGrid}
         activities={activities}
+        activityPollsById={activityPollsById}
+        activityPollUserResponses={activityPollUserResponses}
+        activityPollVoteCounts={activityPollVoteCounts}
         profilePosts={profilePosts || []}
         supabaseUrl={supabaseUrl}
       />

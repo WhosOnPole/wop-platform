@@ -13,8 +13,6 @@ interface PollOption {
   value: string
 }
 
-const ENDS_AT_MS = 24 * 60 * 60 * 1000
-
 export function PollModal({ onClose }: PollModalProps) {
   const supabase = createClientComponentClient()
   const [question, setQuestion] = useState('')
@@ -60,19 +58,41 @@ export function PollModal({ onClose }: PollModalProps) {
       return
     }
 
-    const endsAt = new Date(Date.now() + ENDS_AT_MS).toISOString()
-    const { error: insertError } = await supabase.from('polls').insert({
-      question: question.trim(),
-      options: filledOptions,
-      admin_id: null,
-      ends_at: endsAt,
-      is_featured_podium: false,
-    })
+    const { data: insertedPoll, error: insertError } = await supabase
+      .from('polls')
+      .insert({
+        question: question.trim(),
+        options: filledOptions,
+        admin_id: null,
+        is_featured_podium: false,
+      })
+      .select('id')
+      .single()
 
     if (insertError) {
       setError(insertError.message ?? 'Failed to create poll.')
       setSubmitting(false)
       return
+    }
+
+    // Create a linked post so poll creation appears in creator activity/feed.
+    // If this fails, roll back the poll insert to avoid inconsistent UX.
+    if (insertedPoll?.id) {
+      const { error: postInsertError } = await supabase.from('posts').insert({
+        content: question.trim(),
+        user_id: session.user.id,
+        parent_page_type: 'poll',
+        parent_page_id: insertedPoll.id,
+      })
+      if (postInsertError) {
+        await supabase.from('polls').delete().eq('id', insertedPoll.id)
+        setError(
+          postInsertError.message ??
+            'Failed to publish poll to feed/activity. Please try again.'
+        )
+        setSubmitting(false)
+        return
+      }
     }
 
     setQuestion('')
@@ -153,7 +173,7 @@ export function PollModal({ onClose }: PollModalProps) {
           </div>
 
           <p className="text-xs text-white/60">
-            You have 24 hours to vote. Polls stay visible for 30 days.
+            Community polls stay visible and can be voted on anytime.
           </p>
 
           <div className="flex justify-end gap-2 pt-2">

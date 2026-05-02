@@ -874,6 +874,22 @@ export async function FeedPageContent({
     created_at: string
     ends_at?: string | null
   }>
+  const communityPollIds = communityPollsList.map((p) => p.id)
+  let ownCommunityPollIds = new Set<string>()
+  if (communityPollIds.length > 0) {
+    const { data: ownPollPostRows } = await supabase
+      .from('posts')
+      .select('parent_page_id')
+      .eq('user_id', session.user.id)
+      .eq('parent_page_type', 'poll')
+      .in('parent_page_id', communityPollIds)
+    ownCommunityPollIds = new Set(
+      (ownPollPostRows || [])
+        .map((row: { parent_page_id: string | null }) => row.parent_page_id)
+        .filter((id): id is string => typeof id === 'string')
+    )
+  }
+  const communityPollsForDiscovery = communityPollsList.filter((poll) => !ownCommunityPollIds.has(poll.id))
   const allActivePolls = [...adminPollsList, ...communityPollsList]
   // Banner shows only an admin poll that is explicitly marked as featured. No other polls in the spotlight banner (carousel/sidebar).
   const featuredAdminPoll = adminPollsForBannerList.find((p) => p.is_featured_podium) ?? null
@@ -1113,7 +1129,7 @@ export async function FeedPageContent({
             gridComments={[]}
             embeddedPollsByPollId={embeddedPollsByPollId}
             parentPageByKey={parentPageByKey}
-            communityPolls={communityPollsList}
+            communityPolls={communityPollsForDiscovery}
             pollUserResponses={feedPollUserResponses}
             pollVoteCounts={feedPollVoteCounts}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}

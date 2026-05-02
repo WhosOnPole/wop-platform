@@ -116,6 +116,7 @@ export interface EmbeddedPollData {
 interface FeedContentProps {
   posts: Post[]
   grids: Grid[]
+  pitCrewPolls?: StandalonePoll[]
   gridComments?: GridCommentItem[]
   embeddedPollsByPollId?: Record<string, EmbeddedPollData>
   parentPageByKey?: Record<
@@ -153,6 +154,7 @@ type FeedTab = 'pit crew' | 'discovery'
 export function FeedContent({
   posts,
   grids,
+  pitCrewPolls = [],
   gridComments = [],
   embeddedPollsByPollId = {},
   parentPageByKey = {},
@@ -542,6 +544,7 @@ export function FeedContent({
   const pitCrewContent: FeedItem[] = [
     ...posts.map((p) => ({ ...p, contentType: 'post' as const })),
     ...grids.map((g) => ({ ...g, contentType: 'grid' as const })),
+    ...pitCrewPolls.map((p) => ({ ...p, contentType: 'poll' as const })),
     ...gridComments.map((c) => ({ ...c, contentType: 'grid_comment' as const })),
     ...featuredNews.map((n) => ({ ...n, contentType: 'news' as const })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -555,7 +558,7 @@ export function FeedContent({
   const hasContent = pitCrewContent.length > 0
 
   const emptyStateBlock = (
-    <div className="rounded-lg border border-white/10 bg-black/40 p-12 text-center shadow backdrop-blur-sm">
+    <div className="rounded-lg border border-white/10 bg-gray-900 p-12 text-center shadow backdrop-blur-sm">
       <p className="text-white/90">
         Start your journey by exploring drivers, teams and tracks!
       </p>
@@ -662,6 +665,7 @@ export function FeedContent({
                 <FeedPostActionsMenu
                   postId={post.id}
                   postAuthorId={post.user?.id ?? null}
+                  allowDeleteAny
                 />
               </div>
               {post.parent_page_type &&
@@ -695,7 +699,16 @@ export function FeedContent({
                 })()}
               {post.content &&
                 !post.embeddedGrid &&
-                (post.parent_page_type === 'hot_take' || post.parent_page_type === 'poll') && (
+                (post.parent_page_type === 'hot_take' ||
+                  (post.parent_page_type === 'poll' &&
+                    (() => {
+                      if (!post.parent_page_id || !embeddedPollsByPollId[post.parent_page_id]) return true
+                      const pollQuestion = String(
+                        embeddedPollsByPollId[post.parent_page_id].poll.question ?? ''
+                      ).trim()
+                      const postContent = String(post.content ?? '').trim()
+                      return postContent.length > 0 && postContent !== pollQuestion
+                    })())) && (
                   <p className="mb-3 text-[15px] font-semibold text-white/95">{post.content}</p>
                 )}
               {post.parent_page_type === 'hot_take' &&
@@ -737,7 +750,7 @@ export function FeedContent({
                 embeddedPollsByPollId[post.parent_page_id] && (() => {
                   const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
                   return (
-                    <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4 [&_h2]:text-sm">
+                    <div className="mt-4 rounded-md bg-black/30 [&_h2]:text-sm">
                       <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                         {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
                       </p>
@@ -1053,6 +1066,7 @@ export function FeedContent({
                           postId={post.id}
                           postAuthorId={post.user?.id ?? null}
                           showFollowButton
+                          allowDeleteAny
                         />
                       </div>
                       {post.parent_page_type &&
@@ -1086,7 +1100,15 @@ export function FeedContent({
                       {post.content &&
                         !(post as Post).embeddedGrid &&
                         (post.parent_page_type === 'hot_take' ||
-                          post.parent_page_type === 'poll') && (
+                          (post.parent_page_type === 'poll' &&
+                            (() => {
+                              if (!post.parent_page_id || !embeddedPollsByPollId[post.parent_page_id]) return true
+                              const pollQuestion = String(
+                                embeddedPollsByPollId[post.parent_page_id].poll.question ?? ''
+                              ).trim()
+                              const postContent = String(post.content ?? '').trim()
+                              return postContent.length > 0 && postContent !== pollQuestion
+                            })())) && (
                           <p className="mb-3 text-[15px] font-semibold text-white/95">{post.content}</p>
                         )}
                       {post.parent_page_type === 'hot_take' &&
@@ -1113,7 +1135,7 @@ export function FeedContent({
                         (() => {
                           const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
                           return (
-                            <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4 [&_h2]:text-sm">
+                            <div className="mt-4 rounded-md bg-black/30 [&_h2]:text-sm">
                               <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                                 {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
                               </p>

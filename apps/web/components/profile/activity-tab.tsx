@@ -1,13 +1,16 @@
 import Link from 'next/link'
-import { Grid3x3, MessageSquare } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { BarChart3, Grid3x3, MessageSquare } from 'lucide-react'
 import { formatTimeAgo } from '@/utils/date-utils'
 import { LikeButton } from '@/components/discussion/like-button'
 import { FeedPostCommentSection } from '@/components/feed/feed-post-comment-section'
+import { PollCard } from '@/components/polls/poll-card'
 
 interface ActivityItem {
   id: string
   type: 'post' | 'comment' | 'reply' | 'checkin' | 'like' | 'grid_update'
   content?: string
+  image_url?: string | null
   created_at: string
   target_id?: string
   target_type?: string
@@ -30,6 +33,12 @@ interface ActivityItem {
 interface ActivityTabProps {
   activities: ActivityItem[]
   profileUsername: string
+  pollsById?: Record<
+    string,
+    { id: string; question: string; options?: unknown[]; is_featured_podium?: boolean; created_at: string; ends_at?: string | null }
+  >
+  pollUserResponses?: Record<string, string>
+  pollVoteCounts?: Record<string, Record<string, number>>
 }
 
 function toEntitySlug(name: string) {
@@ -81,7 +90,14 @@ function getActivityLink(item: ActivityItem, profileUsername: string): string | 
   return null
 }
 
-export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
+export function ActivityTab({
+  activities,
+  profileUsername,
+  pollsById = {},
+  pollUserResponses = {},
+  pollVoteCounts = {},
+}: ActivityTabProps) {
+  const router = useRouter()
   const filteredActivities = activities.filter((item) => item.type !== 'like')
 
   if (filteredActivities.length === 0) {
@@ -116,15 +132,18 @@ export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
 
         const content = (
           <>
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="min-w-0">
+            <div className="mb-4 flex items-center justify-end gap-3">
+            <div className="min-w-0">
                 <p className="text-xs text-white/70">{formatTimeAgo(item.created_at)}</p>
               </div>
               {item.type === 'grid_update' ? (
                 <Grid3x3 className="h-4 w-4 text-white/80" />
+              ) : item.type === 'post' && item.target_type === 'poll' ? (
+                <BarChart3 className="h-4 w-4 text-[#25B4B1]" />
               ) : (
                 <MessageSquare className="h-4 w-4 text-[#25B4B1]" />
               )}
+              
             </div>
 
             {item.type === 'grid_update' ? (
@@ -153,21 +172,68 @@ export function ActivityTab({ activities, profileUsername }: ActivityTabProps) {
             ) : (
               <div className="space-y-2">
                 {item.target_name && (
-                  <p className="text-xs text-white/70">
-                    {item.type === 'reply'
-                      ? 'Replied on '
-                      : item.type === 'comment'
-                        ? 'Commented on '
-                        : item.type === 'post'
-                          ? 'Posted on '
-                          : 'Activity on '}
-                    <span className="text-[#25B4B1]">
-                      {item.target_type === 'profile' ? '@' : ''}
-                      {item.target_name}
-                    </span>
-                  </p>
+                  item.target_type !== 'poll' && (
+                    <p className="text-xs text-white/70">
+                      {item.type === 'reply'
+                        ? 'Replied on '
+                        : item.type === 'comment'
+                          ? 'Commented on '
+                          : item.type === 'post'
+                            ? 'Posted on '
+                            : 'Activity on '}
+                      <span className="text-[#25B4B1]">
+                        {item.target_type === 'profile' ? '@' : ''}
+                        {item.target_name}
+                      </span>
+                    </p>
+                  )
                 )}
-                {item.content && <p className="text-white/90">{item.content}</p>}
+                {item.content &&
+                  (item.target_type !== 'poll' ||
+                    !item.target_id ||
+                    !pollsById[item.target_id] ||
+                    String(item.content).trim() !== String(pollsById[item.target_id].question ?? '').trim()) && (
+                    <p className="text-white/90">{item.content}</p>
+                  )}
+                {item.type === 'post' &&
+                  item.target_type === 'poll' &&
+                  item.target_id &&
+                  pollsById[item.target_id] && (
+                    <div className="mt-4 rounded-md bg-black/30 [&_h2]:text-sm">
+                      <p className="text-xs font-medium uppercase tracking-wide text-white/60">
+                        {pollsById[item.target_id].is_featured_podium ? 'Admin Poll' : 'User Poll'}
+                      </p>
+                      <div className="mt-2">
+                        <PollCard
+                          poll={{
+                            ...pollsById[item.target_id],
+                            options: Array.isArray(pollsById[item.target_id].options)
+                              ? pollsById[item.target_id].options
+                              : [],
+                            is_featured_podium: !!pollsById[item.target_id].is_featured_podium,
+                            ends_at: pollsById[item.target_id].ends_at ?? undefined,
+                          }}
+                          userResponse={pollUserResponses[item.target_id]}
+                          voteCounts={pollVoteCounts[item.target_id] ?? {}}
+                          onVote={() => router.refresh()}
+                          variant="dark"
+                          className="min-h-0 border-0 bg-transparent p-0"
+                          compact
+                          showRepost={false}
+                        />
+                      </div>
+                    </div>
+                  )}
+                {item.type === 'post' && item.image_url && (
+                  <div className="mt-3 overflow-hidden rounded-lg">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.image_url}
+                      alt=""
+                      className="max-h-96 w-full object-contain"
+                    />
+                  </div>
+                )}
                 {item.type === 'post' && item.post_id && (
                   <>
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">

@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { X } from 'lucide-react'
 import { PollCard } from './poll-card'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 
@@ -56,9 +55,8 @@ export function PollDiscussionModal({
               type="button"
               onClick={onClose}
               className="shrink-0 rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
-              aria-label="Close"
             >
-              <X className="h-5 w-5" />
+              X
             </button>
           </div>
           <div className="mb-4">

@@ -19,6 +19,9 @@ interface ProfilePageClientProps {
   trackGrid?: any
   teamGrid?: any
   activities: any[]
+  activityPollsById?: Record<string, any>
+  activityPollUserResponses?: Record<string, string>
+  activityPollVoteCounts?: Record<string, Record<string, number>>
   profilePosts: any[]
   supabaseUrl?: string
 }
@@ -39,6 +42,9 @@ export function ProfilePageClient({
   trackGrid,
   teamGrid,
   activities,
+  activityPollsById = {},
+  activityPollUserResponses = {},
+  activityPollVoteCounts = {},
   profilePosts,
   supabaseUrl,
 }: ProfilePageClientProps) {
@@ -251,6 +257,9 @@ export function ProfilePageClient({
             <ActivityTab
               activities={activities}
               profileUsername={profile.username}
+              pollsById={activityPollsById}
+              pollUserResponses={activityPollUserResponses}
+              pollVoteCounts={activityPollVoteCounts}
             />
           </div>
         )}
