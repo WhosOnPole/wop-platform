@@ -606,10 +606,10 @@ export function DiscussionSection({
     : 'items-center justify-center'
   const isCompactInput = fixedInput || compact
   const textareaClasses = isDark
-    ? 'min-w-0 flex-1 resize-none text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-0 rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5'
+    ? 'min-w-0 flex-1 resize-none text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-0 rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 pt-3'
     : 'min-w-0 flex-1 resize-none text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-0 rounded-l-2xl rounded-r-none border border-r-0 border-gray-200 bg-gray-100 px-4 py-1.5'
   const submitButtonClasses = isDark
-    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-1.5 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
+    ? 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-4 py-4 text-sm font-medium text-white hover:bg-[#25B4B1] disabled:opacity-50'
     : 'flex shrink-0 items-center justify-center gap-1.5 rounded-r-2xl rounded-l-none border border-gray-300 bg-gray-100 px-4 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-200 disabled:opacity-50'
   const emptyTextClasses = isDark
     ? 'text-sm text-white/60 text-center'

@@ -56,7 +56,7 @@ function getNotificationUrl(notification: any, currentUsername?: string | null):
       }
       return `/u/${notification.actor?.username ?? actor_id}`
     case 'comment':
-      if (target_type === 'grid_slot_comment' && metadata?.grid_id) {
+      if ((target_type === 'grid_slot_comment' || target_type === 'grid') && metadata?.grid_id) {
         return `/grid/${encodeURIComponent(metadata.grid_id)}`
       }
       if (target_type === 'comment') {

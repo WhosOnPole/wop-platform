@@ -78,6 +78,9 @@ export function ProfilePageClient({
       setActiveTab(tab)
       const params = new URLSearchParams(searchParams.toString())
       params.set('tab', tab)
+      // Clear deep-link params so manual tab changes are not forced back to Activity.
+      params.delete('post')
+      params.delete('comment')
       const query = params.toString()
       router.replace(`${pathname}${query ? `?${query}` : ''}`, { scroll: false })
     },

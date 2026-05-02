@@ -208,8 +208,8 @@ export function ActivityTab({
                           poll={{
                             ...pollsById[item.target_id],
                             options: Array.isArray(pollsById[item.target_id].options)
-                              ? pollsById[item.target_id].options
-                              : [],
+                              ? (pollsById[item.target_id].options as any[])
+                              : ([] as any[]),
                             is_featured_podium: !!pollsById[item.target_id].is_featured_podium,
                             ends_at: pollsById[item.target_id].ends_at ?? undefined,
                           }}

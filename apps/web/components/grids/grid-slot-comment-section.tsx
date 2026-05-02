@@ -59,54 +59,29 @@ export function GridSlotCommentSection({
   const [expandedReplyThreads, setExpandedReplyThreads] = useState<Record<string, boolean>>({})
 
   async function sendGridSlotCommentNotifications(params: {
-    actorId: string
     commentId: string
     preview: string
     parentCommentId?: string | null
   }) {
-    const { actorId, commentId, preview, parentCommentId } = params
+    const { commentId, preview, parentCommentId } = params
     try {
-      const { data: grid } = await supabase
-        .from('grids')
-        .select('id, user_id, type')
-        .eq('id', gridId)
-        .single()
-
-      if (!grid?.user_id) return
-
-      const recipientIds = new Set<string>()
-      if (grid.user_id !== actorId) {
-        recipientIds.add(grid.user_id)
-      }
-
-      if (parentCommentId) {
-        const { data: parentComment } = await supabase
-          .from('grid_slot_comments')
-          .select('user_id')
-          .eq('id', parentCommentId)
-          .maybeSingle()
-        if (parentComment?.user_id && parentComment.user_id !== actorId) {
-          recipientIds.add(parentComment.user_id)
-        }
-      }
-
-      if (recipientIds.size === 0) return
-
-      const rows = Array.from(recipientIds).map((userId) => ({
-        user_id: userId,
-        type: 'comment',
-        actor_id: actorId,
-        target_type: 'grid_slot_comment',
-        target_id: commentId,
-        metadata: {
-          grid_id: gridId,
-          grid_type: grid.type,
-          rank_index: rankIndex,
-          preview,
-          parent_comment_id: parentCommentId ?? null,
+      const response = await fetch('/api/notifications/grid-slot-comment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }))
-      await supabase.from('notifications').insert(rows)
+        body: JSON.stringify({
+          gridId,
+          rankIndex,
+          commentId,
+          preview,
+          parentCommentId: parentCommentId ?? null,
+        }),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null)
+        throw new Error(payload?.error || 'Failed to create notification')
+      }
     } catch (notificationError) {
       // Keep UX smooth if notification write fails.
       console.warn('Failed to create grid slot comment notification:', notificationError)
@@ -222,7 +197,6 @@ export function GridSlotCommentSection({
     setComments((prev) => [...prev, data as GridSlotComment])
 
     await sendGridSlotCommentNotifications({
-      actorId: session.user.id,
       commentId: data.id,
       preview: result.value,
     })
@@ -282,7 +256,6 @@ export function GridSlotCommentSection({
 
     setComments((prev) => [...prev, data as GridSlotComment])
     await sendGridSlotCommentNotifications({
-      actorId: session.user.id,
       commentId: data.id,
       preview: result.value,
       parentCommentId,

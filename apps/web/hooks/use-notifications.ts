@@ -164,7 +164,10 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
           if (grid) {
             metadata.grid_id = grid.id
             metadata.grid_type = grid.type
-            metadata.context_label = `${gridTypeLabel(grid.type)} grid`
+            metadata.context_label =
+              typeof metadata.rank_index === 'number'
+                ? `${gridTypeLabel(grid.type)} grid · Position #${metadata.rank_index}`
+                : `${gridTypeLabel(grid.type)} grid`
           }
         }
 
