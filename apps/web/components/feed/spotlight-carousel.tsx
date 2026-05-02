@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Radio, Check, X } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
@@ -134,6 +135,7 @@ export function SpotlightCarousel({
   const [activeIndex, setActiveIndex] = useState(0)
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
   const [activePollId, setActivePollId] = useState<string | null>(null)
+  const searchParams = useSearchParams()
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const cardRefs = useRef<HTMLDivElement[]>([])
 
@@ -153,6 +155,19 @@ export function SpotlightCarousel({
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [cards.length])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) return
+    const openMode = searchParams.get('open')
+    const targetHotTake = searchParams.get('hot_take')
+    if (
+      openMode === 'hot-take-discussion' &&
+      targetHotTake &&
+      targetHotTake === spotlight?.hot_take?.id
+    ) {
+      setIsDiscussionOpen(true)
+    }
+  }, [searchParams, spotlight?.hot_take?.id])
 
   function scrollToIndex(idx: number, instant?: boolean) {
     const el = scrollContainerRef.current

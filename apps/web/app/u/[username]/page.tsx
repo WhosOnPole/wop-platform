@@ -135,6 +135,39 @@ export default async function UserProfilePage({ params }: PageProps) {
     .eq('user_id', profile.id)
     .order('created_at', { ascending: false })
 
+  const postIds = (posts || []).map((post) => post.id)
+  const [postCommentRows, postLikeRows, userPostLikes] = await Promise.all([
+    postIds.length > 0
+      ? supabase.from('comments').select('post_id').in('post_id', postIds)
+      : Promise.resolve({ data: [] as Array<{ post_id: string }> }),
+    postIds.length > 0
+      ? supabase.from('votes').select('target_id').eq('target_type', 'post').in('target_id', postIds)
+      : Promise.resolve({ data: [] as Array<{ target_id: string }> }),
+    session && postIds.length > 0
+      ? supabase
+          .from('votes')
+          .select('target_id')
+          .eq('target_type', 'post')
+          .eq('user_id', session.user.id)
+          .in('target_id', postIds)
+      : Promise.resolve({ data: [] as Array<{ target_id: string }> }),
+  ])
+  const postCommentCountById = (postCommentRows.data || []).reduce(
+    (acc: Record<string, number>, row: { post_id: string }) => {
+      acc[row.post_id] = (acc[row.post_id] || 0) + 1
+      return acc
+    },
+    {}
+  )
+  const postLikeCountById = (postLikeRows.data || []).reduce(
+    (acc: Record<string, number>, row: { target_id: string }) => {
+      acc[row.target_id] = (acc[row.target_id] || 0) + 1
+      return acc
+    },
+    {}
+  )
+  const userLikedPostIds = new Set((userPostLikes.data || []).map((row: { target_id: string }) => row.target_id))
+
   if (posts) {
     for (const post of posts) {
       // Skip posts on own profile - they're redundant (original post shows in profile discussion)
@@ -173,11 +206,14 @@ export default async function UserProfilePage({ params }: PageProps) {
         target_type: post.parent_page_type,
         target_name: targetName,
         post_id: post.id,
+        like_count: postLikeCountById[post.id] ?? post.like_count ?? 0,
+        comment_count: postCommentCountById[post.id] ?? 0,
+        is_liked: userLikedPostIds.has(post.id),
       })
     }
   }
 
-  // Comments
+  // Comments + replies
   const { data: comments } = await supabase
     .from('comments')
     .select('*, post:posts!post_id(id, parent_page_type, parent_page_id)')
@@ -215,13 +251,15 @@ export default async function UserProfilePage({ params }: PageProps) {
       const parentPost = comment.post as { id?: string } | null
       activities.push({
         id: comment.id,
-        type: 'comment',
+        type: comment.parent_comment_id ? 'reply' : 'comment',
         content: comment.content,
         created_at: comment.created_at,
         target_id: parentPageId,
         target_type: parentPageType,
         target_name: targetName,
         post_id: parentPost?.id ?? undefined,
+        comment_id: comment.id,
+        parent_comment_id: comment.parent_comment_id ?? undefined,
       })
     }
   }
@@ -234,8 +272,10 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   // Grid updates are not shown in activity (posts with parent_page_type='profile' on own profile)
 
-  // Grid slot comments this user made on their own grids (user-initiated only)
+  // Grid slot notes this user made on their own grids.
+  // Product decision: show one feed item per position note.
   const myGridIds = (grids || []).map((g: { id: string }) => g.id)
+  const gridById = new Map((grids || []).map((g: { id: string }) => [g.id, g]))
   if (myGridIds.length > 0) {
     const { data: gridComments } = await supabase
       .from('grid_slot_comments')
@@ -267,9 +307,12 @@ export default async function UserProfilePage({ params }: PageProps) {
       for (const c of gridComments) {
         const commenter = c.user as { id?: string; username?: string; profile_image_url?: string | null } | null
         const grid = c.grid as { id?: string; type?: string } | null
+        const fullGrid = gridById.get(c.grid_id) as
+          | { ranked_items?: Array<{ id: string; name: string }>; type?: 'driver' | 'team' | 'track' }
+          | undefined
         activities.push({
           id: c.id,
-          type: 'grid_comment',
+          type: 'grid_update',
           content: c.content,
           created_at: c.created_at,
           target_id: c.grid_id,
@@ -277,6 +320,15 @@ export default async function UserProfilePage({ params }: PageProps) {
           target_name: commenter?.username ?? null,
           grid_id: c.grid_id,
           rank_index: c.rank_index,
+          comment_id: c.id,
+          grid_snapshot:
+            Array.isArray(fullGrid?.ranked_items) && fullGrid?.type
+              ? {
+                  id: c.grid_id,
+                  type: fullGrid.type,
+                  ranked_items: fullGrid.ranked_items,
+                }
+              : null,
           user: commenter ?? undefined,
         })
       }

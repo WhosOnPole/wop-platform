@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Radio, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
@@ -78,12 +79,26 @@ export function FeedHighlightedSidebar({
 }: FeedHighlightedSidebarProps) {
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
   const [activePollId, setActivePollId] = useState<string | null>(null)
+  const searchParams = useSearchParams()
   const hasHotTake = Boolean(spotlight?.hot_take)
   const hasFeaturedGrid = Boolean(featuredGrid)
   const hasPolls = polls.length > 0
   const hasNews = featuredNews.length > 0
 
   if (!hasHotTake && !hasFeaturedGrid && !hasPolls && !hasNews) return null
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) return
+    const openMode = searchParams.get('open')
+    const targetHotTake = searchParams.get('hot_take')
+    if (
+      openMode === 'hot-take-discussion' &&
+      targetHotTake &&
+      targetHotTake === spotlight?.hot_take?.id
+    ) {
+      setIsDiscussionOpen(true)
+    }
+  }, [searchParams, spotlight?.hot_take?.id])
 
   return (
     <>

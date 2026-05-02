@@ -171,10 +171,10 @@ export default async function PodiumsPage() {
   const adminPolls = polls.filter((p) => p.admin_id != null)
   const communityPolls = polls.filter((p) => p.admin_id == null)
 
-  // Fetch poll discussion posts for admin polls
+  // Fetch poll discussion posts for all polls (enables deep-linking to exact comments).
   let pollDiscussionPostsByPollId: Record<string, any[]> = {}
-  if (adminPolls.length > 0) {
-    const adminPollIds = adminPolls.map((p) => p.id)
+  if (allPolls.length > 0) {
+    const allPollIds = allPolls.map((p) => p.id)
     const { data: pollPosts } = await supabase
       .from('posts')
       .select(
@@ -189,7 +189,7 @@ export default async function PodiumsPage() {
       `
       )
       .eq('parent_page_type', 'poll')
-      .in('parent_page_id', adminPollIds)
+      .in('parent_page_id', allPollIds)
       .order('created_at', { ascending: false })
 
     if (pollPosts) {

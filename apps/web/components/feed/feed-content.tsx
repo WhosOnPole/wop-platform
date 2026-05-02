@@ -360,8 +360,11 @@ export function FeedContent({
 
       // Post comment counts and user like state
       const postIds = postsList.map((p) => p.id)
-      const [postCommentCounts, userPostLikes, userGridLikes] = await Promise.all([
+      const [postCommentCounts, postLikeCounts, userPostLikes, userGridLikes] = await Promise.all([
         postIds.length > 0 ? supabase.from('comments').select('post_id').in('post_id', postIds) : Promise.resolve({ data: [] }),
+        postIds.length > 0
+          ? supabase.from('votes').select('target_id').eq('target_type', 'post').in('target_id', postIds)
+          : Promise.resolve({ data: [] }),
         session && postIds.length > 0 ? supabase.from('votes').select('target_id').eq('user_id', session.user.id).eq('target_type', 'post').in('target_id', postIds) : Promise.resolve({ data: [] }),
         session && gridsList.length > 0 ? supabase.from('grid_likes').select('grid_id').eq('user_id', session.user.id).in('grid_id', gridsList.map((g) => g.id)) : Promise.resolve({ data: [] }),
       ])
@@ -378,6 +381,10 @@ export function FeedContent({
       }, {})
       const commentCountByPostId = (postCommentCounts.data || []).reduce((acc: Record<string, number>, r: { post_id: string }) => {
         acc[r.post_id] = (acc[r.post_id] || 0) + 1
+        return acc
+      }, {})
+      const likeCountByPostId = (postLikeCounts.data || []).reduce((acc: Record<string, number>, r: { target_id: string }) => {
+        acc[r.target_id] = (acc[r.target_id] || 0) + 1
         return acc
       }, {})
       const userLikedPostIds = new Set((userPostLikes.data || []).map((r: { target_id: string }) => r.target_id))
@@ -435,7 +442,7 @@ export function FeedContent({
         const base = {
           ...p,
           contentType: 'post' as const,
-          like_count: p.like_count ?? 0,
+          like_count: likeCountByPostId[p.id] ?? p.like_count ?? 0,
           is_liked: userLikedPostIds.has(p.id),
           comment_count: commentCountByPostId[p.id] ?? 0,
         }
@@ -686,6 +693,11 @@ export function FeedContent({
                     </p>
                   )
                 })()}
+              {post.content &&
+                !post.embeddedGrid &&
+                (post.parent_page_type === 'hot_take' || post.parent_page_type === 'poll') && (
+                  <p className="mb-3 text-[15px] font-semibold text-white/95">{post.content}</p>
+                )}
               {post.parent_page_type === 'hot_take' &&
                 post.parent_page_id &&
                 (() => {
@@ -700,11 +712,16 @@ export function FeedContent({
                       <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                         Hot Take
                       </p>
-                      <p className="mt-2 text-white/90">{contentText}</p>
+                      <p className="mt-2 text-sm text-white/90">{contentText}</p>
                     </Link>
                   )
                 })()}
-              {post.content && !post.embeddedGrid ? <p className="text-white/90">{post.content}</p> : null}
+              {post.content &&
+              !post.embeddedGrid &&
+              post.parent_page_type !== 'hot_take' &&
+              post.parent_page_type !== 'poll' ? (
+                <p className="text-white/90">{post.content}</p>
+              ) : null}
               {post.image_url && (
                 <div className="mt-3 overflow-hidden rounded-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -720,7 +737,7 @@ export function FeedContent({
                 embeddedPollsByPollId[post.parent_page_id] && (() => {
                   const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
                   return (
-                    <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4">
+                    <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4 [&_h2]:text-sm">
                       <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                         {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
                       </p>
@@ -1066,6 +1083,12 @@ export function FeedContent({
                             </p>
                           )
                         })()}
+                      {post.content &&
+                        !(post as Post).embeddedGrid &&
+                        (post.parent_page_type === 'hot_take' ||
+                          post.parent_page_type === 'poll') && (
+                          <p className="mb-3 text-[15px] font-semibold text-white/95">{post.content}</p>
+                        )}
                       {post.parent_page_type === 'hot_take' &&
                         post.parent_page_id &&
                         (() => {
@@ -1080,7 +1103,7 @@ export function FeedContent({
                               <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                                 Hot Take
                               </p>
-                              <p className="mt-2 text-white/90">{contentText}</p>
+                              <p className="mt-2 text-sm text-white/90">{contentText}</p>
                             </Link>
                           )
                         })()}
@@ -1090,7 +1113,7 @@ export function FeedContent({
                         (() => {
                           const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
                           return (
-                            <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4">
+                            <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-4 [&_h2]:text-sm">
                               <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                                 {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
                               </p>
@@ -1114,7 +1137,12 @@ export function FeedContent({
                             </div>
                           )
                         })()}
-                      {post.content && !(post as Post).embeddedGrid ? <p className="text-white/90">{post.content}</p> : null}
+                      {post.content &&
+                      !(post as Post).embeddedGrid &&
+                      post.parent_page_type !== 'hot_take' &&
+                      post.parent_page_type !== 'poll' ? (
+                        <p className="text-white/90">{post.content}</p>
+                      ) : null}
                       {post.image_url && (
                         <div className="mt-3 overflow-hidden rounded-lg">
                           {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -259,7 +259,7 @@ export function FeedPostCommentSection({
                           <div className="mt-2 ml-4 space-y-2 border-l border-white/10 pl-3">
                             {commentReplies.map((reply) => (
                               <div key={reply.id} className="relative">
-                                <div className="mb-0.5 flex items-center justify-between gap-2">
+                                <div className="mb-2 flex items-center justify-between gap-2">
                                   <div className="flex min-w-0 flex-1 items-center gap-2">
                                     <Link
                                       href={`/u/${reply.user?.username || 'unknown'}`}
@@ -318,7 +318,7 @@ export function FeedPostCommentSection({
                                     />
                                   </div>
                                 </div>
-                                <p className="text-sm text-white/90">{reply.content}</p>
+                                <p className="text-sm text-white">{reply.content}</p>
                                 <div className="mt-1 flex justify-end">
                                   <LikeButton
                                     targetId={reply.id}
@@ -352,7 +352,7 @@ export function FeedPostCommentSection({
                 <button
                   type="submit"
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1] disabled:opacity-50"
+                  className="flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1] disabled:opacity-50"
                   aria-label="Post reply"
                 >
                   <Send className="h-4 w-4" />

@@ -402,6 +402,7 @@ export async function FeedPageContent({
   // Second batch: parallel fetches that depend on followingPostsList
   const [
     postLikesResult,
+    postLikeRowsResult,
     commentRowsResult,
     driverEntities,
     teamEntities,
@@ -414,6 +415,13 @@ export async function FeedPageContent({
           .from('votes')
           .select('target_id')
           .eq('user_id', session.user.id)
+          .eq('target_type', 'post')
+          .in('target_id', feedPostIds)
+      : Promise.resolve({ data: [] }),
+    feedPostIds.length > 0
+      ? supabase
+          .from('votes')
+          .select('target_id')
           .eq('target_type', 'post')
           .in('target_id', feedPostIds)
       : Promise.resolve({ data: [] }),
@@ -456,6 +464,11 @@ export async function FeedPageContent({
   let userLikedPostIds = new Set<string>()
   postLikesResult.data?.forEach((row: { target_id: string }) => userLikedPostIds.add(row.target_id))
 
+  let likeCountByPostId: Record<string, number> = {}
+  postLikeRowsResult.data?.forEach((row: { target_id: string }) => {
+    likeCountByPostId[row.target_id] = (likeCountByPostId[row.target_id] ?? 0) + 1
+  })
+
   let commentCountByPostId: Record<string, number> = {}
   commentRowsResult.data?.forEach((row: { post_id: string }) => {
     commentCountByPostId[row.post_id] = (commentCountByPostId[row.post_id] ?? 0) + 1
@@ -465,7 +478,7 @@ export async function FeedPageContent({
 
   let enrichedFeedPosts = followingPostsList.map((p: Record<string, unknown> & { id: string; like_count?: number | null }) => ({
     ...p,
-    like_count: p.like_count ?? 0,
+    like_count: likeCountByPostId[p.id] ?? p.like_count ?? 0,
     is_liked: userLikedPostIds.has(p.id),
     comment_count: commentCountByPostId[p.id] ?? 0,
   })) as Post[]

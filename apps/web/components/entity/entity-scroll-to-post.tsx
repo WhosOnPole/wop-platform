@@ -13,12 +13,22 @@ export function EntityScrollToPost() {
 
   useEffect(() => {
     const postId = searchParams.get('post')
-    if (!postId) return
+    const commentId = searchParams.get('comment')
+    if (!postId && !commentId) return
 
     function tryScroll() {
-      const el = document.getElementById(`post-${postId}`)
-      if (el) {
+      const targetIds = [
+        commentId ? `comment-${commentId}` : null,
+        postId ? `post-${postId}` : null,
+      ].filter(Boolean) as string[]
+      for (const id of targetIds) {
+        const el = document.getElementById(id)
+        if (!el) continue
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        el.classList.add('ring-2', 'ring-[#25B4B1]', 'ring-offset-2', 'ring-offset-black')
+        setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-[#25B4B1]', 'ring-offset-2', 'ring-offset-black')
+        }, 2200)
         return true
       }
       return false

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
 import { sanitizeUserContent, CONTENT_MAX_LENGTHS } from '@/utils/sanitize'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Send } from 'lucide-react'
 import { CommentIcon } from '@/components/ui/comment-icon'
 import Link from 'next/link'
@@ -61,6 +61,7 @@ export function DiscussionSection({
   const isDark = variant === 'dark'
   const supabase = createClientComponentClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [posts, setPosts] = useState(initialPosts)
   const [comments, setComments] = useState<Record<string, Comment[]>>({})
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({})
@@ -87,6 +88,51 @@ export function DiscussionSection({
       loadUserLikesAndReports(initialPosts)
     }
   }, [initialPosts])
+
+  // Deep-link support: scroll and highlight exact post/comment targets.
+  useEffect(() => {
+    const postId = searchParams.get('post')
+    const commentId = searchParams.get('comment')
+    if (!postId && !commentId) return
+
+    const pollParam = searchParams.get('poll')
+    const hotTakeParam = searchParams.get('hot_take')
+    if (parentPageType === 'poll' && pollParam && pollParam !== parentPageId) return
+    if (parentPageType === 'hot_take' && hotTakeParam && hotTakeParam !== parentPageId) return
+
+    let clearTimer: ReturnType<typeof setTimeout> | null = null
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+
+    function focusTarget() {
+      const targetIds = [
+        commentId ? `comment-${commentId}` : null,
+        postId ? `post-${postId}` : null,
+      ].filter(Boolean) as string[]
+
+      for (const id of targetIds) {
+        const el = document.getElementById(id)
+        if (!el) continue
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-2', 'ring-[#25B4B1]', 'ring-offset-2', 'ring-offset-black')
+        clearTimer = setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-[#25B4B1]', 'ring-offset-2', 'ring-offset-black')
+        }, 2200)
+        return true
+      }
+      return false
+    }
+
+    const initialTimer = setTimeout(() => {
+      if (focusTarget()) return
+      retryTimer = setTimeout(() => focusTarget(), 400)
+    }, 260)
+
+    return () => {
+      clearTimeout(initialTimer)
+      if (retryTimer) clearTimeout(retryTimer)
+      if (clearTimer) clearTimeout(clearTimer)
+    }
+  }, [searchParams, comments, posts, parentPageId, parentPageType])
 
   // Real-time subscriptions for like_count updates on posts and comments
   useEffect(() => {
@@ -701,7 +747,7 @@ export function DiscussionSection({
                       const commentReplies = repliesByParent[comment.id] || []
 
                       return (
-                        <div key={comment.id} className="py-2">
+                        <div key={comment.id} id={`comment-${comment.id}`} className="py-2">
                           <div className="mb-2 flex items-start justify-between gap-2">
                             <div className="flex min-w-0 flex-1 items-start space-x-2">
                               <Link
@@ -816,7 +862,7 @@ export function DiscussionSection({
                           {commentReplies.length > 0 && (
                             <div className={`mt-2 ml-4 space-y-2 ${commentBorderClasses} pl-3`}>
                               {commentReplies.map((reply) => (
-                                <div key={reply.id} className="py-1">
+                                <div key={reply.id} id={`comment-${reply.id}`} className="py-1">
                                   <div className="mb-1 flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 flex-1 items-start space-x-2">
                                       <Link
