@@ -19,6 +19,9 @@ interface ProfilePageClientProps {
   trackGrid?: any
   teamGrid?: any
   activities: any[]
+  activityPollsById?: Record<string, any>
+  activityPollUserResponses?: Record<string, string>
+  activityPollVoteCounts?: Record<string, Record<string, number>>
   profilePosts: any[]
   supabaseUrl?: string
 }
@@ -39,6 +42,9 @@ export function ProfilePageClient({
   trackGrid,
   teamGrid,
   activities,
+  activityPollsById = {},
+  activityPollUserResponses = {},
+  activityPollVoteCounts = {},
   profilePosts,
   supabaseUrl,
 }: ProfilePageClientProps) {
@@ -54,11 +60,12 @@ export function ProfilePageClient({
   const touchStartY = useRef(0)
   const isSwipe = useRef(false)
 
-  // Open tab from URL (e.g. ?tab=drivers from activity grid update link; ?post=id for notification deep link)
+  // Open tab from URL (e.g. ?tab=drivers from activity grid update link; ?post=id / ?comment=id deep links)
   useEffect(() => {
     const tabParam = searchParams.get('tab')
     const postParam = searchParams.get('post')
-    if (postParam) {
+    const commentParam = searchParams.get('comment')
+    if (postParam || commentParam) {
       setActiveTab('activity')
     } else if (tabParam && TAB_ORDER.includes(tabParam as TabKey)) {
       setActiveTab(tabParam as TabKey)
@@ -71,20 +78,54 @@ export function ProfilePageClient({
       setActiveTab(tab)
       const params = new URLSearchParams(searchParams.toString())
       params.set('tab', tab)
+      // Clear deep-link params so manual tab changes are not forced back to Activity.
+      params.delete('post')
+      params.delete('comment')
       const query = params.toString()
       router.replace(`${pathname}${query ? `?${query}` : ''}`, { scroll: false })
     },
     [pathname, router, searchParams]
   )
 
-  // Scroll to the specific post when ?post= is present (e.g. from "commented on your post" notification)
+  // Scroll to deep-linked activity targets and apply a temporary highlight.
   useEffect(() => {
     const postId = searchParams.get('post')
-    if (!postId || activeTab !== 'activity') return
-    const el = document.getElementById(`post-${postId}`)
-    if (el) {
-      const t = setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300)
-      return () => clearTimeout(t)
+    const commentId = searchParams.get('comment')
+    if ((!postId && !commentId) || activeTab !== 'activity') return
+
+    const targetIds = [
+      commentId ? `comment-${commentId}` : null,
+      postId ? `post-${postId}` : null,
+    ].filter(Boolean) as string[]
+
+    let clearTimer: ReturnType<typeof setTimeout> | null = null
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+
+    function focusTarget() {
+      for (const id of targetIds) {
+        const el = document.getElementById(id)
+        if (!el) continue
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        el.classList.add('ring-2', 'ring-[#25B4B1]', 'ring-offset-2', 'ring-offset-black')
+        clearTimer = setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-[#25B4B1]', 'ring-offset-2', 'ring-offset-black')
+        }, 2200)
+        return true
+      }
+      return false
+    }
+
+    const initialTimer = setTimeout(() => {
+      if (focusTarget()) return
+      retryTimer = setTimeout(() => {
+        focusTarget()
+      }, 450)
+    }, 300)
+
+    return () => {
+      clearTimeout(initialTimer)
+      if (retryTimer) clearTimeout(retryTimer)
+      if (clearTimer) clearTimeout(clearTimer)
     }
   }, [searchParams, activeTab])
 
@@ -219,6 +260,9 @@ export function ProfilePageClient({
             <ActivityTab
               activities={activities}
               profileUsername={profile.username}
+              pollsById={activityPollsById}
+              pollUserResponses={activityPollUserResponses}
+              pollVoteCounts={activityPollVoteCounts}
             />
           </div>
         )}

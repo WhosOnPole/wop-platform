@@ -130,6 +130,19 @@ export function SpotlightTabs({
     ...p,
     is_featured_podium: p.is_featured_podium ?? false,
   }))
+  const communityPollsWithFeatured = communityPolls.map((p) => ({
+    ...p,
+    is_featured_podium: p.is_featured_podium ?? false,
+  }))
+  const allPollsWithFeatured = [...adminPollsWithFeatured, ...communityPollsWithFeatured]
+  useEffect(() => {
+    const pollId = searchParams.get('poll')
+    const openMode = searchParams.get('open')
+    if (!pollId || openMode !== 'poll-discussion') return
+    if (!allPollsWithFeatured.some((p) => p.id === pollId)) return
+    setActiveTab('polls')
+    setActivePollId(pollId)
+  }, [searchParams, allPollsWithFeatured])
   const adminPollsCount = adminPollsWithFeatured.length
   const [adminPollsActiveIndex, setAdminPollsActiveIndex] = useState(0)
   const adminPollsScrollRef = useRef<HTMLDivElement | null>(null)
@@ -150,11 +163,6 @@ export function SpotlightTabs({
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [adminPollsCount])
-
-  const communityPollsWithFeatured = communityPolls.map((p) => ({
-    ...p,
-    is_featured_podium: p.is_featured_podium ?? false,
-  }))
 
   return (
     <div className="w-full min-w-0 ">
@@ -367,7 +375,7 @@ export function SpotlightTabs({
       )}
 
       {activePollId && (() => {
-        const poll = adminPollsWithFeatured.find((p) => p.id === activePollId)
+        const poll = allPollsWithFeatured.find((p) => p.id === activePollId)
         if (!poll) return null
         return (
           <PollDiscussionModal

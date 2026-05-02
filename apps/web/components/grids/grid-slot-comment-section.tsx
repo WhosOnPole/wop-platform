@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { Send } from 'lucide-react'
 import { LikeButton } from '@/components/discussion/like-button'
 import { CommentActionsMenu } from '@/components/discussion/comment-actions-menu'
+import { CommentIcon } from '@/components/ui/comment-icon'
 import { getAvatarUrl, isDefaultAvatar } from '@/utils/avatar'
 import { formatTimeAgo } from '@/utils/date-utils'
 import { toast } from 'sonner'
@@ -50,8 +51,42 @@ export function GridSlotCommentSection({
   const [content, setContent] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isReplySubmitting, setIsReplySubmitting] = useState(false)
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({})
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [showReplyToComment, setShowReplyToComment] = useState<string | null>(null)
+  const [replyContent, setReplyContent] = useState<Record<string, string>>({})
+  const [expandedReplyThreads, setExpandedReplyThreads] = useState<Record<string, boolean>>({})
+
+  async function sendGridSlotCommentNotifications(params: {
+    commentId: string
+    preview: string
+    parentCommentId?: string | null
+  }) {
+    const { commentId, preview, parentCommentId } = params
+    try {
+      const response = await fetch('/api/notifications/grid-slot-comment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gridId,
+          rankIndex,
+          commentId,
+          preview,
+          parentCommentId: parentCommentId ?? null,
+        }),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null)
+        throw new Error(payload?.error || 'Failed to create notification')
+      }
+    } catch (notificationError) {
+      // Keep UX smooth if notification write fails.
+      console.warn('Failed to create grid slot comment notification:', notificationError)
+    }
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -160,8 +195,75 @@ export function GridSlotCommentSection({
     }
 
     setComments((prev) => [...prev, data as GridSlotComment])
+
+    await sendGridSlotCommentNotifications({
+      commentId: data.id,
+      preview: result.value,
+    })
+
     setContent('')
     setIsSubmitting(false)
+  }
+
+  async function handleAddReply(parentCommentId: string) {
+    const rawContent = replyContent[parentCommentId] || ''
+    if (!rawContent.trim()) return
+
+    const result = sanitizeUserContent(rawContent, {
+      maxLength: CONTENT_MAX_LENGTHS.comment,
+      fieldName: 'Reply',
+    })
+    if (!result.ok) {
+      toast.error(result.error)
+      return
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    setIsReplySubmitting(true)
+    const { data, error } = await supabase
+      .from('grid_slot_comments')
+      .insert({
+        content: result.value,
+        user_id: session.user.id,
+        grid_id: gridId,
+        rank_index: rankIndex,
+        parent_comment_id: parentCommentId,
+      })
+      .select(
+        `
+        *,
+        user:profiles!user_id (
+          id,
+          username,
+          profile_image_url
+        )
+      `
+      )
+      .single()
+
+    if (error) {
+      console.error('Error adding reply:', error)
+      setIsReplySubmitting(false)
+      return
+    }
+
+    setComments((prev) => [...prev, data as GridSlotComment])
+    await sendGridSlotCommentNotifications({
+      commentId: data.id,
+      preview: result.value,
+      parentCommentId,
+    })
+    setReplyContent((prev) => ({ ...prev, [parentCommentId]: '' }))
+    setShowReplyToComment(null)
+    setExpandedReplyThreads((prev) => ({ ...prev, [parentCommentId]: true }))
+    setIsReplySubmitting(false)
   }
 
   // Exclude the owner's "set comment" from the edit grid (slot blurb) so it only appears above; their replies stay in the comment section.
@@ -201,7 +303,7 @@ export function GridSlotCommentSection({
             const commentReplies = repliesByParent[comment.id] || []
             return (
               <div key={comment.id} className="py-1">
-                <div className="mb-0.5 flex items-center justify-between gap-2">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     <Link
                       href={`/u/${comment.user?.username ?? 'unknown'}`}
@@ -230,16 +332,6 @@ export function GridSlotCommentSection({
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <LikeButton
-                      targetId={comment.id}
-                      targetType="grid_slot_comment"
-                      initialLikeCount={comment.like_count ?? 0}
-                      initialIsLiked={userLikes[comment.id] ?? false}
-                      onLikeChange={(targetId, isLiked) => {
-                        setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
-                      }}
-                      variant="dark"
-                    />
                     <CommentActionsMenu
                       commentId={comment.id}
                       commentAuthorId={comment.user?.id ?? null}
@@ -265,11 +357,66 @@ export function GridSlotCommentSection({
                   </div>
                 </div>
                 <p className="text-sm text-white/90 pl-8">{comment.content}</p>
+                <div className="mt-6 ml-8 flex items-center justify-start gap-3">
+                  <LikeButton
+                    targetId={comment.id}
+                    targetType="grid_slot_comment"
+                    initialLikeCount={comment.like_count ?? 0}
+                    initialIsLiked={userLikes[comment.id] ?? false}
+                    onLikeChange={(targetId, isLiked) => {
+                      setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
+                    }}
+                    variant="dark"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowReplyToComment((prev) =>
+                        prev === comment.id ? null : comment.id
+                      )
+                    }
+                    className="inline-flex items-center gap-1 text-white"
+                    aria-label="Reply"
+                  >
+                    <CommentIcon className="h-4 w-4 shrink-0" />
+                    <span className="text-xs font-medium leading-none tabular-nums">
+                      {commentReplies.length}
+                    </span>
+                  </button>
+                </div>
+                {showReplyToComment === comment.id && (
+                  <div className="my-6 ml-0 flex w-full items-center">
+                    <textarea
+                      value={replyContent[comment.id] || ''}
+                      onChange={(e) =>
+                        setReplyContent((prev) => ({
+                          ...prev,
+                          [comment.id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Write a reply..."
+                      rows={1}
+                      className="min-w-0 flex-1 resize-none rounded-l-2xl rounded-r-none border border-r-0 border-white/10 bg-white/10 px-4 py-1.5 text-sm text-white placeholder:text-white/50 focus:border-[#25B4B1] focus:outline-none focus:ring-1 focus:ring-[#25B4B1] focus:ring-inset"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddReply(comment.id)}
+                      disabled={isReplySubmitting || !(replyContent[comment.id] || '').trim()}
+                      className="flex shrink-0 items-center justify-center rounded-r-2xl rounded-l-none border border-white/30 bg-transparent px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#25B4B1] disabled:opacity-50"
+                      aria-label="Post reply"
+                    >
+                      <Send className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
                 {commentReplies.length > 0 && (
                   <div className="mt-2 ml-4 space-y-2 border-l border-white/10 pl-3">
-                    {commentReplies.map((reply) => (
+                    {(expandedReplyThreads[comment.id]
+                      ? commentReplies
+                      : commentReplies.slice(0, 2)
+                    ).map((reply) => (
                       <div key={reply.id}>
-                          <div className="mb-0.5 flex items-center justify-between gap-2">
+                          <div className="mb-2 flex items-center justify-between gap-2">
                             <div className="flex min-w-0 flex-1 items-center gap-2">
                               <Link
                                 href={`/u/${reply.user?.username ?? 'unknown'}`}
@@ -336,6 +483,22 @@ export function GridSlotCommentSection({
                         <p className="text-sm text-white/90">{reply.content}</p>
                       </div>
                     ))}
+                    {commentReplies.length >= 3 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedReplyThreads((prev) => ({
+                            ...prev,
+                            [comment.id]: !prev[comment.id],
+                          }))
+                        }
+                        className="pt-1 text-xs font-medium text-[#25B4B1] hover:text-[#3BEFEB]"
+                      >
+                        {expandedReplyThreads[comment.id]
+                          ? 'Hide replies'
+                          : `View ${commentReplies.length - 2} more repl${commentReplies.length - 2 === 1 ? 'y' : 'ies'}`}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

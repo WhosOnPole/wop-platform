@@ -27,11 +27,18 @@ type NotificationMetadata = { message?: string; preview?: string; grid_owner_use
 
 const notificationMessages: Record<
   string,
-  (actor: string, metadata?: NotificationMetadata) => string
+  (actor: string, metadata?: NotificationMetadata & { context_label?: string }) => string
 > = {
-  like_grid: (actor) => `${actor} liked your grid`,
-  like_post: (actor) => `${actor} liked your post`,
-  comment: (actor) => `${actor} commented on your post`,
+  like_grid: (actor, metadata) =>
+    metadata?.context_label ? `${actor} liked your ${metadata.context_label}` : `${actor} liked your grid`,
+  like_post: (actor, metadata) =>
+    metadata?.context_label
+      ? `${actor} liked your comment on ${metadata.context_label}`
+      : `${actor} liked your post`,
+  comment: (actor, metadata) =>
+    metadata?.context_label
+      ? `${actor} commented on your ${metadata.context_label}`
+      : `${actor} commented on your post`,
   follow: (actor) => `${actor} started following you`,
   mention: (actor) => `${actor} mentioned you`,
   poll_vote: (actor) => `${actor} voted on a poll you're following`,
@@ -44,17 +51,39 @@ function getNotificationUrl(notification: any, currentUsername?: string | null):
 
   switch (type) {
     case 'like_grid':
-      if (metadata?.grid_owner_username) {
-        return `/u/${metadata.grid_owner_username}`
+      if (metadata?.grid_id || target_type === 'grid') {
+        return `/grid/${encodeURIComponent(metadata?.grid_id ?? target_id)}`
       }
       return `/u/${notification.actor?.username ?? actor_id}`
     case 'comment':
-      // Comment on your post → your profile, activity tab, with post highlighted
+      if ((target_type === 'grid_slot_comment' || target_type === 'grid') && metadata?.grid_id) {
+        return `/grid/${encodeURIComponent(metadata.grid_id)}`
+      }
+      // Prefer comment-level deep links when metadata includes full context.
+      if (target_type === 'comment') {
+        const commentId = target_id
+        const postId = metadata?.post_id
+        const parentType = metadata?.parent_page_type
+        const parentId = metadata?.parent_page_id
+        if (commentId && postId && parentType === 'poll' && parentId) {
+          return `/podiums?open=poll-discussion&poll=${encodeURIComponent(parentId)}&post=${encodeURIComponent(postId)}&comment=${encodeURIComponent(commentId)}`
+        }
+        if (commentId && postId && parentType === 'hot_take' && parentId) {
+          return `/feed?open=hot-take-discussion&hot_take=${encodeURIComponent(parentId)}&post=${encodeURIComponent(postId)}&comment=${encodeURIComponent(commentId)}`
+        }
+        if (currentUsername && postId) {
+          return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(postId)}&comment=${encodeURIComponent(commentId)}`
+        }
+      }
+      // Legacy fallback: post-level deep link.
       if (currentUsername && target_id) {
         return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`
       }
       return '/feed'
     case 'like_post':
+      if (target_type === 'grid_slot_comment' && metadata?.grid_id) {
+        return `/grid/${encodeURIComponent(metadata.grid_id)}`
+      }
       // Like on your post → your profile, activity tab, with post highlighted
       if (currentUsername && target_id) {
         return `/u/${currentUsername}?tab=activity&post=${encodeURIComponent(target_id)}`

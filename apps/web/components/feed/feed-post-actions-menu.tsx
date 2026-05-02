@@ -21,12 +21,21 @@ interface FeedPostActionsMenuProps {
   postAuthorId: string | null
   /** When true (e.g. in discover section), show Follow option to follow the post author */
   showFollowButton?: boolean
+  /** When true, allow deleting any visible post (not only own posts). */
+  allowDeleteAny?: boolean
   /** When provided, called after successful delete (e.g. to remove from local state); if not provided, router.refresh() is used */
   onDeleted?: (postId: string) => void
   variant?: 'light' | 'dark'
 }
 
-export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = false, onDeleted, variant = 'dark' }: FeedPostActionsMenuProps) {
+export function FeedPostActionsMenu({
+  postId,
+  postAuthorId,
+  showFollowButton = false,
+  allowDeleteAny = false,
+  onDeleted,
+  variant = 'dark',
+}: FeedPostActionsMenuProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -56,6 +65,7 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
   }, [menuOpen])
 
   const isOwner = !!currentUserId && !!postAuthorId && currentUserId === postAuthorId
+  const canDelete = !!currentUserId && (isOwner || allowDeleteAny)
   const isDark = variant === 'dark'
   const showFollow = showFollowButton && !isOwner && !!postAuthorId && !!currentUserId
 
@@ -156,7 +166,7 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
           className={`absolute right-full top-0 z-50 mr-1 ${menuClass}`}
           role="menu"
         >
-          {isOwner && (
+          {canDelete && (
             <button
               type="button"
               role="menuitem"
@@ -184,7 +194,7 @@ export function FeedPostActionsMenu({ postId, postAuthorId, showFollowButton = f
               {isFollowingLoading ? 'Following...' : isFollowing ? 'Following' : 'Follow'}
             </button>
           )}
-          {!isOwner && (
+          {!canDelete && (
             <button
               type="button"
               role="menuitem"

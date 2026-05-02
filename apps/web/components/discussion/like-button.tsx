@@ -25,7 +25,8 @@ export function LikeButton({
   const supabase = createClientComponentClient()
   const router = useRouter()
   const [isLiked, setIsLiked] = useState(initialIsLiked)
-  const [likeCount, setLikeCount] = useState(initialLikeCount)
+  const safeInitialLikeCount = initialLikeCount ?? 0
+  const [likeCount, setLikeCount] = useState(safeInitialLikeCount)
   const [isLoading, setIsLoading] = useState(false)
 
   // Sync state with props when they change (e.g., on page refresh or when user changes)
@@ -35,24 +36,24 @@ export function LikeButton({
     // Don't overwrite likeCount with stale 0 from parent (e.g. realtime before DB trigger).
     // Parent may report count=0 while user just liked; keep our optimistic count until DB catches up.
     const parentStaleAfterLike =
-      initialIsLiked && likeCount >= 1 && (initialLikeCount === 0 || initialLikeCount == null)
+      initialIsLiked && likeCount >= 1 && (safeInitialLikeCount === 0 || safeInitialLikeCount == null)
     if (!parentStaleAfterLike) {
-      setLikeCount(initialLikeCount)
+      setLikeCount(safeInitialLikeCount)
     }
-  }, [targetId, initialIsLiked, initialLikeCount])
+  }, [targetId, initialIsLiked, safeInitialLikeCount])
 
   // Also sync when props change (for same targetId but different user session).
   useEffect(() => {
     if (isLiked !== initialIsLiked) {
       setIsLiked(initialIsLiked)
     }
-    if (likeCount !== initialLikeCount) {
+    if (likeCount !== safeInitialLikeCount) {
       const parentStaleAfterLike =
-        initialIsLiked && likeCount >= 1 && (initialLikeCount === 0 || initialLikeCount == null)
+        initialIsLiked && likeCount >= 1 && (safeInitialLikeCount === 0 || safeInitialLikeCount == null)
       if (parentStaleAfterLike) return
-      setLikeCount(initialLikeCount)
+      setLikeCount(safeInitialLikeCount)
     }
-  }, [initialIsLiked, initialLikeCount])
+  }, [initialIsLiked, safeInitialLikeCount])
 
   async function handleToggleLike() {
     const {
@@ -198,6 +199,13 @@ export function LikeButton({
     return (count || 0) > 0
   }
 
+  // If item is liked but count arrives as 0, recover from source-of-truth.
+  useEffect(() => {
+    if (!initialIsLiked) return
+    if (safeInitialLikeCount > 0) return
+    refreshLikeCount({ allowDecrease: false })
+  }, [targetId, initialIsLiked, safeInitialLikeCount])
+
   const isDark = variant === 'dark'
   const buttonClasses = isDark
     ? isLiked
@@ -219,9 +227,7 @@ export function LikeButton({
       ) : (
         <Heart className="h-5 w-5 shrink-0" />
       )}
-      {likeCount > 0 && (
-        <span className={`text-sm font-medium leading-none ${isLiked ? 'text-sunset-end' : ''}`}>{likeCount}</span>
-      )}
+      <span className={`text-sm font-medium leading-none ${isLiked ? 'text-sunset-end' : ''}`}>{likeCount}</span>
     </button>
   )
 }

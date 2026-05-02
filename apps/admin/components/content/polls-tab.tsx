@@ -63,6 +63,11 @@ export function PollsTab() {
         new Date(p.ends_at) < new Date()
     )
 
+  function isPollExpired(poll: Poll) {
+    if (!poll.ends_at) return false
+    return new Date(poll.ends_at) < new Date()
+  }
+
   return (
     <>
       {featuredPollExpired && (
@@ -109,9 +114,9 @@ export function PollsTab() {
                   <td>
                     {poll.ends_at ? new Date(poll.ends_at).toLocaleString() : 'No end date'}
                   </td>
-                  <td>
-                    {poll.is_featured_podium && (
-                      <span className="admin-status-review">
+                  <td className="px-6 py-4">
+                    {poll.is_featured_podium && !isPollExpired(poll) && (
+                      <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
                         Featured
                       </span>
                     )}

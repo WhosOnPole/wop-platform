@@ -402,6 +402,7 @@ export async function FeedPageContent({
   // Second batch: parallel fetches that depend on followingPostsList
   const [
     postLikesResult,
+    postLikeRowsResult,
     commentRowsResult,
     driverEntities,
     teamEntities,
@@ -414,6 +415,13 @@ export async function FeedPageContent({
           .from('votes')
           .select('target_id')
           .eq('user_id', session.user.id)
+          .eq('target_type', 'post')
+          .in('target_id', feedPostIds)
+      : Promise.resolve({ data: [] }),
+    feedPostIds.length > 0
+      ? supabase
+          .from('votes')
+          .select('target_id')
           .eq('target_type', 'post')
           .in('target_id', feedPostIds)
       : Promise.resolve({ data: [] }),
@@ -456,6 +464,11 @@ export async function FeedPageContent({
   let userLikedPostIds = new Set<string>()
   postLikesResult.data?.forEach((row: { target_id: string }) => userLikedPostIds.add(row.target_id))
 
+  let likeCountByPostId: Record<string, number> = {}
+  postLikeRowsResult.data?.forEach((row: { target_id: string }) => {
+    likeCountByPostId[row.target_id] = (likeCountByPostId[row.target_id] ?? 0) + 1
+  })
+
   let commentCountByPostId: Record<string, number> = {}
   commentRowsResult.data?.forEach((row: { post_id: string }) => {
     commentCountByPostId[row.post_id] = (commentCountByPostId[row.post_id] ?? 0) + 1
@@ -465,7 +478,7 @@ export async function FeedPageContent({
 
   let enrichedFeedPosts = followingPostsList.map((p: Record<string, unknown> & { id: string; like_count?: number | null }) => ({
     ...p,
-    like_count: p.like_count ?? 0,
+    like_count: likeCountByPostId[p.id] ?? p.like_count ?? 0,
     is_liked: userLikedPostIds.has(p.id),
     comment_count: commentCountByPostId[p.id] ?? 0,
   })) as Post[]
@@ -861,6 +874,22 @@ export async function FeedPageContent({
     created_at: string
     ends_at?: string | null
   }>
+  const communityPollIds = communityPollsList.map((p) => p.id)
+  let ownCommunityPollIds = new Set<string>()
+  if (communityPollIds.length > 0) {
+    const { data: ownPollPostRows } = await supabase
+      .from('posts')
+      .select('parent_page_id')
+      .eq('user_id', session.user.id)
+      .eq('parent_page_type', 'poll')
+      .in('parent_page_id', communityPollIds)
+    ownCommunityPollIds = new Set(
+      (ownPollPostRows || [])
+        .map((row: { parent_page_id: string | null }) => row.parent_page_id)
+        .filter((id): id is string => typeof id === 'string')
+    )
+  }
+  const communityPollsForDiscovery = communityPollsList.filter((poll) => !ownCommunityPollIds.has(poll.id))
   const allActivePolls = [...adminPollsList, ...communityPollsList]
   // Banner shows only an admin poll that is explicitly marked as featured. No other polls in the spotlight banner (carousel/sidebar).
   const featuredAdminPoll = adminPollsForBannerList.find((p) => p.is_featured_podium) ?? null
@@ -1100,7 +1129,7 @@ export async function FeedPageContent({
             gridComments={[]}
             embeddedPollsByPollId={embeddedPollsByPollId}
             parentPageByKey={parentPageByKey}
-            communityPolls={communityPollsList}
+            communityPolls={communityPollsForDiscovery}
             pollUserResponses={feedPollUserResponses}
             pollVoteCounts={feedPollVoteCounts}
             supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL}
