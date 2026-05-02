@@ -145,33 +145,33 @@ export function HighlightedFanManager({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
+          <div className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</div>
         )}
 
         {success && (
-          <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800">
+          <div className="rounded-lg bg-teal-50 p-3 text-sm font-medium text-teal-800">
             Highlighted fan saved successfully!
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="admin-form-label mb-2">
             Highlighted Fan
           </label>
           {selectedFan ? (
-            <div className="mb-2 flex items-center space-x-3 rounded-md border border-gray-300 bg-gray-50 p-3">
+            <div className="mb-2 flex items-center space-x-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
               {selectedFan.profile_image_url && (
                 <img
                   src={selectedFan.profile_image_url}
                   alt={selectedFan.username}
-                  className="h-10 w-10 rounded-full object-cover"
+                  className="h-10 w-10 rounded-full border border-slate-200 object-cover"
                 />
               )}
               <div>
-                <div className="font-medium text-gray-900">{selectedFan.username}</div>
+                <div className="font-bold text-slate-900">{selectedFan.username}</div>
               </div>
               <button
                 type="button"
@@ -179,7 +179,7 @@ export function HighlightedFanManager({
                   setSelectedFan(null)
                   setFanSearch('')
                 }}
-                className="ml-auto text-sm text-red-600 hover:text-red-900"
+                className="ml-auto text-sm font-bold text-red-600 hover:text-red-900"
               >
                 Remove
               </button>
@@ -187,22 +187,22 @@ export function HighlightedFanManager({
           ) : (
             <div className="relative">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={fanSearch}
                   onChange={(e) => setFanSearch(e.target.value)}
                   placeholder="Search for a user by username..."
-                  className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="admin-form-input pl-10"
                 />
               </div>
               {searchingFans && (
                 <div className="mt-2 flex items-center justify-center py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                 </div>
               )}
               {fanResults.length > 0 && (
-                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg">
                   {fanResults.map((fan) => (
                     <button
                       key={fan.id}
@@ -212,17 +212,17 @@ export function HighlightedFanManager({
                         setFanSearch('')
                         setFanResults([])
                       }}
-                      className="flex w-full items-center space-x-3 px-4 py-2 hover:bg-gray-50"
+                      className="flex w-full items-center space-x-3 px-4 py-2 hover:bg-slate-50"
                     >
                       {fan.profile_image_url && (
                         <img
                           src={fan.profile_image_url}
                           alt={fan.username}
-                          className="h-8 w-8 rounded-full object-cover"
+                          className="h-8 w-8 rounded-full border border-slate-200 object-cover"
                         />
                       )}
                       <div className="text-left">
-                        <div className="font-medium text-gray-900">{fan.username}</div>
+                        <div className="font-bold text-slate-900">{fan.username}</div>
                       </div>
                     </button>
                   ))}
@@ -234,13 +234,13 @@ export function HighlightedFanManager({
 
         {/* Fan Grid selection */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Select Grid (driver/team/track)</label>
+          <label className="admin-form-label">Select Grid (driver/team/track)</label>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-700">Filter:</label>
+            <label className="text-sm font-medium text-slate-700">Filter:</label>
             <select
               value={gridFilter}
               onChange={(e) => setGridFilter(e.target.value as any)}
-              className="rounded-md border border-gray-300 px-3 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
               disabled={!selectedFan}
             >
               <option value="all">All</option>
@@ -251,26 +251,26 @@ export function HighlightedFanManager({
           </div>
 
           {!selectedFan && (
-            <div className="rounded-md border border-dashed border-gray-300 p-3 text-sm text-gray-600">
+            <div className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
               Select a fan first to choose a grid.
             </div>
           )}
 
           {selectedFan && loadingGrids && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-slate-600">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading grids…
             </div>
           )}
 
           {selectedFan && !loadingGrids && gridError && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
               Failed to load grids: {gridError}
             </div>
           )}
 
           {selectedFan && !loadingGrids && !gridError && fanGrids.length === 0 && (
-            <div className="rounded-md border border-dashed border-gray-300 p-3 text-sm text-gray-600">
+            <div className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
               No grids found for this fan.
             </div>
           )}
@@ -282,21 +282,21 @@ export function HighlightedFanManager({
                   key={grid.id}
                   type="button"
                   onClick={() => setSelectedGrid(grid)}
-                  className={`rounded-md border p-3 text-left shadow-sm hover:border-blue-500 ${
-                    selectedGrid?.id === grid.id ? 'border-blue-500 ring-1 ring-blue-200' : 'border-gray-200'
+                  className={`rounded-xl border p-3 text-left shadow-sm transition hover:border-teal-500 ${
+                    selectedGrid?.id === grid.id ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-slate-200'
                   }`}
                 >
-                  <div className="flex items-center justify-between text-sm text-gray-700">
+                  <div className="flex items-center justify-between text-sm text-slate-700">
                     <span className="font-medium capitalize">{grid.type} grid</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-slate-500">
                       {new Date(grid.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="mt-2 space-y-1 text-xs text-gray-600">
+                  <div className="mt-2 space-y-1 text-xs text-slate-600">
                     {Array.isArray(grid.ranked_items) &&
                       grid.ranked_items.slice(0, 3).map((item: any, i: number) => (
                         <div key={i} className="flex items-center space-x-2">
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-800 text-[10px] font-bold text-white">
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold text-white">
                             {i + 1}
                           </span>
                           <span className="truncate">{item?.name || item?.title || 'Unknown'}</span>
@@ -309,11 +309,11 @@ export function HighlightedFanManager({
           )}
         </div>
 
-        <div className="rounded-md bg-blue-50 p-4">
-          <p className="text-sm text-blue-800">
+        <div className="rounded-xl bg-teal-50 p-4">
+          <p className="text-sm text-teal-800">
             <strong>Week Start Date:</strong> {new Date(currentWeekStart).toLocaleDateString()}
           </p>
-          <p className="mt-1 text-xs text-blue-700">
+          <p className="mt-1 text-xs text-teal-700">
             This will update or create the highlighted fan for the week starting on this Monday.
           </p>
         </div>
@@ -322,7 +322,7 @@ export function HighlightedFanManager({
           <button
             type="submit"
             disabled={loading || !selectedFan || !selectedGrid}
-            className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="admin-button-primary px-6"
           >
             {loading ? (
               <span className="flex items-center">

@@ -79,59 +79,81 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Team: {team.name}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+    <div className="admin-drawer-overlay">
+      <div className="admin-drawer-panel">
+        <div className="admin-drawer-header">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">Edit Team</h2>
+            <p className="mt-1 text-xs font-medium text-slate-500">ID: {team.id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close team editor"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
-        )}
+        <form onSubmit={handleSubmit} className="contents">
+          <div className="admin-drawer-body space-y-6">
+            <div className="admin-asset-preview">
+              {formData.image_url ? (
+                <img src={formData.image_url} alt={team.name} className="max-h-56 w-full object-contain" />
+              ) : (
+                <div className="text-center">
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-2xl font-bold text-teal-600">
+                    {team.name.charAt(0)}
+                  </div>
+                  <p className="text-sm font-medium text-slate-500">No team image available</p>
+                </div>
+              )}
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</div>
+            )}
+
+            <div className="admin-form-section">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <label className="admin-form-label">Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Image URL</label>
+            <label className="admin-form-label">Image URL</label>
             <input
               type="url"
               value={formData.image_url}
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Overview Text</label>
+            <label className="admin-form-label">Overview Text</label>
             <textarea
               value={formData.overview_text}
               onChange={(e) => setFormData({ ...formData, overview_text: e.target.value })}
               rows={6}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Instagram Username</label>
+            <label className="admin-form-label">Instagram Username</label>
             <input
               type="text"
               value={formData.instagram_username}
               onChange={(e) => setFormData({ ...formData, instagram_username: e.target.value })}
               placeholder="mercedesamgf1"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -141,26 +163,28 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
                 type="checkbox"
                 checked={formData.active}
                 onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="admin-checkbox"
               />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-slate-700">
                 Active (team is active for current season)
               </span>
             </label>
           </div>
+            </div>
+          </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="admin-drawer-footer">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="admin-button-secondary"
             >
-              Cancel
+              Discard
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {loading ? (
                 <span className="flex items-center">

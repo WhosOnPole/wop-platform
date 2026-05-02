@@ -1,4 +1,5 @@
 import { ContentTabs } from './content-tabs'
+import { AdminPageHeader } from '@/components/admin/page-header'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,18 +12,16 @@ export default async function ContentPage({
   const defaultTab = params.tab === 'stories' ? 'stories' : 'news'
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Content Creation</h1>
-      <p className="mb-8 text-gray-600">
-        Create and manage news stories, user submissions, polls, hot takes, and endorsements.
-        
-      </p>
-
+    <div className="space-y-8">
+      <AdminPageHeader
+        eyebrow="Content Studio"
+        title="Content Creation"
+        description="Create and manage news stories, user submissions, polls, hot takes, and endorsements."
+      />
       <ContentTabs defaultTab={defaultTab as 'news' | 'stories'} />
-      <p className="text-sm text-gray-500 mt-16">
+      <p className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm">
         Notes: Featured stories will be displayed on the home page.
       </p>
-      
     </div>
   )
 }

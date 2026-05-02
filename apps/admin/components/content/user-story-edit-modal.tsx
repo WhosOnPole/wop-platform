@@ -105,7 +105,7 @@ export function UserStoryEditModal({ submission, onClose, onSaved }: UserStoryEd
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
               maxLength={500}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -116,7 +116,7 @@ export function UserStoryEditModal({ submission, onClose, onSaved }: UserStoryEd
               onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
               maxLength={1000}
               rows={2}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -127,7 +127,7 @@ export function UserStoryEditModal({ submission, onClose, onSaved }: UserStoryEd
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               required
               rows={10}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -137,7 +137,7 @@ export function UserStoryEditModal({ submission, onClose, onSaved }: UserStoryEd
               type="url"
               value={formData.image_url}
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -152,7 +152,7 @@ export function UserStoryEditModal({ submission, onClose, onSaved }: UserStoryEd
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {loading ? (
                 <span className="flex items-center">

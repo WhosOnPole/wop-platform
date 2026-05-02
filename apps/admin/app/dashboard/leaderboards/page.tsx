@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 import { LeaderboardDashboard } from '@/components/leaderboards/leaderboard-dashboard'
+import { AdminPageHeader } from '@/components/admin/page-header'
 
 export default async function LeaderboardsPage() {
   const cookieStore = await cookies()
@@ -32,12 +33,12 @@ export default async function LeaderboardsPage() {
     .single()
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Leaderboards</h1>
-      <p className="mb-8 text-gray-600">
-        Generate and manage leaderboard rankings
-      </p>
-
+    <div className="space-y-8">
+      <AdminPageHeader
+        eyebrow="Rankings"
+        title="Leaderboards"
+        description="Generate and manage leaderboard rankings."
+      />
       <LeaderboardDashboard
         weeklyLastGenerated={weeklyLeaderboard?.created_at}
         monthlyLastGenerated={monthlyLeaderboard?.created_at}

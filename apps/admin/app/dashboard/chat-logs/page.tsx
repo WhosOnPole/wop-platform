@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 import { ChatLogsViewer } from '@/components/chat-logs/chat-logs-viewer'
+import { AdminPageHeader } from '@/components/admin/page-header'
 
 export default async function ChatLogsPage() {
   const cookieStore = await cookies()
@@ -22,12 +23,12 @@ export default async function ChatLogsPage() {
     .order('start_date', { ascending: false })
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Live Chat Logs</h1>
-      <p className="mb-8 text-gray-600">
-        View chat logs for any race. This is a read-only security/audit tool.
-      </p>
-
+    <div className="space-y-8">
+      <AdminPageHeader
+        eyebrow="Security Audit"
+        title="Live Chat Logs"
+        description="View chat logs for any race. This is a read-only security and audit tool."
+      />
       <ChatLogsViewer races={races || []} />
     </div>
   )

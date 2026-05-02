@@ -7,17 +7,18 @@ import { DriversTable } from '@/components/data-enrichment/drivers-table'
 import { TeamsTable } from '@/components/data-enrichment/teams-table'
 import { TracksTable } from '@/components/data-enrichment/tracks-table'
 import { SchedulesTable } from '@/components/data-enrichment/schedules-table'
+import { AdminPageHeader } from '@/components/admin/page-header'
 
 export default async function DataEnrichmentPage() {
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Data Enrichment</h1>
-      <p className="mb-8 text-gray-600">
-        Edit driver, team, and track data. You can update enriched fields such as images, bios,
-        and stats.
-      </p>
+    <div className="space-y-8">
+      <AdminPageHeader
+        eyebrow="Data Management"
+        title="Data Enrichment"
+        description="Edit driver, team, and track data. Update enriched fields such as imagery, bios, metadata, schedules, and racing stats."
+      />
 
-      <Tabs defaultValue="drivers" className="w-full mb-8">
+      <Tabs defaultValue="drivers" className="mb-8 w-full">
         <TabsList>
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
           <TabsTrigger value="teams">Teams</TabsTrigger>

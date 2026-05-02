@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 import { TrackTipsQueue } from '@/components/track-tips/track-tips-queue'
+import { AdminPageHeader } from '@/components/admin/page-header'
 
 export default async function TrackTipsPage() {
   const cookieStore = await cookies()
@@ -34,12 +35,12 @@ export default async function TrackTipsPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div>
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Track Tips Queue</h1>
-      <p className="mb-8 text-gray-600">
-        Review and approve track tips. Approved tips award 2 points to the submitter.
-      </p>
-
+    <div className="space-y-8">
+      <AdminPageHeader
+        eyebrow="Community Review"
+        title="Track Tips Queue"
+        description="Review and approve track tips. Approved tips award 2 points to the submitter."
+      />
       <TrackTipsQueue initialTips={tips || []} />
     </div>
   )

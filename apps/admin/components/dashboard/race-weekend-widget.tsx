@@ -199,37 +199,53 @@ export function RaceWeekendWidget({
   }
 
   return (
-    <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-blue-500" />
-          <h2 className="text-xl font-semibold text-gray-900">
-            {isLive ? 'Live Race' : 'Upcoming Race Weekend'}
-          </h2>
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-4 border-b border-gray-200 px-6 py-5 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-[#25B4B1]">
+            <Calendar className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
+              Race weekend
+            </p>
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-gray-900">
+              {isLive ? 'Live Race' : 'Upcoming Race Weekend'}
+            </h2>
+          </div>
         </div>
-        <Link
-          href={`https://www.whosonpole.org/tracks/${initialRace.name?.toLowerCase().replace(/\s+/g, '-')}`}
-          className="text-sm text-blue-600 hover:text-blue-700"
-        >
-          View Race Page →
-        </Link>
+        <div className="flex items-center gap-3">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              isLive ? 'bg-teal-100 text-teal-800' : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            {isLive ? 'Active' : 'Pending'}
+          </span>
+          <Link
+            href={`https://www.whosonpole.org/tracks/${initialRace.name?.toLowerCase().replace(/\s+/g, '-')}`}
+            className="text-sm font-bold text-[#25B4B1] transition hover:text-teal-700"
+          >
+            View Race Page →
+          </Link>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
         {/* Race Info */}
-        <div>
-          <h3 className="mb-2 text-lg font-semibold text-gray-900">
+        <div className="rounded-xl border border-gray-100 bg-gray-50 p-5">
+          <h3 className="text-lg font-bold text-gray-900">
             {initialRace.name || 'Unknown Race'}
           </h3>
           {initialRace.location && (
-            <p className="text-sm text-gray-600">{initialRace.location}</p>
+            <p className="mt-1 text-sm text-gray-600">{initialRace.location}</p>
           )}
 
-          <div className="mt-4 space-y-2">
+          <div className="mt-5 space-y-3">
             {(weekendTimes.firstEventAt || startDateForDisplay) && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Clock className="h-4 w-4" />
-                <span>
+              <div className="flex items-start gap-3 rounded-lg bg-white p-3 text-sm text-gray-600">
+                <Clock className="mt-0.5 h-4 w-4 text-gray-400" />
+                <span className="leading-5">
                   Starts: {weekendTimes.firstEventAt
                     ? formatDateTimeInUserLocale(weekendTimes.firstEventAt)
                     : formatDateInUserLocale(startDateForDisplay)}
@@ -237,9 +253,9 @@ export function RaceWeekendWidget({
               </div>
             )}
             {(weekendTimes.lastEventEndAt || endDateForDisplay) && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Clock className="h-4 w-4" />
-                <span>
+              <div className="flex items-start gap-3 rounded-lg bg-white p-3 text-sm text-gray-600">
+                <Clock className="mt-0.5 h-4 w-4 text-gray-400" />
+                <span className="leading-5">
                   Ends: {weekendTimes.lastEventEndAt
                     ? formatDateTimeInUserLocale(weekendTimes.lastEventEndAt)
                     : formatDateInUserLocale(endDateForDisplay)}
@@ -250,17 +266,22 @@ export function RaceWeekendWidget({
         </div>
 
         {/* Chat Metrics & Controls */}
-        <div>
+        <div className="rounded-xl border border-gray-100 bg-white">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Live Chat</h3>
+            <div className="px-5 pt-5">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">
+                Moderation channel
+              </p>
+              <h3 className="mt-1 text-lg font-bold text-gray-900">Live Chat</h3>
+            </div>
             {isWithinWindow ? (
               <button
                 onClick={handleToggleChat}
                 disabled={isToggling}
-                className={`flex items-center space-x-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`mr-5 mt-5 flex items-center space-x-2 rounded-lg px-3 py-2 text-sm font-bold transition-colors ${
                   chatEnabled
                     ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-[#25B4B1] text-white hover:bg-teal-600'
                 } disabled:opacity-50`}
               >
                 {chatEnabled ? (
@@ -279,33 +300,33 @@ export function RaceWeekendWidget({
           </div>
 
           {isChatLive && metrics && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-md bg-gray-50 p-3">
+            <div className="space-y-3 px-5 pb-5">
+              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3 transition hover:bg-gray-100">
                 <div className="flex items-center space-x-2">
-                  <MessageSquare className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm text-gray-600">Total Messages</span>
+                  <MessageSquare className="h-4 w-4 text-[#25B4B1]" />
+                  <span className="text-sm font-medium text-gray-600">Total Messages</span>
                 </div>
-                <span className="text-lg font-semibold text-gray-900">
+                <span className="font-mono text-lg font-bold tabular-nums text-gray-900">
                   {metrics.totalMessages.toLocaleString()}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between rounded-md bg-gray-50 p-3">
+              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3 transition hover:bg-gray-100">
                 <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm text-gray-600">Active Users</span>
+                  <Users className="h-4 w-4 text-[#25B4B1]" />
+                  <span className="text-sm font-medium text-gray-600">Active Users</span>
                 </div>
-                <span className="text-lg font-semibold text-gray-900">
+                <span className="font-mono text-lg font-bold tabular-nums text-gray-900">
                   {metrics.activeUsers}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between rounded-md bg-gray-50 p-3">
+              <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3 transition hover:bg-gray-100">
                 <div className="flex items-center space-x-2">
-                  <MessageSquare className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm text-gray-600">Messages/Min</span>
+                  <MessageSquare className="h-4 w-4 text-[#25B4B1]" />
+                  <span className="text-sm font-medium text-gray-600">Messages/Min</span>
                 </div>
-                <span className="text-lg font-semibold text-gray-900">
+                <span className="font-mono text-lg font-bold tabular-nums text-gray-900">
                   {metrics.messagesPerMinute}
                 </span>
               </div>
@@ -313,7 +334,7 @@ export function RaceWeekendWidget({
           )}
 
           {!isChatLive && (
-            <p className="text-sm text-gray-500">
+            <p className="px-5 pb-5 text-sm text-gray-500">
               {isLive && !chatEnabled
                 ? 'Race is live, but chat is currently disabled'
                 : isUpcoming

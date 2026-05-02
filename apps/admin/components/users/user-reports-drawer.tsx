@@ -46,44 +46,58 @@ export default function UserReportsDrawer({ userId, username, open, onClose }: U
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-black/30 transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+      className={`admin-drawer-overlay transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       aria-hidden={!open}
     >
       <div
-        className={`absolute right-0 top-0 h-full w-full max-w-md transform bg-white shadow-xl transition-transform ${
+        className={`admin-drawer-panel max-w-[520px] transform transition-transform duration-300 ease-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+        <div className="admin-drawer-header">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Reports for {username || 'User'}</h2>
-            <p className="text-xs text-gray-500">Most recent first</p>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              Reports for {username || 'User'}
+            </h2>
+            <p className="mt-1 text-xs font-medium text-slate-500">
+              {userId ? `ID: ${userId}` : 'Most recent first'}
+            </p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700" aria-label="Close">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="h-[calc(100%-56px)] overflow-y-auto p-4">
-          {loading && <p className="text-sm text-gray-500">Loading…</p>}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="admin-drawer-body">
+          {loading && <p className="text-sm text-slate-500">Loading...</p>}
+          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
           {!loading && !error && reports.length === 0 && (
-            <p className="text-sm text-gray-500">No reports for this user.</p>
+            <div className="flex flex-col items-center py-12 text-center">
+              <div className="mb-3 rounded-full bg-teal-50 p-3 text-teal-600">
+                <X className="h-6 w-6" />
+              </div>
+              <p className="font-bold text-slate-900">No reports for this user</p>
+              <p className="mt-1 text-sm text-slate-500">Moderation context is clear.</p>
+            </div>
           )}
           <div className="space-y-3">
             {reports.map((r) => (
-              <div key={r.id} className="rounded-md border border-gray-200 p-3">
+              <div key={r.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium capitalize">{r.target_type}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="admin-status-review capitalize">{r.target_type}</span>
+                  <span className="text-xs font-medium text-slate-500">
                     {new Date(r.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-gray-500 break-all">Target: {r.target_id}</p>
-                <p className="mt-2 text-sm text-gray-800">
+                <p className="mt-3 break-all font-mono text-xs text-slate-500">Target: {r.target_id}</p>
+                <p className="mt-3 border-l-4 border-teal-500 bg-[#F8F9FB] p-3 text-sm text-slate-700">
                   <strong>Reason:</strong> {r.reason}
                 </p>
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-3 text-xs font-medium text-slate-600">
                   Status: <span className="capitalize">{r.status}</span>
                 </p>
               </div>

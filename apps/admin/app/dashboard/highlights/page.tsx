@@ -2,10 +2,10 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
-import { WeeklyHighlightsManager } from '@/components/highlights/weekly-highlights-manager'
 import { AutoCalculateButton } from '@/components/highlights/auto-calculate-button'
 import { HighlightedFanManager } from '@/components/highlights/highlighted-fan-manager'
 import { HighlightedSponsorManager } from '@/components/highlights/highlighted-sponsor-manager'
+import { AdminPageHeader } from '@/components/admin/page-header'
 
 async function getCurrentWeekStart() {
   const today = new Date()
@@ -69,19 +69,16 @@ export default async function HighlightsPage() {
   const needsHighlights = !currentHighlights || missingFan || missingGrid
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Weekly Highlights</h1>
-          <p className="mt-2 text-gray-600">
-            Set the highlighted fan and endorsement for the current week. The week starts on Monday.
-          </p>
-        </div>
-        <AutoCalculateButton weekStart={weekStart} />
-      </div>
+    <div className="space-y-8">
+      <AdminPageHeader
+        eyebrow="Spotlight Operations"
+        title="Weekly Highlights"
+        description="Set the highlighted fan and endorsement for the current week. The week starts on Monday."
+        action={<AutoCalculateButton weekStart={weekStart} />}
+      />
 
       {needsHighlights && (
-        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
           <p className="text-sm font-medium">
             Set the featured fan and grid for this week to keep Spotlight Our Picks active.
           </p>
@@ -89,17 +86,17 @@ export default async function HighlightsPage() {
       )}
 
       {currentHighlights?.highlighted_fan && (
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <p className="text-sm font-medium text-blue-900">
+        <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
+          <p className="text-sm font-bold text-teal-900">
             Current Featured Fan: {currentHighlights.highlighted_fan.username}
             {currentHighlights.highlighted_fan.weekly_points !== null && (
-              <span className="ml-2 text-blue-700">
+              <span className="ml-2 text-teal-700">
                 ({currentHighlights.highlighted_fan.weekly_points} weekly points)
               </span>
             )}
           </p>
           {currentHighlights.updated_at && (
-            <p className="mt-1 text-xs text-blue-700">
+            <p className="mt-1 text-xs font-medium text-teal-700">
               Last updated: {new Date(currentHighlights.updated_at).toLocaleString()}
             </p>
           )}
@@ -107,20 +104,20 @@ export default async function HighlightsPage() {
       )}
 
       {calculationHistory && calculationHistory.length > 0 && (
-        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold text-gray-900">Recent Calculations</h2>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-3 text-lg font-bold text-slate-900">Recent Calculations</h2>
           <div className="space-y-2">
             {calculationHistory.map((highlight) => (
               <div
                 key={highlight.id}
-                className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-0 first:pb-0 "
+                className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0 first:pb-0 "
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-bold text-slate-900">
                     Week of {new Date(highlight.week_start_date).toLocaleDateString()}
                   </p>
                   {highlight.highlighted_fan && (
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-slate-600">
                       {highlight.highlighted_fan.username}
                       {highlight.highlighted_fan.weekly_points !== null && (
                         <span> - {highlight.highlighted_fan.weekly_points} points</span>
@@ -128,7 +125,7 @@ export default async function HighlightsPage() {
                     </p>
                   )}
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs font-medium text-slate-500">
                   {new Date(highlight.created_at).toLocaleDateString()}
                 </p>
               </div>
@@ -138,16 +135,16 @@ export default async function HighlightsPage() {
       )}
 
       <div className="space-y-8">
-        <div>
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Fan</h2>
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">Highlighted Fan</h2>
           <HighlightedFanManager
             currentWeekStart={weekStart}
             existingFan={currentHighlights?.highlighted_fan || null}
           />
         </div>
 
-        <div>
-          <h2 className="mb-4 text-xl font-semibold text-gray-900">Highlighted Endorsement</h2>
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">Highlighted Endorsement</h2>
           <HighlightedSponsorManager
             currentWeekStart={weekStart}
             existingSponsor={currentHighlights?.highlighted_sponsor || null}

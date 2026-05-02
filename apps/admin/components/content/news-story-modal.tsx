@@ -78,52 +78,62 @@ export function NewsStoryModal({ story, onClose }: NewsStoryModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">
+    <div className="admin-drawer-overlay">
+      <div className="admin-drawer-panel">
+        <div className="admin-drawer-header">
+          <div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
             {story ? 'Edit Story' : 'Create Story'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <p className="mt-1 text-xs font-medium text-slate-500">
+              {story ? `ID: ${story.id}` : 'New content record'}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close story editor"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
 
+        <form onSubmit={handleSubmit} className="contents">
+          <div className="admin-drawer-body space-y-4">
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
+          <div className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Title *</label>
+            <label className="admin-form-label">Title *</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
               maxLength={500}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Image URL</label>
+            <label className="admin-form-label">Image URL</label>
             <input
               type="url"
               value={formData.image_url}
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Content *</label>
+            <label className="admin-form-label">Content *</label>
             <textarea
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               required
               rows={10}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="admin-form-input"
             />
           </div>
 
@@ -133,25 +143,26 @@ export function NewsStoryModal({ story, onClose }: NewsStoryModalProps) {
               id="is_featured"
               checked={formData.is_featured}
               onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="admin-checkbox"
             />
-            <label htmlFor="is_featured" className="ml-2 text-sm text-gray-700">
+            <label htmlFor="is_featured" className="ml-2 text-sm font-medium text-slate-700">
               Featured Story
             </label>
           </div>
+          </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="admin-drawer-footer">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="admin-button-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="admin-button-primary"
             >
               {loading ? (
                 <span className="flex items-center">
