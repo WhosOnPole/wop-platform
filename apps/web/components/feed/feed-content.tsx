@@ -626,7 +626,7 @@ export function FeedContent({
           return (
             <div
               key={`post-${post.id}`}
-              className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
+              className="rounded-lg border border-white/20 bg-white/10 p-6 shadow backdrop-blur-sm"
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center space-x-3">
@@ -830,7 +830,7 @@ export function FeedContent({
           return (
             <div
               key={`grid-${grid.id}`}
-              className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
+              className="rounded-lg border border-white/20 bg-white/10 p-6 shadow backdrop-blur-sm"
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center space-x-3">
@@ -917,7 +917,7 @@ export function FeedContent({
           return (
             <div
               key={`grid-comment-${comment.id}`}
-              className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
+              className="rounded-lg border border-white/20 bg-white/10 p-6 shadow backdrop-blur-sm"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
@@ -948,7 +948,7 @@ export function FeedContent({
           return (
             <div
               key={`news-${news.id}`}
-              className="relative flex min-h-[140px] flex-col overflow-hidden rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
+              className="relative flex min-h-[140px] flex-col overflow-hidden rounded-lg border border-white/20 bg-white/10 p-6 shadow backdrop-blur-sm"
             >
               <span className="text-[0.6em] uppercase tracking-widest text-white/60 align-super">
                 Featured Story
@@ -1026,7 +1026,7 @@ export function FeedContent({
                   return (
                     <div
                       key={`discover-post-${post.id}`}
-                      className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
+                      className="rounded-lg border border-white/20 bg-white/10 p-6 shadow backdrop-blur-sm"
                     >
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <div className="flex min-w-0 flex-1 items-center space-x-3">
@@ -1229,7 +1229,7 @@ export function FeedContent({
                   return (
                     <div
                       key={`discover-grid-${grid.id}`}
-                      className="rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm"
+                      className="rounded-lg border border-white/20 bg-white/10 p-6 shadow backdrop-blur-sm"
                     >
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <div className="flex min-w-0 flex-1 items-center space-x-3">

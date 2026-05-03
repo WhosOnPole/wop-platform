@@ -260,6 +260,7 @@ export function ProfilePageClient({
             <ActivityTab
               activities={activities}
               profileUsername={profile.username}
+              teamBackground={teamBackground}
               pollsById={activityPollsById}
               pollUserResponses={activityPollUserResponses}
               pollVoteCounts={activityPollVoteCounts}
