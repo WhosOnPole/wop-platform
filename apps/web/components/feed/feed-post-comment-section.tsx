@@ -179,7 +179,7 @@ export function FeedPostCommentSection({
   })
 
   const panelContent = isOpen ? (
-    <div className="rounded-mdbg-black/40 p-3 backdrop-blur-sm">
+    <div className="rounded-md bg-black/30 p-3 border border-white/20">
           {isLoading ? (
             <p className="text-sm text-white/90">Loading comments...</p>
           ) : (
@@ -189,36 +189,65 @@ export function FeedPostCommentSection({
                   {topLevel.map((comment) => {
                     const commentReplies = repliesByParent[comment.id] || []
                     return (
-                      <div key={comment.id} className="py-1">
-                        <div className="mb-1 flex items-center gap-2">
-                          <Link
-                            href={`/u/${comment.user?.username || 'unknown'}`}
-                            className="shrink-0"
-                          >
-                            <div
-                              className={`h-6 w-6 rounded-full overflow-hidden ${
-                                isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
-                              }`}
+                      <div key={comment.id} className="border-b border-white/10 py-1 pb-4 last:border-b-0">
+                        <div className="mb- flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <Link
+                              href={`/u/${comment.user?.username || 'unknown'}`}
+                              className="shrink-0"
                             >
-                              <img
-                                src={getAvatarUrl(comment.user?.profile_image_url)}
-                                alt={comment.user?.username ?? ''}
-                                className="h-full w-full rounded-full object-cover"
-                              />
-                            </div>
-                          </Link>
-                          <Link
-                            href={`/u/${comment.user?.username || 'unknown'}`}
-                            className="text-sm font-medium text-white/90 hover:text-white"
-                          >
-                            {comment.user?.username || 'Unknown'}
-                          </Link>
-                          <span className="text-xs text-white/70">
-                            {formatTimeAgo(comment.created_at)}
-                          </span>
+                              <div
+                                className={`h-6 w-6 rounded-full overflow-hidden ${
+                                  isDefaultAvatar(comment.user?.profile_image_url) ? 'bg-white/10' : ''
+                                }`}
+                              >
+                                <img
+                                  src={getAvatarUrl(comment.user?.profile_image_url)}
+                                  alt={comment.user?.username ?? ''}
+                                  className="h-full w-full rounded-full object-cover"
+                                />
+                              </div>
+                            </Link>
+                            <Link
+                              href={`/u/${comment.user?.username || 'unknown'}`}
+                              className="text-sm font-medium text-white/90 hover:text-white"
+                            >
+                              {comment.user?.username || 'Unknown'}
+                            </Link>
+                            <span className="text-xs text-white/70">
+                              {formatTimeAgo(comment.created_at)}
+                            </span>
+                          </div>
+                          <div className="shrink-0">
+                            <CommentActionsMenu
+                              commentId={comment.id}
+                              commentAuthorId={comment.user?.id ?? null}
+                              currentUserId={currentUserId}
+                              targetType="comment"
+                              variant="dark"
+                              initialContent={comment.content}
+                              onDeleted={(deletedId) => {
+                                setComments((prev) => {
+                                  const next = prev.filter(
+                                    (c) =>
+                                      c.id !== deletedId && c.parent_comment_id !== deletedId
+                                  )
+                                  setCommentCount(next.length)
+                                  return next
+                                })
+                              }}
+                              onEdited={(editedId, newContent) => {
+                                setComments((prev) =>
+                                  prev.map((c) =>
+                                    c.id === editedId ? { ...c, content: newContent } : c
+                                  )
+                                )
+                              }}
+                            />
+                          </div>
                         </div>
-                        <p className="text-sm text-white/90">{comment.content}</p>
-                        <div className="mt-1 flex items-center gap-2">
+                        <p className="text-sm text-white/90 pl-8 pt-2">{comment.content}</p>
+                        <div className="mt-1 flex items-end justify-end gap-2">
                           <LikeButton
                             targetId={comment.id}
                             targetType="comment"
@@ -228,31 +257,6 @@ export function FeedPostCommentSection({
                               setUserLikes((prev) => ({ ...prev, [targetId]: isLiked }))
                             }}
                             variant="dark"
-                          />
-                          <CommentActionsMenu
-                            commentId={comment.id}
-                            commentAuthorId={comment.user?.id ?? null}
-                            currentUserId={currentUserId}
-                            targetType="comment"
-                            variant="dark"
-                            initialContent={comment.content}
-                            onDeleted={(deletedId) => {
-                              setComments((prev) => {
-                                const next = prev.filter(
-                                  (c) =>
-                                    c.id !== deletedId && c.parent_comment_id !== deletedId
-                                )
-                                setCommentCount(next.length)
-                                return next
-                              })
-                            }}
-                            onEdited={(editedId, newContent) => {
-                              setComments((prev) =>
-                                prev.map((c) =>
-                                  c.id === editedId ? { ...c, content: newContent } : c
-                                )
-                              )
-                            }}
                           />
                         </div>
                         {commentReplies.length > 0 && (

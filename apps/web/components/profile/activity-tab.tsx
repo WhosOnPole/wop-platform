@@ -129,7 +129,7 @@ export function ActivityTab({
                 ? 'Tracks'
                 : 'Grid'
 
-        const rootClasses = `rounded-lg border border-white/10 bg-black/40 p-6 shadow backdrop-blur-sm ${
+        const rootClasses = `rounded-lg border border-white/20 bg-white/10 p-6 shadow backdrop-blur-sm ${
           link ? 'block cursor-pointer transition-colors hover:bg-black/50' : 'block'
         }`
 
@@ -147,9 +147,11 @@ export function ActivityTab({
           item.type === 'grid_update'
             ? 'Grid Update'
             : isCommentActivity
-              ? item.target_type === 'hot_take'
-                ? 'Hot Take Comment'
-                : 'Post Comment'
+              ? item.target_type === 'poll'
+                ? 'Poll Comment'
+                : item.target_type === 'hot_take'
+                  ? 'Hot Take Comment'
+                  : 'Post Comment'
               : item.target_type === 'poll'
                 ? 'Poll'
                 : item.type === 'checkin'
@@ -257,7 +259,7 @@ export function ActivityTab({
                 )}
                 {item.type === 'post' && item.post_id && (
                   <>
-                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90 justify-end">
                       <LikeButton
                         targetId={item.post_id}
                         targetType="post"

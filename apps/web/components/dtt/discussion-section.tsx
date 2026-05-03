@@ -863,9 +863,9 @@ export function DiscussionSection({
                           {commentReplies.length > 0 && (
                             <div className={`mt-2 ml-4 space-y-2 ${commentBorderClasses} pl-3`}>
                               {commentReplies.map((reply) => (
-                                <div key={reply.id} id={`comment-${reply.id}`} className="py-1">
-                                  <div className="mb-1 flex items-start justify-between gap-2">
-                                    <div className="flex min-w-0 flex-1 items-start space-x-2">
+                                <div key={reply.id} id={`comment-${reply.id}`} className="py-1 border-b border-white/10 pb-4">
+                                  <div className="mb-2 flex items-center justify-between gap-2">
+                                    <div className="flex min-w-0 flex-1 items-center space-x-2">
                                       <Link
                                         href={`/u/${reply.user?.username || 'unknown'}`}
                                         className="shrink-0"
@@ -889,10 +889,9 @@ export function DiscussionSection({
                                         >
                                           {reply.user?.username || 'Unknown'}
                                         </Link>
-                                        <p className={timestampClasses}>
+                                        <span className={`ml-2 ${timestampClasses}`}>
                                           {formatTimeAgo(reply.created_at)}
-                                        </p>
-                                        <p className={replyContentClasses}>{reply.content}</p>
+                                        </span>
                                       </div>
                                     </div>
                                     <div className="shrink-0">
@@ -924,6 +923,7 @@ export function DiscussionSection({
                                       />
                                     </div>
                                   </div>
+                                  <p className={`ml-7 ${replyContentClasses}`}>{reply.content}</p>
                                   <div className="ml-7 flex items-center space-x-3">
                                     <LikeButton
                                       targetId={reply.id}
