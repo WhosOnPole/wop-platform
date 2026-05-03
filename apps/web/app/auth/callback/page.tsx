@@ -7,6 +7,7 @@ import {
   resetSessionInvalidated,
   uninstallTokenPkceDedupe,
 } from '@/utils/supabase-client'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { LoadingLogo } from '@/components/loading-logo'
 
 /**
@@ -20,6 +21,27 @@ const exchangeByCode = new Map<
   Promise<{ destination: string } | { error: true; rateLimited?: boolean }>
 >()
 
+async function getDestinationForSession(supabase: SupabaseClient, userId: string) {
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('username, date_of_birth')
+    .eq('id', userId)
+    .maybeSingle()
+  if (profileError && process.env.NODE_ENV === 'development') {
+    console.error('[auth/callback] Profile fetch failed:', profileError.message)
+  }
+  const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
+  return isProfileComplete ? '/feed' : '/onboarding'
+}
+
+async function tryRecoverFromExistingSession(supabase: SupabaseClient): Promise<string | null> {
+  const { data } = await supabase.auth.getSession()
+  const session = data?.session
+  if (!session) return null
+  resetSessionInvalidated()
+  return getDestinationForSession(supabase, session.user.id)
+}
+
 function runExchangeOnce(code: string) {
   let p = exchangeByCode.get(code)
   if (p) return p
@@ -29,31 +51,33 @@ function runExchangeOnce(code: string) {
       const supabase = createClientComponentClient()
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       if (error) {
+        const status = (error as { status?: number })?.status
+        const message = error?.message ?? ''
+        // If another caller already exchanged this one-time code, recover via existing session.
+        if (
+          status === 400 &&
+          /invalid_grant|code verifier|code challenge|already used|already redeemed|expired/i.test(message)
+        ) {
+          const destination = await tryRecoverFromExistingSession(supabase)
+          if (destination) return { destination }
+        }
         if (process.env.NODE_ENV === 'development') {
           console.error('[auth/callback] exchangeCodeForSession failed:', error.message, error)
         }
-        const status = (error as { status?: number })?.status
-        const isRateLimit = status === 429 || /rate limit|too many requests/i.test(error?.message ?? '')
+        const isRateLimit = status === 429 || /rate limit|too many requests/i.test(message)
         return { error: true as const, rateLimited: isRateLimit }
       }
       const session = data?.session
       if (!session) {
+        const destination = await tryRecoverFromExistingSession(supabase)
+        if (destination) return { destination }
         if (process.env.NODE_ENV === 'development') {
           console.error('[auth/callback] No session after exchange')
         }
         return { error: true as const }
       }
       resetSessionInvalidated()
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('username, date_of_birth')
-        .eq('id', session.user.id)
-        .maybeSingle()
-      if (profileError && process.env.NODE_ENV === 'development') {
-        console.error('[auth/callback] Profile fetch failed:', profileError.message)
-      }
-      const isProfileComplete = Boolean(profile?.username && profile?.date_of_birth)
-      return { destination: isProfileComplete ? '/feed' : '/onboarding' }
+      return { destination: await getDestinationForSession(supabase, session.user.id) }
     } catch (e) {
       if (process.env.NODE_ENV === 'development') {
         console.error('[auth/callback] Unexpected error:', e)
