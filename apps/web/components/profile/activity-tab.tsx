@@ -18,6 +18,8 @@ interface ActivityItem {
   post_id?: string
   comment_id?: string
   parent_comment_id?: string
+  reply_to_username?: string
+  reply_to_content?: string
   grid_id?: string
   rank_index?: number
   grid_snapshot?: {
@@ -48,6 +50,12 @@ function toEntitySlug(name: string) {
 function withParams(path: string, params: URLSearchParams) {
   const qs = params.toString()
   return qs ? `${path}?${qs}` : path
+}
+
+function truncateText(text: string, maxLength = 90) {
+  const normalized = text.trim()
+  if (normalized.length <= maxLength) return normalized
+  return `${normalized.slice(0, maxLength)}…`
 }
 
 function getActivityLink(item: ActivityItem, profileUsername: string): string | null {
@@ -129,21 +137,50 @@ export function ActivityTab({
         if (item.post_id) anchorIds.push(`post-${item.post_id}`)
         if (item.comment_id) anchorIds.push(`comment-${item.comment_id}`)
         if (item.type === 'grid_update') anchorIds.push(`grid-update-${item.id}`)
+        const isReplyActivity =
+          item.type === 'reply' ||
+          !!item.parent_comment_id ||
+          !!item.reply_to_username ||
+          !!item.reply_to_content
+        const isCommentActivity = item.type === 'comment' || isReplyActivity
+        const contextLabel =
+          item.type === 'grid_update'
+            ? 'Grid Update'
+            : isCommentActivity
+              ? item.target_type === 'hot_take'
+                ? 'Hot Take Comment'
+                : 'Post Comment'
+              : item.target_type === 'poll'
+                ? 'Poll'
+                : item.type === 'checkin'
+                  ? 'Story'
+                  : 'Post'
+        const subjectLine = isReplyActivity
+          ? item.reply_to_content
+            ? `Reply to "${truncateText(item.reply_to_content)}"`
+            : item.reply_to_username
+              ? `Reply to @${item.reply_to_username}`
+              : item.target_name ?? null
+          : item.target_name
+            ? `${item.target_type === 'profile' ? '@' : ''}${item.target_name}`
+            : null
 
         const content = (
           <>
-            <div className="mb-4 flex items-center justify-end gap-3">
-            <div className="min-w-0">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="min-w-0 truncate text-xs font-medium text-white/70">
+                {contextLabel}
+              </p>
+              <div className="flex items-center gap-2">
                 <p className="text-xs text-white/70">{formatTimeAgo(item.created_at)}</p>
+                {item.type === 'grid_update' ? (
+                  <Grid3x3 className="h-4 w-4 text-white/80" />
+                ) : item.type === 'post' && item.target_type === 'poll' ? (
+                  <BarChart3 className="h-4 w-4 text-[#25B4B1]" />
+                ) : (
+                  <MessageSquare className="h-4 w-4 text-[#25B4B1]" />
+                )}
               </div>
-              {item.type === 'grid_update' ? (
-                <Grid3x3 className="h-4 w-4 text-white/80" />
-              ) : item.type === 'post' && item.target_type === 'poll' ? (
-                <BarChart3 className="h-4 w-4 text-[#25B4B1]" />
-              ) : (
-                <MessageSquare className="h-4 w-4 text-[#25B4B1]" />
-              )}
-              
             </div>
 
             {item.type === 'grid_update' ? (
@@ -171,23 +208,7 @@ export function ActivityTab({
               </div>
             ) : (
               <div className="space-y-2">
-                {item.target_name && (
-                  item.target_type !== 'poll' && (
-                    <p className="text-xs text-white/70">
-                      {item.type === 'reply'
-                        ? 'Replied on '
-                        : item.type === 'comment'
-                          ? 'Commented on '
-                          : item.type === 'post'
-                            ? 'Posted on '
-                            : 'Activity on '}
-                      <span className="text-[#25B4B1]">
-                        {item.target_type === 'profile' ? '@' : ''}
-                        {item.target_name}
-                      </span>
-                    </p>
-                  )
-                )}
+                {subjectLine && <p className="text-xs text-[#25B4B1]">{subjectLine}</p>}
                 {item.content &&
                   (item.target_type !== 'poll' ||
                     !item.target_id ||

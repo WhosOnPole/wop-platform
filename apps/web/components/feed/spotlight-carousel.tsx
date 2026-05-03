@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Radio, Check, X } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
@@ -90,6 +90,7 @@ export function SpotlightCarousel({
   sponsors = [],
   featuredNews = [],
 }: SpotlightCarouselProps) {
+  const router = useRouter()
   const hasHotTake = Boolean(spotlight?.hot_take)
   const hasFeaturedGrid = Boolean(spotlight?.featured_grid)
   const hasAdminPolls = polls.length > 0
@@ -168,6 +169,28 @@ export function SpotlightCarousel({
       setIsDiscussionOpen(true)
     }
   }, [searchParams, spotlight?.hot_take?.id])
+
+  function closeHotTakeModal() {
+    setIsDiscussionOpen(false)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('open')
+    params.delete('hot_take')
+    params.delete('post')
+    params.delete('comment')
+    const query = params.toString()
+    router.replace(query ? `/feed?${query}` : '/feed', { scroll: false })
+  }
+
+  function closePollModal() {
+    setActivePollId(null)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('open')
+    params.delete('poll')
+    params.delete('post')
+    params.delete('comment')
+    const query = params.toString()
+    router.replace(query ? `/feed?${query}` : '/feed', { scroll: false })
+  }
 
   function scrollToIndex(idx: number, instant?: boolean) {
     const el = scrollContainerRef.current
@@ -385,7 +408,7 @@ export function SpotlightCarousel({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsDiscussionOpen(false)}
+                  onClick={closeHotTakeModal}
                   className="rounded-md text-md font-black text-sunset-end transition-colors hover:bg-white/10"
                   aria-label="Close"
                 >
@@ -416,7 +439,7 @@ export function SpotlightCarousel({
             userResponse={userResponses[poll.id]}
             voteCounts={voteCounts[poll.id] ?? {}}
             discussionPosts={pollDiscussionPostsByPollId[poll.id] ?? []}
-            onClose={() => setActivePollId(null)}
+            onClose={closePollModal}
           />
         )
       })()}

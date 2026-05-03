@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Radio, Check } from 'lucide-react'
 import { DiscussionSection } from '@/components/dtt/discussion-section'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
@@ -77,6 +77,7 @@ export function FeedHighlightedSidebar({
   discussionPosts,
   pollDiscussionPostsByPollId = {},
 }: FeedHighlightedSidebarProps) {
+  const router = useRouter()
   const [isDiscussionOpen, setIsDiscussionOpen] = useState(false)
   const [activePollId, setActivePollId] = useState<string | null>(null)
   const searchParams = useSearchParams()
@@ -99,6 +100,28 @@ export function FeedHighlightedSidebar({
       setIsDiscussionOpen(true)
     }
   }, [searchParams, spotlight?.hot_take?.id])
+
+  function closeDiscussionModal() {
+    setIsDiscussionOpen(false)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('open')
+    params.delete('hot_take')
+    params.delete('post')
+    params.delete('comment')
+    const query = params.toString()
+    router.replace(query ? `/feed?${query}` : '/feed', { scroll: false })
+  }
+
+  function closePollModal() {
+    setActivePollId(null)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('open')
+    params.delete('poll')
+    params.delete('post')
+    params.delete('comment')
+    const query = params.toString()
+    router.replace(query ? `/feed?${query}` : '/feed', { scroll: false })
+  }
 
   return (
     <>
@@ -187,7 +210,7 @@ export function FeedHighlightedSidebar({
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsDiscussionOpen(false)}
+                  onClick={closeDiscussionModal}
                   className="rounded-md border border-white/30 bg-transparent px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-white/10"
                 >
                   Close
@@ -217,7 +240,7 @@ export function FeedHighlightedSidebar({
             userResponse={userResponses[poll.id]}
             voteCounts={voteCounts[poll.id] ?? {}}
             discussionPosts={pollDiscussionPostsByPollId[poll.id] ?? []}
-            onClose={() => setActivePollId(null)}
+            onClose={closePollModal}
           />
         )
       })()}
