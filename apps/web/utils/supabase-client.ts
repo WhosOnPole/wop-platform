@@ -11,6 +11,13 @@ export function uninstallTokenPkceDedupe(): void {
   tokenPkceUninstall = null
 }
 
+function makeJsonResponse(status: number, payload: Record<string, string>): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  })
+}
+
 function installTokenPkceDedupe(): () => void {
   const originalFetch = window.fetch
   let pkceInFlight: Promise<Response> | null = null
@@ -41,13 +48,43 @@ function installTokenPkceDedupe(): () => void {
       return pkceInFlight
     }
     if (isRefresh) {
+      const now = Date.now()
+      if (sessionInvalidated || now < circuitBreakerUntil) {
+        return Promise.resolve(
+          makeJsonResponse(400, {
+            error: 'invalid_grant',
+            error_description: 'Refresh token circuit breaker active',
+          })
+        )
+      }
+      if (now < last429At + RATE_LIMIT_BACKOFF_MS) {
+        return Promise.resolve(
+          makeJsonResponse(429, {
+            error: 'over_request_rate_limit',
+            error_description: 'Refresh token backoff active',
+          })
+        )
+      }
       if (refreshInFlight) {
         return refreshInFlight.then(() => (refreshCached ? refreshCached.clone() : originalFetch.call(window, input, init)))
       }
       refreshInFlight = originalFetch
         .call(window, input, init)
-        .then((r) => {
+        .then(async (r) => {
           refreshCached = r.clone()
+          if (r.status === 429) {
+            last429At = Date.now()
+            circuitBreakerUntil = Math.max(circuitBreakerUntil, Date.now() + RATE_LIMIT_BACKOFF_MS)
+            clearSupabaseAuthStorage()
+          } else if (r.status === 400) {
+            sessionInvalidated = true
+            circuitBreakerUntil = Math.max(circuitBreakerUntil, Date.now() + CIRCUIT_BREAKER_MS)
+            clearSupabaseAuthStorage()
+          } else if (r.ok) {
+            sessionInvalidated = false
+            circuitBreakerUntil = 0
+            last429At = 0
+          }
           return r
         })
         .finally(() => {
@@ -72,6 +109,8 @@ let sessionInvalidated = false
 /** Call after sign-in succeeds (e.g. onAuthStateChange with session) so getSession() works again. */
 export function resetSessionInvalidated(): void {
   sessionInvalidated = false
+  circuitBreakerUntil = 0
+  last429At = 0
 }
 
 function isInvalidRefreshError(err: unknown): boolean {
