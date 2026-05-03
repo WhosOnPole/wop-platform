@@ -217,7 +217,19 @@ export default async function UserProfilePage({ params }: PageProps) {
   // Comments + replies
   const { data: comments } = await supabase
     .from('comments')
-    .select('*, post:posts!post_id(id, parent_page_type, parent_page_id)')
+    .select(
+      `
+      *,
+      post:posts!post_id(id, parent_page_type, parent_page_id),
+      parent_comment:comments!parent_comment_id(
+        id,
+        content,
+        user:profiles!user_id(
+          username
+        )
+      )
+      `
+    )
     .eq('user_id', profile.id)
     .order('created_at', { ascending: false })
 
@@ -250,6 +262,17 @@ export default async function UserProfilePage({ params }: PageProps) {
       }
 
       const parentPost = comment.post as { id?: string } | null
+      const rawParentComment = comment.parent_comment as
+        | { content?: string | null; user?: { username?: string | null } | Array<{ username?: string | null }> | null }
+        | Array<{ content?: string | null; user?: { username?: string | null } | Array<{ username?: string | null }> | null }>
+        | null
+      const parentComment =
+        rawParentComment && Array.isArray(rawParentComment) ? rawParentComment[0] : rawParentComment
+      const parentCommentUser = parentComment?.user
+        ? Array.isArray(parentComment.user)
+          ? parentComment.user[0]
+          : parentComment.user
+        : null
       activities.push({
         id: comment.id,
         type: comment.parent_comment_id ? 'reply' : 'comment',
@@ -261,6 +284,8 @@ export default async function UserProfilePage({ params }: PageProps) {
         post_id: parentPost?.id ?? undefined,
         comment_id: comment.id,
         parent_comment_id: comment.parent_comment_id ?? undefined,
+        reply_to_username: parentCommentUser?.username ?? undefined,
+        reply_to_content: parentComment?.content ?? undefined,
       })
     }
   }

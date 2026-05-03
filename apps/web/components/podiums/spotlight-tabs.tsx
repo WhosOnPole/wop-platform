@@ -135,6 +135,17 @@ export function SpotlightTabs({
     is_featured_podium: p.is_featured_podium ?? false,
   }))
   const allPollsWithFeatured = [...adminPollsWithFeatured, ...communityPollsWithFeatured]
+  function handleClosePollDiscussionModal() {
+    setActivePollId(null)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('open')
+    params.delete('poll')
+    params.delete('post')
+    params.delete('comment')
+    if (!params.get('tab')) params.set('tab', 'polls')
+    const query = params.toString()
+    router.replace(query ? `/podiums?${query}` : '/podiums?tab=polls', { scroll: false })
+  }
   useEffect(() => {
     const pollId = searchParams.get('poll')
     const openMode = searchParams.get('open')
@@ -383,7 +394,7 @@ export function SpotlightTabs({
             userResponse={userResponses[poll.id]}
             voteCounts={voteCounts[poll.id] ?? {}}
             discussionPosts={pollDiscussionPostsByPollId[poll.id] ?? []}
-            onClose={() => setActivePollId(null)}
+            onClose={handleClosePollDiscussionModal}
           />
         )
       })()}
