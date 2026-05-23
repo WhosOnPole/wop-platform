@@ -6,6 +6,8 @@ import { getStoryBylineProfile } from '@/utils/story-byline-profile'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
+const POLLS_PAGE_SIZE = 10
+
 async function getCurrentWeekStart() {
   const today = new Date()
   const dayOfWeek = today.getDay()
@@ -57,17 +59,28 @@ export default async function PodiumsPage() {
   } = await supabase.auth.getSession()
 
   const weekStart = await getCurrentWeekStart()
-  const now = new Date()
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   const [
-    pollsResult,
+    adminPollsResult,
+    communityPollsResult,
     newsStoriesResult,
     approvedUserStoriesResult,
     sponsorsResult,
     weeklyHighlightsResult,
   ] = await Promise.all([
-    supabase.from('polls').select('*').gte('created_at', thirtyDaysAgo).order('created_at', { ascending: false }),
+    supabase
+      .from('polls')
+      .select('*')
+      .not('admin_id', 'is', null)
+      .order('is_featured_podium', { ascending: false })
+      .order('created_at', { ascending: false })
+      .range(0, POLLS_PAGE_SIZE - 1),
+    supabase
+      .from('polls')
+      .select('*')
+      .is('admin_id', null)
+      .order('created_at', { ascending: false })
+      .range(0, POLLS_PAGE_SIZE - 1),
     supabase
       .from('news_stories')
       .select(
@@ -131,7 +144,11 @@ export default async function PodiumsPage() {
       .single(),
   ])
 
-  const allPolls = pollsResult.data || []
+  const adminPolls = adminPollsResult.data || []
+  const communityPolls = communityPollsResult.data || []
+  const adminPollsHasMore = adminPolls.length === POLLS_PAGE_SIZE
+  const communityPollsHasMore = communityPolls.length === POLLS_PAGE_SIZE
+  const allPolls = [...adminPolls, ...communityPolls]
   const polls = allPolls
   const pollIds = polls.map((p) => p.id)
   let userResponses: Record<string, string> = {}
@@ -167,9 +184,6 @@ export default async function PodiumsPage() {
       )
     }
   }
-
-  const adminPolls = polls.filter((p) => p.admin_id != null)
-  const communityPolls = polls.filter((p) => p.admin_id == null)
 
   // Fetch poll discussion posts for all polls (enables deep-linking to exact comments).
   let pollDiscussionPostsByPollId: Record<string, any[]> = {}
@@ -378,7 +392,9 @@ export default async function PodiumsPage() {
 
       <SpotlightTabs
         adminPolls={adminPolls}
+        adminPollsHasMore={adminPollsHasMore}
         communityPolls={communityPolls}
+        communityPollsHasMore={communityPollsHasMore}
         userResponses={userResponses}
         voteCounts={voteCounts}
         stories={stories}

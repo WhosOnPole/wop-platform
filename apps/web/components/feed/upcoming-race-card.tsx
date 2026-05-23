@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Users } from 'lucide-react'
-import { formatWeekendRange, parseDateOnly } from '@/utils/date-utils'
+import { formatWeekendRange } from '@/utils/date-utils'
 
 interface Race {
   id: string
@@ -13,10 +13,9 @@ interface Race {
   country: string | null
   image_url: string | null
   circuit_ref: string | null
-  chat_enabled?: boolean
   /** When live, distinct users who sent a message in last 10 min (feed banner only) */
   liveChatUserCount?: number | null
-  /** When true, treat as live (event-based); if undefined, fall back to weekend window check */
+  /** When true, treat as live (active chat-enabled track event) */
   isLive?: boolean
 }
 
@@ -33,18 +32,7 @@ export function UpcomingRaceCard({ race }: UpcomingRaceCardProps) {
   const daysUntil = Math.floor(timeUntilRace / (1000 * 60 * 60 * 24))
   const hoursUntil = Math.floor((timeUntilRace % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
 
-  const isLive =
-    race.isLive === true ||
-    (() => {
-      if (!race.start_date || !race.end_date) return false
-      if (race.chat_enabled === false) return false
-      const start = new Date(race.start_date)
-      const endDay =
-        race.end_date.length <= 10 ? parseDateOnly(race.end_date) : new Date(race.end_date)
-      if (!endDay) return false
-      const end = new Date(endDay.getTime() + 24 * 60 * 60 * 1000)
-      return now >= start && now <= end
-    })()
+  const isLive = race.isLive === true
 
   // Weekend range (e.g. "Mar 7-8")
   const dateDisplay = formatWeekendRange(race.start_date, race.end_date) ?? 'Date TBA'

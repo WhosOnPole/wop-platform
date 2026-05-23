@@ -4,9 +4,16 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PitlaneSearchProvider, PitlaneTabsComponent } from '@/components/pitlane/pitlane-search-wrapper'
 import { UpcomingRaceBannerActions } from '@/components/pitlane/upcoming-race-banner-actions'
-import { formatWeekendRange, parseDateOnly } from '@/utils/date-utils'
+import { formatWeekendRange } from '@/utils/date-utils'
+import {
+  formatLiveChatCountdown,
+  getNextLiveChatEvent,
+  type PitlaneTrackSummary,
+} from '@/utils/live-chat-schedule'
 
 export const revalidate = 300
+
+type TrackRow = PitlaneTrackSummary
 
 export default async function PitlanePage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -20,57 +27,63 @@ export default async function PitlanePage() {
 
   const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-  const [tracksWithDates, drivers, teams, tracks, nextUpcomingTrackIdResult] = await Promise.all([
-    supabase
-      .from('tracks')
-      .select('id, name, location, country, start_date, end_date, circuit_ref, chat_enabled')
-      .not('start_date', 'is', null)
-      .order('start_date', { ascending: true }),
-    supabase
-      .from('drivers')
-      .select('id, name, headshot_url, image_url, nationality, racing_number')
-      .eq('active', true)
-      .order('name', { ascending: true }),
-    supabase
-      .from('teams')
-      .select('id, name, image_url')
-      .eq('active', true)
-      .order('name', { ascending: true }),
-    supabase
-      .from('tracks')
-      .select('id, name, location, country, circuit_ref')
-      .order('name', { ascending: true }),
-    supabase.rpc('get_track_id_with_next_upcoming_event'),
-  ])
+  const [tracksWithDates, drivers, teams, tracks, nextUpcomingTrackIdResult, nextLiveChatEvent] =
+    await Promise.all([
+      supabase
+        .from('tracks')
+        .select('id, name, location, country, start_date, end_date, circuit_ref')
+        .not('start_date', 'is', null)
+        .order('start_date', { ascending: true }),
+      supabase
+        .from('drivers')
+        .select('id, name, headshot_url, image_url, nationality, racing_number')
+        .eq('active', true)
+        .order('name', { ascending: true }),
+      supabase
+        .from('teams')
+        .select('id, name, image_url')
+        .eq('active', true)
+        .order('name', { ascending: true }),
+      supabase
+        .from('tracks')
+        .select('id, name, location, country, circuit_ref')
+        .order('name', { ascending: true }),
+      supabase.rpc('get_track_id_with_next_upcoming_event'),
+      getNextLiveChatEvent(supabase),
+    ])
 
-  const tracksWithStartDate = tracksWithDates.data || []
+  const tracksWithStartDate = (tracksWithDates.data || []) as TrackRow[]
   const driversData = drivers.data || []
   const teamsData = teams.data || []
   const tracksData = tracks.data || []
 
-  const nextRace = (() => {
-    const nextTrackId = nextUpcomingTrackIdResult?.data as string | null
-    if (nextTrackId) {
-      const track = tracksWithStartDate.find((t) => t.id === nextTrackId)
-      if (track) return track
-    }
-    return getClosestRace({ tracks: tracksWithStartDate })
-  })()
-  const backgroundImage = '/images/race_banner.jpeg'
+  const trackById = new Map(tracksWithStartDate.map((t) => [t.id, t]))
 
-  // Live = track has an active event right now (from track_events)
+  const nextSequentialTrackId = nextUpcomingTrackIdResult?.data as string | null
+  const nextSequentialTrack = nextSequentialTrackId
+    ? trackById.get(nextSequentialTrackId) ?? null
+    : getClosestRace({ tracks: tracksWithStartDate })
+
   const { data: liveTrackIds } = await supabase.rpc('get_track_ids_with_active_event')
   const liveIdSet = new Set((liveTrackIds || []) as string[])
   const liveTrack =
     liveTrackIds?.length > 0
-      ? tracksWithStartDate.find((t) => liveIdSet.has(t.id))
+      ? tracksWithStartDate.find((t) => liveIdSet.has(t.id)) ?? null
       : null
   const isLive = Boolean(liveTrack)
 
-  // Weekend range (e.g. "Mar 7-8") then track name (use live track or next race)
-  const bannerRace = liveTrack || nextRace
-  const weekendRange = formatWeekendRange(bannerRace?.start_date ?? null, bannerRace?.end_date ?? null)
-  const trackName = bannerRace?.circuit_ref || bannerRace?.name || bannerRace?.location || bannerRace?.country
+  const nextLiveChatTrack = nextLiveChatEvent
+    ? trackById.get(nextLiveChatEvent.track_id) ?? null
+    : null
+
+  const bannerRace = liveTrack || nextLiveChatTrack || nextSequentialTrack
+
+  const weekendRange = formatWeekendRange(
+    bannerRace?.start_date ?? null,
+    bannerRace?.end_date ?? null
+  )
+  const trackName =
+    bannerRace?.circuit_ref || bannerRace?.name || bannerRace?.location || bannerRace?.country
   let dateDisplay = 'Date TBA'
   if (weekendRange && trackName) {
     dateDisplay = `${weekendRange} - ${trackName}`
@@ -78,48 +91,16 @@ export default async function PitlanePage() {
     dateDisplay = weekendRange
   }
 
-  // Calculate counter - countdown to next event (prefer track_events.scheduled_at over track dates)
   let counterText = ''
-  let countdownTarget: Date | null = null
-  if (nextRace?.id && !isLive) {
-    const currentSeason = new Date().getFullYear()
-    const { data: nextEvent } = await supabase
-      .from('track_events')
-      .select('scheduled_at')
-      .eq('track_id', nextRace.id)
-      .eq('season_year', currentSeason)
-      .gt('scheduled_at', new Date().toISOString())
-      .order('scheduled_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    if (nextEvent?.scheduled_at) {
-      countdownTarget = new Date(nextEvent.scheduled_at)
-    }
-  }
-  if (!countdownTarget && nextRace?.end_date) {
-    countdownTarget =
-      nextRace.end_date.length <= 10
-        ? parseDateOnly(nextRace.end_date)
-        : new Date(nextRace.end_date)
-  }
-  if (!countdownTarget && nextRace?.start_date) {
-    countdownTarget = new Date(nextRace.start_date)
-  }
-  if (countdownTarget) {
-    const now = new Date()
-    const timeUntil = countdownTarget.getTime() - now.getTime()
-    if (timeUntil > 0) {
-      const daysUntil = Math.floor(timeUntil / (1000 * 60 * 60 * 24))
-      const hoursUntil = Math.floor((timeUntil % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      counterText =
-        daysUntil > 0
-          ? `${daysUntil} day${daysUntil > 1 ? 's' : ''} until live chat is open`
-          : `${hoursUntil > 0 ? `${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}` : 'Less than an hour'} until live chat is open`
-    }
+  if (!isLive && nextLiveChatEvent?.scheduled_at) {
+    const countdownTarget = new Date(nextLiveChatEvent.scheduled_at)
+    counterText = formatLiveChatCountdown(countdownTarget)
   }
 
   const trackSlug = bannerRace ? slugify(bannerRace.name) : ''
   const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
+
+  const backgroundImage = '/images/race_banner.jpeg'
 
   return (
     <PitlaneSearchProvider>
@@ -128,7 +109,6 @@ export default async function PitlanePage() {
         <h3 className="text-sm text-white/70 font-sans mb-6">Tap into the Grid. Stay ahead of the pack.</h3>
       </div>
       <div className="mx-auto max-w-6xl mt-6">
-      {/* Upcoming / live race banner */}
       {bannerRace ? (
         <div className="mb-5 relative mx-4 mb-8 sm:mx-6 lg:mx-8">
           <sup className="w-full text-left block text-sm text-[#838383]">{isLive ? 'Live now' : 'Upcoming'}</sup>
@@ -147,7 +127,6 @@ export default async function PitlanePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20" />
             
-            {/* Action Buttons - Top Right */}
             <UpcomingRaceBannerActions
               trackId={bannerRace.id}
               trackSlug={trackSlug}
@@ -156,7 +135,6 @@ export default async function PitlanePage() {
             
             <div className="absolute inset-0 flex flex-col justify-between">
               <div className="px-2 sm:px-10 text-white pt-2">
-                {/* Grand Prix Name with Flag - Same line */}
                 <div className="flex items-center gap-2">
                   {bannerRace.country && getCountryFlagPath(bannerRace.country) ? (
                     <Image
@@ -171,7 +149,6 @@ export default async function PitlanePage() {
                     {bannerRace.circuit_ref || bannerRace.name}
                   </h2>
                 </div>
-                {/* Date - City, Country - Below name, aligned with name start */}
                 <p className="text-[10px] text-gray-300 tracking-wide pl-7">
                   {dateDisplay}
                 </p>
@@ -198,7 +175,6 @@ export default async function PitlanePage() {
         </section>
       )}
 
-      {/* Tabs for drivers/teams/tracks/schedule */}
       <PitlaneTabsComponent
         drivers={driversData}
         teams={teamsData}
@@ -207,7 +183,6 @@ export default async function PitlanePage() {
         supabaseUrl={supabaseUrl}
       />
 
-      {/* Beginners guide banner */}
       <section>
 
         <Link
@@ -237,13 +212,12 @@ export default async function PitlanePage() {
   )
 }
 
-function getClosestRace(params: { tracks: Array<{ start_date: string | null; end_date?: string | null; chat_enabled?: boolean } & Record<string, any>> }) {
+function getClosestRace(params: { tracks: TrackRow[] }) {
   const { tracks } = params
   if (tracks.length === 0) return null
 
   const now = new Date()
 
-  // Next upcoming race (by start_date)
   const upcomingRaces = tracks.filter((track) => {
     if (!track.start_date) return false
     return new Date(track.start_date) > now
@@ -253,11 +227,10 @@ function getClosestRace(params: { tracks: Array<{ start_date: string | null; end
     return upcomingRaces.sort((a, b) => {
       const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
       const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
-      return aTime - bTime // Earliest first
+      return aTime - bTime
     })[0]
   }
 
-  // Fallback: return the most recent past race
   return tracks.sort((a, b) => {
     const aTime = a.start_date ? new Date(a.start_date).getTime() : 0
     const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
@@ -273,7 +246,6 @@ function getCountryFlagPath(country?: string | null): string | null {
   if (!country) return null
   const normalized = country.trim().toLowerCase()
   
-  // Map country to flag file name
   const flagMap: Record<string, string> = {
     argentina: 'argentina',
     argentine: 'argentina',

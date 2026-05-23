@@ -54,30 +54,8 @@ export function PollsTab() {
     )
   }
 
-  const featuredPollExpired =
-    polls.some(
-      (p) =>
-        p.is_featured_podium &&
-        p.ends_at != null &&
-        p.ends_at !== '' &&
-        new Date(p.ends_at) < new Date()
-    )
-
-  function isPollExpired(poll: Poll) {
-    if (!poll.ends_at) return false
-    return new Date(poll.ends_at) < new Date()
-  }
-
   return (
     <>
-      {featuredPollExpired && (
-        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
-          <p className="text-sm font-medium">
-            Your featured poll has expired. Create a new featured poll to keep it visible on Spotlight.
-          </p>
-        </div>
-      )}
-
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => setIsCreating(true)}
@@ -95,7 +73,6 @@ export function PollsTab() {
               <tr>
                 <th>Question</th>
                 <th>Options</th>
-                <th>Active Until</th>
                 <th>Featured</th>
                 <th>Actions</th>
               </tr>
@@ -111,11 +88,8 @@ export function PollsTab() {
                       {Array.isArray(poll.options) ? poll.options.length : 0} options
                     </div>
                   </td>
-                  <td>
-                    {poll.ends_at ? new Date(poll.ends_at).toLocaleString() : 'No end date'}
-                  </td>
                   <td className="px-6 py-4">
-                    {poll.is_featured_podium && !isPollExpired(poll) && (
+                    {poll.is_featured_podium && (
                       <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
                         Featured
                       </span>
@@ -157,4 +131,3 @@ export function PollsTab() {
     </>
   )
 }
-

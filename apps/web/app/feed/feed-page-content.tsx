@@ -53,7 +53,6 @@ interface TrackRace {
   country: string | null
   image_url: string | null
   circuit_ref: string | null
-  chat_enabled: boolean | null
 }
 
 function slugify(name: string) {
@@ -170,7 +169,7 @@ export async function FeedPageContent({
     gridCommentsOnMyGrids,
     polls,
     adminPolls,
-    adminPollsForBanner,
+    featuredAdminPollResult,
     featuredNews,
     sponsors,
     weeklyHighlights,
@@ -262,14 +261,15 @@ export async function FeedPageContent({
       .gte('created_at', thirtyDaysAgo)
       .order('created_at', { ascending: false })
       .limit(20),
-    // Admin polls for banner: only active (not expired) so featured poll hides when expired
+    // Featured admin poll for feed top banner and spotlight sidebar/carousel
     supabase
       .from('polls')
       .select('*')
       .not('admin_id', 'is', null)
-      .or('ends_at.is.null,ends_at.gt.' + new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(20),
+      .eq('is_featured_podium', true)
+      .limit(1)
+      .maybeSingle()
+      .then((r) => ({ data: r.data })),
     // Featured news (with author for spotlight story card)
     supabase
       .from('news_stories')
@@ -853,18 +853,21 @@ export async function FeedPageContent({
     is_featured_podium?: boolean
     admin_id?: string | null
   }>
-  const adminPollsForBannerList = (adminPollsForBanner.data || []).map((p) => ({
-    ...p,
-    options: (p as { options?: unknown[] }).options ?? [],
-    created_at: (p as { created_at?: string }).created_at ?? new Date().toISOString(),
-  })) as Array<{
+  const featuredAdminPollRaw = featuredAdminPollResult.data as {
     id: string
     question: string
-    options: unknown[]
+    options?: unknown[]
     is_featured_podium?: boolean
     admin_id?: string | null
-    created_at: string
-  }>
+    created_at?: string
+  } | null
+  const featuredAdminPoll = featuredAdminPollRaw
+    ? {
+        ...featuredAdminPollRaw,
+        options: featuredAdminPollRaw.options ?? [],
+        created_at: featuredAdminPollRaw.created_at ?? new Date().toISOString(),
+      }
+    : null
   const communityPollsList = (polls.data || []) as Array<{
     id: string
     question: string
@@ -872,7 +875,6 @@ export async function FeedPageContent({
     is_featured_podium?: boolean
     admin_id?: string | null
     created_at: string
-    ends_at?: string | null
   }>
   const communityPollIds = communityPollsList.map((p) => p.id)
   let ownCommunityPollIds = new Set<string>()
@@ -890,10 +892,6 @@ export async function FeedPageContent({
     )
   }
   const communityPollsForDiscovery = communityPollsList.filter((poll) => !ownCommunityPollIds.has(poll.id))
-  const allActivePolls = [...adminPollsList, ...communityPollsList]
-  // Banner shows only an admin poll that is explicitly marked as featured. No other polls in the spotlight banner (carousel/sidebar).
-  const featuredAdminPoll = adminPollsForBannerList.find((p) => p.is_featured_podium) ?? null
-  // Carousel and sidebar: only the single featured admin poll (or none). Never community polls or non-featured admin polls.
   const pollsForSpotlightBanner = featuredAdminPoll ? [featuredAdminPoll] : []
 
   // Fetch poll discussion posts for spotlight banner polls
@@ -938,6 +936,7 @@ export async function FeedPageContent({
     ...new Set([
       ...adminPollsList.map((p) => p.id),
       ...communityPollsList.map((p) => p.id),
+      ...(featuredAdminPoll ? [featuredAdminPoll.id] : []),
     ]),
   ]
   let feedPollUserResponses: Record<string, string> = {}
@@ -1049,24 +1048,7 @@ export async function FeedPageContent({
     }
   }
 
-  type BannerItem =
-    | { type: 'sponsor'; data: (typeof sponsorsList)[number] }
-    | { type: 'featured_poll'; data: NonNullable<typeof featuredAdminPoll> }
-    | { type: 'featured_story'; data: NonNullable<typeof featuredStory> }
-    | { type: 'featured_grid'; data: NonNullable<typeof enrichedFeaturedGrid> }
-  const bannerItems: BannerItem[] = []
-  sponsorsList.forEach((sponsor) => bannerItems.push({ type: 'sponsor', data: sponsor }))
-  // Only admin polls in banner; never user-submitted (community) polls
-  if (featuredAdminPoll && featuredAdminPoll.admin_id != null) {
-    bannerItems.push({ type: 'featured_poll', data: featuredAdminPoll })
-  }
-  if (featuredStory) bannerItems.push({ type: 'featured_story', data: featuredStory })
-  if (enrichedFeaturedGrid) bannerItems.push({ type: 'featured_grid', data: enrichedFeaturedGrid })
-
-  // Desktop banner: sponsors + featured grid only (no news, no featured poll — those live in the left sidebar)
-  const desktopBannerItems = bannerItems.filter(
-    (item) => item.type !== 'featured_story' && item.type !== 'featured_poll'
-  )
+  const showTopBanner = Boolean(featuredAdminPoll) || sponsorsList.length > 0
 
   return (
     <div className="w-full">
@@ -1075,16 +1057,20 @@ export async function FeedPageContent({
         <h3 className="text-sm text-white/80 font-sans mb-4">Post. React. Express Yourself.</h3>
       </div>
 
-      {sponsorsList.length > 0 && (
-        <div className="relative z-10 hidden w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:block lg:px-8">
-          <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-hidden justify-center items-center">
-            {desktopBannerItems.map((item) => (
-              <div
-                key={`sponsor-${item.data.id}`}
-                className={' flex-shrink-0'}>
-                {item.type === 'sponsor' && (
-                  <SponsorCard sponsor={item.data} variant="banner" />
-                )}
+      {showTopBanner && (
+        <div className="relative z-10 w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-auto justify-center">
+            {featuredAdminPoll && (
+              <div className="w-full max-w-md flex-shrink-0 lg:max-w-sm">
+                <BannerPollCard
+                  poll={featuredAdminPoll}
+                  userResponse={bannerPollUserResponse}
+                />
+              </div>
+            )}
+            {sponsorsList.map((sponsor) => (
+              <div key={`sponsor-${sponsor.id}`} className="flex-shrink-0">
+                <SponsorCard sponsor={sponsor} variant="banner" />
               </div>
             ))}
           </div>

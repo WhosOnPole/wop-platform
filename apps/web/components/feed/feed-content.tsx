@@ -88,7 +88,6 @@ interface StandalonePoll {
   options?: unknown[]
   is_featured_podium?: boolean
   created_at: string
-  ends_at?: string | null
   admin_id?: string | null
 }
 
@@ -107,7 +106,6 @@ export interface EmbeddedPollData {
     options?: unknown[]
     is_featured_podium?: boolean
     created_at: string
-    ends_at?: string | null
   }
   userResponse: string | undefined
   voteCounts: Record<string, number>
@@ -760,7 +758,6 @@ export function FeedContent({
                             ...poll,
                             options: Array.isArray(poll.options) ? poll.options : [],
                             is_featured_podium: !!poll.is_featured_podium,
-                            ends_at: poll.ends_at ?? undefined,
                           }}
                           userResponse={userResponse}
                           voteCounts={voteCounts}
@@ -892,7 +889,6 @@ export function FeedContent({
                   ...poll,
                   options: Array.isArray(poll.options) ? poll.options : [],
                   is_featured_podium: poll.is_featured_podium ?? false,
-                  ends_at: poll.ends_at ?? undefined,
                 }}
                 userResponse={pollUserResponses[poll.id]}
                 voteCounts={pollVoteCounts[poll.id] ?? {}}
@@ -1010,7 +1006,6 @@ export function FeedContent({
                           ...poll,
                           options: Array.isArray(poll.options) ? poll.options : [],
                           is_featured_podium: poll.is_featured_podium ?? false,
-                          ends_at: poll.ends_at ?? undefined,
                         }}
                         userResponse={pollUserResponses[poll.id]}
                         voteCounts={pollVoteCounts[poll.id] ?? {}}
@@ -1145,7 +1140,6 @@ export function FeedContent({
                                     ...poll,
                                     options: Array.isArray(poll.options) ? poll.options : [],
                                     is_featured_podium: !!poll.is_featured_podium,
-                                    ends_at: poll.ends_at ?? undefined,
                                   }}
                                   userResponse={userResponse}
                                   voteCounts={voteCounts}

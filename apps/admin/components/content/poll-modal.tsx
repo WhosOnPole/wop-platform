@@ -10,7 +10,6 @@ const pollSchema = z.object({
   question: z.string().min(1),
   options: z.array(z.string().min(1)).min(2),
   is_featured_podium: z.boolean(),
-  ends_at: z.string().optional().nullable(),
 })
 
 interface PollModalProps {
@@ -26,9 +25,6 @@ export function PollModal({ poll, onClose }: PollModalProps) {
     question: poll?.question || '',
     options: poll?.options || ['', ''],
     is_featured_podium: poll?.is_featured_podium || false,
-    ends_at: poll?.ends_at
-      ? new Date(poll.ends_at).toISOString().slice(0, 16)
-      : '',
   })
 
   function addOption() {
@@ -62,7 +58,6 @@ export function PollModal({ poll, onClose }: PollModalProps) {
         question: formData.question,
         options: formData.options.filter((opt) => opt.trim() !== ''),
         is_featured_podium: formData.is_featured_podium,
-        ends_at: formData.ends_at ? formData.ends_at : null,
       })
 
       if (validated.options.length < 2) {
@@ -77,11 +72,27 @@ export function PollModal({ poll, onClose }: PollModalProps) {
         throw new Error('Not authenticated')
       }
 
+      if (validated.is_featured_podium) {
+        let unfeatureQuery = supabase
+          .from('polls')
+          .update({ is_featured_podium: false })
+          .eq('is_featured_podium', true)
+
+        if (poll?.id) {
+          unfeatureQuery = unfeatureQuery.neq('id', poll.id)
+        }
+
+        const { error: unfeatureError } = await unfeatureQuery
+        if (unfeatureError) throw unfeatureError
+      }
+
       if (poll) {
         const payload = {
-          ...validated,
+          question: validated.question,
+          options: validated.options,
+          is_featured_podium: validated.is_featured_podium,
           admin_id: session.user.id,
-          ends_at: validated.ends_at ? new Date(validated.ends_at).toISOString() : null,
+          ends_at: null,
         }
         const { error: updateError } = await supabase
           .from('polls')
@@ -95,7 +106,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
           options: validated.options,
           is_featured_podium: validated.is_featured_podium,
           admin_id: session.user.id,
-          ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          ends_at: null,
         }
         const { error: insertError } = await supabase.from('polls').insert(payload)
 
@@ -173,37 +184,25 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             </button>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-start gap-2">
             <input
               type="checkbox"
               id="is_featured_podium"
               checked={formData.is_featured_podium}
               onChange={(e) => setFormData({ ...formData, is_featured_podium: e.target.checked })}
-              className="admin-checkbox"
+              className="admin-checkbox mt-0.5"
             />
-            <label htmlFor="is_featured_podium" className="ml-2 text-sm text-gray-700">
-              Featured Podium
-            </label>
-          </div>
-
-          {poll ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Ends At <span className="text-gray-400">(optional)</span>
+              <label htmlFor="is_featured_podium" className="text-sm text-gray-700">
+                Featured Podium
               </label>
-              <input
-                type="datetime-local"
-                value={formData.ends_at}
-                onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
-                className="admin-form-input"
-              />
               <p className="mt-1 text-xs text-gray-500">
-                Poll is active while ends_at is empty or in the future.
+                Only one poll can be featured at a time. Featured poll appears on the Feed top banner.
               </p>
             </div>
-          ) : (
-            <p className="text-sm text-gray-600">You have 24 hours to vote. Polls stay visible for 30 days.</p>
-          )}
+          </div>
+
+          <p className="text-sm text-gray-600">Polls stay open and can be voted on anytime.</p>
 
           <div className="flex justify-end space-x-3 pt-4">
             <button
@@ -233,4 +232,3 @@ export function PollModal({ poll, onClose }: PollModalProps) {
     </div>
   )
 }
-
