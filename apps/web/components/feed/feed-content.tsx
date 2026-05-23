@@ -748,7 +748,7 @@ export function FeedContent({
                 embeddedPollsByPollId[post.parent_page_id] && (() => {
                   const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
                   return (
-                    <div className="mt-4 rounded-md bg-black/30 [&_h2]:text-sm">
+                    <div className="mt-4 [&_h2]:text-sm">
                       <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                         {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
                       </p>
@@ -1130,7 +1130,7 @@ export function FeedContent({
                         (() => {
                           const { poll, userResponse, voteCounts } = embeddedPollsByPollId[post.parent_page_id]
                           return (
-                            <div className="mt-4 rounded-md bg-black/30 [&_h2]:text-sm">
+                            <div className="mt-4 [&_h2]:text-sm">
                               <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                                 {poll.is_featured_podium ? 'Admin Poll' : 'User Poll'}
                               </p>
