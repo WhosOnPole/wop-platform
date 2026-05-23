@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
+import { AdminDrawer } from '@/components/admin/admin-drawer'
 
 interface Report {
   id: number
@@ -45,67 +46,65 @@ export default function UserReportsDrawer({ userId, username, open, onClose }: U
   }, [userId, open])
 
   return (
-    <div
-      className={`admin-drawer-overlay transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-      aria-hidden={!open}
+    <AdminDrawer
+      open={open}
+      onClose={onClose}
+      aria-label={`Reports for ${username || 'user'}`}
+      overlayClassName={`transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+      panelClassName={`max-w-[520px] transform transition-transform duration-300 ease-out ${
+        open ? 'translate-x-0' : 'translate-x-full'
+      }`}
     >
-      <div
-        className={`admin-drawer-panel max-w-[520px] transform transition-transform duration-300 ease-out ${
-          open ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        <div className="admin-drawer-header">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Reports for {username || 'User'}
-            </h2>
-            <p className="mt-1 text-xs font-medium text-slate-500">
-              {userId ? `ID: ${userId}` : 'Most recent first'}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
+      <div className="admin-drawer-header">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            Reports for {username || 'User'}
+          </h2>
+          <p className="mt-1 text-xs font-medium text-slate-500">
+            {userId ? `ID: ${userId}` : 'Most recent first'}
+          </p>
         </div>
+        <button
+          onClick={onClose}
+          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
 
-        <div className="admin-drawer-body">
-          {loading && <p className="text-sm text-slate-500">Loading...</p>}
-          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
-          {!loading && !error && reports.length === 0 && (
-            <div className="flex flex-col items-center py-12 text-center">
-              <div className="mb-3 rounded-full bg-teal-50 p-3 text-teal-600">
-                <X className="h-6 w-6" />
-              </div>
-              <p className="font-bold text-slate-900">No reports for this user</p>
-              <p className="mt-1 text-sm text-slate-500">Moderation context is clear.</p>
+      <div className="admin-drawer-body">
+        {loading && <p className="text-sm text-slate-500">Loading...</p>}
+        {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+        {!loading && !error && reports.length === 0 && (
+          <div className="flex flex-col items-center py-12 text-center">
+            <div className="mb-3 rounded-full bg-teal-50 p-3 text-teal-600">
+              <X className="h-6 w-6" />
             </div>
-          )}
-          <div className="space-y-3">
-            {reports.map((r) => (
-              <div key={r.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="admin-status-review capitalize">{r.target_type}</span>
-                  <span className="text-xs font-medium text-slate-500">
-                    {new Date(r.created_at).toLocaleString()}
-                  </span>
-                </div>
-                <p className="mt-3 break-all font-mono text-xs text-slate-500">Target: {r.target_id}</p>
-                <p className="mt-3 border-l-4 border-teal-500 bg-[#F8F9FB] p-3 text-sm text-slate-700">
-                  <strong>Reason:</strong> {r.reason}
-                </p>
-                <p className="mt-3 text-xs font-medium text-slate-600">
-                  Status: <span className="capitalize">{r.status}</span>
-                </p>
-              </div>
-            ))}
+            <p className="font-bold text-slate-900">No reports for this user</p>
+            <p className="mt-1 text-sm text-slate-500">Moderation context is clear.</p>
           </div>
+        )}
+        <div className="space-y-3">
+          {reports.map((r) => (
+            <div key={r.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="admin-status-review capitalize">{r.target_type}</span>
+                <span className="text-xs font-medium text-slate-500">
+                  {new Date(r.created_at).toLocaleString()}
+                </span>
+              </div>
+              <p className="mt-3 break-all font-mono text-xs text-slate-500">Target: {r.target_id}</p>
+              <p className="mt-3 border-l-4 border-teal-500 bg-[#F8F9FB] p-3 text-sm text-slate-700">
+                <strong>Reason:</strong> {r.reason}
+              </p>
+              <p className="mt-3 text-xs font-medium text-slate-600">
+                Status: <span className="capitalize">{r.status}</span>
+              </p>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </AdminDrawer>
   )
 }
-

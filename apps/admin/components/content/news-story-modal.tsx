@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 import { NewsStory } from './content.types'
+import { AdminDrawer } from '@/components/admin/admin-drawer'
 
 const newsStorySchema = z.object({
   title: z.string().min(1).max(500),
@@ -78,8 +79,7 @@ export function NewsStoryModal({ story, onClose }: NewsStoryModalProps) {
   }
 
   return (
-    <div className="admin-drawer-overlay">
-      <div className="admin-drawer-panel">
+    <AdminDrawer onClose={onClose} aria-label={story ? 'Edit story' : 'Create story'}>
         <div className="admin-drawer-header">
           <div>
           <h2 className="text-xl font-bold tracking-tight text-slate-900">
@@ -175,8 +175,7 @@ export function NewsStoryModal({ story, onClose }: NewsStoryModalProps) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDrawer>
   )
 }
 
