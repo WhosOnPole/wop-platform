@@ -124,7 +124,7 @@ export function PollCard({
     <div
       className={`h-full w-full rounded-lg p-0 shadow ${
         isDark
-          ? ' backdrop-blur-sm bg-white/10 text-white'
+          ? 'text-white'
           : 'border-gray-200 bg-white text-black'
       } ${className || ''}`}
     >
