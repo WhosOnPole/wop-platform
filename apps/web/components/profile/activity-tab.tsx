@@ -37,7 +37,7 @@ interface ActivityTabProps {
   profileUsername: string
   pollsById?: Record<
     string,
-    { id: string; question: string; options?: unknown[]; is_featured_podium?: boolean; created_at: string; ends_at?: string | null }
+    { id: string; question: string; options?: unknown[]; is_featured_podium?: boolean; created_at: string }
   >
   pollUserResponses?: Record<string, string>
   pollVoteCounts?: Record<string, Record<string, number>>
@@ -234,7 +234,6 @@ export function ActivityTab({
                               ? (pollsById[item.target_id].options as any[])
                               : ([] as any[]),
                             is_featured_podium: !!pollsById[item.target_id].is_featured_podium,
-                            ends_at: pollsById[item.target_id].ends_at ?? undefined,
                           }}
                           userResponse={pollUserResponses[item.target_id]}
                           voteCounts={pollVoteCounts[item.target_id] ?? {}}

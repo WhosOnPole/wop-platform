@@ -19,6 +19,7 @@ interface TrackEvent {
   scheduled_at: string
   duration_minutes: number | null
   season_year: number
+  live_chat_enabled: boolean
 }
 
 interface TrackScheduleModalProps {
@@ -48,6 +49,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
     scheduled_at: '',
     duration_minutes: '',
     season_year: new Date().getFullYear(),
+    live_chat_enabled: false,
   })
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
     setError(null)
     const { data, error: e } = await supabase
       .from('track_events')
-      .select('id, track_id, event_type, scheduled_at, duration_minutes, season_year')
+      .select('id, track_id, event_type, scheduled_at, duration_minutes, season_year, live_chat_enabled')
       .eq('track_id', track.id)
       .eq('season_year', seasonYear)
       .order('scheduled_at', { ascending: true })
@@ -96,6 +98,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
       scheduled_at: '',
       duration_minutes: '',
       season_year: seasonYear,
+      live_chat_enabled: false,
     })
     setShowForm(true)
   }
@@ -107,6 +110,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
       scheduled_at: utcToLocalDatetimeString(event.scheduled_at, tz),
       duration_minutes: event.duration_minutes?.toString() ?? '',
       season_year: event.season_year,
+      live_chat_enabled: event.live_chat_enabled ?? false,
     })
     setShowForm(true)
   }
@@ -127,6 +131,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
         scheduled_at: scheduledAtUtc,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes, 10) : null,
         season_year: formData.season_year,
+        live_chat_enabled: formData.live_chat_enabled,
       }
       if (editingId) {
         const { error: updateErr } = await supabase
@@ -276,6 +281,17 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
                 required
               />
             </div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={formData.live_chat_enabled}
+                onChange={(e) =>
+                  setFormData({ ...formData, live_chat_enabled: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              />
+              Enable live chat for this session
+            </label>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
@@ -315,12 +331,14 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
               <p className="mt-1 text-sm text-slate-500">Add qualifying and race sessions.</p>
             </div>
           ) : (
-            <table className="admin-table">
+            <div className="overflow-x-auto">
+            <table className="admin-table min-w-[640px]">
               <thead>
                 <tr>
                   <th>Type</th>
                   <th>Scheduled</th>
                   <th>Duration</th>
+                  <th>Live chat</th>
                   <th className="w-24">Actions</th>
                 </tr>
               </thead>
@@ -330,6 +348,17 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
                     <td>{formatEventType(ev.event_type)}</td>
                     <td>{formatScheduledAt(ev.scheduled_at)}</td>
                     <td className="font-mono tabular-nums">{ev.duration_minutes ?? '—'} min</td>
+                    <td>
+                      <span
+                        className={
+                          ev.live_chat_enabled
+                            ? 'font-medium text-teal-700'
+                            : 'text-slate-400'
+                        }
+                      >
+                        {ev.live_chat_enabled ? 'On' : 'Off'}
+                      </span>
+                    </td>
                     <td>
                       <div className="flex gap-2">
                       <button
@@ -354,6 +383,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

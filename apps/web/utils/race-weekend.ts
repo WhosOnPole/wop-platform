@@ -1,5 +1,6 @@
 /**
- * Race weekend detection and chat status utilities
+ * Race weekend detection and chat status utilities.
+ * Live chat open/closed is driven by track_events (live_chat_enabled + schedule) via get_chat_status RPC.
  */
 
 interface Track {
@@ -7,7 +8,6 @@ interface Track {
   name?: string
   start_date?: string | null
   end_date?: string | null
-  chat_enabled?: boolean
 }
 
 export interface ChatStatus {
@@ -17,13 +17,6 @@ export interface ChatStatus {
   slow_mode_ms?: number
   reason?: string
   error?: string
-}
-
-/**
- * Check if chat is enabled for a track
- */
-export function isChatEnabled(track: Track): boolean {
-  return track.chat_enabled !== false
 }
 
 /** Date-only YYYY-MM-DD from DB (tracks.start_date / end_date are DATE, no timezone). */
@@ -56,8 +49,6 @@ export function getRaceWeekendWindow(track: Track): {
  * For live chat open/closed, use getChatStatus(trackId) which is driven by track_events.
  */
 export function isRaceWeekendActive(track: Track): boolean {
-  if (!isChatEnabled(track)) return false
-
   const startStr = toDateStr(track.start_date)
   const endStr = toDateStr(track.end_date)
   if (!startStr || !endStr) return false

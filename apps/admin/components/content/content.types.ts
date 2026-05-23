@@ -22,7 +22,7 @@ export interface Poll {
   question: string
   options: string[]
   is_featured_podium: boolean
-  ends_at?: string | null
+  admin_id?: string | null
   created_at?: string | null
 }
 

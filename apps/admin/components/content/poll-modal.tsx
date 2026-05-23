@@ -10,7 +10,6 @@ const pollSchema = z.object({
   question: z.string().min(1),
   options: z.array(z.string().min(1)).min(2),
   is_featured_podium: z.boolean(),
-  ends_at: z.string().optional().nullable(),
 })
 
 interface PollModalProps {
@@ -20,15 +19,13 @@ interface PollModalProps {
 
 export function PollModal({ poll, onClose }: PollModalProps) {
   const supabase = createClientComponentClient()
+  const isCreating = !poll
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     question: poll?.question || '',
     options: poll?.options || ['', ''],
-    is_featured_podium: poll?.is_featured_podium || false,
-    ends_at: poll?.ends_at
-      ? new Date(poll.ends_at).toISOString().slice(0, 16)
-      : '',
+    is_featured_podium: poll?.is_featured_podium ?? true,
   })
 
   function addOption() {
@@ -61,8 +58,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
       const validated = pollSchema.parse({
         question: formData.question,
         options: formData.options.filter((opt) => opt.trim() !== ''),
-        is_featured_podium: formData.is_featured_podium,
-        ends_at: formData.ends_at ? formData.ends_at : null,
+        is_featured_podium: isCreating ? true : formData.is_featured_podium,
       })
 
       if (validated.options.length < 2) {
@@ -78,26 +74,41 @@ export function PollModal({ poll, onClose }: PollModalProps) {
       }
 
       if (poll) {
-        const payload = {
-          ...validated,
-          admin_id: session.user.id,
-          ends_at: validated.ends_at ? new Date(validated.ends_at).toISOString() : null,
+        if (validated.is_featured_podium) {
+          const { error: unfeatureError } = await supabase
+            .from('polls')
+            .update({ is_featured_podium: false })
+            .neq('id', poll.id)
+
+          if (unfeatureError) throw unfeatureError
         }
+
         const { error: updateError } = await supabase
           .from('polls')
-          .update(payload)
+          .update({
+            question: validated.question,
+            options: validated.options,
+            is_featured_podium: validated.is_featured_podium,
+            admin_id: session.user.id,
+            ends_at: null,
+          })
           .eq('id', poll.id)
 
         if (updateError) throw updateError
       } else {
-        const payload = {
+        const { error: unfeatureError } = await supabase
+          .from('polls')
+          .update({ is_featured_podium: false })
+
+        if (unfeatureError) throw unfeatureError
+
+        const { error: insertError } = await supabase.from('polls').insert({
           question: validated.question,
           options: validated.options,
-          is_featured_podium: validated.is_featured_podium,
+          is_featured_podium: true,
           admin_id: session.user.id,
-          ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        }
-        const { error: insertError } = await supabase.from('polls').insert(payload)
+          ends_at: null,
+        })
 
         if (insertError) throw insertError
       }
@@ -115,7 +126,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
       <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {poll ? 'Edit Poll' : 'Create Poll'}
+            {poll ? 'Edit Admin Poll' : 'Create Admin Poll'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />
@@ -173,37 +184,35 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             </button>
           </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="is_featured_podium"
-              checked={formData.is_featured_podium}
-              onChange={(e) => setFormData({ ...formData, is_featured_podium: e.target.checked })}
-              className="admin-checkbox"
-            />
-            <label htmlFor="is_featured_podium" className="ml-2 text-sm text-gray-700">
-              Featured Podium
-            </label>
-          </div>
-
-          {poll ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Ends At <span className="text-gray-400">(optional)</span>
-              </label>
-              <input
-                type="datetime-local"
-                value={formData.ends_at}
-                onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
-                className="admin-form-input"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Poll is active while ends_at is empty or in the future.
-              </p>
-            </div>
+          {isCreating ? (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              This poll will be featured on the Feed banner. Only one poll can be featured at a time
+              — saving will replace the current featured poll.
+            </p>
           ) : (
-            <p className="text-sm text-gray-600">You have 24 hours to vote. Polls stay visible for 30 days.</p>
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="is_featured_podium"
+                checked={formData.is_featured_podium}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_featured_podium: e.target.checked })
+                }
+                className="admin-checkbox mt-0.5"
+              />
+              <div>
+                <label htmlFor="is_featured_podium" className="text-sm text-gray-700">
+                  Featured on Feed banner
+                </label>
+                <p className="mt-1 text-xs text-gray-500">
+                  Only one poll can be featured at a time. Enabling this replaces the current
+                  featured poll.
+                </p>
+              </div>
+            </div>
           )}
+
+          <p className="text-sm text-gray-600">Polls stay open and can be voted on anytime.</p>
 
           <div className="flex justify-end space-x-3 pt-4">
             <button
@@ -213,11 +222,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="admin-button-primary"
-            >
+            <button type="submit" disabled={loading} className="admin-button-primary">
               {loading ? (
                 <span className="flex items-center">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -233,4 +238,3 @@ export function PollModal({ poll, onClose }: PollModalProps) {
     </div>
   )
 }
-

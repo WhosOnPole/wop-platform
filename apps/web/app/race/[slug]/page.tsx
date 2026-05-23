@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { RealtimeChatBatched } from '@/components/race/realtime-chat-batched'
-import { AdminChatControl } from '@/components/race/admin-chat-control'
 import { getChatStatus } from '@/utils/race-weekend'
 
 export const dynamic = 'force-dynamic'
@@ -25,14 +24,10 @@ export default async function RacePage({ params }: PageProps) {
       supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     }
   )
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
   const slugName = slug.replace(/-/g, ' ')
   const { data: tracks } = await supabase
     .from('tracks')
-    .select('id, name, location, country, start_date, end_date, chat_enabled')
+    .select('id, name, location, country, start_date, end_date')
     .ilike('name', `%${slugName}%`)
 
   const race = tracks?.find(
@@ -49,20 +44,6 @@ export default async function RacePage({ params }: PageProps) {
   const opensAt = chatStatus.opens_at ? new Date(chatStatus.opens_at) : null
   const isUpcoming = opensAt ? opensAt > new Date() : false
   const trackSlug = race.name.toLowerCase().trim().replace(/\s+/g, '-')
-
-  // Check if user is admin
-  let isAdmin = false
-  if (session) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, email')
-      .eq('id', session.user.id)
-      .single()
-
-    const isAdminEmail = session.user.email?.endsWith('@whosonpole.org')
-    const isAdminRole = profile?.role === 'admin'
-    isAdmin = isAdminEmail || isAdminRole || false
-  }
 
   // When live (active track event): full-screen chat_bg, no scroll, header + styled chat box
   if (chatActive) {
@@ -86,16 +67,6 @@ export default async function RacePage({ params }: PageProps) {
             {race.name} <span aria-hidden>→</span>
           </Link>
 
-          {/* Admin above chat (when admin) */}
-          {isAdmin && (
-            <div className="mt-4 shrink-0">
-              <AdminChatControl
-                trackId={race.id}
-                initialChatEnabled={race.chat_enabled !== false}
-              />
-            </div>
-          )}
-
           {/* Race chat in styled container */}
           <div
             className="mt-4 flex-1 min-h-0 flex flex-col rounded-[20px] overflow-hidden"
@@ -118,16 +89,6 @@ export default async function RacePage({ params }: PageProps) {
   // Not live: standard scrollable page
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Admin Chat Control */}
-      {isAdmin && (
-        <div className="mb-6">
-          <AdminChatControl
-            trackId={race.id}
-            initialChatEnabled={race.chat_enabled !== false}
-          />
-        </div>
-      )}
-
       {isUpcoming && opensAt ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow">
           <p className="text-gray-600">

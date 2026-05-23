@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { PenLine, Check, Plus } from 'lucide-react'
+import { PenLine, Check, Plus, Loader2 } from 'lucide-react'
+import { createClientComponentClient } from '@/utils/supabase-client'
 import { PollCard } from '@/components/polls/poll-card'
 import { PollDiscussionModal } from '@/components/polls/poll-discussion-modal'
 import { useCreateModal } from '@/components/providers/create-modal-provider'
@@ -56,7 +57,9 @@ interface FeaturedGrid {
 
 interface SpotlightTabsProps {
   adminPolls: Poll[]
+  adminPollsHasMore?: boolean
   communityPolls: Poll[]
+  communityPollsHasMore?: boolean
   userResponses: Record<string, string>
   voteCounts: Record<string, Record<string, number>>
   stories: NewsStory[]
@@ -99,9 +102,19 @@ const gradientCardOuter = 'h-full rounded-lg p-[2px]'
 const gradientCardInner =
   'flex h-full min-h-0 flex-col rounded-[6px] bg-black p-6 text-left shadow transition-colors hover:bg-gradient-to-r hover:from-[#EC6D00] hover:via-[#FF006F] hover:to-[#25B4B1] cursor-pointer w-full'
 
+const POLLS_PAGE_SIZE = 10
+
+const pollsSectionTitleClass =
+  'w-full text-md font-light tracking-wide text-white [font-variant:small-caps]'
+
+const pollsLoadMoreButtonClass =
+  'inline-flex shrink-0 items-center gap-1 rounded border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-normal tracking-wide text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-60 [font-variant:small-caps]'
+
 export function SpotlightTabs({
-  adminPolls,
-  communityPolls,
+  adminPolls: initialAdminPolls,
+  adminPollsHasMore = false,
+  communityPolls: initialCommunityPolls,
+  communityPollsHasMore = false,
   userResponses,
   voteCounts,
   stories,
@@ -110,9 +123,18 @@ export function SpotlightTabs({
   supabaseUrl,
   pollDiscussionPostsByPollId = {},
 }: SpotlightTabsProps) {
+  const supabase = createClientComponentClient()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activePollId, setActivePollId] = useState<string | null>(null)
+  const [adminPollsList, setAdminPollsList] = useState(initialAdminPolls)
+  const [hasMoreAdminPolls, setHasMoreAdminPolls] = useState(adminPollsHasMore)
+  const [loadingMoreAdminPolls, setLoadingMoreAdminPolls] = useState(false)
+  const [communityPollsList, setCommunityPollsList] = useState(initialCommunityPolls)
+  const [hasMoreCommunityPolls, setHasMoreCommunityPolls] = useState(communityPollsHasMore)
+  const [loadingMoreCommunityPolls, setLoadingMoreCommunityPolls] = useState(false)
+  const [extraUserResponses, setExtraUserResponses] = useState<Record<string, string>>({})
+  const [extraVoteCounts, setExtraVoteCounts] = useState<Record<string, Record<string, number>>>({})
   const createModal = useCreateModal()
   const setActiveModal = createModal?.setActiveModal ?? (() => {})
   const tabFromUrl = searchParams.get('tab')
@@ -126,11 +148,145 @@ export function SpotlightTabs({
     if (validTab) setActiveTab(validTab)
   }, [validTab])
 
-  const adminPollsWithFeatured = adminPolls.map((p) => ({
+  useEffect(() => {
+    setAdminPollsList(initialAdminPolls)
+    setHasMoreAdminPolls(adminPollsHasMore)
+  }, [initialAdminPolls, adminPollsHasMore])
+
+  useEffect(() => {
+    setCommunityPollsList(initialCommunityPolls)
+    setHasMoreCommunityPolls(communityPollsHasMore)
+  }, [initialCommunityPolls, communityPollsHasMore])
+
+  const mergedUserResponses = { ...userResponses, ...extraUserResponses }
+  const mergedVoteCounts = { ...voteCounts, ...extraVoteCounts }
+
+  async function mergeVoteDataForPollIds(newPollIds: string[]) {
+    if (newPollIds.length === 0) return
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (session) {
+      const { data: responses } = await supabase
+        .from('poll_responses')
+        .select('poll_id, selected_option_id')
+        .eq('user_id', session.user.id)
+        .in('poll_id', newPollIds)
+
+      if (responses?.length) {
+        setExtraUserResponses((current) => ({
+          ...current,
+          ...responses.reduce(
+            (acc, response) => {
+              acc[response.poll_id] = response.selected_option_id
+              return acc
+            },
+            {} as Record<string, string>
+          ),
+        }))
+      }
+    }
+
+    const { data: allResponses } = await supabase
+      .from('poll_responses')
+      .select('poll_id, selected_option_id')
+      .in('poll_id', newPollIds)
+
+    if (allResponses?.length) {
+      setExtraVoteCounts((current) => {
+        const next = { ...current }
+        for (const response of allResponses) {
+          if (!next[response.poll_id]) next[response.poll_id] = {}
+          next[response.poll_id][response.selected_option_id] =
+            (next[response.poll_id][response.selected_option_id] || 0) + 1
+        }
+        return next
+      })
+    }
+  }
+
+  async function loadMoreAdminPolls() {
+    if (loadingMoreAdminPolls || !hasMoreAdminPolls) return
+
+    setLoadingMoreAdminPolls(true)
+    const offset = adminPollsList.length
+
+    try {
+      const { data, error } = await supabase
+        .from('polls')
+        .select('*')
+        .not('admin_id', 'is', null)
+        .order('is_featured_podium', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + POLLS_PAGE_SIZE - 1)
+
+      if (error) throw error
+
+      const newPolls = (data || []) as Poll[]
+      if (newPolls.length === 0) {
+        setHasMoreAdminPolls(false)
+        return
+      }
+
+      setAdminPollsList((current) => {
+        const existingIds = new Set(current.map((poll) => poll.id))
+        const uniqueNewPolls = newPolls.filter((poll) => !existingIds.has(poll.id))
+        return [...current, ...uniqueNewPolls]
+      })
+      setHasMoreAdminPolls(newPolls.length === POLLS_PAGE_SIZE)
+
+      await mergeVoteDataForPollIds(newPolls.map((poll) => poll.id))
+    } catch (error) {
+      console.error('Error loading more admin polls:', error)
+    } finally {
+      setLoadingMoreAdminPolls(false)
+    }
+  }
+
+  async function loadMoreCommunityPolls() {
+    if (loadingMoreCommunityPolls || !hasMoreCommunityPolls) return
+
+    setLoadingMoreCommunityPolls(true)
+    const offset = communityPollsList.length
+
+    try {
+      const { data, error } = await supabase
+        .from('polls')
+        .select('*')
+        .is('admin_id', null)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + POLLS_PAGE_SIZE - 1)
+
+      if (error) throw error
+
+      const newPolls = (data || []) as Poll[]
+      if (newPolls.length === 0) {
+        setHasMoreCommunityPolls(false)
+        return
+      }
+
+      setCommunityPollsList((current) => {
+        const existingIds = new Set(current.map((poll) => poll.id))
+        const uniqueNewPolls = newPolls.filter((poll) => !existingIds.has(poll.id))
+        return [...current, ...uniqueNewPolls]
+      })
+      setHasMoreCommunityPolls(newPolls.length === POLLS_PAGE_SIZE)
+
+      await mergeVoteDataForPollIds(newPolls.map((poll) => poll.id))
+    } catch (error) {
+      console.error('Error loading more community polls:', error)
+    } finally {
+      setLoadingMoreCommunityPolls(false)
+    }
+  }
+
+  const adminPollsWithFeatured = adminPollsList.map((p) => ({
     ...p,
     is_featured_podium: p.is_featured_podium ?? false,
   }))
-  const communityPollsWithFeatured = communityPolls.map((p) => ({
+  const communityPollsWithFeatured = communityPollsList.map((p) => ({
     ...p,
     is_featured_podium: p.is_featured_podium ?? false,
   }))
@@ -213,7 +369,28 @@ export function SpotlightTabs({
       {activeTab === 'polls' && (
         <div className="w-full min-w-0 space-y-8">
           <section className="w-full min-w-0 space-y-4 pt-6">
-            <h2 className="text-xl font-semibold text-white">Admin polls</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className={pollsSectionTitleClass}>Admin polls</h2>
+              {hasMoreAdminPolls &&
+                adminPollsCount > 0 &&
+                adminPollsActiveIndex === adminPollsCount - 1 && (
+                  <button
+                    type="button"
+                    onClick={loadMoreAdminPolls}
+                    disabled={loadingMoreAdminPolls}
+                    className={pollsLoadMoreButtonClass}
+                  >
+                    {loadingMoreAdminPolls ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Loading
+                      </>
+                    ) : (
+                      'load more...'
+                    )}
+                  </button>
+                )}
+            </div>
             {adminPollsWithFeatured.length > 0 ? (
               <div className="space-y-3">
                 <div
@@ -222,7 +399,7 @@ export function SpotlightTabs({
                   style={{ scrollSnapType: 'x mandatory' }}
                 >
                   {adminPollsWithFeatured.map((poll) => {
-                  const hasVoted = !!userResponses[poll.id]
+                  const hasVoted = !!mergedUserResponses[poll.id]
                   return (
                     <div
                       key={poll.id}
@@ -293,7 +470,26 @@ export function SpotlightTabs({
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">Community polls</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className={pollsSectionTitleClass}>Community polls</h2>
+              {hasMoreCommunityPolls && communityPollsWithFeatured.length > 0 && (
+                <button
+                  type="button"
+                  onClick={loadMoreCommunityPolls}
+                  disabled={loadingMoreCommunityPolls}
+                  className={pollsLoadMoreButtonClass}
+                >
+                  {loadingMoreCommunityPolls ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Loading
+                    </>
+                  ) : (
+                    'load more...'
+                  )}
+                </button>
+              )}
+            </div>
             {communityPollsWithFeatured.length > 0 ? (
               <div className="flex flex-col gap-4">
                 {communityPollsWithFeatured.map((poll) => (
@@ -303,8 +499,8 @@ export function SpotlightTabs({
                   >
                     <PollCard
                       poll={poll}
-                      userResponse={userResponses[poll.id]}
-                      voteCounts={voteCounts[poll.id] ?? {}}
+                      userResponse={mergedUserResponses[poll.id]}
+                      voteCounts={mergedVoteCounts[poll.id] ?? {}}
                       onVote={() => router.refresh()}
                       variant="dark"
                       className="min-h-0 border-0 bg-transparent p-0 shadow-none"
@@ -391,8 +587,8 @@ export function SpotlightTabs({
         return (
           <PollDiscussionModal
             poll={poll}
-            userResponse={userResponses[poll.id]}
-            voteCounts={voteCounts[poll.id] ?? {}}
+            userResponse={mergedUserResponses[poll.id]}
+            voteCounts={mergedVoteCounts[poll.id] ?? {}}
             discussionPosts={pollDiscussionPostsByPollId[poll.id] ?? []}
             onClose={handleClosePollDiscussionModal}
           />

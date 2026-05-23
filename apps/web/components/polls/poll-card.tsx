@@ -13,7 +13,6 @@ interface Poll {
   options: any[]
   is_featured_podium: boolean
   created_at: string
-  ends_at?: string | null
 }
 
 interface PollCardProps {
@@ -77,7 +76,6 @@ export function PollCard({
 
   async function handleVote(optionIndex: number) {
     if (localResponse) return // Already voted
-    if (poll.ends_at && new Date(poll.ends_at) < new Date()) return // Poll ended
 
     setIsSubmitting(true)
     const {
@@ -120,8 +118,7 @@ export function PollCard({
   }
 
   const hasVoted = !!localResponse
-  const isExpired = !!poll.ends_at && new Date(poll.ends_at) < new Date()
-  const showResults = hasVoted || isExpired
+  const showResults = hasVoted
 
   return (
     <div

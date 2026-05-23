@@ -10,7 +10,6 @@ interface Poll {
   options: any[]
   is_featured_podium?: boolean
   created_at: string
-  ends_at?: string | null
 }
 
 interface PollDiscussionModalProps {
