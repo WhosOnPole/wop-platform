@@ -7,7 +7,6 @@ import { SpotlightCarousel } from '@/components/feed/spotlight-carousel'
 import { FeedHighlightedSidebar } from '@/components/feed/feed-highlighted-sidebar'
 import { SponsorCard } from '@/components/feed/sponsor-card'
 import { FeaturedNewsCard } from '@/components/feed/featured-news-card'
-import { BannerPollCard } from '@/components/feed/banner-poll-card'
 import { FeaturedGridPostBlock } from '@/components/feed/featured-grid-post-block'
 import { toEntitySlug } from '@/utils/url-slug'
 import { getTrackSlug } from '@/utils/storage-urls'
@@ -261,7 +260,7 @@ export async function FeedPageContent({
       .gte('created_at', thirtyDaysAgo)
       .order('created_at', { ascending: false })
       .limit(20),
-    // Featured admin poll for feed top banner and spotlight sidebar/carousel
+    // Featured admin poll for spotlight sidebar / carousel
     supabase
       .from('polls')
       .select('*')
@@ -975,10 +974,6 @@ export async function FeedPageContent({
     }
   }
 
-  const bannerPollUserResponse = featuredAdminPoll?.id
-    ? feedPollUserResponses[featuredAdminPoll.id]
-    : undefined
-
   const featuredStory = featuredNewsList[0] ?? null
   const featuredGrid = getSpotlightFeaturedGrid({
     grid: weeklyHighlights.data?.highlighted_fan_grid,
@@ -1048,7 +1043,7 @@ export async function FeedPageContent({
     }
   }
 
-  const showTopBanner = Boolean(featuredAdminPoll) || sponsorsList.length > 0
+  const showTopBanner = sponsorsList.length > 0
 
   return (
     <div className="w-full">
@@ -1060,14 +1055,6 @@ export async function FeedPageContent({
       {showTopBanner && (
         <div className="relative z-10 w-full border-y border-white/10 bg-black/20 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-nowrap items-stretch gap-6 overflow-x-auto justify-center">
-            {featuredAdminPoll && (
-              <div className="w-full max-w-md flex-shrink-0 lg:max-w-sm">
-                <BannerPollCard
-                  poll={featuredAdminPoll}
-                  userResponse={bannerPollUserResponse}
-                />
-              </div>
-            )}
             {sponsorsList.map((sponsor) => (
               <div key={`sponsor-${sponsor.id}`} className="flex-shrink-0">
                 <SponsorCard sponsor={sponsor} variant="banner" />

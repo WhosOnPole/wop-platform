@@ -331,7 +331,8 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
               <p className="mt-1 text-sm text-slate-500">Add qualifying and race sessions.</p>
             </div>
           ) : (
-            <table className="admin-table">
+            <div className="overflow-x-auto">
+            <table className="admin-table min-w-[640px]">
               <thead>
                 <tr>
                   <th>Type</th>
@@ -382,6 +383,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

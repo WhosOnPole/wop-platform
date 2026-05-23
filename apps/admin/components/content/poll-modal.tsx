@@ -19,12 +19,13 @@ interface PollModalProps {
 
 export function PollModal({ poll, onClose }: PollModalProps) {
   const supabase = createClientComponentClient()
+  const isCreating = !poll
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     question: poll?.question || '',
     options: poll?.options || ['', ''],
-    is_featured_podium: poll?.is_featured_podium || false,
+    is_featured_podium: poll?.is_featured_podium ?? true,
   })
 
   function addOption() {
@@ -57,7 +58,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
       const validated = pollSchema.parse({
         question: formData.question,
         options: formData.options.filter((opt) => opt.trim() !== ''),
-        is_featured_podium: formData.is_featured_podium,
+        is_featured_podium: isCreating ? true : formData.is_featured_podium,
       })
 
       if (validated.options.length < 2) {
@@ -72,43 +73,42 @@ export function PollModal({ poll, onClose }: PollModalProps) {
         throw new Error('Not authenticated')
       }
 
-      if (validated.is_featured_podium) {
-        let unfeatureQuery = supabase
-          .from('polls')
-          .update({ is_featured_podium: false })
-          .eq('is_featured_podium', true)
-
-        if (poll?.id) {
-          unfeatureQuery = unfeatureQuery.neq('id', poll.id)
-        }
-
-        const { error: unfeatureError } = await unfeatureQuery
-        if (unfeatureError) throw unfeatureError
-      }
-
       if (poll) {
-        const payload = {
-          question: validated.question,
-          options: validated.options,
-          is_featured_podium: validated.is_featured_podium,
-          admin_id: session.user.id,
-          ends_at: null,
+        if (validated.is_featured_podium) {
+          const { error: unfeatureError } = await supabase
+            .from('polls')
+            .update({ is_featured_podium: false })
+            .neq('id', poll.id)
+
+          if (unfeatureError) throw unfeatureError
         }
+
         const { error: updateError } = await supabase
           .from('polls')
-          .update(payload)
+          .update({
+            question: validated.question,
+            options: validated.options,
+            is_featured_podium: validated.is_featured_podium,
+            admin_id: session.user.id,
+            ends_at: null,
+          })
           .eq('id', poll.id)
 
         if (updateError) throw updateError
       } else {
-        const payload = {
+        const { error: unfeatureError } = await supabase
+          .from('polls')
+          .update({ is_featured_podium: false })
+
+        if (unfeatureError) throw unfeatureError
+
+        const { error: insertError } = await supabase.from('polls').insert({
           question: validated.question,
           options: validated.options,
-          is_featured_podium: validated.is_featured_podium,
+          is_featured_podium: true,
           admin_id: session.user.id,
           ends_at: null,
-        }
-        const { error: insertError } = await supabase.from('polls').insert(payload)
+        })
 
         if (insertError) throw insertError
       }
@@ -126,7 +126,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
       <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl overflow-y-auto max-h-[90vh]">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            {poll ? 'Edit Poll' : 'Create Poll'}
+            {poll ? 'Edit Admin Poll' : 'Create Admin Poll'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-6 w-6" />
@@ -184,23 +184,33 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             </button>
           </div>
 
-          <div className="flex items-start gap-2">
-            <input
-              type="checkbox"
-              id="is_featured_podium"
-              checked={formData.is_featured_podium}
-              onChange={(e) => setFormData({ ...formData, is_featured_podium: e.target.checked })}
-              className="admin-checkbox mt-0.5"
-            />
-            <div>
-              <label htmlFor="is_featured_podium" className="text-sm text-gray-700">
-                Featured Podium
-              </label>
-              <p className="mt-1 text-xs text-gray-500">
-                Only one poll can be featured at a time. Featured poll appears on the Feed top banner.
-              </p>
+          {isCreating ? (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              This poll will be featured on the Feed banner. Only one poll can be featured at a time
+              — saving will replace the current featured poll.
+            </p>
+          ) : (
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="is_featured_podium"
+                checked={formData.is_featured_podium}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_featured_podium: e.target.checked })
+                }
+                className="admin-checkbox mt-0.5"
+              />
+              <div>
+                <label htmlFor="is_featured_podium" className="text-sm text-gray-700">
+                  Featured on Feed banner
+                </label>
+                <p className="mt-1 text-xs text-gray-500">
+                  Only one poll can be featured at a time. Enabling this replaces the current
+                  featured poll.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           <p className="text-sm text-gray-600">Polls stay open and can be voted on anytime.</p>
 
@@ -212,11 +222,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="admin-button-primary"
-            >
+            <button type="submit" disabled={loading} className="admin-button-primary">
               {loading ? (
                 <span className="flex items-center">
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

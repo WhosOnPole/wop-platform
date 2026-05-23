@@ -86,8 +86,26 @@ body {
   }
 
   .admin-drawer-panel {
-    @apply absolute right-0 top-0 flex h-full w-full max-w-[600px] flex-col bg-white shadow-2xl;
+    @apply absolute right-0 top-0 flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl;
     animation: admin-drawer-enter 300ms ease-out;
+  }
+
+  .admin-drawer-panel .admin-table th,
+  .admin-drawer-panel .admin-table td {
+    @apply px-4;
+  }
+
+  .admin-drawer-panel .admin-table td:last-child,
+  .admin-drawer-panel .admin-table th:last-child {
+    @apply sticky right-0 z-[1] bg-white shadow-[-6px_0_10px_-8px_rgba(15,23,42,0.25)];
+  }
+
+  .admin-drawer-panel .admin-table thead th:last-child {
+    @apply bg-slate-50;
+  }
+
+  .admin-drawer-panel .admin-table tbody tr:hover td:last-child {
+    @apply bg-slate-100;
   }
 
   .admin-drawer-header {
@@ -95,7 +113,7 @@ body {
   }
 
   .admin-drawer-body {
-    @apply flex-1 overflow-y-auto px-6 py-6;
+    @apply min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-6 py-6;
   }
 
   .admin-drawer-footer {
