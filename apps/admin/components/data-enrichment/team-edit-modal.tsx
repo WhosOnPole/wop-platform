@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { AdminDrawer } from '@/components/admin/admin-drawer'
 
 const teamSchema = z.object({
   name: z.string().min(1).max(200),
@@ -79,8 +80,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
   }
 
   return (
-    <div className="admin-drawer-overlay">
-      <div className="admin-drawer-panel">
+    <AdminDrawer onClose={onClose} aria-label="Edit team">
         <div className="admin-drawer-header">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">Edit Team</h2>
@@ -197,8 +197,7 @@ export function TeamEditModal({ team, onClose }: TeamEditModalProps) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDrawer>
   )
 }
 

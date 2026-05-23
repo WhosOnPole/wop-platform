@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2, Plus, Pencil, Trash2 } from 'lucide-react'
+import { AdminDrawer } from '@/components/admin/admin-drawer'
 import { localToUtc, utcToLocalDatetimeString } from '@/utils/date-utils'
 
 const EVENT_TYPES = [
@@ -188,8 +189,7 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
   }
 
   return (
-    <div className="admin-drawer-overlay">
-      <div className="admin-drawer-panel">
+    <AdminDrawer onClose={onClose} aria-label={`Schedule for ${track.name}`}>
         <div className="admin-drawer-header">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">Schedule: {track.name}</h2>
@@ -386,7 +386,6 @@ export function TrackScheduleModal({ track, timezone, onClose, onSaved }: TrackS
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </AdminDrawer>
   )
 }

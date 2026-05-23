@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
 import { localToUtc, utcToLocalDatetimeString } from '@/utils/date-utils'
+import { AdminDrawer } from '@/components/admin/admin-drawer'
 
 const TRACK_TIMEZONES = [
   { value: 'America/New_York', label: 'Eastern (New York)' },
@@ -137,8 +138,7 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
   }
 
   return (
-    <div className="admin-drawer-overlay">
-      <div className="admin-drawer-panel">
+    <AdminDrawer onClose={onClose} aria-label="Edit track">
         <div className="admin-drawer-header">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">Edit Track</h2>
@@ -329,7 +329,6 @@ export function TrackEditModal({ track, onClose }: TrackEditModalProps) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDrawer>
   )
 }

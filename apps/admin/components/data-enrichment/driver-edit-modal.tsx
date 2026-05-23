@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { X, Loader2 } from 'lucide-react'
 import { z } from 'zod'
+import { AdminDrawer } from '@/components/admin/admin-drawer'
 
 /** Nationalities that have flag assets (matches web app flags.ts getNationalityFlagPath). */
 const DRIVER_NATIONALITIES = [
@@ -166,8 +167,7 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
   }
 
   return (
-    <div className="admin-drawer-overlay">
-      <div className="admin-drawer-panel">
+    <AdminDrawer onClose={onClose} aria-label="Edit driver">
         <div className="admin-drawer-header">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">Edit Driver</h2>
@@ -352,8 +352,7 @@ export function DriverEditModal({ driver, onClose }: DriverEditModalProps) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </AdminDrawer>
   )
 }
 
