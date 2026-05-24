@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@/utils/supabase-client'
+import { getRaceSlug } from '@/utils/race-slug'
 
 export interface LiveRaceInfo {
   slug: string
   name: string
-}
-
-function slugify(name: string) {
-  return name.toLowerCase().trim().replace(/\s+/g, '-')
 }
 
 export function useLiveRace() {
@@ -35,7 +32,7 @@ export function useLiveRace() {
       if (isMounted && track) {
         setLiveRace({
           name: track.name,
-          slug: slugify(track.name),
+          slug: getRaceSlug(track),
         })
       } else if (isMounted) {
         setLiveRace(null)

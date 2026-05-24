@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { RealtimeChatBatched } from '@/components/race/realtime-chat-batched'
 import { getChatStatus } from '@/utils/race-weekend'
+import { getRaceSlug, resolveTrackFromRaceSlug } from '@/utils/race-slug'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -24,15 +25,8 @@ export default async function RacePage({ params }: PageProps) {
       supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     }
   )
-  const slugName = slug.replace(/-/g, ' ')
-  const { data: tracks } = await supabase
-    .from('tracks')
-    .select('id, name, location, country, start_date, end_date')
-    .ilike('name', `%${slugName}%`)
 
-  const race = tracks?.find(
-    (track) => track.name.toLowerCase().replace(/\\s+/g, '-') === slug
-  ) || tracks?.[0]
+  const race = await resolveTrackFromRaceSlug(supabase, slug)
 
   if (!race) {
     notFound()
@@ -43,20 +37,18 @@ export default async function RacePage({ params }: PageProps) {
   const chatActive = chatStatus.mode === 'open' || chatStatus.mode === 'read_only'
   const opensAt = chatStatus.opens_at ? new Date(chatStatus.opens_at) : null
   const isUpcoming = opensAt ? opensAt > new Date() : false
-  const trackSlug = race.name.toLowerCase().trim().replace(/\s+/g, '-')
+  const trackSlug = getRaceSlug(race)
 
   // When live (active track event): full-screen chat_bg, no scroll, header + styled chat box
   if (chatActive) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden bg-black pt-[calc(1.75rem+env(safe-area-inset-top))]">
-        {/* Full viewport background */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/images/chat_bg.png)' }}
           aria-hidden
         />
         <div className="relative z-10 flex flex-1 flex-col min-h-0 px-4 py-6 sm:px-6 lg:px-8 pt-16">
-          {/* Top header outside race chat */}
           <h1 className="font-display text-2xl tracking-wider text-white sm:text-3xl shrink-0">
           RACEtalk: {race.location} - {race.country}
           </h1>
@@ -67,7 +59,6 @@ export default async function RacePage({ params }: PageProps) {
             {race.name} <span aria-hidden>→</span>
           </Link>
 
-          {/* Race chat in styled container */}
           <div
             className="mt-4 flex-1 min-h-0 flex flex-col rounded-[20px] overflow-hidden"
             style={{
@@ -86,7 +77,6 @@ export default async function RacePage({ params }: PageProps) {
     )
   }
 
-  // Not live: standard scrollable page
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {isUpcoming && opensAt ? (
@@ -108,4 +98,3 @@ export default async function RacePage({ params }: PageProps) {
     </div>
   )
 }
-

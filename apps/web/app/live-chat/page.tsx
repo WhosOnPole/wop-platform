@@ -2,6 +2,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { Radio, Calendar, Clock } from 'lucide-react'
+import { getRaceSlug } from '@/utils/race-slug'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -98,7 +99,7 @@ export default async function LiveChatPage() {
             {liveRaces.map((race) => (
               <Link
                 key={race.id}
-                href={`/race/${slugify(race.name)}`}
+                href={`/race/${getRaceSlug(race)}`}
                 className="group overflow-hidden rounded-lg border-2 border-red-500 bg-gradient-to-br from-red-50 to-red-100 p-6 shadow-lg hover:shadow-xl transition-shadow"
               >
                 <div className="mb-2 flex items-center space-x-2">
@@ -142,7 +143,7 @@ export default async function LiveChatPage() {
               return (
                 <Link
                   key={race.id}
-                  href={`/race/${slugify(race.name)}`}
+                  href={`/race/${getRaceSlug(race)}`}
                   className="group overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow hover:shadow-lg transition-shadow"
                 >
                   <h3 className="mb-2 text-lg font-semibold text-gray-900 group-hover:text-blue-600">
@@ -184,7 +185,7 @@ export default async function LiveChatPage() {
             {recentRaces.map((race) => (
               <Link
                 key={race.id}
-                href={`/race/${slugify(race.name)}`}
+                href={`/race/${getRaceSlug(race)}`}
                 className="group overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow hover:shadow-lg transition-shadow"
               >
                 <h3 className="mb-2 text-lg font-semibold text-gray-900 group-hover:text-blue-600">
@@ -213,8 +214,4 @@ export default async function LiveChatPage() {
       )}
     </div>
   )
-}
-
-function slugify(name: string) {
-  return name.toLowerCase().trim().replace(/\s+/g, '-')
 }

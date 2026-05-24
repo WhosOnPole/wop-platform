@@ -10,6 +10,7 @@ import {
   getNextLiveChatEvent,
   type PitlaneTrackSummary,
 } from '@/utils/live-chat-schedule'
+import { getRaceSlug } from '@/utils/race-slug'
 
 export const revalidate = 300
 
@@ -97,7 +98,7 @@ export default async function PitlanePage() {
     counterText = formatLiveChatCountdown(countdownTarget)
   }
 
-  const trackSlug = bannerRace ? slugify(bannerRace.name) : ''
+  const trackSlug = bannerRace ? getRaceSlug(bannerRace) : ''
   const bannerHref = isLive ? `/race/${trackSlug}` : `/tracks/${trackSlug}`
 
   const backgroundImage = '/images/race_banner.jpeg'
@@ -236,10 +237,6 @@ function getClosestRace(params: { tracks: TrackRow[] }) {
     const bTime = b.start_date ? new Date(b.start_date).getTime() : 0
     return bTime - aTime
   })[0]
-}
-
-function slugify(name: string) {
-  return name.toLowerCase().trim().replace(/\s+/g, '-')
 }
 
 function getCountryFlagPath(country?: string | null): string | null {
