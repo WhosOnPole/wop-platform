@@ -125,7 +125,16 @@ export function PollsTab() {
   }, [])
 
   const adminPolls = useMemo(
-    () => polls.filter((poll) => poll.admin_id != null),
+    () =>
+      polls
+        .filter((poll) => poll.admin_id != null)
+        .sort((a, b) => {
+          if (a.is_featured_podium && !b.is_featured_podium) return -1
+          if (!a.is_featured_podium && b.is_featured_podium) return 1
+          return (
+            new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+          )
+        }),
     [polls]
   )
   const communityPolls = useMemo(
@@ -153,6 +162,7 @@ export function PollsTab() {
     const { error } = await supabase
       .from('polls')
       .update({ is_featured_podium: false })
+      .not('admin_id', 'is', null)
       .neq('id', pollId)
 
     if (error) throw error
@@ -224,7 +234,8 @@ export function PollsTab() {
     <>
       <div className="mb-6 flex items-center justify-between gap-4">
         <p className="text-sm text-slate-600">
-          Only one poll can be featured at a time. New admin polls are featured automatically.
+          Only one poll can be featured at a time. Admin polls are ordered with featured first,
+          then newest to oldest.
         </p>
         <button onClick={() => setIsCreating(true)} className="admin-button-primary shrink-0">
           <Plus className="h-4 w-4" />

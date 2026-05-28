@@ -282,10 +282,16 @@ export function SpotlightTabs({
     }
   }
 
-  const adminPollsWithFeatured = adminPollsList.map((p) => ({
-    ...p,
-    is_featured_podium: p.is_featured_podium ?? false,
-  }))
+  const adminPollsWithFeatured = [...adminPollsList]
+    .map((p) => ({
+      ...p,
+      is_featured_podium: p.is_featured_podium ?? false,
+    }))
+    .sort((a, b) => {
+      if (a.is_featured_podium && !b.is_featured_podium) return -1
+      if (!a.is_featured_podium && b.is_featured_podium) return 1
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
   const communityPollsWithFeatured = communityPollsList.map((p) => ({
     ...p,
     is_featured_podium: p.is_featured_podium ?? false,

@@ -25,7 +25,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
   const [formData, setFormData] = useState({
     question: poll?.question || '',
     options: poll?.options || ['', ''],
-    is_featured_podium: poll?.is_featured_podium ?? true,
+    is_featured_podium: poll?.is_featured_podium ?? false,
   })
 
   function addOption() {
@@ -58,7 +58,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
       const validated = pollSchema.parse({
         question: formData.question,
         options: formData.options.filter((opt) => opt.trim() !== ''),
-        is_featured_podium: isCreating ? true : formData.is_featured_podium,
+        is_featured_podium: formData.is_featured_podium,
       })
 
       if (validated.options.length < 2) {
@@ -78,6 +78,7 @@ export function PollModal({ poll, onClose }: PollModalProps) {
           const { error: unfeatureError } = await supabase
             .from('polls')
             .update({ is_featured_podium: false })
+            .not('admin_id', 'is', null)
             .neq('id', poll.id)
 
           if (unfeatureError) throw unfeatureError
@@ -96,16 +97,18 @@ export function PollModal({ poll, onClose }: PollModalProps) {
 
         if (updateError) throw updateError
       } else {
-        const { error: unfeatureError } = await supabase
-          .from('polls')
-          .update({ is_featured_podium: false })
-
-        if (unfeatureError) throw unfeatureError
+        if (validated.is_featured_podium) {
+          const { error: unfeatureError } = await supabase
+            .from('polls')
+            .update({ is_featured_podium: false })
+            .not('admin_id', 'is', null)
+          if (unfeatureError) throw unfeatureError
+        }
 
         const { error: insertError } = await supabase.from('polls').insert({
           question: validated.question,
           options: validated.options,
-          is_featured_podium: true,
+          is_featured_podium: validated.is_featured_podium,
           admin_id: session.user.id,
           ends_at: null,
         })
@@ -184,35 +187,30 @@ export function PollModal({ poll, onClose }: PollModalProps) {
             </button>
           </div>
 
-          {isCreating ? (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              This poll will be featured on the Feed banner. Only one poll can be featured at a time
-              — saving will replace the current featured poll.
-            </p>
-          ) : (
-            <div className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                id="is_featured_podium"
-                checked={formData.is_featured_podium}
-                onChange={(e) =>
-                  setFormData({ ...formData, is_featured_podium: e.target.checked })
-                }
-                className="admin-checkbox mt-0.5"
-              />
-              <div>
-                <label htmlFor="is_featured_podium" className="text-sm text-gray-700">
-                  Featured on Feed banner
-                </label>
-                <p className="mt-1 text-xs text-gray-500">
-                  Only one poll can be featured at a time. Enabling this replaces the current
-                  featured poll.
-                </p>
-              </div>
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="is_featured_podium"
+              checked={formData.is_featured_podium}
+              onChange={(e) =>
+                setFormData({ ...formData, is_featured_podium: e.target.checked })
+              }
+              className="admin-checkbox mt-0.5"
+            />
+            <div>
+              <label htmlFor="is_featured_podium" className="text-sm text-gray-700">
+                Featured on Feed banner
+              </label>
+              <p className="mt-1 text-xs text-gray-500">
+                Only one admin poll can be featured at a time. If enabled, this replaces the
+                current featured poll.
+              </p>
             </div>
-          )}
+          </div>
 
-          <p className="text-sm text-gray-600">Polls stay open and can be voted on anytime.</p>
+          <p className="text-sm text-gray-600">
+            Admin polls stay open and are ordered with featured first, then newest to oldest.
+          </p>
 
           <div className="flex justify-end space-x-3 pt-4">
             <button
