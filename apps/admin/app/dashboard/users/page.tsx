@@ -9,7 +9,7 @@ export default function UsersPage() {
       <AdminPageHeader
         eyebrow="User Control"
         title="Users (Points & Strikes)"
-        description="Review users with strikes or low points. Adjust points, reset strikes, ban or unban, and view related reports."
+        description="Browse all accounts, search by username or email, and manage points, strikes, bans, and reports. Use the moderation queue filter for flagged users only."
       />
       <UsersTable />
     </div>

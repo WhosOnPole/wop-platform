@@ -13,6 +13,7 @@ function PollTable({
   onEdit,
   onDelete,
   onSetFeatured,
+  deletingId,
   emptyMessage,
 }: {
   polls: Poll[]
@@ -20,6 +21,7 @@ function PollTable({
   onEdit?: (poll: Poll) => void
   onDelete: (id: string) => void
   onSetFeatured?: (id: string) => void
+  deletingId?: string | null
   emptyMessage: string
 }) {
   if (polls.length === 0) {
@@ -97,7 +99,8 @@ function PollTable({
                   <button
                     type="button"
                     onClick={() => onDelete(poll.id)}
-                    className="rounded-lg p-1.5 text-red-600 transition hover:bg-red-50"
+                    disabled={deletingId === poll.id}
+                    className="rounded-lg p-1.5 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
                     aria-label="Delete poll"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -119,6 +122,7 @@ export function PollsTab() {
   const [editingPoll, setEditingPoll] = useState<Poll | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [featuringId, setFeaturingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     loadPolls()
@@ -198,28 +202,42 @@ export function PollsTab() {
     if (!confirm('Are you sure you want to delete this poll?')) return
 
     const poll = polls.find((p) => p.id === id)
-    const { error } = await supabase.from('polls').delete().eq('id', id)
+    setDeletingId(id)
 
-    if (error) {
-      console.error('Error deleting poll:', error)
-      toast.error('Failed to delete poll')
-      return
-    }
+    try {
+      const res = await fetch('/api/admin/polls', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pollId: id }),
+      })
+      const data = await res.json().catch(() => ({}))
 
-    if (poll?.is_featured_podium && poll.admin_id) {
-      const nextFeatured = polls
-        .filter((p) => p.id !== id && p.admin_id != null)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
-        )[0]
-
-      if (nextFeatured) {
-        await setFeaturedPoll(nextFeatured.id)
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete poll')
       }
-    }
 
-    loadPolls()
+      toast.success('Poll deleted')
+
+      if (poll?.is_featured_podium && poll.admin_id) {
+        const nextFeatured = polls
+          .filter((p) => p.id !== id && p.admin_id != null)
+          .sort(
+            (a, b) =>
+              new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+          )[0]
+
+        if (nextFeatured) {
+          await setFeaturedPoll(nextFeatured.id)
+        }
+      }
+
+      loadPolls()
+    } catch (error) {
+      console.error('Error deleting poll:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete poll')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   if (loading) {
@@ -255,6 +273,7 @@ export function PollsTab() {
             onEdit={setEditingPoll}
             onDelete={handleDelete}
             onSetFeatured={setFeaturedPoll}
+            deletingId={deletingId}
             emptyMessage="No admin polls yet. Create one to feature it on the Feed banner."
           />
         </div>
@@ -272,6 +291,7 @@ export function PollsTab() {
           <PollTable
             polls={communityPolls}
             onDelete={handleDelete}
+            deletingId={deletingId}
             emptyMessage="No community polls yet."
           />
         </div>

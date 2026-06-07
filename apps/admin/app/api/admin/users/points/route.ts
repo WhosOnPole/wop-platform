@@ -11,23 +11,41 @@ export async function GET(request: Request) {
 
   const supabase = createClient(SUPABASE_URL, SECRET_KEY)
   const { searchParams } = new URL(request.url)
-  const showAll = searchParams.get('showAll') === 'true'
+  const showAll = searchParams.get('showAll') !== 'false'
   const minStrikes = Number(searchParams.get('minStrikes') || '1')
   const maxPoints = Number(searchParams.get('maxPoints') || '0')
+  const search = (searchParams.get('search') || '').trim()
+  const page = Math.max(1, Number(searchParams.get('page') || '1'))
+  const pageSize = Math.min(100, Math.max(1, Number(searchParams.get('pageSize') || '50')))
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
 
   try {
+    let countQuery = supabase.from('profiles').select('id', { count: 'exact', head: true })
     let query = supabase
       .from('profiles')
-      .select('id, username, email, points, strikes, banned_until, profile_image_url')
-      .order('strikes', { ascending: false })
-      .limit(200)
+      .select('id, username, email, points, strikes, banned_until, profile_image_url, created_at')
+      .order(showAll ? 'username' : 'strikes', { ascending: showAll })
+      .range(from, to)
 
-    if (!showAll) {
-      query = query.or(`strikes.gte.${minStrikes},points.lte.${maxPoints}`)
+    if (search) {
+      const filter = `username.ilike.%${search}%,email.ilike.%${search}%`
+      query = query.or(filter)
+      countQuery = countQuery.or(filter)
     }
 
-    const { data: profiles, error } = await query
+    if (!showAll) {
+      const thresholdFilter = `strikes.gte.${minStrikes},points.lte.${maxPoints}`
+      query = query.or(thresholdFilter)
+      countQuery = countQuery.or(thresholdFilter)
+    }
+
+    const [{ data: profiles, error }, { count, error: countError }] = await Promise.all([
+      query,
+      countQuery,
+    ])
     if (error) throw error
+    if (countError) throw countError
 
     // Count recent reports per user (last 90 days)
     const ownerIds = (profiles || []).map((p: any) => p.id)
@@ -82,7 +100,13 @@ export async function GET(request: Request) {
       recent_reports: reportsByOwner[p.id] || 0,
     }))
 
-    return NextResponse.json({ data: result })
+    return NextResponse.json({
+      data: result,
+      total: count ?? result.length,
+      page,
+      pageSize,
+      hasMore: count != null ? from + result.length < count : false,
+    })
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Failed to load users' }, { status: 500 })
   }

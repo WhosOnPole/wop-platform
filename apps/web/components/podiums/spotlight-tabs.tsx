@@ -501,7 +501,7 @@ export function SpotlightTabs({
                 {communityPollsWithFeatured.map((poll) => (
                   <div
                     key={poll.id}
-                    className="rounded-xl border border-white/20 bg-white/5 p-4"
+                    className="rounded-xl border border-white/20 bg-black/10 p-4"
                   >
                     <PollCard
                       poll={poll}

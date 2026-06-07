@@ -222,7 +222,7 @@ export function ActivityTab({
                   item.target_type === 'poll' &&
                   item.target_id &&
                   pollsById[item.target_id] && (
-                    <div className="mt-4 rounded-md bg-black/30 [&_h2]:text-sm">
+                    <div className="mt-4 rounded-md  [&_h2]:text-sm">
                       <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                         {pollsById[item.target_id].is_featured_podium ? 'Admin Poll' : 'User Poll'}
                       </p>
