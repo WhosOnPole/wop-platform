@@ -129,7 +129,7 @@ export function PollCard({
       } ${className || ''}`}
     >
       <div className={compact ? 'mb-2 flex items-center justify-between gap-2' : 'mb-4 flex items-center justify-between gap-2'}>
-        <h2 className={`min-w-0 flex-1 text-md font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        <h2 className={`min-w-0 flex-1 text-md font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
           {poll.question}
         </h2>
         <div className="flex shrink-0 items-center gap-2">
