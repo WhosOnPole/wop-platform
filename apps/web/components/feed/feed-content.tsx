@@ -789,7 +789,7 @@ export function FeedContent({
                   />
                 </div>
               )}
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
+              <div className="mt-4 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm text-white/90">
                 <LikeButton
                   targetId={post.id}
                   targetType="post"
@@ -1187,7 +1187,7 @@ export function FeedContent({
                           />
                         </div>
                       )}
-                      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
+                      <div className="mt-4 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm text-white/90">
                         <LikeButton
                           targetId={post.id}
                           targetType="post"

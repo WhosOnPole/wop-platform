@@ -599,8 +599,8 @@ export function DiscussionSection({
       ? 'min-h-[6rem] max-h-[35vh]'
       : 'min-h-[6rem] max-h-[50vh]'
   const contentBoxClasses = isDark
-    ? `mt-6 flex ${contentHeight} flex-col rounded-md border border-white/20 bg-transparent ${fixedInput ? 'overflow-hidden' : 'p-4'}`
-    : `mt-6 flex ${contentHeight} flex-col rounded-md border border-gray-200 bg-gray-50/50 ${fixedInput ? 'overflow-hidden' : 'p-4'}`
+    ? `mt-6 flex ${contentHeight} flex-col rounded-md border border-white/20 bg-transparent ${fixedInput ? 'overflow-hidden' : 'overflow-y-auto p-4'}`
+    : `mt-6 flex ${contentHeight} flex-col rounded-md border border-gray-200 bg-gray-50/50 ${fixedInput ? 'overflow-hidden' : 'overflow-y-auto p-4'}`
   const contentBoxEmptyClasses = isDark
     ? 'items-center justify-center'
     : 'items-center justify-center'
@@ -654,7 +654,7 @@ export function DiscussionSection({
             const { topLevel, repliesByParent } = groupComments(postComments)
 
             return (
-              <div key={post.id} id={`post-${post.id}`} className={`${postBorderClasses} pb-6 last:border-0`}>
+              <div key={post.id} id={`post-${post.id}`} className={`${postBorderClasses} pb-6 last:border-0 last:pb-0`}>
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-start space-x-3">
                     <Link
@@ -714,7 +714,7 @@ export function DiscussionSection({
                 )}
 
                 {/* Post Actions */}
-                <div className="mb-3 flex items-center space-x-4">
+                <div className="mb-3 flex items-center space-x-4 justify-end">
                   <LikeButton
                     targetId={post.id}
                     targetType="post"
